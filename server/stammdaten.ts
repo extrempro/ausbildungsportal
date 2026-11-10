@@ -130,7 +130,9 @@ export function azubiUebersicht(db: DB, z: BenutzerZeile, tag: string) {
     beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
     phase: stand.phase,
     ausbildungsjahr: stand.ausbildungsjahr,
+    beginn: stand.beginn,
     ende: stand.ende,
+    tage: stand.tage,
   };
 }
 

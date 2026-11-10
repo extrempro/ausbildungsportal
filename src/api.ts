@@ -141,7 +141,9 @@ export interface AzubiKurz {
   beruf: string;
   phase: Stand['phase'];
   ausbildungsjahr: number | null;
+  beginn: string | null;
   ende: string | null;
+  tage: number | null;
 }
 
 export interface ZuweisungZeile {
@@ -163,7 +165,7 @@ export function berufName(b: Pick<Beruf, 'bezeichnung' | 'fachrichtung'> | null 
 }
 
 /** Kurztext zum Stand der Ausbildung, z. B. „2. Ausbildungsjahr · bis 31.07.2028“. */
-export function standText(s: Pick<Stand, 'phase' | 'ausbildungsjahr' | 'ende' | 'beginn'> & { tage?: number | null }): string {
+export function standText(s: Pick<Stand, 'phase' | 'ausbildungsjahr' | 'beginn' | 'ende' | 'tage'>): string {
   if (s.phase === 'offen') return 'Ausbildungsbeginn noch nicht eingetragen';
   if (s.phase === 'vor') return s.tage != null ? `beginnt in ${s.tage} Tagen (${datum(s.beginn)})` : `beginnt am ${datum(s.beginn)}`;
   if (s.phase === 'beendet') return `beendet am ${datum(s.ende)}`;
