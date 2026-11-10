@@ -213,6 +213,11 @@ function merke(schluessel: string, wert: string): void {
   }
 }
 
+/** Höhe dessen, was oben fest stehen bleibt: Kopfzeile und Legende. */
+function obenBelegt(): number {
+  return (document.querySelector('.leiste')?.getBoundingClientRect().height ?? 60) + (document.querySelector('.plan-legende')?.getBoundingClientRect().height ?? 0);
+}
+
 /** Welche Woche steht gerade oben im Fenster? (aus dem FISI-Lernkompass übernommen) */
 function useAktiverAbschnitt(ids: string[]): string | null {
   const [aktiv, setAktiv] = useState<string | null>(null);
@@ -224,7 +229,7 @@ function useAktiverAbschnitt(ids: string[]): string | null {
       frame = 0;
       let akt: string | null = null;
       // knapp unter der festen Kopfzeile
-      const grenze = (document.querySelector('.leiste')?.getBoundingClientRect().height ?? 108) + 40;
+      const grenze = obenBelegt() + 40;
       for (const id of ids) {
         const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top <= grenze) akt = id;
@@ -640,7 +645,15 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   };
   const zeige = (montag: string) => {
     if (nurBelegt && !document.getElementById(`kw-${montag}`)) setNurBelegt(false);
-    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(`kw-${montag}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`kw-${montag}`);
+        if (!el) return;
+        // knapp unter Kopfzeile und Legende, die beide stehen bleiben
+        const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - obenBelegt() - 12, behavior: ruhig ? 'auto' : 'smooth' });
+      }),
+    );
   };
   const hake = async (e: PlanEintrag, body: { erledigt: boolean; unteraufgabe?: number }) => {
     const ersetze = (x: PlanEintrag) => setD((alt) => (alt ? { ...alt, eintraege: alt.eintraege.map((y) => (y.id === e.id ? x : y)) } : alt));

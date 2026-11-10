@@ -250,6 +250,8 @@ export interface OffenerBericht {
   jahr: number;
   eingereichtAm: string | null;
   stunden: number;
+  /** Wochenstunden des Azubis */
+  soll: number;
 }
 
 export const STATUS_TEXT: Record<BerichtStatus, string> = {

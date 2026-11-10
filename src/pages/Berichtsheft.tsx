@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, berichtsheftPfad, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '../api';
-import type { BerichtListe, BerichtStatus, OffenerBericht } from '../api';
+import type { BerichtListe, BerichtStatus } from '../api';
 import { Icon } from '../icons';
 import { Link } from '../router';
 import { BerichtBlatt } from './Bericht';
@@ -259,114 +259,6 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         </section>
       ))}
       {berichte.length === 0 && <p className="karte leise">Keine Berichte vorhanden.</p>}
-    </>
-  );
-}
-
-/** Warteliste: eingereichte Berichte, die das angemeldete Konto abzeichnen darf. */
-export function Abzeichnen() {
-  const [offen, setOffen] = useState<OffenerBericht[] | null>(null);
-  const [hatUnterschrift, setHatUnterschrift] = useState(true);
-  const [gewaehlt, setGewaehlt] = useState<Set<string>>(new Set());
-  const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
-  const schluessel = (o: OffenerBericht) => `${o.azubiId}|${o.montag}`;
-
-  const lade = async () => {
-    const r = await api<{ offen: OffenerBericht[]; hatUnterschrift: boolean }>('GET', '/api/abzeichnen');
-    setOffen(r.offen);
-    setHatUnterschrift(r.hatUnterschrift);
-    setGewaehlt(new Set());
-  };
-  useEffect(() => {
-    lade().catch((e: Error) => setMeldung({ text: e.message, fehler: true }));
-  }, []);
-
-  const zeichneAb = async () => {
-    const berichte = (offen ?? []).filter((o) => gewaehlt.has(schluessel(o))).map((o) => ({ azubiId: o.azubiId, montag: o.montag }));
-    try {
-      const r = await api<{ abgezeichnet: number }>('POST', '/api/berichte/abzeichnen', { berichte });
-      await lade();
-      setMeldung({ text: `${r.abgezeichnet} ${r.abgezeichnet === 1 ? 'Bericht' : 'Berichte'} abgezeichnet.`, fehler: false });
-    } catch (e) {
-      setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
-    }
-  };
-  const schalte = (k: string) => {
-    const neu = new Set(gewaehlt);
-    if (neu.has(k)) neu.delete(k);
-    else neu.add(k);
-    setGewaehlt(neu);
-  };
-
-  return (
-    <>
-      <h1>Abzeichnen</h1>
-      <p className="leise">Eingereichte Berichte, die auf deine Unterschrift warten. Zum Lesen die Woche öffnen; mehrere lassen sich gemeinsam abzeichnen.</p>
-      {!hatUnterschrift && (
-        <p className="hinweis">
-          Zum Abzeichnen fehlt noch deine Unterschrift. <Link zu="/konto">Unter „Konto“ hinterlegen</Link>
-        </p>
-      )}
-      {meldung && (
-        <p className={`hinweis ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
-          {meldung.text}
-        </p>
-      )}
-      {offen === null ? (
-        <p className="leise">Lädt …</p>
-      ) : offen.length === 0 ? (
-        <p className="karte leise">Es wartet kein Bericht auf dich.</p>
-      ) : (
-        <>
-          <div className="karte tabelle-rahmen">
-            <table className="stapel">
-              <thead>
-                <tr>
-                  <th>
-                    <label className="haken nur-haken">
-                      <input
-                        type="checkbox"
-                        aria-label="Alle auswählen"
-                        checked={gewaehlt.size === offen.length}
-                        onChange={(e) => setGewaehlt(e.target.checked ? new Set(offen.map(schluessel)) : new Set())}
-                      />
-                    </label>
-                  </th>
-                  <th>Azubi</th>
-                  <th>Woche</th>
-                  <th className="zahl">Stunden</th>
-                </tr>
-              </thead>
-              <tbody>
-                {offen.map((o) => (
-                  <tr key={schluessel(o)}>
-                    <td data-label="Auswählen">
-                      <label className="haken nur-haken">
-                        <input type="checkbox" aria-label={`${o.azubi}, KW ${o.kw} auswählen`} checked={gewaehlt.has(schluessel(o))} onChange={() => schalte(schluessel(o))} />
-                      </label>
-                    </td>
-                    <td data-label="Azubi">{o.azubi}</td>
-                    <td data-label="Woche">
-                      <span>
-                        <Link zu={`/azubis/${o.azubiId}/berichtsheft/${o.montag}`}>
-                          <strong>
-                            KW {o.kw}/{o.jahr}
-                          </strong>
-                        </Link>{' '}
-                        <span className="leise">{wocheText(o.montag, o.sonntag)}</span>
-                      </span>
-                    </td>
-                    <td className="zahl" data-label="Stunden">{h(o.stunden)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <button type="button" className="knopf" disabled={gewaehlt.size === 0 || !hatUnterschrift} onClick={() => void zeichneAb()}>
-            {gewaehlt.size === 0 ? 'Ausgewählte abzeichnen' : `${gewaehlt.size} ${gewaehlt.size === 1 ? 'Bericht' : 'Berichte'} abzeichnen`}
-          </button>
-        </>
-      )}
     </>
   );
 }
