@@ -1,30 +1,40 @@
 import { useEffect, useState } from 'react';
-import { api, ROLLE_TEXT } from '../api';
-import type { Konto } from '../api';
+import { api, ROLLE_TEXT, standText } from '../api';
+import type { AzubiKurz, Konto, ProfilAntwort } from '../api';
 import { Link } from '../router';
-
-interface Azubi {
-  id: number;
-  anzeigename: string;
-  anmeldename: string;
-  status: string;
-}
+import { ProfilUebersicht } from './AzubiDetail';
 
 export function Start({ konto }: { konto: Konto }) {
-  const [azubis, setAzubis] = useState<Azubi[] | null>(null);
-  const siehtAzubis = konto.rolle === 'ausbilder' || konto.rolle === 'beauftragter';
+  const [azubis, setAzubis] = useState<AzubiKurz[] | null>(null);
+  const [profil, setProfil] = useState<ProfilAntwort | null>(null);
+  const betreut = konto.rolle === 'ausbilder' || konto.rolle === 'beauftragter';
 
   useEffect(() => {
-    if (siehtAzubis) api<{ azubis: Azubi[] }>('GET', '/api/azubis').then((r) => setAzubis(r.azubis), () => setAzubis([]));
-  }, [siehtAzubis]);
+    if (betreut) api<{ azubis: AzubiKurz[] }>('GET', '/api/azubis').then((r) => setAzubis(r.azubis), () => setAzubis([]));
+    if (konto.rolle === 'azubi') api<ProfilAntwort>('GET', `/api/azubis/${konto.id}/profil`).then(setProfil, () => {});
+  }, [betreut, konto.rolle, konto.id]);
 
   return (
     <>
       <h1>Hallo {konto.anzeigename}</h1>
       <p className="leise">Angemeldet als {ROLLE_TEXT[konto.rolle]}.</p>
-      <p className="hinweis">Berichtsheft und Ausbildungsplan folgen in den nächsten Ausbaustufen. Bisher gibt es Anmeldung, Konten und Rechte.</p>
+      <p className="hinweis">Berichtsheft und Ausbildungsplan folgen in den nächsten Ausbaustufen.</p>
 
-      {siehtAzubis && (
+      {konto.rolle === 'azubi' && (
+        <section className="karte">
+          <h2>Meine Ausbildung</h2>
+          {profil ? (
+            <>
+              <ProfilUebersicht p={profil} />
+              {profil.stand.phase === 'offen' && <p className="leise klein">Die Angaben trägt dein Ausbilder ein.</p>}
+            </>
+          ) : (
+            <p className="leise">Lädt …</p>
+          )}
+        </section>
+      )}
+
+      {betreut && (
         <section className="karte">
           <h2>{konto.rolle === 'ausbilder' ? 'Alle Azubis' : 'Mir zugewiesene Azubis'}</h2>
           {azubis === null ? (
@@ -43,7 +53,13 @@ export function Start({ konto }: { konto: Konto }) {
             <ul className="liste">
               {azubis.map((a) => (
                 <li key={a.id}>
-                  <strong>{a.anzeigename}</strong> <span className="leise">{a.anmeldename}</span>
+                  <Link zu={`/azubis/${a.id}`}>
+                    <strong>{a.anzeigename}</strong>
+                  </Link>{' '}
+                  <span className="leise">
+                    {a.beruf ? `${a.beruf} · ` : ''}
+                    {standText(a)}
+                  </span>
                   {a.status === 'gesperrt' && <span className="pille grau">gesperrt</span>}
                 </li>
               ))}

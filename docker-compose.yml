@@ -28,7 +28,10 @@ services:
       PORT: "3000"
       HOST: 0.0.0.0
       DATA_DIR: /app/data
+      CONTENT_DIR: /app/content
       NODE_ENV: production
     volumes:
       # Datenbank und Sicherungen – bleiben bei Updates erhalten. Gehört nie ins Git oder ins Image.
       - ./data:/app/data
+      # Gepflegte Inhalte (Schulferien je Bundesland) nur lesend – Änderungen kommen ohne Neustart an
+      - ./content:/app/content:ro

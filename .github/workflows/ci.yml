@@ -61,6 +61,7 @@ jobs:
           grep -q "Rechte am Datenordner" /tmp/start.log
           grep -q 'Super-Admin „admin“ angelegt' /tmp/start.log
           sudo test -f data/ausbildungsportal.db
+          docker compose exec -T app test -f /app/content/ferien/HH.json
       - name: Sicherung im Container
         run: |
           docker compose exec -T app npm run backup

@@ -73,3 +73,99 @@ export function zeit(iso: string | null): string {
   if (!iso) return '–';
   return new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 }
+
+// ---------- Stammdaten und Azubi-Profil ----------
+
+export interface Beruf {
+  id: number;
+  bezeichnung: string;
+  fachrichtung: string;
+  regeldauer_monate: number;
+}
+
+export interface Berufsschule {
+  id: number;
+  name: string;
+  ort: string;
+  bundesland: string;
+  form: 'block' | 'teilzeit';
+}
+
+export interface Stammdaten {
+  betrieb: { name: string; anschrift: string; bundesland: string };
+  berufe: Beruf[];
+  berufsschulen: Berufsschule[];
+  bundeslaender: { kuerzel: string; name: string }[];
+  ausbilder: { id: number; anzeigename: string }[];
+}
+
+export interface Profil {
+  berufId: number | null;
+  berufsschuleId: number | null;
+  ausbilderId: number | null;
+  ausbildungsbeginn: string;
+  vertragsende: string;
+  verkuerzungMonate: number;
+  verkuerzungArt: 'ende' | 'anfang';
+  verkuerzungGrund: string;
+  vorzeitigeZulassung: boolean;
+  wochenstunden: number;
+}
+
+export interface Stand {
+  phase: 'offen' | 'vor' | 'laufend' | 'beendet';
+  ausbildungsjahr: number | null;
+  beginn: string | null;
+  ende: string | null;
+  monate: number | null;
+  endeVonHand: boolean;
+  tage: number | null;
+}
+
+export interface ProfilAntwort {
+  azubi: { id: number; anzeigename: string; anmeldename: string; status: string };
+  profil: Profil;
+  beruf: Beruf | null;
+  berufsschule: Berufsschule | null;
+  ausbilder: { id: number; anzeigename: string } | null;
+  stand: Stand;
+  hoechsteVerkuerzung: number;
+  bearbeitbar: boolean;
+}
+
+export interface AzubiKurz {
+  id: number;
+  anzeigename: string;
+  anmeldename: string;
+  status: string;
+  beruf: string;
+  phase: Stand['phase'];
+  ausbildungsjahr: number | null;
+  ende: string | null;
+}
+
+export interface ZuweisungZeile {
+  id?: number;
+  beauftragter_id: number;
+  beauftragter?: string;
+  von: string | null;
+  bis: string | null;
+}
+
+/** JJJJ-MM-TT → TT.MM.JJJJ */
+export function datum(iso: string | null | undefined): string {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return '–';
+  return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+}
+
+export function berufName(b: Pick<Beruf, 'bezeichnung' | 'fachrichtung'> | null | undefined): string {
+  return b ? [b.bezeichnung, b.fachrichtung].filter(Boolean).join(' – ') : '';
+}
+
+/** Kurztext zum Stand der Ausbildung, z. B. „2. Ausbildungsjahr · bis 31.07.2028“. */
+export function standText(s: Pick<Stand, 'phase' | 'ausbildungsjahr' | 'ende' | 'beginn'> & { tage?: number | null }): string {
+  if (s.phase === 'offen') return 'Ausbildungsbeginn noch nicht eingetragen';
+  if (s.phase === 'vor') return s.tage != null ? `beginnt in ${s.tage} Tagen (${datum(s.beginn)})` : `beginnt am ${datum(s.beginn)}`;
+  if (s.phase === 'beendet') return `beendet am ${datum(s.ende)}`;
+  return `${s.ausbildungsjahr}. Ausbildungsjahr · bis ${datum(s.ende)}`;
+}

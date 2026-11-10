@@ -1,9 +1,10 @@
 import { timingSafeEqual } from 'node:crypto';
+import { datumOderNull, Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
+import type { Anfrage, Antwort, Ctx, Kontext, Route } from './api-basis';
 import type { Config } from './config';
 import type { DB } from './db';
 import { transaktion } from './db';
 import { heute } from './datum';
-import type { Entra } from './entra';
 import { fehlerText, pkceChallenge, zufall } from './entra';
 import { hashePasswort, pruefePasswort, pruefeRegeln, zufallsPasswort } from './passwort';
 import { leseProtokoll, protokolliere } from './protokoll';
@@ -17,79 +18,10 @@ import {
   sichtbareAzubis,
 } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
+import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, ROLLEN } from './typen';
 import type { BenutzerZeile, Rolle, Zuweisung } from './typen';
 
-/**
- * Die gesamte API als Funktion Anfrage → Antwort, unabhängig vom Webserver.
- * Jede Route nennt in `wer`, wer sie aufrufen darf; geprüft wird das an genau einer Stelle (behandle).
- */
-export interface Anfrage {
-  methode: string;
-  pfad: string;
-  query: URLSearchParams;
-  /** Header-Namen klein geschrieben */
-  headers: Record<string, string | undefined>;
-  cookies: Record<string, string>;
-  body: unknown;
-  ip: string;
-}
-
-export interface Antwort {
-  status: number;
-  body?: unknown;
-  cookies?: string[];
-  redirect?: string;
-}
-
-export interface Kontext {
-  db: DB;
-  cfg: Config;
-  entra: Entra | null;
-  version: string;
-  log: (text: string) => void;
-  jetzt: () => Date;
-  /** Hash eines Zufallspassworts – damit die Prüfung bei unbekanntem Konto gleich lange dauert */
-  dummyHash: string;
-  /** Anmeldeversuche je IP */
-  versuche: Map<string, { anzahl: number; bis: number }>;
-  /** Adressen, für die der Hinweis auf eine unpassende APP_URL schon im Log steht */
-  gemeldeteHerkunft: Set<string>;
-}
-
-export class Fehler extends Error {
-  constructor(
-    public status: number,
-    text: string,
-    public code = '',
-  ) {
-    super(text);
-  }
-}
-
-interface Ctx {
-  k: Kontext;
-  a: Anfrage;
-  /** angemeldetes Konto; bei offenen Routen null */
-  b: BenutzerZeile;
-  token: string | undefined;
-  p: Record<string, string>;
-}
-
-export interface Route {
-  m: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  p: string;
-  /** 'offen' = ohne Anmeldung, 'alle' = jedes angemeldete Konto, sonst die erlaubten Rollen */
-  wer: 'offen' | 'alle' | Rolle[];
-  /** auch erreichbar, solange der Passwortwechsel noch aussteht */
-  trotzWechsel?: boolean;
-  /**
-   * Höchstzahl der Aufrufe je IP in 15 Minuten. Knapp bei der Passwort-Anmeldung (Raten erschweren),
-   * großzügig bei der Microsoft-Anmeldung – dort teilen sich oft viele Nutzer eine IP.
-   */
-  begrenzt?: number;
-  h: (c: Ctx) => Antwort | Promise<Antwort>;
-}
 
 const MAX_FEHLVERSUCHE = 5;
 const WARTEZEIT_MS = 15 * 60 * 1000;
@@ -100,34 +32,9 @@ const FALSCH = 'Anmeldung nicht möglich: Benutzername oder Passwort falsch, ode
 
 // ---------- Hilfen ----------
 
-function istObjekt(x: unknown): x is Record<string, unknown> {
-  return typeof x === 'object' && x !== null && !Array.isArray(x);
-}
+export { Fehler } from './api-basis';
+export type { Anfrage, Antwort, Kontext, Route } from './api-basis';
 
-function text(x: unknown, max: number, feld: string, pflicht = true): string {
-  const s = typeof x === 'string' ? x.trim() : '';
-  if (!s && pflicht) throw new Fehler(400, `${feld} fehlt`);
-  if (s.length > max) throw new Fehler(400, `${feld} ist zu lang`);
-  if (/[\u0000-\u001f\u007f]/.test(s)) throw new Fehler(400, `${feld} enthält unzulässige Zeichen`);
-  return s;
-}
-
-function koerper(c: Ctx): Record<string, unknown> {
-  if (!istObjekt(c.a.body)) throw new Fehler(400, 'Anfrage ohne gültige Daten');
-  return c.a.body;
-}
-
-function idAus(s: string): number {
-  return /^\d{1,12}$/.test(s) ? Number(s) : NaN;
-}
-
-function datumOderNull(x: unknown, feld: string): string | null {
-  if (x === null || x === undefined || x === '') return null;
-  if (typeof x !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(x) || Number.isNaN(Date.parse(`${x}T00:00:00Z`))) {
-    throw new Fehler(400, `${feld} ist kein gültiges Datum`);
-  }
-  return x;
-}
 
 function gleich(a: string, b: string): boolean {
   const x = Buffer.from(a);
@@ -135,10 +42,6 @@ function gleich(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-function holeBenutzer(db: DB, id: number): BenutzerZeile | undefined {
-  if (!Number.isInteger(id)) return undefined;
-  return db.prepare('SELECT * FROM benutzer WHERE id = ?').get(id) as BenutzerZeile | undefined;
-}
 
 function nachAnmeldename(db: DB, name: string): BenutzerZeile | undefined {
   return db.prepare('SELECT * FROM benutzer WHERE anmeldename = ?').get(name) as BenutzerZeile | undefined;
@@ -562,7 +465,8 @@ export const ROUTEN: Route[] = [
     wer: ['ausbilder', 'beauftragter'],
     h: (c) => {
       const ids = sichtbareAzubis(c.k.db, c.b, heute(c.k.jetzt()));
-      const azubis = ids.map((id) => holeBenutzer(c.k.db, id)!).map((z) => ({ id: z.id, anzeigename: z.anzeigename, anmeldename: z.anmeldename, status: z.status }));
+      const tag = heute(c.k.jetzt());
+      const azubis = ids.map((id) => azubiUebersicht(c.k.db, holeBenutzer(c.k.db, id)!, tag));
       return { status: 200, body: { azubis } };
     },
   },
@@ -623,6 +527,8 @@ export const ROUTEN: Route[] = [
     // der Super-Admin sieht nur Konto-Ereignisse
     h: (c) => ({ status: 200, body: { eintraege: leseProtokoll(c.k.db, c.b.rolle === 'admin', Number(c.a.query.get('limit')) || 200) } }),
   },
+
+  ...STAMMDATEN_ROUTEN,
 ];
 
 // ---------- Verteiler ----------
