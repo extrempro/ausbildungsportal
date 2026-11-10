@@ -2,18 +2,18 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.4.0 (Phase 2 – Stammdaten).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten und Azubi-Profile sind fertig, dazu das Docker-Setup. Berichtsheft und Ausbildungsplan folgen in den nächsten Phasen.
+**Stand: Version 0.5.0 (Phase 3 – Berichtsheft).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile und das Berichtsheft mit Abzeichnen sind fertig, dazu das Docker-Setup. Der Ausbildungsplan folgt in der nächsten Phase.
 
-> **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft ist bisher nur gegen einen nachgebildeten Anbieter getestet, nicht gegen ein echtes Entra-Verzeichnis. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
+> **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
 ## Rollen
 
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
 | Super-Admin | lokal mit Passwort | ausschließlich Konten anlegen, sperren und löschen – kein Zugriff auf Pläne und Berichte |
-| Ausbilder | Microsoft | alle Azubis sehen, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
-| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, im Zeitraum der Zuweisung abzeichnen |
-| Azubi | Microsoft | nur die eigenen Daten |
+| Ausbilder | Microsoft | alle Azubis sehen, alle Nachweise abzeichnen, zurückgeben und eine Abzeichnung aufheben, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
+| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben |
+| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen |
 
 Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
 
@@ -87,6 +87,15 @@ Die App ist nicht auf einen Beruf oder ein Bundesland festgelegt:
 - **Berufe** legen die Ausbilder unter „Stammdaten“ an, jeweils mit Regeldauer in Monaten (meist 24, 36 oder 42). Aus Ausbildungsbeginn, Regeldauer und Verkürzung berechnet die App Ausbildungsjahr und Ende. Sie rechnet nur – ob eine Verkürzung zulässig ist, entscheidet die zuständige Kammer.
 - **Feiertage** richten sich nach dem Bundesland des Betriebs und werden für alle 16 Länder berechnet. Feiertage, die nur in Teilen eines Landes gelten (z. B. Mariä Himmelfahrt in Bayern, Fronleichnam in Teilen von Sachsen und Thüringen), sind als „teilweise“ gekennzeichnet.
 - **Schulferien** richten sich nach dem Bundesland der Berufsschule und kommen aus Dateien in `content/ferien/`. Mitgeliefert ist bisher nur Hamburg; wie man weitere Länder ergänzt, steht in [content/README.md](content/README.md).
+
+## Berichtsheft
+
+Ein Ausbildungsnachweis je Kalenderwoche, von der ersten bis zur laufenden Woche der Ausbildung. Voraussetzung ist ein Ausbildungsbeginn im Azubi-Profil.
+
+- **Schreiben:** Nur der Azubi selbst. Abschnitte: betriebliche Tätigkeiten, Unterweisungen und Schulungen, Berufsschule, Abwesenheit (Urlaub, Krankheit, Feiertag …), jeweils mit Stunden. Landesweite Feiertage des Betriebs-Bundeslands sind in einer neuen Woche vorbelegt.
+- **Ablauf:** Entwurf → eingereicht → abgezeichnet. Ausbilder und zuständige Beauftragte können mit Kommentar zurückgeben. Ein abgezeichneter Nachweis ist gesperrt; nur ein Ausbilder kann die Abzeichnung mit Begründung aufheben. Jeder Schritt steht im Verlauf des Nachweises.
+- **Unterschrift:** Jede Person hinterlegt unter „Konto“ einmal ihre Unterschrift (mit Finger, Stift oder Maus gezeichnet). Beim Einreichen und Abzeichnen wird eine Kopie mit Name und Zeitpunkt am Nachweis gespeichert. Das ist ein Unterschriftsbild, **keine qualifizierte elektronische Signatur**. Ob die zuständige Kammer diese Form des Nachweises anerkennt, bitte dort klären.
+- **Drucken:** Einzelne oder alle Nachweise über den Druckdialog des Browsers, dort auch „Als PDF speichern“.
 
 ## Sicherheit in Kürze
 

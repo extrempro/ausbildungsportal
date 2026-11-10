@@ -18,6 +18,7 @@ import {
   sichtbareAzubis,
 } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
+import { BERICHT_ROUTEN } from './berichte';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, ROLLEN } from './typen';
 import type { BenutzerZeile, Rolle, Zuweisung } from './typen';
@@ -529,6 +530,7 @@ export const ROUTEN: Route[] = [
   },
 
   ...STAMMDATEN_ROUTEN,
+  ...BERICHT_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

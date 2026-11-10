@@ -77,6 +77,19 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/azubis/:id/profil': 'ausbilder,beauftragter,azubi',
     'PUT /api/azubis/:id/profil': 'ausbilder',
     'GET /api/kalender': 'ausbilder,beauftragter,azubi',
+    'GET /api/ich/unterschrift': 'ausbilder,beauftragter,azubi',
+    'PUT /api/ich/unterschrift': 'ausbilder,beauftragter,azubi',
+    'DELETE /api/ich/unterschrift': 'ausbilder,beauftragter,azubi',
+    'GET /api/azubis/:id/berichte': 'ausbilder,beauftragter,azubi',
+    'GET /api/azubis/:id/berichte/:montag': 'ausbilder,beauftragter,azubi',
+    'PUT /api/azubis/:id/berichte/:montag': 'azubi',
+    'DELETE /api/azubis/:id/berichte/:montag': 'azubi',
+    'POST /api/azubis/:id/berichte/:montag/einreichen': 'azubi',
+    'POST /api/azubis/:id/berichte/:montag/zurueckziehen': 'azubi',
+    'GET /api/abzeichnen': 'ausbilder,beauftragter',
+    'POST /api/berichte/abzeichnen': 'ausbilder,beauftragter',
+    'POST /api/azubis/:id/berichte/:montag/zurueckgeben': 'ausbilder,beauftragter',
+    'POST /api/azubis/:id/berichte/:montag/oeffnen': 'ausbilder',
   });
 });
 
