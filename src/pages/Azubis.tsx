@@ -32,7 +32,7 @@ export function Azubis({ ich }: { ich: Konto }) {
         </p>
       ) : (
         <div className="karte tabelle-rahmen">
-          <table>
+          <table className="stapel">
             <thead>
               <tr>
                 <th>Name</th>
@@ -43,7 +43,7 @@ export function Azubis({ ich }: { ich: Konto }) {
             <tbody>
               {(azubis ?? []).map((a) => (
                 <tr key={a.id}>
-                  <td>
+                  <td className="kopf">
                     <Link zu={`/azubis/${a.id}`}>
                       <strong>{a.anzeigename}</strong>
                     </Link>
@@ -51,8 +51,8 @@ export function Azubis({ ich }: { ich: Konto }) {
                     <br />
                     <span className="leise klein">{a.anmeldename}</span>
                   </td>
-                  <td>{a.beruf || <span className="leise">noch nicht eingetragen</span>}</td>
-                  <td>{standText(a)}</td>
+                  <td data-label="Beruf">{a.beruf || <span className="leise">noch nicht eingetragen</span>}</td>
+                  <td data-label="Stand">{standText(a)}</td>
                 </tr>
               ))}
             </tbody>

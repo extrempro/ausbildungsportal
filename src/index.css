@@ -18,9 +18,12 @@
   --c-gruen-fg: #166534;
   --c-schule: #7c3aed;
   --c-schule-soft: #ede9fe;
-  --c-ferien: #0d9488;
+  --c-ferien: #0f766e;
   --c-ferien-soft: #ccfbf1;
   --c-track: #e2e8f0;
+  /* Rand von Eingabefeldern: mindestens 3:1 zum Hintergrund, damit das Feld als Feld erkennbar ist */
+  --c-rand-feld: #7c8ba1;
+  --c-schatten: 0 1px 2px rgba(15, 23, 42, 0.05), 0 12px 28px -16px rgba(15, 23, 42, 0.18);
   color-scheme: light;
 }
 
@@ -41,11 +44,13 @@ html.dark {
   --c-rot-fg: #fca5a5;
   --c-gruen-bg: rgba(22, 163, 74, 0.28);
   --c-gruen-fg: #86efac;
-  --c-schule: #a78bfa;
+  --c-schule: #c4b5fd;
   --c-schule-soft: rgba(124, 58, 237, 0.28);
   --c-ferien: #2dd4bf;
   --c-ferien-soft: rgba(13, 148, 136, 0.25);
   --c-track: #334155;
+  --c-rand-feld: #8493a8;
+  --c-schatten: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -16px rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
 
@@ -67,8 +72,9 @@ body {
 }
 
 h1 {
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1.2;
+  letter-spacing: -0.02em;
   margin: 0 0 8px;
 }
 
@@ -86,8 +92,13 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--c-accent);
+  outline: 3px solid var(--c-accent);
   outline-offset: 2px;
+}
+
+/* der Inhaltsbereich bekommt den Fokus nur als Sprungziel – ohne Rahmen */
+main:focus {
+  outline: none;
 }
 
 main {
@@ -122,7 +133,23 @@ main.schmal {
   clip-path: inset(50%);
 }
 
-/* Navigation */
+/* ---------- Kopfzeile und Navigation ---------- */
+.sprung {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 100;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-weight: 600;
+}
+
+.sprung:focus {
+  top: 8px;
+}
+
 .leiste {
   position: sticky;
   top: 0;
@@ -131,55 +158,201 @@ main.schmal {
   border-bottom: 1px solid var(--c-border);
 }
 
+@supports (backdrop-filter: blur(12px)) {
+  .leiste {
+    background: color-mix(in srgb, var(--c-card) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+  }
+}
+
 .leiste-innen {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 8px 16px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 8px 24px;
+  max-width: 1200px;
+  min-height: 60px;
+  margin: 0 auto;
+  padding: 6px 16px;
 }
 
 .marke {
-  font-weight: 700;
-  color: var(--c-text);
-  text-decoration: none;
-}
-
-.leiste nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  flex: 1;
-}
-
-.leiste nav a {
   display: inline-flex;
   align-items: center;
+  gap: 10px;
   min-height: 44px;
-  padding: 0 12px;
-  border-radius: 8px;
-  color: var(--c-muted);
+  color: var(--c-text);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.leiste nav a:hover {
+.marke img {
+  border-radius: 7px;
+}
+
+.haupt-nav {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.haupt-nav > a,
+.menue-knopf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--c-muted);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.haupt-nav > a:hover,
+.menue-knopf:hover {
+  background: var(--c-chip);
   color: var(--c-text);
 }
 
-.leiste nav a[aria-current='page'] {
+.haupt-nav > a[aria-current='page'],
+.menue-knopf.aktiv,
+.menue-knopf[aria-expanded='true'] {
   background: var(--c-accent-soft);
   color: var(--c-accent);
   font-weight: 600;
 }
 
-.wer {
+.menue {
+  position: relative;
+}
+
+.menue.ich {
+  margin-left: auto;
+}
+
+.menue.ich .menue-knopf {
+  padding: 0 8px 0 4px;
+  color: var(--c-text);
+}
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ich-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.ich-name small {
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.menue-flaeche,
+.bogen-liste {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.menue-flaeche {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  min-width: 240px;
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  background: var(--c-card);
+  box-shadow: var(--c-schatten);
+}
+
+.menue-flaeche.rechts {
+  right: 0;
+  left: auto;
+}
+
+.menue-flaeche a,
+.menue-flaeche button,
+.bogen-liste a,
+.bogen-liste button {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 14px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menue-flaeche a:hover,
+.menue-flaeche button:hover,
+.bogen-liste a:hover,
+.bogen-liste button:hover {
+  background: var(--c-chip);
+}
+
+.menue-flaeche a[aria-current='page'],
+.bogen-liste a[aria-current='page'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.menue-flaeche svg,
+.bogen-liste svg {
+  flex: none;
   color: var(--c-muted);
+}
+
+.menue-flaeche [aria-current='page'] svg,
+.bogen-liste [aria-current='page'] svg {
+  color: inherit;
+}
+
+.trenner {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--c-border);
+}
+
+/* Leiste unten und Bogen „Mehr“ – nur auf Handy und Tablet (siehe Abschnitt Breiten am Ende) */
+.tabs,
+.bogen-hintergrund {
+  display: none;
 }
 
 .fuss {
@@ -194,10 +367,10 @@ main.schmal {
 .karte {
   background: var(--c-card);
   border: 1px solid var(--c-border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
   margin: 0 0 24px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--c-schatten);
 }
 
 details.karte > summary {
@@ -237,8 +410,8 @@ select {
   font-weight: 400;
   color: var(--c-text);
   background: var(--c-bg);
-  border: 1px solid var(--c-border);
-  border-radius: 8px;
+  border: 1px solid var(--c-rand-feld);
+  border-radius: 10px;
 }
 
 .knopf {
@@ -1000,8 +1173,8 @@ fieldset.abschnitt legend {
   padding-top: 4px;
 }
 
-.kw-kopf.vergangen {
-  opacity: 0.7;
+.kw-kopf.vergangen strong {
+  color: var(--c-muted);
 }
 
 .kw-aktionen {
@@ -1020,8 +1193,8 @@ fieldset.abschnitt legend {
 }
 
 .kw .plus {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 8px;
   background: none;
@@ -1029,7 +1202,6 @@ fieldset.abschnitt legend {
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.5;
 }
 
 .kw:hover .plus,
@@ -1107,9 +1279,9 @@ a.bericht-link:hover {
   flex: none;
   width: 6.5rem;
   color: var(--art);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -1180,9 +1352,9 @@ a.bericht-link:hover {
   padding-left: 8px;
   border-left: 4px solid var(--art, var(--c-muted));
   color: var(--art, var(--c-muted));
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -1567,5 +1739,366 @@ td select {
   .knopf,
   .leiste nav a {
     transition: background-color 0.15s, color 0.15s;
+  }
+}
+
+/* ---------- Bedienflächen: mindestens 40 × 40 px, auch für Finger (ISO 9241-110 Steuerbarkeit, WCAG 2.5.8) ---------- */
+.knopf {
+  border-radius: 10px;
+}
+
+.knopf:not(:disabled):hover {
+  filter: brightness(0.94);
+}
+
+.knopf.symbol {
+  min-width: 44px;
+}
+
+.umschalter button {
+  min-height: 44px;
+}
+
+.link-knopf,
+td a,
+th[scope='row'] a,
+.liste li a,
+.kennzahl a,
+p.klein > a:only-child,
+.filter > a,
+a.bericht-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.eintrag-kopf .link-knopf {
+  padding: 0 6px;
+}
+
+a.bericht-link {
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fuss a {
+  display: inline-block;
+  padding: 10px 8px;
+}
+
+label.haken input {
+  width: 22px;
+  height: 22px;
+}
+
+label.haken.nur-haken {
+  flex: none;
+  justify-content: center;
+  gap: 0;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.eintrag-kopf input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+}
+
+details.karte > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+body.dialog-offen {
+  overflow: hidden;
+}
+
+/* ---------- Startseite: Kacheln ---------- */
+.kacheln {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kachel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  background: var(--c-card);
+  box-shadow: var(--c-schatten);
+  color: var(--c-text);
+  text-decoration: none;
+}
+
+a.kachel:hover {
+  border-color: var(--c-accent);
+}
+
+.kachel-wert {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.kachel.warnung .kachel-wert {
+  color: var(--c-rot-fg);
+}
+
+.kachel-text {
+  font-weight: 600;
+}
+
+.kachel-zusatz {
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+.schritte {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.schritte li {
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+/* ---------- Breiten: PC ab 1024 px, darunter Tablet und Handy ---------- */
+@media (max-width: 1023px) {
+  .haupt-nav,
+  .menue.ich {
+    display: none;
+  }
+
+  .leiste-innen {
+    min-height: 52px;
+    padding: 4px 16px;
+  }
+
+  /* Leiste unten: die wichtigsten Bereiche, mit dem Daumen erreichbar */
+  .tabs {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--c-border);
+    background: var(--c-card);
+  }
+
+  .tabs a,
+  .tabs button {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    max-width: 140px;
+    min-height: 56px;
+    padding: 4px 0;
+    letter-spacing: -0.01em;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: var(--c-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .tabs span {
+    overflow: hidden;
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .tabs a[aria-current='page'],
+  .tabs button.aktiv,
+  .tabs button[aria-expanded='true'] {
+    background: var(--c-accent-soft);
+    color: var(--c-accent);
+  }
+
+  .bogen-hintergrund {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+  }
+
+  .bogen {
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0;
+    background: var(--c-card);
+    box-shadow: var(--c-schatten);
+  }
+
+  .bogen-kopf {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 6px 12px;
+  }
+
+  .bogen-kopf .knopf {
+    margin-left: auto;
+  }
+
+  .bogen .ueberschrift-klein {
+    display: block;
+    padding: 8px 12px 0;
+  }
+
+  .fuss {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  /* Versionshinweise und Hilfe stehen hier unter „Mehr“ */
+  .fuss-links {
+    display: none;
+  }
+
+  /* Dialoge kommen von unten und nutzen die ganze Breite */
+  .dialog-hintergrund {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .dialog {
+    max-width: 640px;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+@media (max-width: 700px) {
+  main {
+    padding: 20px 12px 32px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .karte {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  /* Tabellen als Liste: jede Zeile ein Block, die Spaltenüberschrift steht vor dem Wert */
+  table.stapel thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  table.stapel,
+  table.stapel tbody,
+  table.stapel tr,
+  table.stapel td {
+    display: block;
+  }
+
+  table.stapel tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  table.stapel tr:last-child {
+    border-bottom: 0;
+  }
+
+  table.stapel td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 32px;
+    padding: 2px 16px;
+    border: 0;
+    text-align: right;
+    white-space: normal;
+  }
+
+  table.stapel td[data-label]::before {
+    content: attr(data-label);
+    flex: none;
+    color: var(--c-muted);
+    font-size: 14px;
+    text-align: left;
+  }
+
+  table.stapel td.kopf {
+    display: block;
+    font-size: 17px;
+    text-align: left;
+  }
+
+  table.stapel td:empty {
+    display: none;
+  }
+
+  table.stapel td select {
+    max-width: 60%;
+  }
+
+  .kacheln {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .kachel {
+    padding: 14px;
+  }
+
+  .kachel-wert {
+    font-size: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .knopf,
+  .haupt-nav > a,
+  .menue-knopf,
+  .kachel,
+  .tabs a,
+  .tabs button {
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, filter 0.15s;
+  }
+}
+
+@media print {
+  .tabs,
+  .sprung,
+  .bogen-hintergrund {
+    display: none !important;
   }
 }

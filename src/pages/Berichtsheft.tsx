@@ -13,7 +13,7 @@ const FILTER: { wert: BerichtStatus | 'alle'; text: string }[] = [
   { wert: 'abgezeichnet', text: 'Abgezeichnet' },
 ];
 
-/** Liste aller Wochen der Ausbildung mit dem Stand des jeweiligen Nachweises. */
+/** Liste aller Wochen der Ausbildung mit dem Stand des jeweiligen Berichts. */
 export function Berichtsheft({ azubiId }: { azubiId: number }) {
   const [daten, setDaten] = useState<BerichtListe | null>(null);
   const [fehler, setFehler] = useState('');
@@ -46,7 +46,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
       )}
       <h1>Berichtsheft{daten.eigenes ? '' : ` von ${daten.azubi.anzeigename}`}</h1>
       <p className="leise">
-        Ein Ausbildungsnachweis je Kalenderwoche. {daten.eigenes ? 'Du schreibst und reichst ein; dein Ausbilder oder deine Ausbildungsbeauftragten zeichnen ab.' : 'Nur der Azubi selbst kann die Nachweise bearbeiten.'}
+        Ein Bericht (Ausbildungsnachweis) je Kalenderwoche. {daten.eigenes ? 'Du schreibst und reichst ein; dein Ausbilder oder deine Ausbildungsbeauftragten zeichnen ab.' : 'Nur der Azubi selbst kann die Berichte bearbeiten.'}
       </p>
 
       {daten.beginnFehlt ? (
@@ -63,12 +63,12 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
             ))}
             {anzahl('alle') > anzahl('fehlt') && (
               <Link zu={`${basis}/druck`} className="knopf schlicht rechts">
-                Alle Nachweise drucken
+                Alle Berichte drucken
               </Link>
             )}
           </div>
           <div className="karte tabelle-rahmen">
-            <table>
+            <table className="stapel">
               <thead>
                 <tr>
                   <th>Woche</th>
@@ -80,21 +80,23 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
               <tbody>
                 {sichtbar.map((w) => (
                   <tr key={w.montag}>
-                    <td className="eng">
+                    <td className="eng kopf">
                       <Link zu={`${basis}/${w.montag}`}>
                         <strong>
                           KW {w.kw}/{w.jahr}
                         </strong>
                       </Link>
                     </td>
-                    <td className="eng">
-                      {wocheText(w.montag, w.sonntag)}
-                      {w.ausbildungsjahr ? <span className="leise"> · {w.ausbildungsjahr}. Jahr</span> : null}
+                    <td className="eng" data-label="Zeitraum">
+                      <span>
+                        {wocheText(w.montag, w.sonntag)}
+                        {w.ausbildungsjahr ? <span className="leise"> · {w.ausbildungsjahr}. Jahr</span> : null}
+                      </span>
                     </td>
-                    <td>
+                    <td data-label="Stand">
                       <span className={`pille ${STATUS_FARBE[w.status]}`}>{STATUS_TEXT[w.status]}</span>
                     </td>
-                    <td className="zahl">{w.status === 'fehlt' ? '–' : `${h(w.stunden)} / ${h(daten.soll)}`}</td>
+                    <td className="zahl" data-label="Stunden">{w.status === 'fehlt' ? '–' : `${h(w.stunden)} / ${h(daten.soll)}`}</td>
                   </tr>
                 ))}
                 {sichtbar.length === 0 && (
@@ -113,7 +115,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
   );
 }
 
-/** Alle vorhandenen Nachweise untereinander – jede Woche auf einer eigenen Druckseite. */
+/** Alle vorhandenen Berichte untereinander – jede Woche auf einer eigenen Druckseite. */
 export function BerichteDruck({ azubiId }: { azubiId: number }) {
   const [daten, setDaten] = useState<BerichtListe | null>(null);
   const [fehler, setFehler] = useState('');
@@ -133,9 +135,9 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         <p className="klein">
           <Link zu={berichtsheftPfad(azubiId, daten.eigenes)}>← Berichtsheft</Link>
         </p>
-        <h1>Nachweise drucken</h1>
+        <h1>Berichte drucken</h1>
         <p className="leise">
-          {daten.azubi.anzeigename} · {berichte.length} Nachweise, jeder auf einer eigenen Seite. Über „Drucken“ lässt sich im Druckdialog auch „Als PDF speichern“ wählen.
+          {daten.azubi.anzeigename} · {berichte.length} Berichte, jeder auf einer eigenen Seite. Über „Drucken“ lässt sich im Druckdialog auch „Als PDF speichern“ wählen.
         </p>
         <div className="filter">
           <button type="button" className="knopf schlicht" aria-pressed={nur === 'alle'} onClick={() => setNur('alle')}>
@@ -154,12 +156,12 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
           <BerichtBlatt b={b} />
         </section>
       ))}
-      {berichte.length === 0 && <p className="karte leise">Keine Nachweise vorhanden.</p>}
+      {berichte.length === 0 && <p className="karte leise">Keine Berichte vorhanden.</p>}
     </>
   );
 }
 
-/** Warteliste: eingereichte Nachweise, die das angemeldete Konto abzeichnen darf. */
+/** Warteliste: eingereichte Berichte, die das angemeldete Konto abzeichnen darf. */
 export function Abzeichnen() {
   const [offen, setOffen] = useState<OffenerBericht[] | null>(null);
   const [hatUnterschrift, setHatUnterschrift] = useState(true);
@@ -182,7 +184,7 @@ export function Abzeichnen() {
     try {
       const r = await api<{ abgezeichnet: number }>('POST', '/api/berichte/abzeichnen', { berichte });
       await lade();
-      setMeldung({ text: `${r.abgezeichnet} ${r.abgezeichnet === 1 ? 'Nachweis' : 'Nachweise'} abgezeichnet.`, fehler: false });
+      setMeldung({ text: `${r.abgezeichnet} ${r.abgezeichnet === 1 ? 'Bericht' : 'Berichte'} abgezeichnet.`, fehler: false });
     } catch (e) {
       setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
     }
@@ -197,7 +199,7 @@ export function Abzeichnen() {
   return (
     <>
       <h1>Abzeichnen</h1>
-      <p className="leise">Eingereichte Nachweise, die auf deine Unterschrift warten. Zum Lesen die Woche öffnen; mehrere lassen sich gemeinsam abzeichnen.</p>
+      <p className="leise">Eingereichte Berichte, die auf deine Unterschrift warten. Zum Lesen die Woche öffnen; mehrere lassen sich gemeinsam abzeichnen.</p>
       {!hatUnterschrift && (
         <p className="hinweis">
           Zum Abzeichnen fehlt noch deine Unterschrift. <Link zu="/konto">Unter „Konto“ hinterlegen</Link>
@@ -211,15 +213,15 @@ export function Abzeichnen() {
       {offen === null ? (
         <p className="leise">Lädt …</p>
       ) : offen.length === 0 ? (
-        <p className="karte leise">Es wartet kein Nachweis auf dich.</p>
+        <p className="karte leise">Es wartet kein Bericht auf dich.</p>
       ) : (
         <>
           <div className="karte tabelle-rahmen">
-            <table>
+            <table className="stapel">
               <thead>
                 <tr>
                   <th>
-                    <label className="haken">
+                    <label className="haken nur-haken">
                       <input
                         type="checkbox"
                         aria-label="Alle auswählen"
@@ -236,28 +238,30 @@ export function Abzeichnen() {
               <tbody>
                 {offen.map((o) => (
                   <tr key={schluessel(o)}>
-                    <td>
-                      <label className="haken">
+                    <td data-label="Auswählen">
+                      <label className="haken nur-haken">
                         <input type="checkbox" aria-label={`${o.azubi}, KW ${o.kw} auswählen`} checked={gewaehlt.has(schluessel(o))} onChange={() => schalte(schluessel(o))} />
                       </label>
                     </td>
-                    <td>{o.azubi}</td>
-                    <td>
-                      <Link zu={`/azubis/${o.azubiId}/berichtsheft/${o.montag}`}>
-                        <strong>
-                          KW {o.kw}/{o.jahr}
-                        </strong>
-                      </Link>{' '}
-                      <span className="leise">{wocheText(o.montag, o.sonntag)}</span>
+                    <td data-label="Azubi">{o.azubi}</td>
+                    <td data-label="Woche">
+                      <span>
+                        <Link zu={`/azubis/${o.azubiId}/berichtsheft/${o.montag}`}>
+                          <strong>
+                            KW {o.kw}/{o.jahr}
+                          </strong>
+                        </Link>{' '}
+                        <span className="leise">{wocheText(o.montag, o.sonntag)}</span>
+                      </span>
                     </td>
-                    <td className="zahl">{h(o.stunden)}</td>
+                    <td className="zahl" data-label="Stunden">{h(o.stunden)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <button type="button" className="knopf" disabled={gewaehlt.size === 0 || !hatUnterschrift} onClick={() => void zeichneAb()}>
-            {gewaehlt.size === 0 ? 'Ausgewählte abzeichnen' : `${gewaehlt.size} ${gewaehlt.size === 1 ? 'Nachweis' : 'Nachweise'} abzeichnen`}
+            {gewaehlt.size === 0 ? 'Ausgewählte abzeichnen' : `${gewaehlt.size} ${gewaehlt.size === 1 ? 'Bericht' : 'Berichte'} abzeichnen`}
           </button>
         </>
       )}

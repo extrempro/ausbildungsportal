@@ -52,7 +52,7 @@ export function Konten({ ich }: { ich: Konto }) {
   const loeschen = (k: Konto) => {
     const frage =
       k.rolle === 'azubi'
-        ? `Konto „${k.anzeigename}“ mit allen Daten dieses Azubis endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Wenn die Nachweise noch gebraucht werden, vorher exportieren – oder das Konto nur sperren.`
+        ? `Konto „${k.anzeigename}“ mit allen Daten dieses Azubis endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Wenn die Berichte noch gebraucht werden, vorher exportieren – oder das Konto nur sperren.`
         : `Konto „${k.anzeigename}“ endgültig löschen? Das lässt sich nicht rückgängig machen.`;
     if (window.confirm(frage)) void tue(() => api('DELETE', `/api/konten/${k.id}`));
   };
@@ -137,7 +137,7 @@ export function Konten({ ich }: { ich: Konto }) {
       </section>
 
       <div className="karte tabelle-rahmen">
-        <table>
+        <table className="stapel">
           <thead>
             <tr>
               <th>Name</th>
@@ -152,13 +152,13 @@ export function Konten({ ich }: { ich: Konto }) {
           <tbody>
             {(daten?.konten ?? []).map((k) => (
               <tr key={k.id}>
-                <td>
+                <td className="kopf">
                   <strong>{k.anzeigename}</strong>
                   {k.id === ich.id && <span className="leise"> (ich)</span>}
                   <br />
                   <span className="leise klein">{k.anmeldename}</span>
                 </td>
-                <td>
+                <td data-label="Rolle">
                   {k.verwaltbar && k.rolle !== 'admin' ? (
                     <select
                       aria-label={`Rolle von ${k.anzeigename}`}
@@ -180,7 +180,7 @@ export function Konten({ ich }: { ich: Konto }) {
                     ROLLE_TEXT[k.rolle]
                   )}
                 </td>
-                <td>
+                <td data-label="Stand">
                   {k.status === 'gesperrt' ? (
                     <span className="pille grau">gesperrt</span>
                   ) : k.verknuepft ? (
@@ -189,7 +189,7 @@ export function Konten({ ich }: { ich: Konto }) {
                     <span className="pille gelb">wartet auf erste Anmeldung</span>
                   )}
                 </td>
-                <td className="eng">{zeit(k.letzteAnmeldung)}</td>
+                <td className="eng" data-label="Letzte Anmeldung">{zeit(k.letzteAnmeldung)}</td>
                 <td>
                   {k.verwaltbar && (
                     <div className="aktionen">
