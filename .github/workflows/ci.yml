@@ -21,3 +21,64 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  docker:
+    # Baut das Image und prüft, dass der Container startet, gesund wird und seine Daten behält.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose-Dateien prüfen
+        run: |
+          docker compose config --quiet
+          cp docker-compose.override.example.yml docker-compose.override.yml
+          docker compose config > /tmp/compose.txt
+          grep -q '8989' /tmp/compose.txt
+          rm docker-compose.override.yml
+      - name: Datenordner für den Container-Benutzer (UID 1000)
+        run: mkdir -p data && sudo chown 1000:1000 data
+      - name: Bauen und starten
+        run: docker compose up -d --build
+      - name: Warten, bis der Container gesund ist
+        run: |
+          for i in $(seq 1 45); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ausbildungsportal 2>/dev/null || true)
+            [ "$status" = "healthy" ] && break
+            sleep 2
+          done
+          docker compose logs app > /tmp/start.log 2>&1
+          sed 's/\(Startpasswort[^:]*: \).*/\1(ausgeblendet)/' /tmp/start.log
+          [ "$status" = "healthy" ]
+      - name: Erreichbarkeit und Benutzer prüfen
+        run: |
+          curl -fsS http://127.0.0.1:3000/api/health -o /tmp/health.json
+          grep -q '"ok":true' /tmp/health.json
+          curl -fsS http://127.0.0.1:3000/ -o /tmp/start.html
+          grep -q 'Ausbildungsportal' /tmp/start.html
+          curl -fsS http://127.0.0.1:3000/verwaltung/konten -o /tmp/konten.html
+          grep -q 'Ausbildungsportal' /tmp/konten.html
+          test "$(docker compose exec -T app id -u)" = "1000"
+          grep -q 'Super-Admin „admin“ angelegt' /tmp/start.log
+          sudo test -f data/ausbildungsportal.db
+      - name: Sicherung im Container
+        run: |
+          docker compose exec -T app npm run backup
+          sudo sh -c 'ls data/backups/' > /tmp/sicherungen.txt
+          grep -q 'manuell' /tmp/sicherungen.txt
+      - name: Neustart behält die Daten
+        run: |
+          docker compose down
+          docker compose up -d
+          for i in $(seq 1 45); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ausbildungsportal 2>/dev/null || true)
+            [ "$status" = "healthy" ] && break
+            sleep 2
+          done
+          [ "$status" = "healthy" ]
+          # der Super-Admin darf nicht noch einmal angelegt werden
+          docker compose logs app > /tmp/neustart.log 2>&1
+          ! grep -q 'Super-Admin „admin“ angelegt' /tmp/neustart.log
+      - name: Nicht aus dem Netz erreichbar (nur 127.0.0.1)
+        run: |
+          docker port ausbildungsportal > /tmp/port.txt
+          cat /tmp/port.txt
+          grep -q '^3000/tcp -> 127.0.0.1:3000$' /tmp/port.txt

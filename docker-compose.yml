@@ -1,0 +1,34 @@
+# Ausbildungsportal mit Docker (Docker Compose ab Version 2.24)
+#   Starten:      docker compose up -d --build
+#   Logs:         docker compose logs -f app      (beim ersten Start steht hier das Startpasswort des Super-Admins)
+#   Stoppen:      docker compose down             (die Daten in ./data bleiben erhalten)
+#   Sicherung:    docker compose exec app npm run backup
+#   Notfall:      docker compose exec app npm run admin-reset
+
+services:
+  app:
+    build:
+      context: .
+    image: ausbildungsportal:latest
+    container_name: ausbildungsportal
+    restart: unless-stopped
+    ports:
+      # Nur auf diesem Rechner erreichbar – gedacht für einen Reverse Proxy mit HTTPS davor.
+      # Eigenen Port oder Freigabe im Netz nicht hier ändern, sondern in docker-compose.override.yml
+      # (Vorlage: docker-compose.override.example.yml).
+      - "127.0.0.1:3000:3000"
+    # Einstellungen aus .env (Vorlage: .env.example): APP_URL, ENTRA_*, TRUST_PROXY, beim ersten Start ADMIN_*.
+    # Fehlt die Datei, startet die App mit Standardwerten; dann kann sich nur der Super-Admin anmelden.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: Europe/Berlin
+      # im Container fest – nicht über .env ändern (Port außen siehe oben bzw. Override-Datei)
+      PORT: "3000"
+      HOST: 0.0.0.0
+      DATA_DIR: /app/data
+      NODE_ENV: production
+    volumes:
+      # Datenbank und Sicherungen – bleiben bei Updates erhalten. Gehört nie ins Git oder ins Image.
+      - ./data:/app/data
