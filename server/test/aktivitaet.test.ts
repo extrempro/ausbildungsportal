@@ -111,7 +111,7 @@ test('Glocke: eine übernommene Planvorlage zählt mit allen Einträgen; alte Ak
   assert.equal(v.status, 201);
   assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan/vorlage`, { cookies, body: { vorlageId: koerper(v).vorlage.id } })).status, 200);
   const a = await glocke(w, w.azubi);
-  assert.deepEqual([a.neu, a.gruppen[0].anzahl, a.gruppen[0].titel], [2, 2, ['Vorlage „Erstes Jahr“']]);
+  assert.deepEqual([a.neu, a.gruppen[0].anzahl, a.gruppen[0].titel], [2, 2, ['Baustein „Erstes Jahr“']]);
   w.u.uhr.jetzt = new Date('2027-01-20T09:00:00Z');
   await lege(w, w.ausbilder, 'Neu im Januar');
   const b = await glocke(w, w.azubi);

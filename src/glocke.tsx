@@ -85,7 +85,7 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
         icon: 'plan',
         farbe: 'blau',
         kopf: n === 1 ? 'Neuer Eintrag im Ausbildungsplan' : `${n} neue Einträge im Ausbildungsplan`,
-        mitte: aufzaehlung(g.titel, g.titel.some((t) => t.startsWith('Vorlage ')) ? 0 : Math.max(0, n - g.titel.length)),
+        mitte: aufzaehlung(g.titel, g.titel.some((t) => t.startsWith('Baustein ') || t.startsWith('Vorlage ')) ? 0 : Math.max(0, n - g.titel.length)),
         zu: azubi ? '/' : `/azubis/${g.azubiId}/plan`,
       };
     case 'bericht_eingereicht':

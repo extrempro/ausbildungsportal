@@ -556,6 +556,8 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const [entwurf, setEntwurf] = useState<Entwurf | null>(null);
   const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
   const [vorlage, setVorlage] = useState('');
+  // Startwoche für „Baustein einfügen“; leer = Vorschlag (laufende Woche bzw. erste Woche der Ausbildung)
+  const [bausteinAb, setBausteinAb] = useState('');
   const [nurBelegt, setNurBelegtRoh] = useState(() => lies('plan-nur-belegt') === '1');
   const [zeigeFrei, setZeigeFreiRoh] = useState(() => lies('plan-ferien') !== '0');
   const setNurBelegt = (x: boolean) => {
@@ -617,6 +619,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   if (!d) return <p className="leise">Lädt …</p>;
 
   const aktuelle = wochen.find((w) => w.montag <= d.heute && w.sonntag >= d.heute) ?? null;
+  const bausteinVorschlag = d.beginn && d.ende && d.heute >= d.beginn && d.heute <= d.ende ? d.heute : (d.beginn ?? '');
   const dieseWoche = aktuelle?.montag ?? '';
   const naechste = aktuelle ? (wochen.find((w) => w.montag === plusTage(aktuelle.montag, 7)) ?? null) : null;
   const gesamt = wochen.filter((w) => w.nummer > 0).length;
@@ -672,11 +675,15 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   };
   const uebernimm = async () => {
     const v = d.vorlagen.find((x) => String(x.id) === vorlage);
-    if (!v || !window.confirm(`Vorlage „${v.titel}“ in diesen Plan übernehmen? Die Einträge kommen zu den vorhandenen dazu.`)) return;
+    const ab = bausteinAb || bausteinVorschlag;
+    if (!v || !ab) return;
+    const kw = d.wochen.find((w) => w.montag <= ab && plusTage(w.montag, 6) >= ab);
+    if (!window.confirm(`Baustein „${v.titel}“ ab ${kw ? `KW ${kw.kw}/${kw.jahr}` : datum(ab)} in diesen Plan einfügen?\n\nDie Einträge kommen zu den vorhandenen dazu.`)) return;
     try {
-      const r = await api<{ uebernommen: number }>('POST', `/api/azubis/${azubiId}/plan/vorlage`, { vorlageId: v.id });
+      const r = await api<{ uebernommen: number }>('POST', `/api/azubis/${azubiId}/plan/vorlage`, { vorlageId: v.id, ab });
       await lade();
-      setMeldung({ text: `${r.uebernommen} Einträge aus der Vorlage übernommen.`, fehler: false });
+      setMeldung({ text: `${r.uebernommen === 1 ? '1 Eintrag' : `${r.uebernommen} Einträge`} aus dem Baustein eingefügt.`, fehler: false });
+      if (kw) zeige(kw.montag);
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
     }
@@ -836,9 +843,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               </nav>
 
               {d.vorlagen.length > 0 && !d.beginnFehlt && (
-                <div className="filter nicht-drucken">
-                  <select aria-label="Planvorlage" value={vorlage} onChange={(e) => setVorlage(e.target.value)}>
-                    <option value="">– Vorlage wählen –</option>
+                <div className="filter nicht-drucken baustein-leiste">
+                  <select aria-label="Baustein" value={vorlage} onChange={(e) => setVorlage(e.target.value)}>
+                    <option value="">– Baustein wählen –</option>
                     {d.vorlagen.map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.titel}
@@ -846,17 +853,21 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
                       </option>
                     ))}
                   </select>
+                  <label className="baustein-ab">
+                    ab der Woche vom
+                    <input type="date" value={bausteinAb || bausteinVorschlag} min={d.beginn ?? undefined} max={d.ende ?? undefined} onChange={(e) => setBausteinAb(e.target.value)} />
+                  </label>
                   <button type="button" className="knopf schlicht" disabled={!vorlage} onClick={() => void uebernimm()}>
-                    Vorlage übernehmen
+                    Baustein einfügen
                   </button>
                   <Link zu="/verwaltung/vorlagen" className="klein">
-                    Vorlagen verwalten
+                    Bausteine verwalten
                   </Link>
                 </div>
               )}
               {d.vorlagen.length === 0 && d.rechte.zuweisen && (
                 <p className="leise klein nicht-drucken">
-                  Wiederkehrende Abläufe lassen sich als <Link zu="/verwaltung/vorlagen">Planvorlage</Link> anlegen und hier übernehmen.
+                  Was immer wieder vorkommt, lässt sich als <Link zu="/verwaltung/vorlagen">Planbaustein</Link> anlegen und hier ab einer Woche deiner Wahl einfügen.
                 </p>
               )}
 

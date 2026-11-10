@@ -174,7 +174,7 @@ export function Stammdaten() {
     <>
       <h1>Stammdaten</h1>
       <p className="klein">
-        <Link zu="/verwaltung/vorlagen">Planvorlagen für den Ausbildungsplan verwalten</Link>
+        <Link zu="/verwaltung/vorlagen">Planbausteine für den Ausbildungsplan verwalten</Link>
       </p>
       <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Ausbildungsnachweise und bestimmen Dauer, Feiertage und Ferien.</p>
       <p className="hinweis" role="note">
