@@ -28,11 +28,13 @@ export function merkeAktivitaet(
   montag: string | null,
   titel = '',
   anzahl = 1,
+  /** Lauf der Sammelplanung, zu dem die Aktivität gehört – wird mit ihm zurückgenommen */
+  sammelId: number | null = null,
 ): void {
   if (anzahl < 1) return;
   const grenze = new Date(jetzt.getTime() - AUFBEWAHRUNG_TAGE * 86_400_000).toISOString();
   db.prepare('DELETE FROM aktivitaet WHERE zeit < ?').run(grenze);
-  db.prepare('INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
+  db.prepare('INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl, sammel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
     jetzt.toISOString(),
     azubiId,
     wer.id,
@@ -41,6 +43,7 @@ export function merkeAktivitaet(
     montag,
     titel.slice(0, 200),
     anzahl,
+    sammelId,
   );
 }
 

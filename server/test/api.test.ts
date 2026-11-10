@@ -92,6 +92,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/abzeichnen': 'ausbilder,beauftragter',
     'GET /api/plan/sammel': 'ausbilder',
     'POST /api/plan/sammel': 'ausbilder',
+    'DELETE /api/plan/sammel/:id': 'ausbilder',
     'POST /api/fehlermeldungen': 'alle',
     'GET /api/fehlermeldungen': 'admin',
     'GET /api/fehlermeldungen/:id/bild': 'admin',

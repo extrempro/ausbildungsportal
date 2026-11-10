@@ -222,21 +222,46 @@ function weiseZu(db: DB, jetzt: Date, wer: BenutzerZeile, azubi: BenutzerZeile, 
 }
 
 /** Legt einen geprüften Eintrag im Plan eines Azubis an (Rechte, Höchstzahl, Zuweisung, Aktivität). */
-function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boolean): { id: number; zugewiesen: boolean } {
+/** Ein Lauf der Sammelplanung: Nummer und ein einziger Zeitstempel für alles, was er anlegt. */
+interface Lauf {
+  id: number;
+  zeit: Date;
+}
+
+const SAMMEL_TAGE = 30;
+const SAMMEL_LISTE = 5;
+
+/**
+ * Die letzten Läufe der Sammelplanung mit dem, was von ihnen noch im Plan steht.
+ * „unveraendert“ sind Einträge, die seit dem Lauf niemand bearbeitet oder abgehakt hat – nur diese nimmt „Zurücknehmen“ weg.
+ */
+function letzteLaeufe(db: DB) {
+  const zeilen = db
+    .prepare(
+      `SELECT s.id, s.zeit, s.benutzer_name AS name, s.titel, s.azubis, s.eintraege,
+              COUNT(p.id) AS vorhanden, COALESCE(SUM(p.geaendert = s.zeit), 0) AS unveraendert
+         FROM sammelplanung s LEFT JOIN plan_eintrag p ON p.sammel_id = s.id
+        GROUP BY s.id HAVING COUNT(p.id) > 0 ORDER BY s.id DESC LIMIT ?`,
+    )
+    .all(SAMMEL_LISTE) as unknown as { id: number; zeit: string; name: string; titel: string; azubis: number; eintraege: number; vorhanden: number; unveraendert: number }[];
+  return zeilen.map((z) => ({ ...z }));
+}
+
+function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boolean, lauf: Lauf | null = null): { id: number; zugewiesen: boolean } {
   const { db } = c.k;
   if (!darfPlanBearbeiten(db, c.b, azubi.id, e.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diese Art von Eintrag darfst du hier nicht anlegen', 'rolle');
   const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
   if (anzahl >= MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hat schon ${MAX_EINTRAEGE} Einträge`);
-  const jetzt = c.k.jetzt();
+  const jetzt = lauf?.zeit ?? c.k.jetzt();
   let zugewiesen = false;
   const id = transaktion(db, () => {
     const r = db
       .prepare(
-        `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, zustaendig_id, erledigt, unteraufgaben, erstellt_von, geaendert_von, geaendert)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, zustaendig_id, erledigt, unteraufgaben, erstellt_von, geaendert_von, geaendert, sammel_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString());
-    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel);
+      .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString(), lauf?.id ?? null);
+    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel, 1, lauf?.id ?? null);
     if (zuweisen && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
     return Number(r.lastInsertRowid);
   });
@@ -248,7 +273,7 @@ function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boole
  * die gewählte Woche oder, ohne Angabe, die Woche des Ausbildungsbeginns.
  * Was erst nach dem Ende der Ausbildung beginnen würde, entfällt; was hineinragt, wird gekürzt.
  */
-function fuegeBausteinEin(c: Ctx, azubi: BenutzerZeile, v: VorlageZeile, ab: string | null): number {
+function fuegeBausteinEin(c: Ctx, azubi: BenutzerZeile, v: VorlageZeile, ab: string | null, lauf: Lauf | null = null): number {
   const { db } = c.k;
   const dauer = dauerVon(db, leseProfil(db, azubi.id));
   if (!dauer) throw new Fehler(409, 'Für diesen Azubi ist noch kein Ausbildungsbeginn eingetragen');
@@ -265,16 +290,16 @@ function fuegeBausteinEin(c: Ctx, azubi: BenutzerZeile, v: VorlageZeile, ab: str
     });
   const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
   if (anzahl + neu.length > MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hätte danach mehr als ${MAX_EINTRAEGE} Einträge`);
-  const jetzt = c.k.jetzt();
+  const jetzt = lauf?.zeit ?? c.k.jetzt();
   transaktion(db, () => {
     const einfuegen = db.prepare(
-      `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, unteraufgaben, erstellt_von, geaendert_von, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, unteraufgaben, erstellt_von, geaendert_von, geaendert, sammel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const { e, von, bis } of neu) {
-      einfuegen.run(azubi.id, e.art, von, bis, e.titel, e.text, JSON.stringify(e.unteraufgaben.map((t) => ({ text: t, erledigt: false }))), c.b.id, c.b.id, jetzt.toISOString());
+      einfuegen.run(azubi.id, e.art, von, bis, e.titel, e.text, JSON.stringify(e.unteraufgaben.map((t) => ({ text: t, erledigt: false }))), c.b.id, c.b.id, jetzt.toISOString(), lauf?.id ?? null);
     }
     protokolliere(db, jetzt, 'fach', 'planvorlage_uebernommen', c.b, azubi, `${v.titel}: ${neu.length} Einträge`);
-    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, neu[0]?.von ?? null, `Baustein „${v.titel}“`, neu.length);
+    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, neu[0]?.von ?? null, `Baustein „${v.titel}“`, neu.length, lauf?.id ?? null);
   });
   return neu.length;
 }
@@ -500,6 +525,7 @@ export const PLAN_ROUTEN: Route[] = [
           }),
           bausteine: (db.prepare('SELECT * FROM planvorlage ORDER BY titel COLLATE NOCASE').all() as unknown as VorlageZeile[]).map(vorlageAnsicht),
           personen: db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown[],
+          letzte: letzteLaeufe(db),
         },
       };
     },
@@ -524,25 +550,60 @@ export const PLAN_ROUTEN: Route[] = [
         if (!istObjekt(roh.eintrag)) throw new Fehler(400, 'Eintrag oder Baustein fehlt');
         eintrag = eingabeAus(db, roh.eintrag);
       }
+      // ein Lauf mit einem Zeitstempel für alles – daran erkennt „Zurücknehmen“ später, was unverändert ist
+      const zeit = c.k.jetzt();
+      db.prepare('DELETE FROM sammelplanung WHERE zeit < ?').run(new Date(zeit.getTime() - SAMMEL_TAGE * 86_400_000).toISOString());
+      const titel = baustein ? `Baustein „${baustein.titel}“` : eintrag!.titel;
+      const lauf: Lauf = { id: Number(db.prepare('INSERT INTO sammelplanung (zeit, benutzer_id, benutzer_name, titel) VALUES (?, ?, ?, ?)').run(zeit.toISOString(), c.b.id, c.b.anzeigename, titel).lastInsertRowid), zeit };
       const ergebnis = ids.map((id) => {
         const azubi = holeBenutzer(db, id)!;
         try {
           if (baustein) {
-            const anzahl = fuegeBausteinEin(c, azubi, baustein, ab);
+            const anzahl = fuegeBausteinEin(c, azubi, baustein, ab, lauf);
             if (anzahl === 0) return { id, anzeigename: azubi.anzeigename, ok: false, anzahl: 0, grund: 'Der Baustein hat keine Einträge, die in die Ausbildungszeit fallen' };
             return { id, anzeigename: azubi.anzeigename, ok: true, anzahl, grund: '' };
           }
           const dauer = dauerVon(db, leseProfil(db, id));
           if (!dauer) throw new Fehler(409, 'Für diesen Azubi ist noch kein Ausbildungsbeginn eingetragen');
           if (eintrag!.bis < montagVon(dauer.beginn) || eintrag!.von > montagVon(dauer.ende)) throw new Fehler(409, 'Der Zeitraum liegt außerhalb der Ausbildungszeit');
-          legeEintragAn(c, azubi, eintrag!, roh.zuweisen === true);
+          legeEintragAn(c, azubi, eintrag!, false, lauf);
           return { id, anzeigename: azubi.anzeigename, ok: true, anzahl: 1, grund: '' };
         } catch (e) {
           if (!(e instanceof Fehler)) throw e;
           return { id, anzeigename: azubi.anzeigename, ok: false, anzahl: 0, grund: e.message };
         }
       });
-      return { status: 200, body: { ergebnis, eingetragen: ergebnis.filter((x) => x.ok).length } };
+      const eingetragen = ergebnis.filter((x) => x.ok).length;
+      // ein Lauf, der nichts angelegt hat, braucht kein „Zurücknehmen“
+      if (eingetragen === 0) db.prepare('DELETE FROM sammelplanung WHERE id = ?').run(lauf.id);
+      else db.prepare('UPDATE sammelplanung SET azubis = ?, eintraege = ? WHERE id = ?').run(eingetragen, ergebnis.reduce((n, x) => n + x.anzahl, 0), lauf.id);
+      return { status: 200, body: { ergebnis, eingetragen, laufId: eingetragen > 0 ? lauf.id : null, letzte: letzteLaeufe(db) } };
+    },
+  },
+  {
+    // Einen Lauf zurücknehmen: entfernt, was seitdem niemand geändert oder abgehakt hat. Alles andere bleibt und wird genannt.
+    m: 'DELETE',
+    p: '/api/plan/sammel/:id',
+    wer: ['ausbilder'],
+    h: (c) => {
+      const { db } = c.k;
+      const lauf = db.prepare('SELECT * FROM sammelplanung WHERE id = ?').get(idAus(c.p.id)) as { id: number; zeit: string; titel: string } | undefined;
+      if (!lauf) throw new Fehler(404, 'Diese Sammelplanung gibt es nicht mehr');
+      const geblieben = db
+        .prepare(
+          `SELECT b.anzeigename, p.titel FROM plan_eintrag p JOIN benutzer b ON b.id = p.azubi_id
+            WHERE p.sammel_id = ? AND p.geaendert <> ? ORDER BY b.anzeigename COLLATE NOCASE, p.von`,
+        )
+        .all(lauf.id, lauf.zeit) as unknown as { anzeigename: string; titel: string }[];
+      const entfernt = transaktion(db, () => {
+        const n = Number(db.prepare('DELETE FROM plan_eintrag WHERE sammel_id = ? AND geaendert = ?').run(lauf.id, lauf.zeit).changes);
+        // die Hinweise in den Glocken der Azubis verschwinden mit – außer bei denen, deren Einträge bleiben
+        db.prepare('DELETE FROM aktivitaet WHERE sammel_id = ? AND azubi_id NOT IN (SELECT azubi_id FROM plan_eintrag WHERE sammel_id = ?)').run(lauf.id, lauf.id);
+        db.prepare('DELETE FROM sammelplanung WHERE id = ?').run(lauf.id);
+        protokolliere(db, c.k.jetzt(), 'fach', 'sammelplanung_zurueckgenommen', c.b, null, `${lauf.titel}: ${n} Einträge entfernt${geblieben.length ? `, ${geblieben.length} geänderte bleiben` : ''}`);
+        return n;
+      });
+      return { status: 200, body: { entfernt, geblieben: geblieben.map((g) => ({ azubi: g.anzeigename, titel: g.titel })), letzte: letzteLaeufe(db) } };
     },
   },
 

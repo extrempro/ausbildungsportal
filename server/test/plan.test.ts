@@ -402,3 +402,62 @@ test('Sammelplanung: ein Eintrag oder Baustein für mehrere Azubis; wer nicht pa
   assert.equal((await sammel({ azubiIds: [w.azubi.id], eintrag: { art: 'notiz', von: '2026-11-23', titel: 'x' } }, w.beauftragter)).status, 403);
   assert.equal((await plan(w, w.ausbilder)).eintraege.length, 2);
 });
+
+test('Sammelplanung zurücknehmen: entfernt Unverändertes, lässt Geändertes und Abgehaktes stehen, räumt die Glocken auf', async () => {
+  const w = await welt();
+  const cookies = als(w, w.ausbilder);
+  const sammel = (body: unknown) => ruf(w.u, 'POST', '/api/plan/sammel', { cookies: als(w, w.ausbilder), body });
+  const nimm = (id: number, wer = w.ausbilder) => ruf(w.u, 'DELETE', `/api/plan/sammel/${id}`, { cookies: als(w, wer) });
+  const letzte = async () => koerper(await ruf(w.u, 'GET', '/api/plan/sammel', { cookies: als(w, w.ausbilder) })).letzte;
+  // ein eigener Eintrag, der nichts mit der Sammelplanung zu tun hat
+  await lege(w, w.ausbilder, { art: 'notiz', von: '2026-11-09', titel: 'Bleibt immer' });
+
+  // Lauf 1: Schulblock für beide
+  const a = koerper(await sammel({ azubiIds: [w.azubi.id, w.ben.id], eintrag: { art: 'schule', von: '2026-11-23', titel: 'Block 2' } }));
+  assert.ok(a.laufId);
+  assert.deepEqual(a.letzte.map((l: any) => [l.titel, l.name, l.azubis, l.eintraege, l.vorhanden, l.unveraendert]), [['Block 2', 'Petra Lang', 2, 2, 2, 2]]);
+  // Lauf 2: Baustein mit Aufgabe für beide, eine Minute später
+  w.u.uhr.jetzt = new Date('2026-11-10T09:01:00Z');
+  const v = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'Lager', eintraege: [{ art: 'einsatz', abWoche: 1, wochen: 4, titel: 'Lager' }, { art: 'aufgabe', abWoche: 1, wochen: 1, titel: 'Sicherheitsschuhe holen' }] } })).vorlage;
+  const b = koerper(await sammel({ azubiIds: [w.azubi.id, w.ben.id], vorlageId: v.id, ab: '2027-01-11' }));
+  assert.deepEqual((await letzte()).map((l: any) => [l.titel, l.eintraege]), [['Baustein „Lager“', 4], ['Block 2', 2]]);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: als(w, w.ben) })).neu, 3);
+
+  // Anna hakt ihre Aufgabe ab, der Ausbilder ändert Bens Einsatz – beides zählt als geändert
+  w.u.uhr.jetzt = new Date('2026-11-10T09:05:00Z');
+  const anna = (await plan(w, w.azubi)).eintraege;
+  const aufgabe = anna.find((e: any) => e.titel === 'Sicherheitsschuhe holen');
+  assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan/${aufgabe.id}/haken`, { cookies: als(w, w.azubi), body: { erledigt: true } })).status, 200);
+  const bensEinsatz = (await plan(w, w.ausbilder, w.ben)).eintraege.find((e: any) => e.titel === 'Lager');
+  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.ben.id}/plan/${bensEinsatz.id}`, { cookies, body: { art: 'einsatz', von: '2027-01-11', bis: '2027-02-01', titel: 'Lager und Versand' } })).status, 200);
+  assert.deepEqual((await letzte()).map((l: any) => [l.vorhanden, l.unveraendert]), [[4, 2], [2, 2]]);
+
+  // Lauf 2 zurücknehmen
+  assert.equal((await nimm(b.laufId, w.beauftragter)).status, 403);
+  const r = koerper(await nimm(b.laufId));
+  assert.equal(r.entfernt, 2);
+  assert.deepEqual(r.geblieben, [{ azubi: 'Anna Azubi', titel: 'Sicherheitsschuhe holen' }, { azubi: 'Ben Azubi', titel: 'Lager und Versand' }]);
+  assert.deepEqual(r.letzte.map((l: any) => l.titel), ['Block 2']);
+  assert.deepEqual((await plan(w, w.azubi)).eintraege.map((e: any) => e.titel).sort(), ['Bleibt immer', 'Block 2', 'Sicherheitsschuhe holen']);
+  assert.deepEqual((await plan(w, w.ausbilder, w.ben)).eintraege.map((e: any) => e.titel).sort(), ['Block 2', 'Lager und Versand']);
+  assert.equal((await nimm(b.laufId)).status, 404, 'ein Lauf lässt sich nur einmal zurücknehmen');
+
+  // Lauf 1 zurücknehmen: alles weg, auch der Hinweis in der Glocke
+  const r1 = koerper(await nimm(a.laufId));
+  assert.deepEqual([r1.entfernt, r1.geblieben, r1.letzte], [2, [], []]);
+  assert.deepEqual((await plan(w, w.azubi)).eintraege.map((e: any) => e.titel).sort(), ['Bleibt immer', 'Sicherheitsschuhe holen']);
+  const glocke = koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: als(w, w.ben) }));
+  assert.ok(!JSON.stringify(glocke).includes('Block 2'), 'der Hinweis auf den zurückgenommenen Eintrag ist weg');
+  assert.ok(JSON.stringify(glocke).includes('Lager'), 'der Hinweis auf den gebliebenen Baustein bleibt');
+  assert.ok(w.u.db.prepare("SELECT 1 FROM protokoll WHERE aktion = 'sammelplanung_zurueckgenommen'").get());
+
+  // ein Lauf ohne Treffer hinterlässt nichts; nach 30 Tagen ist ein Lauf vergessen, seine Einträge bleiben
+  const leer = koerper(await sammel({ azubiIds: [w.azubi.id], eintrag: { art: 'notiz', von: '2030-01-07', titel: 'zu spät' } }));
+  assert.deepEqual([leer.eingetragen, leer.laufId, leer.letzte], [0, null, []]);
+  const alt = koerper(await sammel({ azubiIds: [w.azubi.id], eintrag: { art: 'notiz', von: '2026-12-07', titel: 'Alter Lauf' } }));
+  w.u.uhr.jetzt = new Date('2026-12-20T09:00:00Z');
+  await sammel({ azubiIds: [w.ben.id], eintrag: { art: 'notiz', von: '2026-12-21', titel: 'Neuer Lauf' } });
+  assert.deepEqual((await letzte()).map((l: any) => l.titel), ['Neuer Lauf']);
+  assert.equal((await nimm(alt.laufId)).status, 404);
+  assert.ok((await plan(w, w.azubi)).eintraege.some((e: any) => e.titel === 'Alter Lauf'));
+});
