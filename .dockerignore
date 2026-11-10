@@ -1,0 +1,14 @@
+# Nicht ins Image: Abhängigkeiten werden im Container neu installiert,
+# Daten und Geheimnisse bleiben draußen.
+node_modules
+dist
+data
+.git
+.github
+.env
+*.zip
+*.log
+.DS_Store
+docker-compose.override.yml
+# Lock-Datei von Windows/macOS enthält oft nicht die Linux-Varianten von esbuild
+package-lock.json

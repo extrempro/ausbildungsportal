@@ -1,0 +1,27 @@
+# Eigene Einstellungen für Docker Compose – nur auf deinem Server.
+# Kopieren nach docker-compose.override.yml; Docker Compose liest die Datei automatisch mit.
+# docker-compose.override.yml steht in .gitignore, git pull überschreibt sie also nicht.
+# !override ersetzt die Portzuordnung aus docker-compose.yml (Docker Compose ab Version 2.24).
+# Kontrolle: docker compose config
+#
+# Die App braucht HTTPS (Microsoft-Anmeldung und Cookies). Sie selbst spricht nur HTTP –
+# davor gehört ein Reverse Proxy mit Zertifikat. APP_URL in .env ist die Adresse dieses Proxys.
+
+services:
+  app:
+    ports: !override
+      # links: Adresse und Port auf dem Server, rechts: Port im Container (immer 3000)
+
+      # Reverse Proxy auf demselben Server → Proxy leitet an 127.0.0.1:8989 weiter
+      - "127.0.0.1:8989:3000"
+
+      # Reverse Proxy auf einem anderen Rechner: an die Adresse des Servers im VPN bzw. internen Netz
+      # binden und den Port per Firewall auf den Proxy beschränken:
+      # - "100.64.0.10:8989:3000"
+
+      # Alle Netze – nur zum Ausprobieren, nicht für den Betrieb:
+      # - "8989:3000"
+
+# Reverse Proxy als Container in derselben Compose-Datei: Ziel ist dann app:3000,
+# und „ports“ kann ganz entfallen:
+#     ports: !reset []

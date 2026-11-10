@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.3.0] – 2026-11-10
+
+### Neu
+
+- Docker-Setup: `Dockerfile`, `docker-compose.yml` und Vorlage `docker-compose.override.example.yml` für eigene Ports. Start mit `docker compose up -d --build`; die Daten liegen im Ordner `./data`.
+
 ## [0.2.0] – 2026-11-10
 
 ### Neu

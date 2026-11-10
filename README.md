@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.2.0 (Phase 1 – Fundament).** Anmeldung, Konten, Rechte und Protokoll sind fertig. Berichtsheft und Ausbildungsplan folgen in den nächsten Phasen, Docker in Phase 5.
+**Stand: Version 0.3.0 (Phase 1 – Fundament).** Anmeldung, Konten, Rechte und Protokoll sind fertig, dazu das Docker-Setup. Berichtsheft und Ausbildungsplan folgen in den nächsten Phasen.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft ist bisher nur gegen einen nachgebildeten Anbieter getestet, nicht gegen ein echtes Entra-Verzeichnis. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -17,12 +17,30 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 
 Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
 
-## Voraussetzungen
+## Starten mit Docker
+
+Voraussetzung: Docker mit Docker Compose ab Version 2.24.
+
+```bash
+cp .env.example .env      # APP_URL und die ENTRA_*-Werte eintragen
+docker compose up -d --build
+docker compose logs app   # beim ersten Start steht hier das Startpasswort des Super-Admins
+```
+
+- Die App lauscht danach auf `127.0.0.1:3000` – nur auf dem Server selbst. Davor gehört ein **Reverse Proxy mit HTTPS**; `APP_URL` in der `.env` ist die Adresse dieses Proxys, und `TRUST_PROXY=true` gehört dazu.
+- Einen anderen Port oder eine Freigabe im Netz stellt man in einer eigenen `docker-compose.override.yml` ein (Vorlage: `docker-compose.override.example.yml`), nicht in `docker-compose.yml`.
+- Datenbank und Sicherungen liegen im Ordner `./data` neben der Compose-Datei und bleiben bei Updates und bei `docker compose down` erhalten.
+- Unter Linux muss der Container in `./data` schreiben dürfen. Er läuft als Benutzer mit der UID 1000; falls der Start mit einem Schreibfehler abbricht: `sudo chown -R 1000:1000 ./data`.
+- Nach einer Änderung an der `.env`: `docker compose up -d`. Update: `git pull`, dann `docker compose up -d --build`.
+
+Zum Ausprobieren ohne Proxy und ohne `.env` reicht `docker compose up -d --build` und im Browser `http://localhost:3000` (nicht `127.0.0.1` – die Adresse muss zu `APP_URL` passen). Dann kann sich nur der Super-Admin anmelden.
+
+## Starten ohne Docker
+
+Voraussetzungen:
 
 - Node.js ab 22.16 (nutzt das eingebaute `node:sqlite`)
 - für die Microsoft-Anmeldung: eine App-Registrierung in Entra, siehe [docs/entra-einrichtung.md](docs/entra-einrichtung.md)
-
-## Starten
 
 ```bash
 npm install
@@ -52,8 +70,8 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | Variable | Bedeutung |
 | --- | --- |
 | `APP_URL` | Adresse, unter der die Nutzer die App im Browser sehen. Bestimmt die Umleitungs-URI für Entra (`<APP_URL>/api/auth/entra/callback`) und ob Cookies nur über HTTPS gehen |
-| `PORT`, `HOST` | worauf der Server lauscht (Standard `3000`, `0.0.0.0`) |
-| `DATA_DIR` | Ordner für Datenbank und Sicherungen (Standard `./data`) |
+| `PORT`, `HOST` | worauf der Server lauscht (Standard `3000`, `0.0.0.0`); mit Docker fest, den Port außen bestimmt die Compose-Datei |
+| `DATA_DIR` | Ordner für Datenbank und Sicherungen (Standard `./data`); mit Docker fest `/app/data` |
 | `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | App-Registrierung in Entra; ohne sie kann sich nur der Super-Admin anmelden |
 | `ADMIN_BENUTZER`, `ADMIN_PASSWORT` | nur für den ersten Start |
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
@@ -78,6 +96,8 @@ npm run backup                    # Sicherung nach data/backups/ (auch im laufen
 npm run admin-reset [benutzer]    # Notfall: neues Startpasswort für einen Super-Admin
 ```
 
+Mit Docker dieselben Befehle im Container: `docker compose exec app npm run backup` bzw. `docker compose exec app npm run admin-reset`.
+
 Datenbank-Änderungen kommen als nummerierte Migrationen (`server/migrations/`); vor jeder Migration legt die App automatisch eine Sicherung an.
 
 ## Aufbau
@@ -97,6 +117,7 @@ server/
 src/              Oberfläche (React)
 scripts/          build, dev, backup, admin-reset
 docs/             Entra-Einrichtung
+Dockerfile, docker-compose.yml, docker-compose.override.example.yml
 ```
 
 ## Lizenz
