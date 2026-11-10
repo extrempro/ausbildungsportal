@@ -6,6 +6,10 @@
 # 1. "ports: !override" (mit dem Ausrufezeichen) ERSETZT die Zuordnung aus docker-compose.yml.
 #    Ohne "!override" kommt der neue Port nur dazu und 127.0.0.1:3000 bleibt zusätzlich offen.
 #    Braucht Docker Compose ab Version 2.24. Kontrolle, was am Ende gilt:  docker compose config
+#    Die Datei muss genau docker-compose.override.yml heißen und neben docker-compose.yml liegen.
+#    Übernommen wird sie mit  docker compose up -d  (nicht mit restart, und nicht mit -f docker-compose.yml).
+#    Welcher Port wirklich offen ist, zeigt  docker compose ps . Im Log der App steht immer Port 3000 –
+#    das ist der Port im Container.
 # 2. APP_URL in der .env muss die Adresse sein, die im Browser steht – mit dem Port von hier,
 #    wenn die App direkt (ohne Reverse Proxy) aufgerufen wird. Sonst lädt die Seite, aber
 #    Anmelden und Speichern werden abgelehnt. Nach einer Änderung:  docker compose up -d

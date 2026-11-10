@@ -23,7 +23,9 @@ setInterval(() => raeumeAuf(db, new Date()), 60 * 60 * 1000).unref();
 
 const server = erzeugeServer(k, fileURLToPath(new URL('../dist', import.meta.url)));
 server.listen(cfg.port, cfg.host, () => {
-  console.log(`Ausbildungsportal ${k.version} läuft auf ${cfg.host}:${cfg.port} – Adresse im Browser: ${cfg.appUrl}`);
+  console.log(`Ausbildungsportal ${k.version} gestartet. Adresse im Browser laut APP_URL: ${cfg.appUrl}`);
+  // In Docker ist das immer der Port im Container – welcher Port außen gilt, bestimmt die Compose-Datei.
+  console.log(`Lauscht auf ${cfg.host}:${cfg.port} (mit Docker ist das der Port im Container; den Port außen zeigt: docker compose ps)`);
 });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

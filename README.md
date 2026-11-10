@@ -28,7 +28,7 @@ docker compose logs app   # beim ersten Start steht hier das Startpasswort des S
 ```
 
 - Die App lauscht danach auf `127.0.0.1:3000` – nur auf dem Server selbst. Davor gehört ein **Reverse Proxy mit HTTPS**; `APP_URL` in der `.env` ist die Adresse dieses Proxys, und `TRUST_PROXY=true` gehört dazu.
-- Einen anderen Port oder eine Freigabe im Netz stellt man in einer eigenen `docker-compose.override.yml` ein (Vorlage: `docker-compose.override.example.yml`), nicht in `docker-compose.yml`. Kontrolle: `docker compose config`.
+- Einen anderen Port oder eine Freigabe im Netz stellt man in einer eigenen `docker-compose.override.yml` ein (Vorlage: `docker-compose.override.example.yml`), nicht in `docker-compose.yml`. Übernommen wird sie mit `docker compose up -d` (nicht mit `restart`). Kontrolle: `docker compose config` zeigt, was gilt, `docker compose ps` den tatsächlich offenen Port – im Log der App steht immer Port 3000, das ist der Port im Container.
 - **`APP_URL` muss immer die Adresse sein, die im Browser steht.** Wer in der Override-Datei Port oder IP ändert und die App direkt aufruft, trägt genau diese Adresse ein, z. B. `APP_URL=http://100.64.0.10:8989`. Sonst lädt die Seite, aber Anmelden und Speichern werden abgelehnt.
 - Ohne HTTPS funktioniert nur die lokale Anmeldung des Super-Admins. Microsoft nimmt als Umleitungs-URI nur `https://` an (Ausnahme `http://localhost`) – für die Microsoft-Anmeldung braucht es also den Reverse Proxy mit Zertifikat.
 - Datenbank und Sicherungen liegen im Ordner `./data` neben der Compose-Datei und bleiben bei Updates und bei `docker compose down` erhalten.
