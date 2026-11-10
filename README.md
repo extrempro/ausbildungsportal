@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.6.0 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
+**Stand: Version 0.6.1 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -99,7 +99,7 @@ Ein Ausbildungsnachweis je Kalenderwoche, von der ersten bis zur laufenden Woche
 
 ## Ausbildungsplan
 
-Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Ausbildung, mit Schulferien und Feiertagen.
+Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Ausbildung, mit Schulferien und Feiertagen. Der Aufbau folgt dem FISI-Lernkompass: oben „Diese Woche“, „Nächste Woche“ und Kennzahlen (Wochen bis zum Ende, fehlende Berichte, offene Aufgaben), links eine Übersicht mit Fortschritt und einem Band aller Wochen je Ausbildungsjahr, rechts alle Kalenderwochen nach Jahr und Monat.
 
 - **Arten:** Berufsschule (Schulblock), Einsatz (Abteilung oder Einsatzort), Aufgabe (mit Unteraufgaben zum Abhaken) und Notiz.
 - **Wer plant:** Ausbilder alles. Ausbildungsbeauftragte legen Aufgaben und Notizen an, solange ihre Zuweisung läuft. Azubis sehen ihren Plan und haken Aufgaben ab.

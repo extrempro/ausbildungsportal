@@ -260,6 +260,8 @@ export const PLAN_ROUTEN: Route[] = [
           eigenes: c.b.id === azubi.id,
           heute: tag,
           beginnFehlt: !dauer,
+          beginn: dauer?.beginn ?? null,
+          ende: dauer?.ende ?? null,
           beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
           wochen,
           eintraege: zeilen.map((z) => ansicht(db, z)),

@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.6.1] – 2026-11-10
+
+### Geändert
+
+- Ausbildungsplan im Aufbau des FISI-Lernkompass: oben die Karten „Diese Woche“ und „Nächste Woche“ mit Kennzahlen (Wochen bis zum Ende der Ausbildung, fehlende Berichte, offene Aufgaben), links eine mitlaufende Übersicht („Du bist hier“, Fortschritt, je Ausbildungsjahr ein Band aller Wochen mit Schule und Ferien, Sprung zu Monaten), rechts alle Kalenderwochen nach Ausbildungsjahr und Monat.
+- Schulwochen tragen einen violetten Streifen; an jeder Woche steht der Stand des Berichts mit Link dorthin.
+- Ansicht umschaltbar: alle Wochen oder nur Wochen mit Einträgen; Ferien und Feiertage lassen sich ausblenden.
+- Einträge werden in einem Dialog angelegt und bearbeitet.
+- Beginn und Ende der Ausbildung sind in ihrer Woche markiert.
+
 ## [0.6.0] – 2026-11-10
 
 ### Neu

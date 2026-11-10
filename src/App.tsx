@@ -54,6 +54,17 @@ export function App() {
     if (konto) setDunkel(wendeThemeAn(konto.theme));
   }, [konto]);
 
+  // Höhe der festen Kopfzeile als CSS-Variable – daran richten sich Seitenleisten und Sprungziele aus
+  useEffect(() => {
+    const leiste = document.querySelector('.leiste');
+    if (!leiste) return;
+    const setze = () => document.documentElement.style.setProperty('--kopf', `${Math.round(leiste.getBoundingClientRect().height)}px`);
+    setze();
+    const beobachter = new ResizeObserver(setze);
+    beobachter.observe(leiste);
+    return () => beobachter.disconnect();
+  }, [konto?.id, konto?.passwortWechsel]);
+
   if (konto === undefined) return <p className="mitte leise">Lädt …</p>;
   if (konto === null) return <Anmelden />;
 

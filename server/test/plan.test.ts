@@ -36,6 +36,8 @@ test('Plan lesen: Wochen der Ausbildung mit Ausbildungsjahr, Feiertage und Ferie
   const p = await plan(w, w.azubi);
   assert.equal(p.eigenes, true);
   assert.equal(p.beginnFehlt, false);
+  assert.equal(p.beginn, '2025-08-01');
+  assert.equal(p.ende, '2028-07-31');
   assert.equal(p.wochen[0].montag, '2025-07-28');
   assert.equal(p.wochen[0].ausbildungsjahr, 1);
   assert.equal(p.wochen.find((x: any) => x.montag === '2026-11-09').ausbildungsjahr, 2);
