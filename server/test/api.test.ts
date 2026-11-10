@@ -90,6 +90,8 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'POST /api/azubis/:id/berichte/:montag/einreichen': 'azubi',
     'POST /api/azubis/:id/berichte/:montag/zurueckziehen': 'azubi',
     'GET /api/abzeichnen': 'ausbilder,beauftragter',
+    'GET /api/aktivitaeten': 'ausbilder,beauftragter,azubi',
+    'POST /api/aktivitaeten/gesehen': 'ausbilder,beauftragter,azubi',
     'POST /api/berichte/abzeichnen': 'ausbilder,beauftragter',
     'POST /api/azubis/:id/berichte/:montag/zurueckgeben': 'ausbilder,beauftragter',
     'POST /api/azubis/:id/berichte/:montag/oeffnen': 'ausbilder',

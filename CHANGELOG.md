@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.11.0] – 2026-11-10
+
+### Neu
+
+- Glocke in der Kopfzeile mit Aktivitäten. Azubis sehen dort neue Einträge in ihrem Ausbildungsplan und ob ein Bericht abgezeichnet oder zurückgegeben wurde. Ausbilder und Ausbildungsbeauftragte sehen neue Einträge im Plan ihrer Azubis und eingereichte Berichte. Die Zahl an der Glocke zeigt, wie viel neu ist; ein Klick auf eine Zeile führt direkt zum Plan, zum Bericht oder zu „Abzeichnen“.
+- Gleiche Aktivitäten eines Tages sind zu einer Zeile zusammengefasst, zum Beispiel „5 neue Einträge im Ausbildungsplan“ oder „3 Berichte warten auf Abzeichnung“.
+- Gespeichert wird nur, wer was für welche Woche getan hat – keine Inhalte von Berichten und keine Kommentare. Nach 60 Tagen werden Aktivitäten gelöscht. Eigene Handlungen stehen nicht in der Glocke, der Super-Admin hat keine.
+
+### Geändert
+
+- Ausbildungsplan auf dem Handy: Die Legende zeigt alle Angaben auf einen Blick in höchstens zwei kleinen Zeilen, statt in einer Zeile zum Wischen.
+
 ## [0.10.2] – 2026-11-10
 
 ### Geändert

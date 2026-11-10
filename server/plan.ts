@@ -1,3 +1,4 @@
+import { merkeAktivitaet } from './aktivitaet';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import type { Ctx, Route } from './api-basis';
 import type { DB } from './db';
@@ -314,6 +315,7 @@ export const PLAN_ROUTEN: Route[] = [
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           )
           .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString());
+        merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel);
         if (roh.zuweisen === true && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
         return Number(r.lastInsertRowid);
       });
@@ -432,6 +434,7 @@ export const PLAN_ROUTEN: Route[] = [
           einfuegen.run(id, e.art, von, bis, e.titel, e.text, JSON.stringify(e.unteraufgaben.map((t) => ({ text: t, erledigt: false }))), c.b.id, c.b.id, jetzt.toISOString());
         }
         protokolliere(db, jetzt, 'fach', 'planvorlage_uebernommen', c.b, azubi, `${v.titel}: ${neu.length} Einträge`);
+        merkeAktivitaet(db, jetzt, 'plan_neu', id, c.b, neu[0]?.von ?? null, `Vorlage „${v.titel}“`, neu.length);
       });
       return { status: 200, body: { uebernommen: neu.length } };
     },

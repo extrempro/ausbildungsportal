@@ -1,3 +1,4 @@
+import { merkeAktivitaet } from './aktivitaet';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper } from './api-basis';
 import type { Ctx, Route } from './api-basis';
 import type { DB } from './db';
@@ -387,6 +388,7 @@ export const BERICHT_ROUTEN: Route[] = [
         db.prepare("UPDATE bericht SET status = 'eingereicht', eingereicht_am = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?").run(jetzt.toISOString(), jetzt.toISOString(), azubi.id, montag);
         unterzeichne(db, jetzt, azubi.id, montag, 'azubi', azubi, pfad);
         vermerke(db, jetzt, azubi.id, montag, 'eingereicht', azubi);
+        merkeAktivitaet(db, jetzt, 'bericht_eingereicht', azubi.id, azubi, montag);
       });
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },
@@ -470,6 +472,7 @@ export const BERICHT_ROUTEN: Route[] = [
           );
           unterzeichne(db, jetzt, z.azubi.id, z.montag, 'abzeichnung', c.b, pfad);
           vermerke(db, jetzt, z.azubi.id, z.montag, 'abgezeichnet', c.b);
+          merkeAktivitaet(db, jetzt, 'bericht_abgezeichnet', z.azubi.id, c.b, z.montag);
         }
       });
       return { status: 200, body: { abgezeichnet: ziele.length } };
@@ -497,6 +500,7 @@ export const BERICHT_ROUTEN: Route[] = [
         // der Azubi unterschreibt die überarbeitete Fassung neu
         db.prepare("DELETE FROM bericht_signatur WHERE azubi_id = ? AND montag = ? AND art = 'azubi'").run(id, montag);
         vermerke(db, jetzt, id, montag, 'zurueckgegeben', c.b, kommentar);
+        merkeAktivitaet(db, jetzt, 'bericht_zurueck', id, c.b, montag);
       });
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },
@@ -528,6 +532,7 @@ export const BERICHT_ROUTEN: Route[] = [
         );
         db.prepare('DELETE FROM bericht_signatur WHERE azubi_id = ? AND montag = ?').run(id, montag);
         vermerke(db, jetzt, id, montag, 'abzeichnung_aufgehoben', c.b, kommentar);
+        merkeAktivitaet(db, jetzt, 'bericht_geoeffnet', id, c.b, montag);
       });
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },
