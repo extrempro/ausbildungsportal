@@ -5,6 +5,7 @@ import { transaktion } from './db';
 import { heute } from './datum';
 import { feiertageZwischen, istBundesland } from './feiertage';
 import { ausbildungsjahrAm, gueltigesDatum, istMontag, kalenderwoche, montagVon, plusTage } from './kalender';
+import { planDerWoche } from './plan';
 import { protokolliere } from './protokoll';
 import { darfAbzeichnen, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
@@ -206,6 +207,8 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
     summe: summe(inhalt),
     soll: profil.wochenstunden,
     kommentar: z?.kommentar ?? '',
+    // was laut Ausbildungsplan in dieser Woche ansteht – als Gedankenstütze beim Schreiben
+    plan: planDerWoche(db, azubi.id, montag),
     eingereichtAm: z?.eingereicht_am ?? null,
     abgezeichnetAm: z?.abgezeichnet_am ?? null,
     signaturen: db.prepare('SELECT art, name, rolle, pfad, zeit FROM bericht_signatur WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag),

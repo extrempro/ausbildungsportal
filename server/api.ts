@@ -19,6 +19,8 @@ import {
 } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
 import { BERICHT_ROUTEN } from './berichte';
+import { leseChangelog } from './changelog';
+import { PLAN_ROUTEN } from './plan';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, ROLLEN } from './typen';
 import type { BenutzerZeile, Rolle, Zuweisung } from './typen';
@@ -314,6 +316,15 @@ export const ROUTEN: Route[] = [
   },
 
   {
+    // Versionshinweise aus CHANGELOG.md – für alle angemeldeten Konten
+    m: 'GET',
+    p: '/api/versionshinweise',
+    wer: 'alle',
+    trotzWechsel: true,
+    h: (c) => ({ status: 200, body: { version: c.k.version, eintraege: leseChangelog() } }),
+  },
+
+  {
     m: 'GET',
     p: '/api/konten',
     wer: ['admin', 'ausbilder'],
@@ -531,6 +542,7 @@ export const ROUTEN: Route[] = [
 
   ...STAMMDATEN_ROUTEN,
   ...BERICHT_ROUTEN,
+  ...PLAN_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api } from '../api';
+import { Link } from '../router';
 import type { Beruf, Berufsschule, Stammdaten as Daten } from '../api';
 
 type Meldung = { text: string; fehler: boolean } | null;
@@ -172,6 +173,9 @@ export function Stammdaten() {
   return (
     <>
       <h1>Stammdaten</h1>
+      <p className="klein">
+        <Link zu="/verwaltung/vorlagen">Planvorlagen für den Ausbildungsplan verwalten</Link>
+      </p>
       <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Ausbildungsnachweise und bestimmen Dauer, Feiertage und Ferien.</p>
       <Zeile m={meldung} />
       <datalist id="regeldauern">

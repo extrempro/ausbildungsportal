@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, ApiFehler, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
+import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
 import { geheZu, Link } from '../router';
 import { UnterschriftBild } from '../unterschrift';
@@ -302,6 +302,12 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
       {meldung && (
         <p className={`hinweis nicht-drucken ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
           {meldung.text} {meldung.unterschrift && <Link zu="/konto">Zur Unterschrift</Link>}
+        </p>
+      )}
+
+      {b.rechte.schreiben && b.plan.length > 0 && (
+        <p className="leise klein nicht-drucken">
+          Laut Ausbildungsplan in dieser Woche: {b.plan.map((p) => `${ART_TEXT[p.art]} „${p.titel}“`).join(', ')}
         </p>
       )}
 

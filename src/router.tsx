@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 
-/** Kleine Seitensteuerung über die History-API. Wird mit Phase 3 durch React Router ersetzt. */
+/** Kleine Seitensteuerung über die History-API. */
 function abonniere(fn: () => void): () => void {
   window.addEventListener('popstate', fn);
   return () => window.removeEventListener('popstate', fn);
