@@ -22,6 +22,7 @@ const PFADE = {
   laden: 'M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14',
   unten: 'M6 9.5l6 6 6-6',
   zu: 'M6 6l12 12M18 6 6 18',
+  glocke: 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2.2 2.2 0 0 0 4 0',
 } as const;
 
 export type IconName = keyof typeof PFADE;

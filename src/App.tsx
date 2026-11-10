@@ -19,6 +19,7 @@ import { Start } from './pages/Start';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
+import { Glocke } from './glocke';
 import { Icon } from './icons';
 import type { IconName } from './icons';
 import { geheZu, Link, usePfad } from './router';
@@ -31,7 +32,7 @@ interface Punkt {
   icon: IconName;
   aktivAb?: string;
 }
-type Menue = 'verwaltung' | 'ich' | 'mehr' | null;
+type Menue = 'verwaltung' | 'ich' | 'mehr' | 'glocke' | null;
 
 function wendeThemeAn(theme: Theme): boolean {
   const dunkel = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -392,6 +393,7 @@ export function App() {
               </div>
             )}
           </nav>
+          {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
           <div className="menue ich">
             <button type="button" className="menue-knopf" aria-expanded={menue === 'ich'} aria-controls="menue-ich" aria-label={`Menü für ${konto.anzeigename}`} onClick={() => schalte('ich')}>
               <span className="avatar" aria-hidden="true">

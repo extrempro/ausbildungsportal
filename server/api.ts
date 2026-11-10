@@ -18,6 +18,7 @@ import {
   sichtbareAzubis,
 } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
+import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BERICHT_ROUTEN } from './berichte';
 import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
@@ -546,6 +547,7 @@ export const ROUTEN: Route[] = [
   ...BERICHT_ROUTEN,
   ...PLAN_ROUTEN,
   ...BRANDING_ROUTEN,
+  ...AKTIVITAET_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

@@ -2926,16 +2926,29 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
   }
 
   /* Legende in einer Zeile zum Wischen – sie soll beim Scrollen wenig Platz nehmen */
+  /* Handy: alles auf einen Blick, klein und in höchstens zwei Zeilen – nichts verschwindet am Rand */
   .plan-legende {
-    flex-wrap: nowrap;
+    gap: 4px 6px;
     margin: 0 -12px 12px;
-    padding: 8px 12px;
-    overflow-x: auto;
-    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1.3;
   }
 
   .plan-legende > * {
     flex: none;
+  }
+
+  .plan-legende .legende-art {
+    padding-left: 5px;
+    border-left-width: 3px;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .plan-legende .pille {
+    padding: 0 6px;
+    font-size: 12px;
   }
 
   .abz-kopf {
@@ -3048,5 +3061,206 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
   .sprung,
   .bogen-hintergrund {
     display: none !important;
+  }
+}
+
+/* ---------- Glocke: Aktivitäten ---------- */
+.menue.glocke {
+  margin-left: auto;
+}
+
+.menue.glocke + .menue.ich {
+  margin-left: 0;
+}
+
+.glocke-knopf {
+  position: relative;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  color: var(--c-text);
+}
+
+.glocke-zahl {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 18px;
+  padding: 0 5px;
+  border: 2px solid var(--c-card);
+  border-radius: 10px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.glocke-flaeche {
+  width: min(400px, calc(100vw - 16px));
+  max-height: min(70vh, 560px);
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.glocke-kopf {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-card);
+}
+
+.glocke-kopf h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.glocke-liste {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.glocke-liste a {
+  align-items: flex-start;
+  min-height: 0;
+  padding: 10px;
+}
+
+.glocke-liste li.neu a {
+  background: var(--c-accent-soft);
+}
+
+.glocke-liste li.neu a:hover {
+  background: var(--c-chip);
+}
+
+.glocke-liste li + li {
+  margin-top: 2px;
+}
+
+.glocke-symbol {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--c-chip);
+}
+
+.glocke-symbol svg {
+  color: inherit;
+}
+
+.glocke-symbol.blau {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.glocke-symbol.gruen {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.glocke-symbol.gelb {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.glocke-symbol.rot {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dark .glocke-symbol.gruen {
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+.dark .glocke-symbol.gelb {
+  background: #713f12;
+  color: #fde68a;
+}
+
+.dark .glocke-symbol.rot {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.glocke-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.glocke-text strong {
+  font-size: 15px;
+}
+
+/* Punkt für „neu“ steht immer rechts oben, auch bei langen Überschriften */
+.glocke-liste li.neu a::after {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  content: '';
+}
+
+/* führt eine Zeile auf die Seite, auf der man gerade ist, bleibt sie trotzdem normal lesbar */
+.glocke-liste a[aria-current='page'] {
+  background: none;
+  color: var(--c-text);
+  font-weight: 400;
+}
+
+.glocke-liste li.neu a[aria-current='page'] {
+  background: var(--c-accent-soft);
+}
+
+.glocke-mitte {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.glocke-text small {
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.glocke-leer {
+  margin: 0;
+  padding: 28px 20px;
+  color: var(--c-muted);
+  text-align: center;
+}
+
+.glocke-fuss {
+  margin: 0;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--c-border);
+}
+
+@media (max-width: 1023px) {
+  /* Handy und Tablet: Fläche unter der Kopfzeile über die ganze Breite */
+  .menue-flaeche.glocke-flaeche {
+    position: fixed;
+    top: calc(var(--kopf, 52px) + 6px);
+    right: 8px;
+    left: auto;
+    max-height: calc(100vh - var(--kopf, 52px) - 110px);
   }
 }
