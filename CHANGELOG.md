@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.9.2] – 2026-11-10
+
+### Geändert
+
+- Handbuch für Azubis: Das Kapitel „Erste Schritte“ entfällt – es wiederholte nur die Anmeldung und die folgenden Kapitel. Der einzige eigene Punkt, die Unterschrift, steht jetzt dort, wo man sie braucht: am Anfang von „Einen Bericht schreiben“.
+
 ## [0.9.1] – 2026-11-10
 
 ### Neu

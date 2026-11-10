@@ -86,24 +86,6 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
-    id: 'start',
-    titel: 'Erste Schritte',
-    inhalt: (
-      <ol className="schritte">
-        <li>Du meldest dich mit deinem Microsoft-Konto vom Betrieb an. Ein eigenes Passwort für das Portal gibt es nicht.</li>
-        <li>
-          Geh zu <Link zu="/konto">Konto</Link> und unterschreibe einmal im Feld „Unterschrift“ – mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt später unter deine Berichte.
-        </li>
-        <li>
-          Schau dir deinen <Link zu="/">Ausbildungsplan</Link> an. Oben stehen diese und die nächste Woche.
-        </li>
-        <li>
-          Schreib deinen ersten Bericht im <Link zu="/berichtsheft">Berichtsheft</Link>.
-        </li>
-      </ol>
-    ),
-  },
-  {
     id: 'plan',
     titel: 'Den Ausbildungsplan lesen',
     inhalt: (
@@ -129,9 +111,13 @@ const AZUBI: Kapitel[] = [
     titel: 'Einen Bericht schreiben – Schritt für Schritt',
     inhalt: (
       <>
+        <p>
+          <strong>Einmal vorab:</strong> Unterschreibe unter <Link zu="/konto">Konto</Link> im Feld „Unterschrift“ – mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie
+          kannst du nicht einreichen.
+        </p>
         <ol className="schritte">
           <li>
-            Öffne das <Link zu="/berichtsheft">Berichtsheft</Link> und tippe auf die Woche.
+            Öffne das <Link zu="/berichtsheft">Berichtsheft</Link> und wähle bei der Woche „Schreiben“.
           </li>
           <li>
             Trag ein, was du gemacht hast, und wie viele Stunden es waren:
