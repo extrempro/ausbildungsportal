@@ -3968,3 +3968,34 @@ fieldset.vorlage-eintrag legend + * {
   align-items: center;
   text-decoration: none;
 }
+
+/* ---------- Sammelplanung: zuletzt eingetragen ---------- */
+.sammel-letzte {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sammel-letzte li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.sammel-letzte li > span {
+  display: flex;
+  flex: 1 1 260px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vorlage-eintrag label > span.klein {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
+}

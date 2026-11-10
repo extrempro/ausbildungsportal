@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { api, ART_TEXT, datum, PLAN_ARTEN, ROLLE_TEXT } from '../api';
+import { api, ART_TEXT, datum, PLAN_ARTEN, ROLLE_TEXT, zeit } from '../api';
 import type { PlanArt, Planvorlage, Rolle } from '../api';
 import { Link } from '../router';
 
@@ -23,8 +23,27 @@ interface Daten {
   azubis: SammelAzubi[];
   bausteine: Planvorlage[];
   personen: { id: number; anzeigename: string; rolle: Rolle }[];
+  letzte: Lauf[];
+}
+/** Ein früherer Lauf der Sammelplanung und was davon noch im Plan steht */
+interface Lauf {
+  id: number;
+  zeit: string;
+  name: string;
+  titel: string;
+  azubis: number;
+  eintraege: number;
+  vorhanden: number;
+  unveraendert: number;
+}
+interface Zurueck {
+  entfernt: number;
+  geblieben: { azubi: string; titel: string }[];
+  letzte: Lauf[];
 }
 interface Ergebnis {
+  laufId: number | null;
+  letzte: Lauf[];
   eingetragen: number;
   ergebnis: { id: number; anzeigename: string; ok: boolean; anzahl: number; grund: string }[];
 }
@@ -46,9 +65,17 @@ export function Sammelplanung() {
   const [ab, setAb] = useState('');
   const [laeuft, setLaeuft] = useState(false);
   const [ergebnis, setErgebnis] = useState<Ergebnis | null>(null);
+  const [letzte, setLetzte] = useState<Lauf[]>([]);
+  const [zurueck, setZurueck] = useState<{ titel: string; r: Zurueck } | null>(null);
 
   useEffect(() => {
-    api<Daten>('GET', '/api/plan/sammel').then(setD, (e: Error) => setFehler(e.message));
+    api<Daten>('GET', '/api/plan/sammel').then(
+      (r) => {
+        setD(r);
+        setLetzte(r.letzte);
+      },
+      (e: Error) => setFehler(e.message),
+    );
   }, []);
 
   // Schnellauswahl: alle, je Ausbildungsjahr, je Berufsschule, je Beruf (nur was es mehr als einmal gibt)
@@ -96,13 +123,35 @@ export function Sammelplanung() {
     try {
       const azubiIds = [...gewaehlt];
       const body = weise === 'eintrag' ? { azubiIds, eintrag: { art, von, bis: bis || von, titel, text, zustaendigId: mitPerson && zustaendigId ? Number(zustaendigId) : null } } : { azubiIds, vorlageId: Number(baustein), ab };
-      setErgebnis(await api<Ergebnis>('POST', '/api/plan/sammel', body));
+      const r = await api<Ergebnis>('POST', '/api/plan/sammel', body);
+      setErgebnis(r);
+      setLetzte(r.letzte);
+      setZurueck(null);
     } catch (err) {
       setFehler(err instanceof Error ? err.message : 'Fehler');
     } finally {
       setLaeuft(false);
     }
   };
+
+  const nimmZurueck = async (l: Lauf) => {
+    const bleibt = l.vorhanden - l.unveraendert;
+    const frage =
+      `Sammelplanung „${l.titel.replace(/[„“]/g, '')}“ vom ${zeit(l.zeit)} zurücknehmen?\n\n` +
+      (l.unveraendert === 0 ? 'Alle Einträge wurden seitdem geändert – es wird nichts entfernt.' : `${l.unveraendert === 1 ? '1 Eintrag wird' : `${l.unveraendert} Einträge werden`} aus den Plänen entfernt.`) +
+      (bleibt > 0 ? `\n${bleibt === 1 ? '1 Eintrag wurde' : `${bleibt} Einträge wurden`} seitdem geändert oder abgehakt und ${bleibt === 1 ? 'bleibt' : 'bleiben'} stehen.` : '');
+    if (!window.confirm(frage)) return;
+    setFehler('');
+    try {
+      const r = await api<Zurueck>('DELETE', `/api/plan/sammel/${l.id}`);
+      setLetzte(r.letzte);
+      setZurueck({ titel: l.titel, r });
+      if (ergebnis?.laufId === l.id) setErgebnis(null);
+    } catch (err) {
+      setFehler(err instanceof Error ? err.message : 'Fehler');
+    }
+  };
+  const laufVonEben = ergebnis?.laufId ? letzte.find((l) => l.id === ergebnis.laufId) : undefined;
 
   return (
     <>
@@ -256,6 +305,13 @@ export function Sammelplanung() {
                   {ergebnis.eingetragen === 0 ? 'Bei niemandem eingetragen.' : `Bei ${ergebnis.eingetragen} von ${ergebnis.ergebnis.length} eingetragen.`}
                   {ergebnis.eingetragen > 0 && ' Ein zweiter Klick würde alles noch einmal eintragen.'}
                 </p>
+                {laufVonEben && (
+                  <p>
+                    <button type="button" className="knopf schlicht klein gefahr" onClick={() => void nimmZurueck(laufVonEben)}>
+                      Das war ein Versehen – zurücknehmen
+                    </button>
+                  </p>
+                )}
                 <ul>
                   {ergebnis.ergebnis.map((x) => (
                     <li key={x.id} className={x.ok ? 'ok' : 'aus'}>
@@ -270,6 +326,49 @@ export function Sammelplanung() {
             )}
           </section>
         </form>
+      )}
+
+      {zurueck && (
+        <div className={`hinweis ${zurueck.r.entfernt > 0 ? 'gut' : ''}`} role="status">
+          <p>
+            Zurückgenommen – {zurueck.titel}: {zurueck.r.entfernt === 1 ? '1 Eintrag' : `${zurueck.r.entfernt} Einträge`} entfernt.
+            {zurueck.r.geblieben.length > 0 && ' Diese Einträge wurden seitdem geändert oder abgehakt und stehen noch im Plan:'}
+          </p>
+          {zurueck.r.geblieben.length > 0 && (
+            <ul>
+              {zurueck.r.geblieben.map((g, i) => (
+                <li key={i}>
+                  {g.azubi}: {g.titel}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {letzte.length > 0 && (
+        <section className="karte" aria-label="Zuletzt eingetragen">
+          <h2>Zuletzt eingetragen</h2>
+          <p className="leise klein">
+            Die letzten Sammelplanungen der vergangenen 30 Tage. „Zurücknehmen“ entfernt die Einträge wieder aus den Plänen – außer denen, die seitdem jemand geändert oder abgehakt hat.
+          </p>
+          <ul className="sammel-letzte">
+            {letzte.map((l) => (
+              <li key={l.id}>
+                <span>
+                  <strong>{l.titel}</strong>
+                  <span className="leise klein">
+                    {zeit(l.zeit)} · {l.name} · {l.azubis === 1 ? '1 Azubi' : `${l.azubis} Azubis`}, {l.eintraege === 1 ? '1 Eintrag' : `${l.eintraege} Einträge`}
+                    {l.vorhanden !== l.eintraege && ` · noch ${l.vorhanden} im Plan`}
+                    {l.vorhanden !== l.unveraendert && ` · ${l.vorhanden - l.unveraendert} seitdem geändert`}
+                  </span>
+                </span>
+                <button type="button" className="knopf schlicht klein gefahr" onClick={() => void nimmZurueck(l)}>
+                  Zurücknehmen
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </>
   );

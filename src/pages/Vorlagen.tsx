@@ -115,6 +115,8 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
   const [berufId, setBerufId] = useState<number | null>(vorlage?.berufId ?? null);
   const [zeilen, setZeilen] = useState<Zeile[]>(sortiert(vorlage?.eintraege ?? []).map((e) => ({ ...e, unteraufgaben: e.unteraufgaben.join('\n') })));
   const [meldung, setMeldung] = useState<Meldung>(null);
+  // „Beginnt in Woche“ braucht es erst, wenn ein Baustein mehrere Einträge hat (oder einer nicht in Woche 1 beginnt)
+  const mitVersatz = zeilen.length > 1 || zeilen.some((z) => z.abWoche !== 1);
   const aendere = (i: number, teil: Partial<Zeile>) => setZeilen(zeilen.map((z, j) => (j === i ? { ...z, ...teil } : z)));
 
   const speichere = async () => {
@@ -161,7 +163,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
       {zeilen.map((z, i) => (
         <fieldset className={`abschnitt vorlage-eintrag ${z.art}`} key={i}>
           <legend>
-            <span className={`legende-art ${z.art}`}>{ART_TEXT[z.art]}</span> {wochen(z)}
+            <span className={`legende-art ${z.art}`}>{ART_TEXT[z.art]}</span> {mitVersatz ? wochen(z) : z.wochen === 1 ? '1 Woche' : `${z.wochen} Wochen`}
             {z.titel && ` · ${z.titel}`}
           </legend>
           <div className="reihe">
@@ -176,13 +178,19 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
               </select>
             </label>
             <label>
-              Ab Woche des Bausteins
-              <input type="number" min={1} max={260} value={z.abWoche} onChange={(e) => aendere(i, { abWoche: Number(e.target.value) })} />
-            </label>
-            <label>
               Dauer in Wochen
               <input type="number" min={1} max={160} value={z.wochen} onChange={(e) => aendere(i, { wochen: Number(e.target.value) })} />
             </label>
+            {/* Nur bei mehreren Einträgen von Bedeutung: der wievielten Woche nach dem Einfügen dieser Eintrag beginnt */}
+            {mitVersatz && (
+              <label>
+                Beginnt in Woche
+                <input type="number" min={1} max={260} value={z.abWoche} aria-describedby={`versatz-${i}`} onChange={(e) => aendere(i, { abWoche: Number(e.target.value) })} />
+                <span id={`versatz-${i}`} className="leise klein">
+                  {z.abWoche === 1 ? 'gleich in der Woche, in der du den Baustein einfügst' : `${z.abWoche - 1} ${z.abWoche === 2 ? 'Woche' : 'Wochen'} nach dem Einfügen`}
+                </span>
+              </label>
+            )}
             <label className="ganz">
               Titel
               <input value={z.titel} maxLength={120} onChange={(e) => aendere(i, { titel: e.target.value })} />
@@ -214,8 +222,8 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
           className="knopf schlicht"
           disabled={zeilen.length >= 100}
           onClick={() => {
-            const letzte = zeilen[zeilen.length - 1];
-            setZeilen([...zeilen, { art: 'einsatz', abWoche: letzte ? letzte.abWoche + letzte.wochen : 1, wochen: 4, titel: '', text: '', unteraufgaben: '' }]);
+            // der erste Eintrag ist meist die Station selbst, weitere sind Aufgaben oder Notizen dazu – alle beginnen in Woche 1
+            setZeilen([...zeilen, zeilen.length === 0 ? { art: 'einsatz', abWoche: 1, wochen: 4, titel: '', text: '', unteraufgaben: '' } : { art: 'aufgabe', abWoche: 1, wochen: 1, titel: '', text: '', unteraufgaben: '' }]);
           }}
         >
           Eintrag hinzufügen
@@ -224,7 +232,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
           {vorlage ? 'Baustein speichern' : 'Baustein anlegen'}
         </button>
       </div>
-      <p className="leise klein">Beim Speichern werden die Einträge nach Wochen geordnet.</p>
+      {mitVersatz && <p className="leise klein">„Beginnt in Woche“ zählt ab der Woche, in der du den Baustein in einen Plan einfügst. Beim Speichern werden die Einträge danach geordnet.</p>}
     </>
   );
 }
@@ -328,7 +336,7 @@ export function Vorlagen() {
           <span>
             <strong>Einträge planen</strong>
             <br />
-            <span className="leise klein">Je Eintrag: Art, Dauer und ab welcher Woche des Bausteins. Woche 1 ist später die Woche, in der du ihn einfügst.</span>
+            <span className="leise klein">Meist ein Einsatz mit seiner Dauer, dazu bei Bedarf Aufgaben oder Notizen. Wann der Baustein beginnt, legst du erst beim Einfügen fest.</span>
           </span>
         </li>
         <li>
@@ -386,7 +394,7 @@ export function Vorlagen() {
                 <ul className="vorlage-ablauf">
                   {sortiert(v.eintraege).map((e, i) => (
                     <li key={i}>
-                      <span className="vorlage-wochen">{wochen(e)}</span>
+                      <span className="vorlage-wochen">{v.eintraege.length === 1 && e.abWoche === 1 ? (e.wochen === 1 ? '1 Woche' : `${e.wochen} Wochen`) : wochen(e)}</span>
                       <span className={`legende-art ${e.art}`}>{ART_TEXT[e.art]}</span>
                       <span>
                         {e.titel}

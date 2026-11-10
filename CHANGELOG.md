@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.15.0] – 2026-11-10
+
+### Neu
+
+- Sammelplanung zurücknehmen: Auf der Seite „Sammelplanung“ stehen die letzten Läufe der vergangenen 30 Tage. „Zurücknehmen“ entfernt die dabei angelegten Einträge wieder aus allen Plänen. Einträge, die seitdem jemand geändert oder abgehakt hat, bleiben stehen und werden genannt. Direkt nach dem Eintragen gibt es dafür den Knopf „Das war ein Versehen – zurücknehmen“.
+
+### Geändert
+
+- Planbausteine: Das Feld „Ab Woche“ heißt jetzt „Beginnt in Woche“ und erscheint erst, wenn ein Baustein mehrere Einträge hat – bei einem einzelnen Eintrag genügt die Dauer. Darunter steht in Worten, was die Zahl bedeutet. Weitere Einträge beginnen von sich aus in Woche 1 (als Aufgabe), statt an den vorherigen anzuschließen.
+
 ## [0.14.0] – 2026-11-10
 
 ### Neu
