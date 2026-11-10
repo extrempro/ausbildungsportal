@@ -1,5 +1,21 @@
 # Änderungen
 
+## [0.9.0] – 2026-11-10
+
+### Neu
+
+- Handbuch je Rolle (Azubi, Ausbildungsbeauftragte, Ausbilder, Super-Admin) in der App; Ausbilder und Beauftragte können auch das Handbuch der Azubis lesen. Es lässt sich drucken.
+- Logo des Betriebs: Der Super-Admin hinterlegt es unter „Erscheinungsbild“. Es steht in der Kopfzeile und auf der Anmeldeseite; „Ausbildungsportal“ bleibt klein daneben stehen.
+- Als App auf Android und iOS (Progressive Web App): installierbar auf den Startbildschirm, mit Hinweisseite ohne Verbindung und einer Anleitung im Handbuch. Auf Android erscheint im Menü „Als App installieren“.
+- Kurzwege in der Azubi-Liste und auf der Startseite der Ausbilder: direkt zum Ausbildungsplan und zum Berichtsheft.
+
+### Geändert
+
+- Die Startseite der Azubis ist ihr Ausbildungsplan. Die Angaben „Meine Ausbildung“ stehen jetzt unter „Konto“.
+- Berichtsheft für Azubis verständlicher: Anleitung in drei Schritten, an jeder Woche ein Knopf („Schreiben“, „Weiterschreiben“, „Überarbeiten“, „Ansehen“), im Bericht der Ablauf mit Erklärung zum Stand, Hinweise und Beispiele zu jedem Abschnitt. Ein neuer Bericht beginnt mit einer leeren Zeile.
+- Das Protokoll sieht nur noch der Super-Admin – vollständig, auch Ereignisse zu Berichten und Stammdaten (ohne Inhalte). Ausbilder sehen es nicht mehr.
+- Neues Favicon und neue App-Symbole.
+
 ## [0.8.0] – 2026-11-10
 
 ### Neu

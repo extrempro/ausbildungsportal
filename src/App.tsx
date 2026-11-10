@@ -15,7 +15,8 @@ import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
-import { Hilfe } from './pages/Hilfe';
+import { Erscheinungsbild } from './pages/Erscheinungsbild';
+import { Handbuch } from './pages/Handbuch';
 import { Icon } from './icons';
 import type { IconName } from './icons';
 import { geheZu, Link, usePfad } from './router';
@@ -50,6 +51,22 @@ export function App() {
   const [version, setVersion] = useState('');
   const [dunkel, setDunkel] = useState(false);
   const [menue, setMenue] = useState<Menue>(null);
+  const [logo, setLogo] = useState<string | null>(null);
+  // Android/Chrome meldet, wenn sich das Portal als App installieren lässt; iOS kennt das nicht (dort über „Teilen“)
+  const [installation, setInstallation] = useState<{ prompt: () => Promise<unknown> } | null>(null);
+  useEffect(() => {
+    const merke = (e: Event) => {
+      e.preventDefault();
+      setInstallation(e as unknown as { prompt: () => Promise<unknown> });
+    };
+    const fertig = () => setInstallation(null);
+    window.addEventListener('beforeinstallprompt', merke);
+    window.addEventListener('appinstalled', fertig);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', merke);
+      window.removeEventListener('appinstalled', fertig);
+    };
+  }, []);
 
   const lade = useCallback(async () => {
     try {
@@ -64,6 +81,7 @@ export function App() {
   useEffect(() => {
     setzeAbmeldung(() => setKonto(null));
     void lade();
+    api<{ logo: string | null }>('GET', '/api/branding').then((r) => setLogo(r.logo), () => {});
   }, [lade]);
 
   useEffect(() => {
@@ -166,11 +184,18 @@ export function App() {
   const heft = /^(?:\/azubis\/(\d{1,12}))?\/berichtsheft(?:\/(druck|\d{4}-\d{2}-\d{2}))?$/.exec(pfad);
   const heftAzubi = heft ? (heft[1] ? (betreut ? Number(heft[1]) : null) : konto.rolle === 'azubi' ? konto.id : null) : null;
 
-  const plan = /^(?:\/azubis\/(\d{1,12}))?\/plan$/.exec(pfad);
-  const planAzubi = plan ? (plan[1] ? (betreut ? Number(plan[1]) : null) : konto.rolle === 'azubi' ? konto.id : null) : null;
+  // Plan eines betreuten Azubis; der eigene Plan des Azubis ist seine Startseite
+  const plan = /^\/azubis\/(\d{1,12})\/plan$/.exec(pfad);
+  const planAzubi = plan && betreut ? Number(plan[1]) : null;
+  // alte Adressen
+  if ((pfad === '/plan' && konto.rolle === 'azubi') || pfad === '/hilfe') {
+    queueMicrotask(() => geheZu(pfad === '/hilfe' ? '/handbuch' : '/'));
+    return null;
+  }
 
   let seite;
-  if (pfad === '/' && konto.rolle !== 'admin') seite = <Start konto={konto} />;
+  if (pfad === '/' && konto.rolle === 'azubi') seite = <PlanSeite key={konto.id} azubiId={konto.id} />;
+  else if (pfad === '/' && konto.rolle !== 'admin') seite = <Start konto={konto} />;
   else if (heft && heftAzubi !== null && heft[2] === 'druck') seite = <BerichteDruck key={heftAzubi} azubiId={heftAzubi} />;
   else if (heft && heftAzubi !== null && heft[2]) seite = <BerichtSeite key={`${heftAzubi}-${heft[2]}`} azubiId={heftAzubi} montag={heft[2]} eigenes={!heft[1]} />;
   else if (heft && heftAzubi !== null) seite = <Berichtsheft key={heftAzubi} azubiId={heftAzubi} />;
@@ -178,13 +203,14 @@ export function App() {
   else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite />;
   else if (pfad === '/verwaltung/vorlagen' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
-  else if (pfad === '/hilfe') seite = <Hilfe rolle={konto.rolle} />;
+  else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} />;
+  else if (pfad === '/verwaltung/erscheinungsbild' && konto.rolle === 'admin') seite = <Erscheinungsbild logo={logo} onGeaendert={setLogo} />;
   else if (pfad === '/abzeichnen' && betreut) seite = <Abzeichnen />;
   else if (pfad === '/azubis' && betreut) seite = <Azubis ich={konto} />;
   else if (azubiId && betreut) seite = <AzubiDetail key={azubiId} id={Number(azubiId)} />;
   else if (pfad === '/verwaltung/stammdaten' && konto.rolle === 'ausbilder') seite = <Stammdaten />;
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
-  else if (pfad === '/verwaltung/protokoll' && verwaltet) seite = <Protokoll nurKonto={konto.rolle === 'admin'} />;
+  else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
   else
     seite = (
@@ -202,12 +228,13 @@ export function App() {
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
+          { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'vorlagen' },
         ]
       : konto.rolle === 'azubi'
         ? [
-            { zu: '/', text: 'Start', icon: 'start' },
+            // die Startseite des Azubis ist sein Ausbildungsplan
+            { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
             { zu: '/berichtsheft', text: 'Berichtsheft', icon: 'heft', aktivAb: '/berichtsheft' },
-            { zu: '/plan', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
           ]
         : [
             { zu: '/', text: 'Start', icon: 'start' },
@@ -221,12 +248,11 @@ export function App() {
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/stammdaten', text: 'Stammdaten', icon: 'stammdaten' },
           { zu: '/verwaltung/vorlagen', text: 'Planvorlagen', icon: 'vorlagen' },
-          { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
         ]
       : [];
   const persoenlich: Punkt[] = [
     { zu: '/konto', text: 'Konto', icon: 'konto' },
-    { zu: '/hilfe', text: 'Hilfe', icon: 'hilfe' },
+    { zu: '/handbuch', text: 'Handbuch', icon: 'hilfe' },
     { zu: '/versionen', text: 'Versionshinweise', icon: 'versionen' },
   ];
   const inVerwaltung = verwaltung.some((p) => p.zu === pfad);
@@ -250,6 +276,21 @@ export function App() {
     ));
   const schalter = (
     <>
+      {installation && (
+        <li>
+          <button
+            type="button"
+            onClick={() => {
+              void installation.prompt();
+              setInstallation(null);
+              setMenue(null);
+            }}
+          >
+            <Icon name="laden" />
+            Als App installieren
+          </button>
+        </li>
+      )}
       <li>
         <button type="button" onClick={() => void wechsleTheme()}>
           <Icon name={dunkel ? 'sonne' : 'mond'} />
@@ -273,8 +314,17 @@ export function App() {
       <header className="leiste">
         <div className="leiste-innen">
           <Link zu={start} className="marke">
-            <img src="/favicon.svg" alt="" width="28" height="28" />
-            Ausbildungsportal
+            {logo ? (
+              <>
+                <img src={logo} alt="Logo des Betriebs" className="logo" />
+                <span className="marke-klein">Ausbildungsportal</span>
+              </>
+            ) : (
+              <>
+                <img src="/favicon.svg" alt="" width="28" height="28" />
+                Ausbildungsportal
+              </>
+            )}
           </Link>
           <nav aria-label="Hauptnavigation" className="haupt-nav">
             {haupt.map((p) => (
@@ -327,7 +377,7 @@ export function App() {
           {' · '}
           <Link zu="/versionen">Versionshinweise</Link>
           {' · '}
-          <Link zu="/hilfe">Hilfe</Link>
+          <Link zu="/handbuch">Handbuch</Link>
         </span>
       </footer>
 

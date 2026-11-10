@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
-import type { Konto, Theme } from '../api';
+import type { Konto, ProfilAntwort, Theme } from '../api';
+import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 
 export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<void> }) {
@@ -46,7 +47,7 @@ export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<
   );
 }
 
-function Unterschrift() {
+function Unterschrift({ konto }: { konto: Konto }) {
   const [gespeichert, setGespeichert] = useState<string | null | undefined>(undefined);
   const [neu, setNeu] = useState('');
   const [zeichnen, setZeichnen] = useState(false);
@@ -77,8 +78,9 @@ function Unterschrift() {
   return (
     <>
       <p className="leise klein">
-        Mit dieser Unterschrift werden Berichte beim Einreichen bzw. Abzeichnen unterschrieben. Am Bericht wird eine Kopie gespeichert – eine spätere Änderung
-        verändert alte Berichte nicht.
+        {konto.rolle === 'azubi'
+          ? 'Unterschreibe hier einmal mit dem Finger, einem Stift oder der Maus. Wenn du einen Bericht einreichst, kommt diese Unterschrift darunter. Änderst du sie später, bleiben alte Berichte, wie sie sind.'
+          : 'Mit dieser Unterschrift zeichnest du Berichte ab. Am Bericht wird eine Kopie gespeichert – eine spätere Änderung verändert alte Berichte nicht.'}
       </p>
       {gespeichert && !zeichnen && (
         <>
@@ -119,6 +121,21 @@ function Unterschrift() {
   );
 }
 
+/** Die Eckdaten der eigenen Ausbildung – gepflegt vom Ausbilder. */
+function MeineAusbildung({ id }: { id: number }) {
+  const [profil, setProfil] = useState<ProfilAntwort | null>(null);
+  useEffect(() => {
+    api<ProfilAntwort>('GET', `/api/azubis/${id}/profil`).then(setProfil, () => {});
+  }, [id]);
+  if (!profil) return <p className="leise">Lädt …</p>;
+  return (
+    <>
+      <ProfilUebersicht p={profil} />
+      <p className="leise klein">Diese Angaben trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</p>
+    </>
+  );
+}
+
 export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: () => void | Promise<void> }) {
   const setzeTheme = async (theme: Theme) => {
     await api('PUT', '/api/ich/theme', { theme });
@@ -143,6 +160,13 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
         </dl>
       </section>
 
+      {konto.rolle === 'azubi' && (
+        <section className="karte">
+          <h2>Meine Ausbildung</h2>
+          <MeineAusbildung id={konto.id} />
+        </section>
+      )}
+
       <section className="karte">
         <h2>Darstellung</h2>
         <label>
@@ -158,7 +182,7 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
       {konto.rolle !== 'admin' && (
         <section className="karte">
           <h2>Unterschrift</h2>
-          <Unterschrift />
+          <Unterschrift konto={konto} />
         </section>
       )}
 

@@ -65,7 +65,10 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/azubis': 'ausbilder,beauftragter',
     'GET /api/azubis/:id/zuweisungen': 'ausbilder,beauftragter,azubi',
     'PUT /api/azubis/:id/zuweisungen': 'ausbilder',
-    'GET /api/protokoll': 'admin,ausbilder',
+    'GET /api/protokoll': 'admin',
+    'GET /api/branding': 'offen',
+    'PUT /api/branding/logo': 'admin',
+    'DELETE /api/branding/logo': 'admin',
     'GET /api/stammdaten': 'ausbilder,beauftragter,azubi',
     'PUT /api/stammdaten/betrieb': 'ausbilder',
     'POST /api/stammdaten/berufe': 'ausbilder',
@@ -489,7 +492,7 @@ test('Zuweisungen: nur Beauftragte zuweisbar, Zeitraum muss stimmen, bei Fehler 
 
 // ---------- Protokoll ----------
 
-test('Protokoll: Super-Admin sieht nur Konto-Ereignisse, Ausbilder alles; nie Passwörter', async () => {
+test('Protokoll: nur der Super-Admin, vollständig; nie Passwörter', async () => {
   const u = await umgebung();
   const w = alle(u);
   await ruf(u, 'POST', '/api/auth/lokal', { body: { benutzername: 'chef', passwort: 'Falsches-Passwort-123' } });
@@ -498,10 +501,9 @@ test('Protokoll: Super-Admin sieht nur Konto-Ereignisse, Ausbilder alles; nie Pa
 
   const beimAdmin = koerper(await ruf(u, 'GET', '/api/protokoll', { cookies: sitzung(u, w.admin) })).eintraege as { aktion: string; bereich: string }[];
   assert.ok(beimAdmin.length >= 3);
-  assert.ok(beimAdmin.every((e) => e.bereich === 'konto'));
   assert.ok(beimAdmin.some((e) => e.aktion === 'anmeldung_fehlgeschlagen'));
-  const beimAusbilder = koerper(await ruf(u, 'GET', '/api/protokoll', { cookies: sitzung(u, w.ausbilder) })).eintraege as { aktion: string }[];
-  assert.ok(beimAusbilder.some((e) => e.aktion === 'zuweisung_geaendert'));
+  assert.ok(beimAdmin.some((e) => e.aktion === 'zuweisung_geaendert'), 'auch fachliche Ereignisse');
+  for (const wer of [w.ausbilder, w.beauftragter, w.azubi]) assert.equal((await ruf(u, 'GET', '/api/protokoll', { cookies: sitzung(u, wer) })).status, 403);
 
   const alles = JSON.stringify(u.db.prepare('SELECT * FROM protokoll').all());
   for (const geheim of ['Falsches-Passwort-123', START, koerper(neu).startpasswort as string]) assert.ok(!alles.includes(geheim));

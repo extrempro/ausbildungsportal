@@ -15,9 +15,11 @@ export function Anmelden() {
   const [status, setStatus] = useState<{ entra: boolean; dev: boolean } | null>(null);
   const [fehler, setFehler] = useState(() => FEHLER[new URLSearchParams(window.location.search).get('fehler') ?? ''] ?? '');
   const [laeuft, setLaeuft] = useState(false);
+  const [logo, setLogo] = useState<string | null>(null);
 
   useEffect(() => {
     api<{ entra: boolean; dev: boolean }>('GET', '/api/auth/status').then(setStatus, () => setStatus({ entra: false, dev: false }));
+    api<{ logo: string | null }>('GET', '/api/branding').then((r) => setLogo(r.logo), () => {});
   }, []);
 
   const sende = (pfad: string, daten: (f: FormData) => unknown) => async (e: FormEvent<HTMLFormElement>) => {
@@ -35,6 +37,7 @@ export function Anmelden() {
 
   return (
     <main className="schmal">
+      <img src={logo ?? '/favicon.svg'} alt={logo ? 'Logo des Betriebs' : ''} className={logo ? 'anmelde-logo' : 'anmelde-logo symbol'} />
       <h1>Ausbildungsportal</h1>
       <p className="leise">Ausbildungsplan und Berichtsheft</p>
       {fehler && (

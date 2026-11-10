@@ -5,11 +5,22 @@ import { geheZu, Link, setzeUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
 const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
-const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: string; hilfe: string }[] = [
-  { schluessel: 'betrieb', titel: 'Betriebliche Tätigkeiten', hilfe: 'Was hast du im Betrieb gemacht?' },
-  { schluessel: 'unterweisung', titel: 'Unterweisungen und Schulungen', hilfe: 'z. B. Einweisungen, betrieblicher Unterricht, Lehrgänge' },
-  { schluessel: 'schule', titel: 'Berufsschule', hilfe: 'Themen des Unterrichts' },
+const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: string; hilfe: string; beispiel: string }[] = [
+  { schluessel: 'betrieb', titel: 'Betriebliche Tätigkeiten', hilfe: 'Was hast du im Betrieb gemacht? Schreib je Tätigkeit eine Zeile und trag die Stunden dazu ein.', beispiel: 'z. B. Wareneingang geprüft und 40 Artikel eingelagert' },
+  { schluessel: 'unterweisung', titel: 'Unterweisungen und Schulungen', hilfe: 'Wurde dir etwas erklärt oder warst du auf einem Lehrgang? Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Unterweisung Arbeitssicherheit' },
+  { schluessel: 'schule', titel: 'Berufsschule', hilfe: 'Warst du in der Berufsschule? Schreib die Themen aus dem Unterricht auf. Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Mathe: Prozentrechnung' },
 ];
+
+/** Was der Stand für den Azubi bedeutet und was als Nächstes zu tun ist. */
+const STATUS_HILFE: Record<string, string> = {
+  fehlt: 'Für diese Woche hast du noch nichts geschrieben. Trag unten ein, was du gemacht hast.',
+  entwurf: 'Das ist ein Entwurf. Nur du siehst ihn. Wenn alles drinsteht, wähle unten „Einreichen“.',
+  eingereicht: 'Du hast den Bericht abgegeben. Jetzt liest ihn dein Ausbilder. Bis er unterschrieben hat, kannst du den Bericht zurückziehen und ändern.',
+  zurueck: 'Dein Ausbilder möchte, dass du etwas änderst. Der Grund steht unten. Ändere den Bericht und reiche ihn noch einmal ein.',
+  abgezeichnet: 'Fertig: Dein Ausbilder hat den Bericht unterschrieben. Er lässt sich nicht mehr ändern.',
+};
+const SCHRITTE = ['Schreiben', 'Einreichen', 'Abgezeichnet'];
+const SCHRITT_VON: Record<string, number> = { fehlt: 0, entwurf: 0, zurueck: 0, eingereicht: 1, abgezeichnet: 2 };
 const VERLAUF_TEXT: Record<string, string> = {
   eingereicht: 'eingereicht',
   zurueckgezogen: 'zurückgezogen',
@@ -110,21 +121,22 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
   );
 }
 
-function EintragListe({ titel, hilfe, liste, onAendern }: { titel: string; hilfe: string; liste: BerichtEintrag[]; onAendern: (l: BerichtEintrag[]) => void }) {
+function EintragListe({ titel, hilfe, beispiel, liste, onAendern }: { titel: string; hilfe: string; beispiel: string; liste: BerichtEintrag[]; onAendern: (l: BerichtEintrag[]) => void }) {
   const setze = (i: number, teil: Partial<BerichtEintrag>) => onAendern(liste.map((e, j) => (j === i ? { ...e, ...teil } : e)));
   return (
     <fieldset className="abschnitt">
       <legend>{titel}</legend>
+      <p className="leise klein abschnitt-hilfe">{hilfe}</p>
       {liste.map((e, i) => (
         <div className="zeile" key={i}>
           <label className="breit">
-            <span className="nur-vorleser">
-              {titel}, Zeile {i + 1}
+            <span className="klein">
+              Was hast du gemacht? <span className="nur-vorleser">({titel}, Zeile {i + 1})</span>
             </span>
-            <textarea rows={2} value={e.text} maxLength={2000} placeholder={hilfe} onChange={(ev) => setze(i, { text: ev.target.value })} />
+            <textarea rows={2} value={e.text} maxLength={2000} placeholder={beispiel} onChange={(ev) => setze(i, { text: ev.target.value })} />
           </label>
           <label>
-            <span className="nur-vorleser">Stunden</span>
+            <span className="klein">Stunden</span>
             <input type="number" min={0} max={60} step={0.25} value={e.stunden} aria-label={`Stunden, ${titel}, Zeile ${i + 1}`} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
           </label>
           <button type="button" className="knopf schlicht" aria-label={`Zeile ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
@@ -133,7 +145,7 @@ function EintragListe({ titel, hilfe, liste, onAendern }: { titel: string; hilfe
         </div>
       ))}
       <button type="button" className="knopf schlicht" onClick={() => onAendern([...liste, { text: '', stunden: 0 }])}>
-        Zeile hinzufügen
+        {liste.length ? 'Weitere Zeile' : 'Zeile hinzufügen'}
       </button>
     </fieldset>
   );
@@ -144,6 +156,7 @@ function AbwesenheitListe({ montag, tagSoll, liste, onAendern }: { montag: strin
   return (
     <fieldset className="abschnitt">
       <legend>Abwesenheit</legend>
+      <p className="leise klein abschnitt-hilfe">Hattest du Urlaub, warst du krank oder war ein Feiertag? Trag jeden Tag einzeln ein. Die Stunden für einen ganzen Tag stehen schon drin.</p>
       {liste.map((a, i) => (
         <div className="zeile vier" key={i}>
           <label>
@@ -199,7 +212,8 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
 
   const uebernimm = useCallback((neu: Bericht) => {
     setB(neu);
-    setInhalt(neu.inhalt);
+    // ein neuer Bericht beginnt mit einer leeren Zeile – so ist sofort klar, wo man schreibt
+    setInhalt(neu.status === 'fehlt' && neu.rechte.schreiben && neu.inhalt.betrieb.length === 0 ? { ...neu.inhalt, betrieb: [{ text: '', stunden: 0 }] } : neu.inhalt);
     setGeaendert(false);
   }, []);
 
@@ -299,9 +313,27 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
         {b.ausbildungsjahr ? ` · ${b.ausbildungsjahr}. Ausbildungsjahr` : ''}
       </p>
 
+      {eigenes && (
+        <>
+          <ol className="ablauf nicht-drucken" aria-label="Ablauf des Berichts">
+            {SCHRITTE.map((s, i) => {
+              const stand = SCHRITT_VON[b.status] ?? 0;
+              return (
+                <li key={s} className={i < stand ? 'erledigt' : i === stand ? 'aktuell' : undefined} aria-current={i === stand ? 'step' : undefined}>
+                  <span className="ablauf-nr">{i + 1}</span>
+                  {s}
+                  {i < stand && <span className="nur-vorleser"> (erledigt)</span>}
+                </li>
+              );
+            })}
+          </ol>
+          <p className="nicht-drucken">{STATUS_HILFE[b.status]}</p>
+        </>
+      )}
+
       {b.status === 'zurueck' && b.kommentar && (
         <div className="hinweis nicht-drucken" role="status">
-          <strong>Zurückgegeben:</strong> <span className="mehrzeilig">{b.kommentar}</span>
+          <strong>{eigenes ? 'Das sollst du ändern:' : 'Zurückgegeben:'}</strong> <span className="mehrzeilig">{b.kommentar}</span>
         </div>
       )}
       {meldung && (
@@ -319,16 +351,19 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
       {b.rechte.schreiben ? (
         <section className="karte nicht-drucken">
           {ABSCHNITTE.map((a) => (
-            <EintragListe key={a.schluessel} titel={a.titel} hilfe={a.hilfe} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />
+            <EintragListe key={a.schluessel} titel={a.titel} hilfe={a.hilfe} beispiel={a.beispiel} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />
           ))}
           <AbwesenheitListe montag={b.montag} tagSoll={Math.round((b.soll / 5) * 4) / 4} liste={inhalt.abwesenheit} onAendern={(l) => aendere({ abwesenheit: l })} />
           <p className="blatt-summe" aria-live="polite">
-            <strong>Summe: {h(ist)} Stunden</strong> <span className="leise">(Soll {h(b.soll)})</span>
-            {Math.abs(ist - b.soll) > 0.01 && ist > 0 && <span className="leise"> · {ist > b.soll ? `${h(ist - b.soll)} mehr` : `${h(b.soll - ist)} weniger`} als das Soll</span>}
+            <strong>
+              Summe: {h(ist)} von {h(b.soll)} Stunden
+            </strong>
+            {Math.abs(ist - b.soll) > 0.01 && ist > 0 && <span className="leise"> · {ist > b.soll ? `${h(ist - b.soll)} Stunden mehr als deine Wochenstunden` : `es fehlen noch ${h(b.soll - ist)} Stunden`}</span>}
+            {Math.abs(ist - b.soll) <= 0.01 && <span className="leise"> · passt genau</span>}
           </p>
           <div className="aktionen links">
             <button type="button" className="knopf schlicht" onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
-              {b.status === 'fehlt' ? 'Als Entwurf speichern' : 'Speichern'}
+              {b.status === 'fehlt' || b.status === 'entwurf' ? 'Als Entwurf speichern' : 'Speichern'}
             </button>
             <button type="button" className="knopf" onClick={() => void reicheEin()}>
               Einreichen
@@ -339,7 +374,14 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
               </button>
             )}
           </div>
-          <p className="leise klein">Mit dem Einreichen unterschreibst du den Bericht mit deiner hinterlegten Unterschrift. Danach kannst du ihn zurückziehen, solange er nicht abgezeichnet ist.</p>
+          <ul className="punkte leise klein">
+            <li>
+              <strong>Als Entwurf speichern:</strong> Du bist noch nicht fertig und schreibst später weiter. Nur du siehst den Entwurf.
+            </li>
+            <li>
+              <strong>Einreichen:</strong> Du bist fertig. Du unterschreibst den Bericht und gibst ihn an deinen Ausbilder. Bis er unterschrieben hat, kannst du ihn noch zurückholen.
+            </li>
+          </ul>
         </section>
       ) : (
         <section className="karte">

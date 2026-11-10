@@ -266,13 +266,12 @@ test('Abzeichnung aufheben: nur Ausbilder, mit Begründung, Unterschriften falle
   const b = koerper(await ruf(w.u, 'POST', ziel, { cookies: als(w, w.ausbilder), body: { kommentar: 'Falsche Woche abgezeichnet' } }));
   assert.deepEqual([b.status, b.signaturen.length, b.abgezeichnetAm], ['zurueck', 0, null]);
   assert.equal((await schreibe(w)).status, 200, 'Azubi kann wieder bearbeiten');
-  const protokoll = koerper(await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.ausbilder) })).eintraege as { aktion: string; detail: string; ziel_name: string }[];
+  const protokoll = koerper(await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.admin) })).eintraege as { aktion: string; detail: string; ziel_name: string }[];
   const aktionen = protokoll.map((e) => e.aktion);
   for (const a of ['bericht_eingereicht', 'bericht_abgezeichnet', 'bericht_geoeffnet']) assert.ok(aktionen.includes(a), a);
   assert.deepEqual([protokoll.find((e) => e.aktion === 'bericht_geoeffnet')?.detail, protokoll.find((e) => e.aktion === 'bericht_geoeffnet')?.ziel_name], ['KW 45/2026', 'Anna Azubi']);
   assert.ok(!JSON.stringify(protokoll).includes('Switch konfiguriert'), 'keine Berichtsinhalte im Protokoll');
-  const beimAdmin = koerper(await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.admin) })).eintraege as { aktion: string }[];
-  assert.ok(!beimAdmin.some((e) => e.aktion.startsWith('bericht_')), 'Super-Admin sieht keine Berichts-Ereignisse');
+  assert.equal((await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.ausbilder) })).status, 403, 'das Protokoll sieht nur der Super-Admin');
 });
 
 test('Löschen eines Azubi-Kontos entfernt Berichte, Unterschriften und Verlauf', async () => {

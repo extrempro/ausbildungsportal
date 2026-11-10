@@ -19,6 +19,7 @@ import {
 } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
 import { BERICHT_ROUTEN } from './berichte';
+import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
 import { PLAN_ROUTEN } from './plan';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
@@ -535,14 +536,16 @@ export const ROUTEN: Route[] = [
   {
     m: 'GET',
     p: '/api/protokoll',
-    wer: ['admin', 'ausbilder'],
-    // der Super-Admin sieht nur Konto-Ereignisse
-    h: (c) => ({ status: 200, body: { eintraege: leseProtokoll(c.k.db, c.b.rolle === 'admin', Number(c.a.query.get('limit')) || 200) } }),
+    // nur der Super-Admin – vollständig, auch fachliche Ereignisse (wer hat wann abgezeichnet, zugewiesen, geändert);
+    // Inhalte von Berichten und Plänen stehen nie im Protokoll
+    wer: ['admin'],
+    h: (c) => ({ status: 200, body: { eintraege: leseProtokoll(c.k.db, false, Number(c.a.query.get('limit')) || 200) } }),
   },
 
   ...STAMMDATEN_ROUTEN,
   ...BERICHT_ROUTEN,
   ...PLAN_ROUTEN,
+  ...BRANDING_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

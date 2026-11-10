@@ -571,8 +571,8 @@ textarea {
   font-weight: 400;
   color: var(--c-text);
   background: var(--c-bg);
-  border: 1px solid var(--c-border);
-  border-radius: 8px;
+  border: 1px solid var(--c-rand-feld);
+  border-radius: 10px;
   resize: vertical;
 }
 
@@ -628,7 +628,7 @@ fieldset.abschnitt legend {
   display: grid;
   grid-template-columns: 1fr 96px auto;
   gap: 8px;
-  align-items: start;
+  align-items: end;
   margin-bottom: 8px;
 }
 
@@ -1871,6 +1871,195 @@ a.kachel:hover {
   padding-left: 4px;
 }
 
+/* ---------- Logo des Betriebs ---------- */
+.marke .logo {
+  width: auto;
+  max-width: 180px;
+  height: 32px;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.marke-klein {
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.anmelde-logo {
+  display: block;
+  max-width: 220px;
+  max-height: 72px;
+  margin: 0 0 20px;
+  object-fit: contain;
+}
+
+.anmelde-logo.symbol {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+}
+
+.logo-vorschau {
+  display: flex;
+  align-items: center;
+  min-height: 80px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px dashed var(--c-rand-feld);
+  border-radius: 12px;
+  background: var(--c-bg);
+}
+
+.logo-vorschau img {
+  max-width: 100%;
+  max-height: 64px;
+}
+
+input[type='file'] {
+  padding: 8px;
+}
+
+/* ---------- Anleitungen: Ablauf, Begriffe, Handbuch ---------- */
+.ablauf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.ablauf li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-card);
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ablauf-nr {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--c-chip);
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ablauf li.aktuell {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.ablauf li.aktuell .ablauf-nr,
+.ablauf-liste .ablauf-nr {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.ablauf li.erledigt {
+  color: var(--c-gruen-fg);
+}
+
+.ablauf li.erledigt .ablauf-nr {
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+}
+
+.ablauf-liste {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.ablauf-liste li {
+  display: flex;
+  gap: 12px;
+}
+
+.abschnitt-hilfe {
+  margin: 0 0 8px;
+}
+
+.begriffe {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+}
+
+.begriffe dt {
+  font-weight: 600;
+}
+
+.begriffe dd {
+  margin: 0;
+}
+
+.begriffe.breit {
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+
+.begriffe.breit dd {
+  margin-bottom: 12px;
+  color: var(--c-muted);
+}
+
+.inhalt {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.kapitel {
+  scroll-margin-top: calc(var(--kopf, 60px) + 16px);
+}
+
+.kapitel h3 {
+  margin: 16px 0 8px;
+}
+
+/* ---------- Kurzwege in Listen ---------- */
+.knopf.klein {
+  min-height: 40px;
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+.kurzwege {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.liste.mit-kurzwegen li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+td.aktion {
+  width: 1%;
+  white-space: nowrap;
+}
+
 /* ---------- Breiten: PC ab 1024 px, darunter Tablet und Handy ---------- */
 @media (max-width: 1023px) {
   .haupt-nav,
@@ -2064,6 +2253,24 @@ a.kachel:hover {
 
   table.stapel td:empty {
     display: none;
+  }
+
+  table.stapel td.aktion {
+    width: auto;
+    padding-top: 8px;
+  }
+
+  .ablauf-liste {
+    grid-template-columns: 1fr;
+  }
+
+  .begriffe {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .begriffe dd {
+    margin-bottom: 10px;
   }
 
   table.stapel td select {
