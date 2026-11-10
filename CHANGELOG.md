@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.3.1] – 2026-11-10
+
+### Geändert
+
+- Passt `APP_URL` nicht zur Adresse im Browser (z. B. eigener Port oder eigene IP in `docker-compose.override.yml`), nennt die Fehlermeldung jetzt beide Adressen und was einzutragen ist; derselbe Hinweis steht im Log.
+- `docker-compose.override.example.yml` und README erklären die Bindung an eine VPN-Adresse und dass `APP_URL` dazu passen muss.
+
 ## [0.3.0] – 2026-11-10
 
 ### Neu
