@@ -32,7 +32,7 @@ docker compose logs app   # beim ersten Start steht hier das Startpasswort des S
 - **`APP_URL` muss immer die Adresse sein, die im Browser steht.** Wer in der Override-Datei Port oder IP ändert und die App direkt aufruft, trägt genau diese Adresse ein, z. B. `APP_URL=http://100.64.0.10:8989`. Sonst lädt die Seite, aber Anmelden und Speichern werden abgelehnt.
 - Ohne HTTPS funktioniert nur die lokale Anmeldung des Super-Admins. Microsoft nimmt als Umleitungs-URI nur `https://` an (Ausnahme `http://localhost`) – für die Microsoft-Anmeldung braucht es also den Reverse Proxy mit Zertifikat.
 - Datenbank und Sicherungen liegen im Ordner `./data` neben der Compose-Datei und bleiben bei Updates und bei `docker compose down` erhalten.
-- Unter Linux muss der Container in `./data` schreiben dürfen. Er läuft als Benutzer mit der UID 1000; falls der Start mit einem Schreibfehler abbricht: `sudo chown -R 1000:1000 ./data`.
+- Die App läuft im Container als Benutzer mit der UID 1000, nicht als root. Die Rechte am Ordner `./data` richtet der Container beim Start selbst; nur wenn das nicht geht (z. B. Netzlaufwerk), von Hand: `sudo chown -R 1000:1000 ./data`.
 - Nach einer Änderung an der `.env`: `docker compose up -d`. Update: `git pull`, dann `docker compose up -d --build`.
 
 Zum Ausprobieren ohne Proxy und ohne `.env` reicht `docker compose up -d --build` und im Browser `http://localhost:3000` (nicht `127.0.0.1` – die Adresse muss zu `APP_URL` passen). Dann kann sich nur der Super-Admin anmelden.

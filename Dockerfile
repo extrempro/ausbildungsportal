@@ -13,7 +13,8 @@ RUN npm run build
 # ---------- 2. Laufzeit ----------
 FROM node:${NODE_VERSION}-alpine
 # tzdata: Datumsangaben („heute“, Sicherungen) in deutscher Zeit
-RUN apk add --no-cache tzdata
+# su-exec: das Startskript wechselt damit von root zum Benutzer „node“
+RUN apk add --no-cache tzdata su-exec
 ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
@@ -34,8 +35,8 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
     && mkdir -p /app/data \
     && chown -R node:node /app/data
 
-# Die App läuft nicht als root, sondern als Benutzer „node“ (UID 1000)
-USER node
+# Kein USER hier: Das Startskript beginnt als root, richtet bei Bedarf die Rechte am Datenordner
+# und startet die App dann als Benutzer „node“ (UID 1000). Die App selbst läuft nie als root.
 EXPOSE 3000
 VOLUME ["/app/data"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

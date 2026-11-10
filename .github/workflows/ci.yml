@@ -34,8 +34,8 @@ jobs:
           docker compose config > /tmp/compose.txt
           grep -q '8989' /tmp/compose.txt
           rm docker-compose.override.yml
-      - name: Datenordner für den Container-Benutzer (UID 1000)
-        run: mkdir -p data && sudo chown 1000:1000 data
+      # Bewusst kein Vorbereiten von ./data: Docker legt den Ordner als root an – genau der Fall,
+      # den der Container beim Start selbst richten muss.
       - name: Bauen und starten
         run: docker compose up -d --build
       - name: Warten, bis der Container gesund ist
@@ -56,7 +56,9 @@ jobs:
           grep -q 'Ausbildungsportal' /tmp/start.html
           curl -fsS http://127.0.0.1:3000/verwaltung/konten -o /tmp/konten.html
           grep -q 'Ausbildungsportal' /tmp/konten.html
-          test "$(docker compose exec -T app id -u)" = "1000"
+          # die App (Prozess 1) läuft als UID 1000, nicht als root
+          test "$(docker compose exec -T app stat -c %u /proc/1)" = "1000"
+          grep -q "Rechte am Datenordner" /tmp/start.log
           grep -q 'Super-Admin „admin“ angelegt' /tmp/start.log
           sudo test -f data/ausbildungsportal.db
       - name: Sicherung im Container
@@ -64,6 +66,11 @@ jobs:
           docker compose exec -T app npm run backup
           sudo sh -c 'ls data/backups/' > /tmp/sicherungen.txt
           grep -q 'manuell' /tmp/sicherungen.txt
+          docker compose exec -T app npm run admin-reset > /dev/null
+          # auch nach Befehlen im Container (die als root starten) gehört alles in ./data der UID 1000
+          sudo find data ! -user 1000 > /tmp/fremd.txt
+          cat /tmp/fremd.txt
+          test ! -s /tmp/fremd.txt
       - name: Neustart behält die Daten
         run: |
           docker compose down
@@ -76,6 +83,9 @@ jobs:
           [ "$status" = "healthy" ]
           # der Super-Admin darf nicht noch einmal angelegt werden
           docker compose logs app > /tmp/neustart.log 2>&1
+          # beim zweiten Start gibt es nichts mehr zu richten
+          ! grep -q 'Rechte am Datenordner' /tmp/neustart.log
+          curl -fsS http://127.0.0.1:3000/api/health -o /tmp/health2.json
           ! grep -q 'Super-Admin „admin“ angelegt' /tmp/neustart.log
       - name: Nicht aus dem Netz erreichbar (nur 127.0.0.1)
         run: |

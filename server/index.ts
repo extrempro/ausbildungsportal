@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { wechsleZumBesitzer } from './benutzer-wechsel';
 import { loadConfig } from './config';
 import { openDatabase } from './db';
 import { erzeugeServer } from './http';
@@ -6,6 +7,7 @@ import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
 
 const cfg = loadConfig();
+wechsleZumBesitzer(cfg.dataDir);
 const db = await openDatabase(cfg.dataDir);
 const k = await erzeugeKontext(db, cfg);
 
