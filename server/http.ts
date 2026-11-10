@@ -149,6 +149,8 @@ export function erzeugeServer(k: Kontext, distDir: string): Server {
       return datei(res, req.method, pfad, basis, url.pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache');
     }
     if (url.pathname.startsWith('/assets/')) return sende(res, 404, basis, 'Nicht gefunden');
+    // Browser fragen von sich aus nach /favicon.ico – dafür gibt es nur das SVG
+    if (url.pathname === '/favicon.ico') return sende(res, 404, basis, 'Nicht gefunden');
     const index = join(wurzel, 'index.html');
     if (!existsSync(index)) {
       return sende(res, 503, { ...basis, 'Content-Type': 'text/plain; charset=utf-8' }, 'Die Oberfläche ist noch nicht gebaut: npm run build');

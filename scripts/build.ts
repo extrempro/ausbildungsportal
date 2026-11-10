@@ -1,6 +1,6 @@
 import { build, context } from 'esbuild';
 import type { BuildOptions, Metafile } from 'esbuild';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
 /** Baut die Oberfläche nach dist/: gebündeltes Skript und Stylesheet mit Hash im Namen, dazu index.html. */
@@ -34,6 +34,8 @@ const optionen: BuildOptions = {
 
 rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist/assets', { recursive: true });
+// Dateien aus public/ (z. B. das Favicon) unverändert übernehmen
+if (existsSync('public')) cpSync('public', 'dist', { recursive: true });
 
 if (watch) {
   const ctx = await context({

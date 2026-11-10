@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, ROLLE_TEXT, setzeAbmeldung } from './api';
 import type { Konto, Theme } from './api';
 import { Anmelden } from './pages/Anmelden';
+import { AzubiDetail } from './pages/AzubiDetail';
+import { Azubis } from './pages/Azubis';
 import { Konten } from './pages/Konten';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Protokoll } from './pages/Protokoll';
+import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
 import { geheZu, Link, usePfad } from './router';
 
@@ -67,8 +70,14 @@ export function App() {
     return null;
   }
 
+  const betreut = konto.rolle === 'ausbilder' || konto.rolle === 'beauftragter';
+  const azubiId = /^\/azubis\/(\d{1,12})$/.exec(pfad)?.[1];
+
   let seite;
   if (pfad === '/' && konto.rolle !== 'admin') seite = <Start konto={konto} />;
+  else if (pfad === '/azubis' && betreut) seite = <Azubis ich={konto} />;
+  else if (azubiId && betreut) seite = <AzubiDetail key={azubiId} id={Number(azubiId)} />;
+  else if (pfad === '/verwaltung/stammdaten' && konto.rolle === 'ausbilder') seite = <Stammdaten />;
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
   else if (pfad === '/verwaltung/protokoll' && verwaltet) seite = <Protokoll nurKonto={konto.rolle === 'admin'} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
@@ -91,7 +100,13 @@ export function App() {
           </Link>
           <nav aria-label="Hauptnavigation">
             {konto.rolle !== 'admin' && <Link zu="/">Start</Link>}
+            {betreut && (
+              <Link zu="/azubis" aktivAb="/azubis">
+                Azubis
+              </Link>
+            )}
             {verwaltet && <Link zu="/verwaltung/konten">Konten</Link>}
+            {konto.rolle === 'ausbilder' && <Link zu="/verwaltung/stammdaten">Stammdaten</Link>}
             {verwaltet && <Link zu="/verwaltung/protokoll">Protokoll</Link>}
             <Link zu="/konto">Konto</Link>
           </nav>

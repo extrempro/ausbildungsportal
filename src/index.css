@@ -332,6 +332,54 @@ td > .pille {
   border: 1px solid var(--c-border);
 }
 
+h3 {
+  font-size: 16px;
+  margin: 24px 0 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
+.raster {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+label.haken {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+label.haken input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  flex: none;
+}
+
+form.reihe .ganz {
+  grid-column: 1 / -1;
+}
+
+div.reihe {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+/* mehrere Formulare untereinander (Stammdaten) klar trennen */
+.karte > form.reihe + form.reihe,
+.karte > div.reihe + div.reihe {
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
 /* Tabellen */
 .tabelle-rahmen {
   padding: 0;
@@ -364,6 +412,10 @@ tr:last-child td {
 
 td.eng {
   white-space: nowrap;
+}
+
+div.aktionen.links {
+  justify-content: flex-start;
 }
 
 div.aktionen {

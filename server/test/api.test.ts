@@ -66,6 +66,17 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/azubis/:id/zuweisungen': 'ausbilder,beauftragter,azubi',
     'PUT /api/azubis/:id/zuweisungen': 'ausbilder',
     'GET /api/protokoll': 'admin,ausbilder',
+    'GET /api/stammdaten': 'ausbilder,beauftragter,azubi',
+    'PUT /api/stammdaten/betrieb': 'ausbilder',
+    'POST /api/stammdaten/berufe': 'ausbilder',
+    'PATCH /api/stammdaten/berufe/:id': 'ausbilder',
+    'DELETE /api/stammdaten/berufe/:id': 'ausbilder',
+    'POST /api/stammdaten/berufsschulen': 'ausbilder',
+    'PATCH /api/stammdaten/berufsschulen/:id': 'ausbilder',
+    'DELETE /api/stammdaten/berufsschulen/:id': 'ausbilder',
+    'GET /api/azubis/:id/profil': 'ausbilder,beauftragter,azubi',
+    'PUT /api/azubis/:id/profil': 'ausbilder',
+    'GET /api/kalender': 'ausbilder,beauftragter,azubi',
   });
 });
 

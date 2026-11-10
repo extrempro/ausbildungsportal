@@ -17,8 +17,10 @@ export function geheZu(pfad: string): void {
   window.scrollTo(0, 0);
 }
 
-export function Link({ zu, children, className }: { zu: string; children: ReactNode; className?: string }) {
-  const aktiv = usePfad() === zu;
+/** aktivAb: der Link gilt auch auf Unterseiten als aktiv (z. B. /azubis/12 für „Azubis“). */
+export function Link({ zu, children, className, aktivAb }: { zu: string; children: ReactNode; className?: string; aktivAb?: string }) {
+  const pfad = usePfad();
+  const aktiv = pfad === zu || (!!aktivAb && pfad.startsWith(`${aktivAb}/`));
   return (
     <a
       href={zu}

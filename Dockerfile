@@ -19,6 +19,7 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
     DATA_DIR=/app/data \
+    CONTENT_DIR=/app/content \
     TZ=Europe/Berlin
 WORKDIR /app
 
@@ -28,6 +29,7 @@ RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY server ./server
 COPY scripts ./scripts
+COPY content ./content
 COPY CHANGELOG.md tsconfig.json ./
 COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # Windows-Zeilenenden im Startskript entfernen, falls die Datei unter Windows bearbeitet wurde

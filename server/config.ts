@@ -10,6 +10,8 @@ export interface Config {
   port: number;
   host: string;
   dataDir: string;
+  /** Ordner mit gepflegten Inhalten, z. B. Schulferien je Bundesland */
+  contentDir: string;
   production: boolean;
   /** Adresse, unter der die Nutzer die App im Browser sehen (ohne Schrägstrich am Ende) */
   appUrl: string;
@@ -53,6 +55,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     port,
     host: env.HOST || '0.0.0.0',
     dataDir: resolve(env.DATA_DIR || './data'),
+    contentDir: resolve(env.CONTENT_DIR || './content'),
     production,
     appUrl,
     sicher: url.protocol === 'https:',

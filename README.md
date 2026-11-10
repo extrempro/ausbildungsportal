@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.3.1 (Phase 1 – Fundament).** Anmeldung, Konten, Rechte und Protokoll sind fertig, dazu das Docker-Setup. Berichtsheft und Ausbildungsplan folgen in den nächsten Phasen.
+**Stand: Version 0.4.0 (Phase 2 – Stammdaten).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten und Azubi-Profile sind fertig, dazu das Docker-Setup. Berichtsheft und Ausbildungsplan folgen in den nächsten Phasen.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft ist bisher nur gegen einen nachgebildeten Anbieter getestet, nicht gegen ein echtes Entra-Verzeichnis. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -11,7 +11,7 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
 | Super-Admin | lokal mit Passwort | ausschließlich Konten anlegen, sperren und löschen – kein Zugriff auf Pläne und Berichte |
-| Ausbilder | Microsoft | alle Azubis sehen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
+| Ausbilder | Microsoft | alle Azubis sehen, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
 | Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, im Zeitraum der Zuweisung abzeichnen |
 | Azubi | Microsoft | nur die eigenen Daten |
 
@@ -74,10 +74,19 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `APP_URL` | Adresse, unter der die Nutzer die App im Browser sehen. Bestimmt die Umleitungs-URI für Entra (`<APP_URL>/api/auth/entra/callback`) und ob Cookies nur über HTTPS gehen |
 | `PORT`, `HOST` | worauf der Server lauscht (Standard `3000`, `0.0.0.0`); mit Docker fest, den Port außen bestimmt die Compose-Datei |
 | `DATA_DIR` | Ordner für Datenbank und Sicherungen (Standard `./data`); mit Docker fest `/app/data` |
+| `CONTENT_DIR` | Ordner mit gepflegten Inhalten wie den Schulferien (Standard `./content`); mit Docker fest `/app/content` |
 | `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | App-Registrierung in Entra; ohne sie kann sich nur der Super-Admin anmelden |
 | `ADMIN_BENUTZER`, `ADMIN_PASSWORT` | nur für den ersten Start |
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
 | `DEV_ANMELDUNG` | nur zum Entwickeln |
+
+## Berufe, Feiertage und Ferien
+
+Die App ist nicht auf einen Beruf oder ein Bundesland festgelegt:
+
+- **Berufe** legen die Ausbilder unter „Stammdaten“ an, jeweils mit Regeldauer in Monaten (meist 24, 36 oder 42). Aus Ausbildungsbeginn, Regeldauer und Verkürzung berechnet die App Ausbildungsjahr und Ende. Sie rechnet nur – ob eine Verkürzung zulässig ist, entscheidet die zuständige Kammer.
+- **Feiertage** richten sich nach dem Bundesland des Betriebs und werden für alle 16 Länder berechnet. Feiertage, die nur in Teilen eines Landes gelten (z. B. Mariä Himmelfahrt in Bayern, Fronleichnam in Teilen von Sachsen und Thüringen), sind als „teilweise“ gekennzeichnet.
+- **Schulferien** richten sich nach dem Bundesland der Berufsschule und kommen aus Dateien in `content/ferien/`. Mitgeliefert ist bisher nur Hamburg; wie man weitere Länder ergänzt, steht in [content/README.md](content/README.md).
 
 ## Sicherheit in Kürze
 
@@ -110,6 +119,8 @@ server/
   http.ts         Webserver: /api und das gebaute Frontend
   api.ts          alle Routen mit ihren Rechten, ein einziger Einstieg (behandle)
   rechte.ts       zentrale Rechteprüfung
+  stammdaten.ts   Betrieb, Berufe, Berufsschulen, Azubi-Profil, Kalender
+  kalender.ts     Ausbildungsdauer; feiertage.ts, ferien.ts
   entra.ts        Anmeldung über Microsoft Entra ID (openid-client)
   passwort.ts     scrypt, Passwortregeln
   sitzung.ts      Sitzungen
@@ -118,6 +129,7 @@ server/
   test/           Tests, u. a. jede Route × jede Rolle
 src/              Oberfläche (React)
 scripts/          build, dev, backup, admin-reset
+content/          gepflegte Inhalte: Schulferien je Bundesland
 docs/             Entra-Einrichtung
 Dockerfile, docker-compose.yml, docker-compose.override.example.yml
 ```
