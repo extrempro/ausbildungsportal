@@ -2,8 +2,15 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, berichtsheftPfad, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '../api';
 import type { BerichtListe, BerichtStatus, OffenerBericht } from '../api';
+import { Icon } from '../icons';
 import { Link } from '../router';
 import { BerichtBlatt } from './Bericht';
+
+/**
+ * Merkt, ob der Azubi die Anleitung selbst auf- oder zugeklappt hat.
+ * Neuer Name seit 0.9.3: Unter dem alten Namen hat Version 0.9.0 von sich aus „offen“ gespeichert – das hielt die Anleitung dauerhaft offen.
+ */
+const ANLEITUNG = 'berichtsheft-anleitung';
 
 /** Was der Azubi mit einer Woche als Nächstes tun kann. */
 const AKTION: Record<BerichtStatus, string> = { fehlt: 'Schreiben', entwurf: 'Weiterschreiben', zurueck: 'Überarbeiten', eingereicht: 'Ansehen', abgezeichnet: 'Ansehen' };
@@ -52,7 +59,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
   const [hatUnterschrift, setHatUnterschrift] = useState(true);
   // Anleitung: von sich aus nur offen, solange noch kein Bericht geschrieben ist; danach eingeklappt.
   // Wer sie selbst auf- oder zuklappt, behält seine Wahl.
-  const [anleitung, setAnleitung] = useState<boolean | null>(() => (lies('heft-anleitung') === '1' ? true : lies('heft-anleitung') === '0' ? false : null));
+  const [anleitung, setAnleitung] = useState<boolean | null>(() => (lies(ANLEITUNG) === '1' ? true : lies(ANLEITUNG) === '0' ? false : null));
 
   useEffect(() => {
     api<BerichtListe>('GET', `/api/azubis/${azubiId}/berichte`).then(setDaten, (e: Error) => setFehler(e.message));
@@ -89,32 +96,43 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
       </p>
 
       {daten.eigenes && !daten.beginnFehlt && (
-        <details className="karte so-gehts" open={anleitungOffen}>
-          <summary
-            onClick={(e) => {
-              // selbst schalten, damit die Wahl gemerkt wird
-              e.preventDefault();
+        <section className={`karte anleitung${anleitungOffen ? '' : ' zu'}`}>
+          <button
+            type="button"
+            className="anleitung-kopf"
+            aria-expanded={anleitungOffen}
+            aria-controls="anleitung-inhalt"
+            onClick={() => {
               setAnleitung(!anleitungOffen);
-              merke('heft-anleitung', anleitungOffen ? '0' : '1');
+              merke(ANLEITUNG, anleitungOffen ? '0' : '1');
             }}
           >
-            So funktioniert das Berichtsheft
-          </summary>
-          <ol className="ablauf-liste">
-            <Schritt nr={1} titel="Woche öffnen und schreiben">
-              Wähle unten bei der Woche „Schreiben“. Trag ein, was du gemacht hast, und die Stunden dazu.
-            </Schritt>
-            <Schritt nr={2} titel="Speichern oder einreichen">
-              Noch nicht fertig? „Als Entwurf speichern“ – du schreibst später weiter. Fertig? „Einreichen“ – damit gibst du den Bericht ab.
-            </Schritt>
-            <Schritt nr={3} titel="Dein Ausbilder zeichnet ab">
-              Er liest den Bericht und unterschreibt. Möchte er eine Änderung, bekommst du den Bericht zurück – dann steht hier „zurückgegeben“.
-            </Schritt>
-          </ol>
-          <p className="leise klein">
-            Tipp: Schreib den Bericht am Ende jeder Woche. Mehr dazu im <Link zu="/handbuch">Handbuch</Link>.
-          </p>
-        </details>
+            <Icon name="hilfe" />
+            <span className="anleitung-titel">So funktioniert das Berichtsheft</span>
+            <span className="anleitung-schalter">
+              {anleitungOffen ? 'Einklappen' : 'Anzeigen'}
+              <Icon name="unten" groesse={18} />
+            </span>
+          </button>
+          {anleitungOffen && (
+            <div id="anleitung-inhalt">
+              <ol className="ablauf-liste">
+                <Schritt nr={1} titel="Woche öffnen und schreiben">
+                  Wähle unten bei der Woche „Schreiben“. Trag ein, was du gemacht hast, und die Stunden dazu.
+                </Schritt>
+                <Schritt nr={2} titel="Speichern oder einreichen">
+                  Noch nicht fertig? „Als Entwurf speichern“ – du schreibst später weiter. Fertig? „Einreichen“ – damit gibst du den Bericht ab.
+                </Schritt>
+                <Schritt nr={3} titel="Dein Ausbilder zeichnet ab">
+                  Er liest den Bericht und unterschreibt. Möchte er eine Änderung, bekommst du den Bericht zurück – dann steht hier „zurückgegeben“.
+                </Schritt>
+              </ol>
+              <p className="leise klein">
+                Tipp: Schreib den Bericht am Ende jeder Woche. Mehr dazu im <Link zu="/handbuch">Handbuch</Link>.
+              </p>
+            </div>
+          )}
+        </section>
       )}
       {daten.eigenes && !hatUnterschrift && (
         <p className="hinweis">

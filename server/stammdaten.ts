@@ -4,7 +4,7 @@ import type { DB } from './db';
 import { heute } from './datum';
 import { BUNDESLAENDER, feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
-import { ausbildungsdauer, ausbildungsstand, gueltigesDatum, hoechsteVerkuerzung, plusTage } from './kalender';
+import { ausbildungsdauer, ausbildungsstand, gueltigesDatum, hoechsteVerkuerzung, montagVon, plusTage } from './kalender';
 import type { Ausbildungsstand, Dauer } from './kalender';
 import { protokolliere } from './protokoll';
 import { darfAzubiSehen, darfAzubiVerwalten } from './rechte';
@@ -143,6 +143,22 @@ export function dauerVon(db: DB, p: Profil): Dauer | null {
   );
 }
 
+/** Wie viele Berichte warten, zurückgegeben sind oder für vergangene Wochen fehlen. */
+function berichtStand(db: DB, azubiId: number, beginn: string | null, ende: string | null, tag: string) {
+  const zeilen = db.prepare('SELECT montag, status FROM bericht WHERE azubi_id = ?').all(azubiId) as unknown as { montag: string; status: string }[];
+  const wartend = zeilen.filter((b) => b.status === 'eingereicht').length;
+  const zurueck = zeilen.filter((b) => b.status === 'zurueck').length;
+  let fehlend = 0;
+  if (beginn && ende) {
+    // fällig sind die Wochen vor der laufenden – die laufende Woche darf noch offen sein
+    const dieseWoche = montagVon(tag);
+    const vorhanden = new Set(zeilen.map((b) => b.montag));
+    const letzte = montagVon(ende);
+    for (let m = montagVon(beginn), n = 0; m < dieseWoche && m <= letzte && n < 400; m = plusTage(m, 7), n++) if (!vorhanden.has(m)) fehlend++;
+  }
+  return { wartend, zurueck, fehlend };
+}
+
 /** Kurzangaben für die Azubi-Liste. */
 export function azubiUebersicht(db: DB, z: BenutzerZeile, tag: string) {
   const { beruf, stand } = standAus(db, leseProfil(db, z.id), tag);
@@ -157,6 +173,7 @@ export function azubiUebersicht(db: DB, z: BenutzerZeile, tag: string) {
     beginn: stand.beginn,
     ende: stand.ende,
     tage: stand.tage,
+    berichte: berichtStand(db, z.id, stand.beginn, stand.ende, tag),
   };
 }
 

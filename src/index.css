@@ -2077,6 +2077,187 @@ td.aktion {
   white-space: nowrap;
 }
 
+/* ---------- Azubi-Karten (Startseite und Azubi-Liste) ---------- */
+.abschnitt-titel {
+  margin: 8px 0 12px;
+}
+
+.azubi-karten {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.azubi-karte {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 20px 20px 12px;
+}
+
+.azubi-kopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.azubi-kopf .avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+}
+
+.azubi-name {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.azubi-name strong {
+  font-size: 18px;
+}
+
+.azubi-kopf .pille {
+  margin-left: 0;
+}
+
+.azubi-stand {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 10px 12px;
+  margin: 0;
+}
+
+.azubi-stand dt {
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+.azubi-stand dd {
+  margin: 0;
+}
+
+.azubi-stand .balken {
+  margin-top: 6px;
+}
+
+.azubi-berichte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.azubi-berichte .pille {
+  margin-left: 0;
+}
+
+/* immer dieselben drei Wege, gleich breit */
+.azubi-wege {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--c-border);
+}
+
+.azubi-wege a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.azubi-wege a:hover {
+  background: var(--c-accent-soft);
+}
+
+.suche {
+  display: block;
+  max-width: 24rem;
+  margin-bottom: 16px;
+}
+
+/* ---------- Ein- und ausklappbare Anleitung ---------- */
+.anleitung {
+  padding: 0;
+  overflow: hidden;
+}
+
+.anleitung-kopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 20px;
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.anleitung-kopf:hover {
+  background: var(--c-chip);
+}
+
+.anleitung-kopf > svg {
+  flex: none;
+  color: var(--c-accent);
+}
+
+.anleitung-titel {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.anleitung-schalter {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* offen zeigt der Pfeil nach oben */
+.anleitung:not(.zu) .anleitung-schalter svg {
+  transform: rotate(180deg);
+}
+
+.anleitung.zu {
+  background: var(--c-accent-soft);
+  box-shadow: none;
+}
+
+.anleitung.zu .anleitung-titel {
+  font-size: 16px;
+}
+
+#anleitung-inhalt {
+  padding: 8px 20px 12px;
+  border-top: 1px solid var(--c-border);
+}
+
 /* ---------- Breiten: PC ab 1024 px, darunter Tablet und Handy ---------- */
 @media (max-width: 1023px) {
   .haupt-nav,
@@ -2279,6 +2460,14 @@ td.aktion {
 
   .ablauf-liste {
     grid-template-columns: 1fr;
+  }
+
+  .azubi-karten {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .anleitung-schalter {
+    font-size: 13px;
   }
 
   .begriffe {

@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.9.3] – 2026-11-10
+
+### Geändert
+
+- Azubis für Ausbilder und Beauftragte als Karten, auf der Startseite und unter „Azubis“ gleich aufgebaut: oben Name und Beruf, darunter Stand der Ausbildung (Ausbildungsjahr, Ende, Fortschritt) und der Berichte (warten auf Abzeichnung, zurückgegeben, fehlen), unten immer dieselben drei Wege – Profil, Ausbildungsplan, Berichtsheft. Ab fünf Azubis gibt es ein Suchfeld.
+- Die Anleitung „So funktioniert das Berichtsheft“ hat einen klaren Schalter („Einklappen“ / „Anzeigen“ mit Pfeil) und ist eingeklappt nur noch eine schmale Zeile.
+
+### Behoben
+
+- Die Anleitung im Berichtsheft blieb offen, obwohl schon Berichte geschrieben waren: Version 0.9.0 hatte im Browser von sich aus „offen“ gespeichert. Dieser alte Merker wird nicht mehr beachtet.
+
 ## [0.9.2] – 2026-11-10
 
 ### Geändert

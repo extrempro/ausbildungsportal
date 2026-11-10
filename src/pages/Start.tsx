@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { api, ROLLE_TEXT, standText } from '../api';
+import { api, ROLLE_TEXT } from '../api';
+import { AzubiKarte } from '../AzubiKarte';
 import type { AzubiKurz, Konto, OffenerBericht } from '../api';
 import { Link } from '../router';
 
@@ -38,12 +39,12 @@ export function Start({ konto }: { konto: Konto }) {
       )}
 
       {betreut && (
-        <section className="karte">
-          <h2>{konto.rolle === 'ausbilder' ? 'Alle Azubis' : 'Mir zugewiesene Azubis'}</h2>
+        <>
+          <h2 className="abschnitt-titel">{konto.rolle === 'ausbilder' ? 'Alle Azubis' : 'Mir zugewiesene Azubis'}</h2>
           {azubis === null ? (
             <p className="leise">Lädt …</p>
           ) : azubis.length === 0 ? (
-            <p className="leise">
+            <p className="karte leise">
               {konto.rolle === 'ausbilder' ? (
                 <>
                   Noch keine Azubis. Unter <Link zu="/verwaltung/konten">Konten</Link> lassen sich welche anlegen.
@@ -53,35 +54,13 @@ export function Start({ konto }: { konto: Konto }) {
               )}
             </p>
           ) : (
-            <ul className="liste mit-kurzwegen">
+            <ul className="azubi-karten">
               {azubis.map((a) => (
-                <li key={a.id}>
-                  <div>
-                    <Link zu={`/azubis/${a.id}`}>
-                      <strong>{a.anzeigename}</strong>
-                    </Link>{' '}
-                    <span className="leise">
-                      {a.beruf ? `${a.beruf} · ` : ''}
-                      {standText(a)}
-                    </span>
-                    {a.status === 'gesperrt' && <span className="pille grau">gesperrt</span>}
-                  </div>
-                  <div className="kurzwege">
-                    <Link zu={`/azubis/${a.id}`} className="knopf schlicht klein">
-                      Profil
-                    </Link>
-                    <Link zu={`/azubis/${a.id}/plan`} className="knopf schlicht klein">
-                      Ausbildungsplan
-                    </Link>
-                    <Link zu={`/azubis/${a.id}/berichtsheft`} className="knopf schlicht klein">
-                      Berichtsheft
-                    </Link>
-                  </div>
-                </li>
+                <AzubiKarte key={a.id} a={a} />
               ))}
             </ul>
           )}
-        </section>
+        </>
       )}
     </>
   );
