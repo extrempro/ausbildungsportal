@@ -282,7 +282,7 @@ export function berichtsheftPfad(azubiId: number, eigenes: boolean): string {
 export type PlanArt = 'schule' | 'einsatz' | 'aufgabe' | 'notiz';
 export const PLAN_ARTEN: PlanArt[] = ['schule', 'einsatz', 'aufgabe', 'notiz'];
 export const ART_TEXT: Record<PlanArt, string> = { schule: 'Berufsschule', einsatz: 'Einsatz', aufgabe: 'Aufgabe', notiz: 'Notiz' };
-export const ART_FARBE: Record<PlanArt, string> = { schule: 'blau', einsatz: 'gruen', aufgabe: 'gelb', notiz: 'grau' };
+export const ART_FARBE: Record<PlanArt, string> = { schule: 'violett', einsatz: 'gruen', aufgabe: 'gelb', notiz: 'grau' };
 
 export interface Unteraufgabe {
   text: string;
@@ -314,6 +314,9 @@ export interface PlanAntwort {
   eigenes: boolean;
   heute: string;
   beginnFehlt: boolean;
+  /** erster und letzter Tag der Ausbildung */
+  beginn: string | null;
+  ende: string | null;
   beruf: string;
   wochen: PlanWoche[];
   eintraege: PlanEintrag[];

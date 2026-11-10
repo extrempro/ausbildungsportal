@@ -16,6 +16,10 @@
   --c-rot-fg: #991b1b;
   --c-gruen-bg: #dcfce7;
   --c-gruen-fg: #166534;
+  --c-schule: #7c3aed;
+  --c-schule-soft: #ede9fe;
+  --c-ferien: #d97706;
+  --c-track: #e2e8f0;
   color-scheme: light;
 }
 
@@ -36,6 +40,10 @@ html.dark {
   --c-rot-fg: #fca5a5;
   --c-gruen-bg: rgba(22, 163, 74, 0.28);
   --c-gruen-fg: #86efac;
+  --c-schule: #a78bfa;
+  --c-schule-soft: rgba(124, 58, 237, 0.28);
+  --c-ferien: #fbbf24;
+  --c-track: #334155;
   color-scheme: dark;
 }
 
@@ -555,27 +563,494 @@ fieldset.abschnitt legend {
 }
 
 /* Drucken: nur der Nachweis, schwarz auf weiß, jede Woche auf einer eigenen Seite */
-/* ---------- Ausbildungsplan ---------- */
-table.plan td {
-  vertical-align: top;
+/* ---------- Ausbildungsplan (Aufbau wie im FISI-Lernkompass) ---------- */
+.ueberschrift-klein {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-muted);
 }
 
-table.plan td.woche {
-  width: 1%;
-  white-space: nowrap;
+.pille.violett {
+  background: var(--c-schule-soft);
+  color: var(--c-schule);
 }
 
-table.plan td.woche .pille {
-  margin-left: 6px;
+.pille.ferien {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
 }
 
-table.plan tr.heute td,
-table.uebersicht .heute {
+.pille.umrandet {
+  border: 1px solid var(--c-border);
+  color: var(--c-muted);
+}
+
+.pille.voll {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.plan-kopf .pille,
+.wochenkarte .pille,
+.kompass .pille,
+.kw .pille,
+.plan-legende .pille {
+  margin-left: 0;
+}
+
+/* oben: diese Woche, nächste Woche, Kennzahlen */
+.plan-oben {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.wochenkarte {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  min-width: 0;
+}
+
+.wochenkarte.hervor {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-soft);
+}
+
+.wochenkarte-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wochenkarte h2,
+.wochenkarte p {
+  margin: 0;
+}
+
+.wochenkarte-fuss {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-border);
+}
+
+.wochenkarte-fuss .bericht-link {
+  margin-left: auto;
+}
+
+.kennzahlen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.kennzahl {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.kennzahl:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.kennzahl-wert {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.kennzahl-warnung {
+  color: var(--c-rot-fg);
+  font-weight: 600;
+}
+
+/* darunter: links die Übersicht, rechts alle Kalenderwochen */
+.plan-bereich {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.plan-seite {
+  position: sticky;
+  top: calc(var(--kopf, 108px) + 16px);
+  max-height: calc(100vh - var(--kopf, 108px) - 32px);
+  margin: 0;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.jahr-sprung {
+  display: none;
+}
+
+.kompass {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kompass-ort {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.kompass .gross {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.kompass-teil {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--c-border);
+  list-style: none;
+}
+
+.kompass-zeile {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.balken {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--c-track);
+}
+
+.balken span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-accent);
+}
+
+.kompass-jahre {
+  gap: 12px;
+}
+
+.kompass-jahre > li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kompass-jahr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 44px;
+  margin: 0 -8px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kompass-jahr span {
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.kompass-jahr:hover {
+  background: var(--c-chip);
+}
+
+.kompass-jahr[aria-current] {
   background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.kompass-jahr[aria-current] span {
+  color: inherit;
+}
+
+.jahresband {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 16px;
+}
+
+.jahresband span {
+  flex: 1;
+  min-width: 0;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--c-track);
+  cursor: pointer;
+}
+
+.jahresband span:hover {
+  opacity: 0.7;
+}
+
+.jahresband .schule,
+.kompass-legende .schule,
+.plan-legende .streifen {
+  background: var(--c-schule);
+}
+
+.jahresband .ferien,
+.kompass-legende .ferien {
+  background: var(--c-ferien);
+}
+
+.jahresband .heute,
+.kompass-legende .heute {
+  background: var(--c-accent);
+}
+
+.jahresband .gelesen {
+  height: 16px;
+}
+
+.kompass-monate {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kompass-monate button {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kompass-monate button:hover {
+  background: var(--c-chip);
+  color: var(--c-text);
+}
+
+.kompass-monate button[aria-current] {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-weight: 600;
+}
+
+.kompass-legende {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 12px;
+}
+
+.kompass-legende i,
+.plan-legende i {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.plan-wochen .filter {
+  align-items: center;
+}
+
+.umschalter {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-card);
+}
+
+.umschalter button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.umschalter button:hover {
+  background: var(--c-chip);
+}
+
+.umschalter button[aria-pressed='true'] {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.plan-legende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+}
+
+.plan-jahr {
+  padding: 20px 24px 8px;
+}
+
+.plan-jahr-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+
+.plan-jahr-kopf h2 {
+  margin: 0;
+}
+
+.plan-leer {
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.kw-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kw-monat {
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--c-border);
+}
+
+.kw {
+  position: relative;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 8px 4px 8px 16px;
+  border-top: 1px solid var(--c-border);
+  scroll-margin-top: calc(var(--kopf, 108px) + 16px);
+}
+
+.kw.heute {
+  border-radius: 8px;
+  background: var(--c-accent-soft);
+}
+
+.kw.schule::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: 6px;
+  border-radius: 999px;
+  background: var(--c-schule);
+}
+
+.kw-kopf {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-top: 4px;
+}
+
+.kw-kopf.vergangen {
+  opacity: 0.7;
+}
+
+.kw-aktionen {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.kw-inhalt {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.kw .plus {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.kw:hover .plus,
+.kw .plus:focus-visible {
+  opacity: 1;
+}
+
+.kw .plus:hover {
+  background: var(--c-chip);
+  color: var(--c-accent);
+}
+
+a.bericht-link {
+  align-self: center;
+  margin-left: 0;
+  text-decoration: none;
+}
+
+a.bericht-link:hover {
+  text-decoration: underline;
 }
 
 .plan-eintrag {
   margin-bottom: 6px;
+}
+
+.plan-eintrag:last-child {
+  margin-bottom: 0;
 }
 
 .plan-kopf {
@@ -591,40 +1066,6 @@ table.uebersicht .heute {
   width: 20px;
   height: 20px;
   min-height: 0;
-}
-
-.zeile.zwei {
-  grid-template-columns: 1fr auto;
-}
-
-@media (max-width: 640px) {
-  /* Wochen untereinander statt als Tabelle */
-  table.plan thead {
-    display: none;
-  }
-
-  table.plan tr,
-  table.plan td {
-    display: block;
-  }
-
-  table.plan td {
-    border: 0;
-  }
-
-  table.plan td.woche {
-    width: auto;
-    padding-bottom: 0;
-    white-space: normal;
-  }
-
-  table.plan tr {
-    border-bottom: 1px solid var(--c-border);
-  }
-
-  .zeile.zwei > button {
-    grid-column: auto;
-  }
 }
 
 .plan-text {
@@ -653,18 +1094,98 @@ table.uebersicht .heute {
   cursor: pointer;
 }
 
-.link-knopf.leise {
-  color: var(--c-muted);
-  text-decoration: none;
-}
-
-.link-knopf.leise:hover {
-  color: var(--c-accent);
+.link-knopf.klein {
+  font-size: 14px;
 }
 
 .filter select {
   width: auto;
   min-width: 14rem;
+}
+
+.zeile.zwei {
+  grid-template-columns: 1fr auto;
+}
+
+/* Dialog zum Anlegen und Bearbeiten */
+.dialog-hintergrund {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5vh 16px;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 640px;
+  margin: 0;
+}
+
+@media (max-width: 1000px) {
+  .plan-oben {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kennzahlen {
+    grid-column: 1 / -1;
+  }
+
+  .plan-bereich {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plan-seite {
+    display: none;
+  }
+
+  .jahr-sprung {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .plan-oben {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plan-jahr {
+    padding: 16px 12px 4px;
+  }
+
+  /* KW-Kopf in einer Zeile oben, Einträge darunter */
+  .kw {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .kw-kopf {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .kw-aktionen {
+    grid-column: 2;
+  }
+
+  .kw-inhalt {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .kw-inhalt:empty {
+    display: none;
+  }
+
+  .zeile.zwei > button {
+    grid-column: auto;
+  }
 }
 
 /* ---------- Übersicht aller Azubis ---------- */
@@ -712,8 +1233,8 @@ table.uebersicht td.ausserhalb {
 }
 
 .ue.schule {
-  background: var(--c-accent-soft);
-  color: var(--c-accent);
+  background: var(--c-schule-soft);
+  color: var(--c-schule);
 }
 
 .ue.einsatz {
