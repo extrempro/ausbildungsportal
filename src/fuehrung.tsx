@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { Rolle } from './api';
+import { Icon } from './icons';
 import { geheZu } from './router';
 
 /**
@@ -70,7 +71,7 @@ function sichtbar(el: Element): boolean {
 }
 
 /** Platz, den die Karte am unteren Rand eines schmalen Bildschirms braucht */
-const KARTE_PLATZ = 250;
+const KARTE_PLATZ = 320;
 
 interface Rahmen {
   top: number;
@@ -217,10 +218,18 @@ export function Fuehrung({ rolle, onEnde }: { rolle: Rolle; onEnde: () => void }
       <div className="fuehrung-sperre" />
       {rahmen && bereit ? <div className="fuehrung-ring" style={rahmen} /> : <div className="fuehrung-dunkel" />}
       {bereit && (
-        <div ref={karte} className="fuehrung-karte" role="dialog" aria-modal="true" aria-labelledby="fuehrung-titel" aria-describedby="fuehrung-text" style={lage}>
-          <span className="ueberschrift-klein" aria-live="polite">
-            Schritt {nr + 1} von {schritte.length}
-          </span>
+        <div key={nr} ref={karte} className="fuehrung-karte" role="dialog" aria-modal="true" aria-labelledby="fuehrung-titel" aria-describedby="fuehrung-text" style={lage}>
+          {/* farbiger Kopf: so ist die Karte auf jeder Seite sofort als „die Führung“ zu erkennen */}
+          <div className="fuehrung-kopf">
+            <Icon name="fuehrung" groesse={18} />
+            <span>Führung</span>
+            <span className="fuehrung-zaehler" aria-live="polite">
+              Schritt {nr + 1} von {schritte.length}
+            </span>
+          </div>
+          <div className="fuehrung-fortschritt" aria-hidden="true">
+            <span style={{ width: `${((nr + 1) / schritte.length) * 100}%` }} />
+          </div>
           <h2 id="fuehrung-titel">{s.titel}</h2>
           <p id="fuehrung-text">{s.text}</p>
           <div className="fuehrung-knoepfe">
