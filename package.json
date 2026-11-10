@@ -1,6 +1,6 @@
 {
   "name": "ausbildungsportal",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "license": "MIT",
   "description": "Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung über Microsoft Entra ID und Rollen",

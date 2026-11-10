@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ROLLE_TEXT, setzeAbmeldung } from './api';
-import type { Konto, Theme } from './api';
+import { api, logoFuer, ROLLE_TEXT, setzeAbmeldung } from './api';
+import type { Konto, Logos, Theme } from './api';
 import { Anmelden } from './pages/Anmelden';
 import { AzubiDetail } from './pages/AzubiDetail';
 import { Azubis } from './pages/Azubis';
@@ -51,7 +51,7 @@ export function App() {
   const [version, setVersion] = useState('');
   const [dunkel, setDunkel] = useState(false);
   const [menue, setMenue] = useState<Menue>(null);
-  const [logo, setLogo] = useState<string | null>(null);
+  const [logos, setLogos] = useState<Logos>({ logo: null, logoDunkel: null });
   // Android/Chrome meldet, wenn sich das Portal als App installieren lässt; iOS kennt das nicht (dort über „Teilen“)
   const [installation, setInstallation] = useState<{ prompt: () => Promise<unknown> } | null>(null);
   useEffect(() => {
@@ -81,7 +81,7 @@ export function App() {
   useEffect(() => {
     setzeAbmeldung(() => setKonto(null));
     void lade();
-    api<{ logo: string | null }>('GET', '/api/branding').then((r) => setLogo(r.logo), () => {});
+    api<Logos>('GET', '/api/branding').then(setLogos, () => {});
   }, [lade]);
 
   useEffect(() => {
@@ -144,6 +144,7 @@ export function App() {
   // Schalter in der Kopfzeile: wechselt fest auf hell oder dunkel; „automatisch“ gibt es unter Konto
   const wechsleTheme = async () => {
     const theme: Theme = dunkel ? 'light' : 'dark';
+    setMenue(null);
     setDunkel(wendeThemeAn(theme));
     await api('PUT', '/api/ich/theme', { theme }).catch(() => {});
     await lade();
@@ -204,7 +205,7 @@ export function App() {
   else if (pfad === '/verwaltung/vorlagen' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
   else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} />;
-  else if (pfad === '/verwaltung/erscheinungsbild' && konto.rolle === 'admin') seite = <Erscheinungsbild logo={logo} onGeaendert={setLogo} />;
+  else if (pfad === '/verwaltung/erscheinungsbild' && konto.rolle === 'admin') seite = <Erscheinungsbild logos={logos} onGeaendert={setLogos} />;
   else if (pfad === '/abzeichnen' && betreut) seite = <Abzeichnen />;
   else if (pfad === '/azubis' && betreut) seite = <Azubis ich={konto} />;
   else if (azubiId && betreut) seite = <AzubiDetail key={azubiId} id={Number(azubiId)} />;
@@ -263,6 +264,7 @@ export function App() {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+  const logo = logoFuer(logos, dunkel);
   const schalte = (m: Menue) => setMenue((alt) => (alt === m ? null : m));
 
   const liste = (punkte: Punkt[]) =>

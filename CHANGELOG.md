@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.9.1] – 2026-11-10
+
+### Neu
+
+- Eigenes Logo für die dunkle Darstellung: Unter „Erscheinungsbild“ lassen sich zwei Logos hinterlegen, mit Vorschau auf hellem und dunklem Hintergrund. Fehlt das dunkle, wird das helle auch dort gezeigt.
+- Kurzweg „Profil“ in der Azubi-Liste und auf der Startseite der Ausbilder, neben „Plan bearbeiten“ und „Berichtsheft“.
+
+### Geändert
+
+- Stammdaten: deutlicher Hinweis, dass sie für das ganze Portal gelten; die Rückfragen beim Löschen nennen das ebenfalls.
+- Berichtsheft: Die Anleitung „So funktioniert das Berichtsheft“ ist nur noch offen, solange der Azubi noch keinen Bericht geschrieben hat; danach ist sie eingeklappt. Wer sie selbst auf- oder zuklappt, behält seine Wahl.
+- Das Menü schließt sich nach dem Umschalten zwischen hell und dunkel.
+
 ## [0.9.0] – 2026-11-10
 
 ### Neu

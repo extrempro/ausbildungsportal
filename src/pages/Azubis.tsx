@@ -58,7 +58,10 @@ export function Azubis({ ich }: { ich: Konto }) {
                   <td data-label="Stand">{standText(a)}</td>
                   <td>
                     <div className="kurzwege">
-                      <Link zu={`/azubis/${a.id}/plan`} className="knopf schlicht klein" >
+                      <Link zu={`/azubis/${a.id}`} className="knopf schlicht klein">
+                        Profil
+                      </Link>
+                      <Link zu={`/azubis/${a.id}/plan`} className="knopf schlicht klein">
                         {ich.rolle === 'ausbilder' ? 'Plan bearbeiten' : 'Ausbildungsplan'}
                       </Link>
                       <Link zu={`/azubis/${a.id}/berichtsheft`} className="knopf schlicht klein">

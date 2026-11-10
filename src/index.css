@@ -1911,6 +1911,23 @@ a.kachel:hover {
   background: var(--c-bg);
 }
 
+.logo-vorschau {
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  color: #475569;
+  font-size: 14px;
+}
+
+/* die Vorschau zeigt den Hintergrund, auf dem das Logo später steht – unabhängig von der eigenen Darstellung */
+.logo-vorschau.hell {
+  background: #ffffff;
+}
+
+.logo-vorschau.dunkel {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
 .logo-vorschau img {
   max-width: 100%;
   max-height: 64px;
