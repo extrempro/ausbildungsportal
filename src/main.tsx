@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { merkeBrowserFehler } from './fehler';
 import './index.css';
 
 // Farbschema des letzten Besuchs sofort setzen; das Konto bestätigt oder korrigiert es gleich danach
@@ -20,6 +21,8 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     });
   });
 }
+
+merkeBrowserFehler();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

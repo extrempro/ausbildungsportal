@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.11.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.12.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -10,7 +10,7 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
-| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, das Logo des Betriebs hinterlegen – kein Zugriff auf Pläne, Berichte und Stammdaten |
+| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, Fehlermeldungen bearbeiten, das Logo des Betriebs hinterlegen – kein Zugriff auf Pläne, Berichte und Stammdaten |
 | Ausbilder | Microsoft | alle Azubis sehen, alle Nachweise abzeichnen, zurückgeben und eine Abzeichnung aufheben, Ausbildungspläne und Planvorlagen pflegen, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
 | Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, während der Zuweisung Aufgaben und Notizen im Plan anlegen |
 | Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan eigene Aufgaben und Notizen eintragen und Aufgaben abhaken |
@@ -135,6 +135,7 @@ Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchge
 - Sitzungen liegen im Server (SQLite, nur als Hash); Cookie `HttpOnly`, `SameSite=Lax`, über HTTPS zusätzlich `Secure` und `__Host-`. Ende nach 8 Stunden ohne Aktivität, spätestens nach 24 Stunden. Sperren wirkt sofort.
 - Schreibende Anfragen nur von der eigenen Adresse (`Origin`-Prüfung), strenge Content-Security-Policy.
 - Protokoll über Anmeldungen und Änderungen (Konten, Zuweisungen, Stammdaten, Azubi-Profile), ohne Passwörter. Berichte und Pläne erscheinen dort nicht – auch nicht, wer wann eingereicht oder abgezeichnet hat; das steht nur im Verlauf des jeweiligen Berichts. Einsehen kann das Protokoll nur der Super-Admin.
+- Fehler melden: Jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt. Lesen, erledigen und löschen kann nur der Super-Admin. Eine automatische Löschfrist gibt es noch nicht.
 - Glocke mit Aktivitäten: Azubis sehen neue Einträge in ihrem Plan sowie abgezeichnete und zurückgegebene Berichte; Ausbilder und zugewiesene Beauftragte sehen neue Einträge und eingereichte Berichte ihrer Azubis. Gespeichert wird nur „wer, was, welche Woche, wann“ – keine Berichtsinhalte und keine Kommentare; nach 60 Tagen wird gelöscht. Der Super-Admin sieht davon nichts.
 
 Der Server nutzt außer Node.js selbst nur **eine** Bibliothek: `openid-client` für die Microsoft-Anmeldung. Mehr dazu und der Meldeweg für Lücken: [SECURITY.md](SECURITY.md).

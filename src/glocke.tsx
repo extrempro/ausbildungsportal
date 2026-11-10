@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from './api';
 import type { Konto } from './api';
 import { Icon } from './icons';
@@ -176,11 +177,21 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
           </span>
         )}
       </button>
+      {/* dunkelt die Seite ab, damit sich das Fenster klar abhebt; liegt unter der Kopfzeile */}
+      {offen && createPortal(<div className="glocke-schleier" aria-hidden="true" />, document.body)}
       {offen && (
         <section id="menue-glocke" className="menue-flaeche rechts glocke-flaeche" aria-label="Aktivitäten">
           <div className="glocke-kopf">
-            <h2>Aktivitäten</h2>
-            <span className="leise klein">{konto.rolle === 'azubi' ? 'Neues in deinem Plan und Berichtsheft' : 'Neues von deinen Azubis'}</span>
+            <span className="glocke-kopf-symbol" aria-hidden="true">
+              <Icon name="glocke" groesse={20} />
+            </span>
+            <div>
+              <h2>Aktivitäten</h2>
+              <span>{konto.rolle === 'azubi' ? 'Neues in deinem Plan und Berichtsheft' : 'Neues von deinen Azubis'}</span>
+            </div>
+            <button type="button" className="glocke-zu" aria-label="Aktivitäten schließen" onClick={onSchalte}>
+              <Icon name="zu" groesse={20} />
+            </button>
           </div>
           {fehler && <p className="glocke-leer">Die Aktivitäten lassen sich gerade nicht laden.</p>}
           {!fehler && gezeigt === null && <p className="glocke-leer">Lädt …</p>}

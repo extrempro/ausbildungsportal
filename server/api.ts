@@ -22,6 +22,7 @@ import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BERICHT_ROUTEN } from './berichte';
 import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
+import { MELDUNG_ROUTEN } from './meldungen';
 import { PLAN_ROUTEN } from './plan';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, ROLLEN } from './typen';
@@ -548,6 +549,7 @@ export const ROUTEN: Route[] = [
   ...PLAN_ROUTEN,
   ...BRANDING_ROUTEN,
   ...AKTIVITAET_ROUTEN,
+  ...MELDUNG_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

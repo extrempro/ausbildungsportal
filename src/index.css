@@ -3098,11 +3098,27 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
 }
 
 .glocke-flaeche {
-  width: min(400px, calc(100vw - 16px));
-  max-height: min(70vh, 560px);
+  width: min(420px, calc(100vw - 16px));
+  max-height: min(72vh, 600px);
   padding: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  border: 2px solid var(--c-accent);
+  border-radius: 16px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-accent) 22%, transparent), 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* Schleier über der Seite (unter der Kopfzeile): das Fenster hebt sich klar ab */
+.glocke-schleier {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.glocke-knopf[aria-expanded='true'] {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
 }
 
 .glocke-kopf {
@@ -3110,16 +3126,54 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
   top: 0;
   z-index: 1;
   display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px 12px 16px;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-size: 13px;
+}
+
+.glocke-kopf > div {
+  display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 2px;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--c-border);
-  background: var(--c-card);
+  gap: 1px;
+  min-width: 0;
 }
 
 .glocke-kopf h2 {
   margin: 0;
+  color: inherit;
   font-size: 17px;
+}
+
+.glocke-kopf-symbol {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.menue-flaeche .glocke-kopf svg {
+  color: inherit;
+}
+
+.menue-flaeche .glocke-zu {
+  flex: none;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: inherit;
+}
+
+.menue-flaeche .glocke-zu:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .glocke-liste {
@@ -3262,5 +3316,423 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
     right: 8px;
     left: auto;
     max-height: calc(100vh - var(--kopf, 52px) - 110px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glocke-flaeche {
+    animation: glocke-ein 0.18s ease-out;
+    transform-origin: top right;
+  }
+
+  .glocke-schleier {
+    animation: schleier-ein 0.18s ease-out;
+  }
+
+  @keyframes glocke-ein {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  @keyframes schleier-ein {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------- Zahl an einem Menüpunkt ---------- */
+.nav-zahl {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.tabs a {
+  position: relative;
+}
+
+.tabs .nav-zahl {
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 6px);
+}
+
+/* ---------- Fehler melden ---------- */
+.melden h2 {
+  margin-top: 0;
+}
+
+.melden textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+}
+
+.melden .knopfzeile,
+.meldung .knopfzeile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.melden-technik {
+  margin: 12px 0;
+  padding: 0 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.melden-technik summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--c-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.melden-technik dl,
+.meldung-angaben {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.melden-technik dt,
+.meldung-angaben dt {
+  color: var(--c-muted);
+}
+
+.melden-technik dd,
+.meldung-angaben dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.melden-technik pre,
+.meldung-angaben pre {
+  margin: 0;
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.meldung {
+  border-left: 4px solid #f59e0b;
+}
+
+.meldung.erledigt {
+  border-left-color: #16a34a;
+}
+
+.meldung-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.meldung-kopf .pille {
+  margin-left: auto;
+}
+
+.meldung-text {
+  margin: 12px 0;
+  font-size: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.meldung-erledigt > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  margin-bottom: 8px;
+  color: var(--c-accent);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Konten: Was bewirkt was? ---------- */
+.konten-hilfe {
+  padding: 0 20px 16px;
+}
+
+.konten-hilfe h3:first-child {
+  border-top: 0;
+}
+
+.konten-hilfe .pille {
+  margin-left: 0;
+}
+
+.konten-hilfe > p {
+  margin: 16px 0 0;
+}
+
+.konten-hilfe h3 {
+  margin: 16px 0 8px;
+  color: var(--c-muted);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.erklaerung {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: 10px 20px;
+  margin: 0;
+}
+
+.erklaerung dt {
+  font-weight: 600;
+}
+
+.erklaerung dd {
+  max-width: 75ch;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 699px) {
+  .erklaerung,
+  .melden-technik dl,
+  .meldung-angaben {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .erklaerung dd,
+  .melden-technik dd,
+  .meldung-angaben dd {
+    margin-bottom: 10px;
+  }
+
+  .konten-hilfe {
+    padding: 4px 14px 12px;
+  }
+}
+
+/* ---------- Planvorlagen ---------- */
+.vorlage-leiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.vorlage-leiste a.knopf {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+#neue-vorlage {
+  scroll-margin-top: calc(var(--kopf, 60px) + 16px);
+}
+
+details.karte.vorlage > summary {
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.vorlage-titel {
+  font-size: 18px;
+}
+
+.vorlage-angaben {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-weight: 400;
+}
+
+.vorlage-angaben .pille {
+  margin-left: 0;
+}
+
+.vorlage-auf {
+  margin-left: auto;
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+details.vorlage[open] .vorlage-auf {
+  display: none;
+}
+
+.vorlage-zwischen {
+  margin: 24px 0 10px;
+  color: var(--c-muted);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vorlage-strahl {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-bg);
+}
+
+.vorlage-strahl-zeile {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.vorlage-strahl-bahn {
+  position: relative;
+  height: 18px;
+  border-radius: 6px;
+  background: var(--c-chip);
+}
+
+.vorlage-strahl-bahn i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: var(--art, var(--c-muted));
+  box-shadow: inset 0 0 0 1px var(--c-card);
+}
+
+.vorlage-strahl-skala {
+  display: flex;
+  justify-content: space-between;
+}
+
+.vorlage-ablauf {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vorlage-ablauf li {
+  display: grid;
+  grid-template-columns: 130px 130px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.vorlage-ablauf li:last-child {
+  border-bottom: 0;
+}
+
+.vorlage-wochen {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.vorlage-knoepfe {
+  margin-top: 16px;
+}
+
+fieldset.vorlage-eintrag {
+  margin: 0 0 12px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--art, var(--c-muted));
+  border-radius: 12px;
+}
+
+fieldset.vorlage-eintrag legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+fieldset.vorlage-eintrag legend + * {
+  clear: both;
+}
+
+.vorlage-eintrag.schule {
+  --art: var(--c-schule);
+}
+
+.vorlage-eintrag.einsatz {
+  --art: var(--c-gruen-fg);
+}
+
+.vorlage-eintrag.aufgabe {
+  --art: var(--c-warn-fg);
+}
+
+.vorlage-eintrag > .knopf {
+  margin-top: 12px;
+}
+
+@media (max-width: 699px) {
+  .vorlage-strahl-zeile {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .vorlage-strahl-zeile > span:empty {
+    display: none;
+  }
+
+  .vorlage-ablauf li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+  }
+
+  .vorlage-ablauf li > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .vorlage-auf {
+    margin-left: 0;
+  }
+
+  .vorlage-leiste .knopf {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* Einträge einer Vorlage: Art und Wochen in einer Zeile, Titel und Texte darunter über die ganze Breite */
+.vorlage-eintrag .reihe {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px 16px;
+}
+
+.vorlage-eintrag .reihe .ganz {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 699px) {
+  .vorlage-eintrag .reihe {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

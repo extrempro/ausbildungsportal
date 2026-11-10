@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ART_TEXT, berufName, PLAN_ARTEN } from '../api';
 import type { PlanArt, Planvorlage, VorlageEintrag } from '../api';
 import { Link } from '../router';
@@ -12,22 +12,122 @@ interface Zeile extends Omit<VorlageEintrag, 'unteraufgaben'> {
   /** eine Unteraufgabe je Zeile */
   unteraufgaben: string;
 }
+type Meldung = { text: string; fehler: boolean } | null;
 
-function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage | null; berufe: Berufe[]; onFertig: () => Promise<void> }) {
+// ---------- Export und Import ----------
+// Eine Datei enthält eine oder mehrere Vorlagen. Der Beruf steht als Name darin, weil die Nummern je Installation verschieden sind.
+const FORMAT = 'ausbildungsportal-planvorlagen';
+const MAX_DATEI = 1_000_000;
+
+interface DateiVorlage {
+  titel: string;
+  beruf: string | null;
+  eintraege: VorlageEintrag[];
+}
+
+function alsDatei(vorlagen: Planvorlage[], berufe: Berufe[]): string {
+  const inhalt: DateiVorlage[] = vorlagen.map((v) => ({
+    titel: v.titel,
+    beruf: berufName(berufe.find((b) => b.id === v.berufId)) || null,
+    eintraege: v.eintraege,
+  }));
+  return JSON.stringify({ format: FORMAT, version: 1, vorlagen: inhalt }, null, 2);
+}
+
+function ladeHerunter(name: string, inhalt: string): void {
+  const url = URL.createObjectURL(new Blob([inhalt], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function dateiname(titel: string): string {
+  const kurz = titel
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `planvorlage-${kurz || 'ohne-titel'}.json`;
+}
+
+/** Liest eine Export-Datei; wirft einen verständlichen Fehler, wenn sie nicht passt. Die genaue Prüfung macht der Server. */
+function ausDatei(text: string): DateiVorlage[] {
+  let roh: unknown;
+  try {
+    roh = JSON.parse(text);
+  } catch {
+    throw new Error('Die Datei lässt sich nicht lesen. Bitte eine Datei wählen, die hier mit „Exportieren“ erzeugt wurde.');
+  }
+  const d = roh as { format?: unknown; vorlagen?: unknown };
+  if (typeof roh !== 'object' || roh === null || d.format !== FORMAT || !Array.isArray(d.vorlagen)) throw new Error('Das ist keine Planvorlagen-Datei aus dem Ausbildungsportal.');
+  if (d.vorlagen.length === 0) throw new Error('Die Datei enthält keine Vorlagen.');
+  if (d.vorlagen.length > 50) throw new Error('Die Datei enthält mehr als 50 Vorlagen.');
+  return d.vorlagen.map((v: unknown, i) => {
+    const x = v as Partial<DateiVorlage>;
+    if (typeof v !== 'object' || v === null || typeof x.titel !== 'string' || !Array.isArray(x.eintraege)) throw new Error(`Vorlage ${i + 1} in der Datei ist unvollständig.`);
+    return { titel: x.titel, beruf: typeof x.beruf === 'string' ? x.beruf : null, eintraege: x.eintraege };
+  });
+}
+
+// ---------- Darstellung ----------
+const letzteWoche = (eintraege: Pick<VorlageEintrag, 'abWoche' | 'wochen'>[]) => eintraege.reduce((max, e) => Math.max(max, e.abWoche + e.wochen - 1), 0);
+const wochen = (e: Pick<VorlageEintrag, 'abWoche' | 'wochen'>) => (e.wochen > 1 ? `Woche ${e.abWoche}–${e.abWoche + e.wochen - 1}` : `Woche ${e.abWoche}`);
+const sortiert = <T extends Pick<VorlageEintrag, 'abWoche'>>(liste: T[]) => [...liste].sort((a, b) => a.abWoche - b.abWoche);
+
+/** Zeitstrahl: je Art eine Zeile, die Balken zeigen die Wochen. Die gleiche Auskunft steht als Text im Ablauf. */
+function Zeitstrahl({ eintraege }: { eintraege: VorlageEintrag[] }) {
+  const ende = letzteWoche(eintraege);
+  if (ende === 0) return null;
+  return (
+    <div className="vorlage-strahl" aria-hidden="true">
+      {PLAN_ARTEN.filter((art) => eintraege.some((e) => e.art === art)).map((art) => (
+        <div key={art} className="vorlage-strahl-zeile">
+          <span className={`legende-art ${art}`}>{ART_TEXT[art]}</span>
+          <div className="vorlage-strahl-bahn">
+            {eintraege
+              .filter((e) => e.art === art)
+              .map((e, i) => (
+                <i key={i} className={`legende-art ${art}`} title={`${wochen(e)}: ${e.titel}`} style={{ left: `${((e.abWoche - 1) / ende) * 100}%`, width: `${(e.wochen / ende) * 100}%` }} />
+              ))}
+          </div>
+        </div>
+      ))}
+      <div className="vorlage-strahl-zeile leise klein">
+        <span />
+        <div className="vorlage-strahl-skala">
+          <span>Woche 1</span>
+          <span>Woche {ende}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage | null; berufe: Berufe[]; onFertig: (meldung?: string) => Promise<void> }) {
   const [titel, setTitel] = useState(vorlage?.titel ?? '');
   const [berufId, setBerufId] = useState<number | null>(vorlage?.berufId ?? null);
-  const [zeilen, setZeilen] = useState<Zeile[]>((vorlage?.eintraege ?? []).map((e) => ({ ...e, unteraufgaben: e.unteraufgaben.join('\n') })));
-  const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
+  const [zeilen, setZeilen] = useState<Zeile[]>(sortiert(vorlage?.eintraege ?? []).map((e) => ({ ...e, unteraufgaben: e.unteraufgaben.join('\n') })));
+  const [meldung, setMeldung] = useState<Meldung>(null);
   const aendere = (i: number, teil: Partial<Zeile>) => setZeilen(zeilen.map((z, j) => (j === i ? { ...z, ...teil } : z)));
 
   const speichere = async () => {
-    const body = { titel, berufId, eintraege: zeilen.map((z) => ({ ...z, unteraufgaben: z.art === 'aufgabe' ? z.unteraufgaben.split('\n').map((t) => t.trim()).filter(Boolean) : [] })) };
+    const geordnet = sortiert(zeilen);
+    const body = { titel, berufId, eintraege: geordnet.map((z) => ({ ...z, unteraufgaben: z.art === 'aufgabe' ? z.unteraufgaben.split('\n').map((t) => t.trim()).filter(Boolean) : [] })) };
     try {
       if (vorlage) await api('PUT', `/api/planvorlagen/${vorlage.id}`, body);
       else await api('POST', '/api/planvorlagen', body);
       await onFertig();
-      if (vorlage) setMeldung({ text: 'Gespeichert.', fehler: false });
-      else {
+      if (vorlage) {
+        setZeilen(geordnet);
+        setMeldung({ text: 'Gespeichert. Pläne, in die diese Vorlage schon übernommen wurde, ändern sich dadurch nicht.', fehler: false });
+      } else {
         setTitel('');
         setZeilen([]);
         setMeldung({ text: 'Vorlage angelegt.', fehler: false });
@@ -36,18 +136,13 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
       setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
     }
   };
-  const loesche = async () => {
-    if (!vorlage || !window.confirm(`Vorlage „${vorlage.titel}“ löschen? Schon übernommene Einträge in Plänen bleiben erhalten.`)) return;
-    await api('DELETE', `/api/planvorlagen/${vorlage.id}`);
-    await onFertig();
-  };
 
   return (
     <>
       <div className="reihe">
         <label>
-          Titel
-          <input value={titel} maxLength={120} onChange={(e) => setTitel(e.target.value)} />
+          Titel der Vorlage
+          <input value={titel} maxLength={120} placeholder="z. B. Fachinformatiker – 1. Ausbildungsjahr" onChange={(e) => setTitel(e.target.value)} />
         </label>
         <label>
           Beruf
@@ -61,9 +156,14 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
           </select>
         </label>
       </div>
+      <h3 className="vorlage-zwischen">Einträge ({zeilen.length})</h3>
+      {zeilen.length === 0 && <p className="leise">Noch keine Einträge. Mit „Eintrag hinzufügen“ planst du den ersten Abschnitt, zum Beispiel einen Einsatz in den Wochen 1 bis 8.</p>}
       {zeilen.map((z, i) => (
-        <fieldset className="abschnitt" key={i}>
-          <legend>Eintrag {i + 1}</legend>
+        <fieldset className={`abschnitt vorlage-eintrag ${z.art}`} key={i}>
+          <legend>
+            <span className={`legende-art ${z.art}`}>{ART_TEXT[z.art]}</span> {wochen(z)}
+            {z.titel && ` · ${z.titel}`}
+          </legend>
           <div className="reihe">
             <label>
               Art
@@ -98,7 +198,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
               </label>
             )}
           </div>
-          <button type="button" className="knopf schlicht gefahr" onClick={() => setZeilen(zeilen.filter((_, j) => j !== i))}>
+          <button type="button" className="knopf schlicht klein gefahr" onClick={() => setZeilen(zeilen.filter((_, j) => j !== i))}>
             Eintrag entfernen
           </button>
         </fieldset>
@@ -123,12 +223,8 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
         <button type="button" className="knopf" disabled={!titel.trim()} onClick={() => void speichere()}>
           {vorlage ? 'Vorlage speichern' : 'Vorlage anlegen'}
         </button>
-        {vorlage && (
-          <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
-            Vorlage löschen
-          </button>
-        )}
       </div>
+      <p className="leise klein">Beim Speichern werden die Einträge nach Wochen geordnet.</p>
     </>
   );
 }
@@ -137,8 +233,11 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
 export function Vorlagen() {
   const [d, setD] = useState<{ vorlagen: Planvorlage[]; berufe: Berufe[] } | null>(null);
   const [fehler, setFehler] = useState('');
-  const lade = useCallback(async () => {
+  const [meldung, setMeldung] = useState<Meldung>(null);
+  const datei = useRef<HTMLInputElement>(null);
+  const lade = useCallback(async (text?: string) => {
     setD(await api('GET', '/api/planvorlagen'));
+    if (text) setMeldung({ text, fehler: false });
   }, []);
   useEffect(() => {
     lade().catch((e: Error) => setFehler(e.message));
@@ -146,24 +245,170 @@ export function Vorlagen() {
 
   if (fehler) return <p className="hinweis fehler">{fehler}</p>;
   if (!d) return <p className="leise">Lädt …</p>;
+
+  const zeigeFehler = (e: unknown) => setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
+  /** Titel, den es noch nicht gibt – sonst wären zwei Vorlagen in der Auswahl nicht zu unterscheiden. */
+  const freierTitel = (titel: string, zusatz: string, vergeben: string[]) => {
+    if (!vergeben.includes(titel)) return titel;
+    let n = 1;
+    let neu = `${titel} (${zusatz})`;
+    while (vergeben.includes(neu)) neu = `${titel} (${zusatz} ${++n})`;
+    return neu.slice(0, 120);
+  };
+
+  const dupliziere = async (v: Planvorlage) => {
+    try {
+      const titel = freierTitel(v.titel, 'Kopie', [v.titel, ...d.vorlagen.map((x) => x.titel)]);
+      await api('POST', '/api/planvorlagen', { titel, berufId: v.berufId, eintraege: v.eintraege });
+      await lade(`„${titel}“ angelegt.`);
+    } catch (e) {
+      zeigeFehler(e);
+    }
+  };
+  const loesche = async (v: Planvorlage) => {
+    if (!window.confirm(`Vorlage „${v.titel}“ löschen?\n\nSchon übernommene Einträge in Plänen bleiben erhalten. Tipp: vorher exportieren, falls du sie später noch einmal brauchst.`)) return;
+    try {
+      await api('DELETE', `/api/planvorlagen/${v.id}`);
+      await lade(`Vorlage „${v.titel}“ gelöscht.`);
+    } catch (e) {
+      zeigeFehler(e);
+    }
+  };
+  const importiere = async (f: File) => {
+    setMeldung(null);
+    try {
+      if (f.size > MAX_DATEI) throw new Error('Die Datei ist zu groß (höchstens 1 MB).');
+      const neue = ausDatei(await f.text());
+      const vergeben = d.vorlagen.map((v) => v.titel);
+      const hinweise: string[] = [];
+      let anzahl = 0;
+      for (const v of neue) {
+        const beruf = v.beruf ? d.berufe.find((b) => berufName(b) === v.beruf) : undefined;
+        if (v.beruf && !beruf) hinweise.push(`Der Beruf „${v.beruf}“ ist hier nicht angelegt – „${v.titel}“ gilt deshalb für alle Berufe.`);
+        const titel = freierTitel(v.titel.trim() || 'Vorlage ohne Titel', 'Import', vergeben);
+        if (titel !== v.titel) hinweise.push(`„${v.titel}“ gab es schon – importiert als „${titel}“.`);
+        try {
+          await api('POST', '/api/planvorlagen', { titel, berufId: beruf?.id ?? null, eintraege: v.eintraege });
+        } catch (e) {
+          throw new Error(`„${v.titel}“ konnte nicht importiert werden: ${e instanceof Error ? e.message : 'Fehler'}${anzahl ? ` (${anzahl} davor wurden importiert)` : ''}`);
+        }
+        vergeben.push(titel);
+        anzahl++;
+      }
+      await lade([`${anzahl === 1 ? 'Eine Vorlage' : `${anzahl} Vorlagen`} importiert.`, ...hinweise].join(' '));
+    } catch (e) {
+      await lade().catch(() => {});
+      zeigeFehler(e);
+    } finally {
+      if (datei.current) datei.current.value = '';
+    }
+  };
+
   return (
     <>
       <p className="klein">
         <Link zu="/verwaltung/stammdaten">← Stammdaten</Link>
       </p>
       <h1>Planvorlagen</h1>
-      <p className="leise">
-        Eine Vorlage beschreibt einen Ablauf in Wochen ab Ausbildungsbeginn, z. B. „Woche 1–8 Einsatz IT-Support“. Im Ausbildungsplan eines Azubis lässt sie sich übernehmen; danach ist dessen Plan unabhängig von der Vorlage.
+      <p className="leise">Eine Vorlage ist ein Ablauf in Wochen ab Ausbildungsbeginn. Du legst ihn einmal an und übernimmst ihn dann in den Plan jedes neuen Azubis.</p>
+      <ol className="ablauf-liste abz-hilfe">
+        <li>
+          <span className="ablauf-nr">1</span>
+          <span>
+            <strong>Vorlage anlegen</strong>
+            <br />
+            <span className="leise klein">Titel und, wenn sie nur für einen Beruf gilt, den Beruf wählen.</span>
+          </span>
+        </li>
+        <li>
+          <span className="ablauf-nr">2</span>
+          <span>
+            <strong>Einträge planen</strong>
+            <br />
+            <span className="leise klein">Je Eintrag: Art, ab welcher Ausbildungswoche, wie viele Wochen.</span>
+          </span>
+        </li>
+        <li>
+          <span className="ablauf-nr">3</span>
+          <span>
+            <strong>In einen Plan übernehmen</strong>
+            <br />
+            <span className="leise klein">Im Ausbildungsplan eines Azubis unter „Vorlage übernehmen“. Danach ist der Plan unabhängig von der Vorlage.</span>
+          </span>
+        </li>
+      </ol>
+
+      <div className="vorlage-leiste">
+        <a className="knopf" href="#neue-vorlage">
+          Neue Vorlage
+        </a>
+        <button type="button" className="knopf schlicht" onClick={() => datei.current?.click()}>
+          Importieren
+        </button>
+        <button type="button" className="knopf schlicht" disabled={d.vorlagen.length === 0} onClick={() => ladeHerunter('planvorlagen.json', alsDatei(d.vorlagen, d.berufe))}>
+          Alle exportieren
+        </button>
+        <input ref={datei} type="file" accept="application/json,.json" hidden aria-label="Datei mit Planvorlagen zum Importieren" onChange={(e) => e.target.files?.[0] && void importiere(e.target.files[0])} />
+      </div>
+      <p className="leise klein">
+        Exportieren speichert Vorlagen als Datei – zur Sicherung oder um sie in ein anderes Ausbildungsportal zu übernehmen. Importieren legt die Vorlagen aus einer solchen Datei zusätzlich an; vorhandene Vorlagen werden nie überschrieben. Die Datei enthält keine Daten von Azubis.
       </p>
-      {d.vorlagen.map((v) => (
-        <details className="karte" key={v.id}>
-          <summary>
-            {v.titel} <span className="leise klein">· {v.eintraege.length} Einträge · {berufName(d.berufe.find((b) => b.id === v.berufId)) || 'alle Berufe'}</span>
-          </summary>
-          <VorlageFormular vorlage={v} berufe={d.berufe} onFertig={lade} />
-        </details>
-      ))}
-      <section className="karte">
+      {meldung && (
+        <p className={`hinweis ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
+          {meldung.text}
+        </p>
+      )}
+
+      <h2>Vorhandene Vorlagen ({d.vorlagen.length})</h2>
+      {d.vorlagen.length === 0 && <p className="karte leise">Noch keine Vorlage. Lege unten die erste an oder importiere eine Datei.</p>}
+      {d.vorlagen.map((v) => {
+        const ende = letzteWoche(v.eintraege);
+        return (
+          <details className="karte vorlage" key={v.id}>
+            <summary>
+              <span className="vorlage-titel">{v.titel}</span>
+              <span className="vorlage-angaben">
+                <span className="pille grau">{berufName(d.berufe.find((b) => b.id === v.berufId)) || 'alle Berufe'}</span>
+                <span className="pille grau">{v.eintraege.length === 1 ? '1 Eintrag' : `${v.eintraege.length} Einträge`}</span>
+                {ende > 0 && <span className="pille grau">{ende === 1 ? '1 Woche' : `${ende} Wochen`}</span>}
+              </span>
+              <span className="vorlage-auf leise klein">Ansehen und bearbeiten</span>
+            </summary>
+            <Zeitstrahl eintraege={v.eintraege} />
+            {v.eintraege.length > 0 && (
+              <>
+                <h3 className="vorlage-zwischen">Ablauf</h3>
+                <ul className="vorlage-ablauf">
+                  {sortiert(v.eintraege).map((e, i) => (
+                    <li key={i}>
+                      <span className="vorlage-wochen">{wochen(e)}</span>
+                      <span className={`legende-art ${e.art}`}>{ART_TEXT[e.art]}</span>
+                      <span>
+                        {e.titel}
+                        {e.unteraufgaben.length > 0 && <span className="leise klein"> · {e.unteraufgaben.length} Unteraufgaben</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <div className="aktionen links vorlage-knoepfe">
+              <button type="button" className="knopf schlicht klein" onClick={() => ladeHerunter(dateiname(v.titel), alsDatei([v], d.berufe))}>
+                Exportieren
+              </button>
+              <button type="button" className="knopf schlicht klein" onClick={() => void dupliziere(v)}>
+                Duplizieren
+              </button>
+              <button type="button" className="knopf schlicht klein gefahr" onClick={() => void loesche(v)}>
+                Vorlage löschen
+              </button>
+            </div>
+            <h3 className="vorlage-zwischen">Bearbeiten</h3>
+            <VorlageFormular vorlage={v} berufe={d.berufe} onFertig={lade} />
+          </details>
+        );
+      })}
+      <section className="karte" id="neue-vorlage">
         <h2>Neue Vorlage</h2>
         <VorlageFormular key={d.vorlagen.length} vorlage={null} berufe={d.berufe} onFertig={lade} />
       </section>
