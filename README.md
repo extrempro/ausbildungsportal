@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.9.3.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.10.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -119,6 +119,7 @@ Das Portal läuft im Browser auf PC, Tablet und Android-Handy; eine eigene App i
 - **Tablet hoch und Handy:** die wichtigsten Bereiche als Leiste unten, alles Weitere unter „Mehr“. Tabellen erscheinen auf dem Handy als Liste.
 - **Als App (Progressive Web App):** Auf Android (Chrome: „App installieren“) und iOS (Safari: Teilen → „Zum Home-Bildschirm“) lässt sich das Portal auf den Startbildschirm legen und startet dann ohne Browserleiste. Das setzt HTTPS voraus. Der Service Worker speichert keine Inhalte; ohne Verbindung zeigt er nur einen Hinweis. Die Schritte stehen im Handbuch.
 - **Startseite:** Azubis landen direkt in ihrem Ausbildungsplan, Ausbilder und Beauftragte auf einer Übersicht mit offenen Berichten.
+- **Interaktive Führung** je Rolle: wenige Schritte, die die wichtigsten Stellen direkt im Portal hervorheben. Sie wird beim ersten Besuch einmal angeboten, lässt sich jederzeit abbrechen und über das Menü oder das Handbuch beliebig oft neu starten.
 - **Handbuch** je Rolle in der App (Menü am Namen bzw. „Mehr“), für Azubis in einfacher Sprache.
 - **Logo:** Der Super-Admin hinterlegt unter „Erscheinungsbild“ das Logo des Betriebs (PNG, JPEG oder WebP bis 150 KB) – je eines für die helle und die dunkle Darstellung; fehlt das dunkle, gilt das helle auch dort.
 - Alles ist mit der Tastatur bedienbar; Bedienflächen sind mindestens 40 × 40 px groß; hell und dunkel.

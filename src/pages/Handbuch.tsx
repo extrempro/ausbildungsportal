@@ -350,7 +350,7 @@ const ADMIN: Kapitel[] = [
   BEDIENUNG,
 ];
 
-export function Handbuch({ rolle }: { rolle: Rolle }) {
+export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () => void }) {
   // Ausbilder und Beauftragte können auch das Handbuch der Azubis lesen, um ihnen zu helfen
   const ansichten: Rolle[] = rolle === 'ausbilder' ? ['ausbilder', 'beauftragter', 'azubi'] : rolle === 'beauftragter' ? ['beauftragter', 'azubi'] : [rolle];
   const [ansicht, setAnsicht] = useState<Rolle>(rolle);
@@ -383,9 +383,17 @@ export function Handbuch({ rolle }: { rolle: Rolle }) {
             </li>
           ))}
         </ol>
-        <button type="button" className="knopf schlicht" onClick={() => window.print()}>
-          Handbuch drucken
-        </button>
+        <div className="aktionen links">
+          {ansicht === rolle && (
+            <button type="button" className="knopf" onClick={onFuehrung}>
+              Führung starten
+            </button>
+          )}
+          <button type="button" className="knopf schlicht" onClick={() => window.print()}>
+            Handbuch drucken
+          </button>
+        </div>
+        {ansicht === rolle && <p className="leise klein">Die Führung zeigt dir die wichtigsten Stellen direkt im Portal. Sie dauert etwa eine Minute und lässt sich jederzeit abbrechen und wiederholen.</p>}
       </nav>
       {kapitel.map((k, i) => (
         <section className="karte kapitel" id={`kapitel-${k.id}`} key={`${ansicht}-${k.id}`}>

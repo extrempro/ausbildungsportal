@@ -254,6 +254,7 @@ test('Übersicht: Schule, Einsatz und Urlaub je Woche; Beauftragte sehen nur ihr
   const r = koerper(await ruf(w.u, 'GET', '/api/uebersicht?von=2026-11-04&wochen=4', { cookies: als(w, w.ausbilder) }));
   assert.deepEqual(r.wochen.map((x: any) => x.montag), ['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23']);
   assert.deepEqual(r.azubis.map((x: any) => x.anzeigename), ['Anna Azubi', 'Ben Azubi']);
+  assert.equal(r.azubis[0].ausbildungsjahr, 2);
   const anna = r.azubis[0].wochen;
   assert.deepEqual(anna[0], { inAusbildung: true, schule: false, einsatz: [], urlaubstage: 2 });
   assert.deepEqual(anna[1], { inAusbildung: true, schule: false, einsatz: ['IT-Support'], urlaubstage: 0 });

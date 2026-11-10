@@ -1,7 +1,7 @@
 // Service Worker des Ausbildungsportals.
 // Er speichert bewusst KEINE Inhalte der Anwendung (keine Berichte, keine Pläne) – alles kommt frisch vom Server.
 // Einzige Aufgabe: ohne Verbindung eine verständliche Seite zeigen, statt der Fehlermeldung des Browsers.
-const SPEICHER = 'ausbildungsportal-offline-1';
+const SPEICHER = 'ausbildungsportal-offline-2';
 const DATEIEN = ['/offline.html', '/offline.css', '/favicon.svg'];
 
 self.addEventListener('install', (e) => {
