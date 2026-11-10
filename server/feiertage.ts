@@ -4,6 +4,12 @@ import { plusTage } from './kalender';
  * Gesetzliche Feiertage der 16 Bundesländer, berechnet – keine Pflege nötig.
  * Feiertage, die nur in Teilen eines Landes gelten (z. B. Mariä Himmelfahrt in Bayern), sind mit
  * teilweise = true gekennzeichnet; ob sie am eigenen Ort gelten, weiß die App nicht.
+ *
+ * Abgeglichen am 10.11.2026 mit der „Übersicht über die gesetzlichen Feiertage in der Bundesrepublik
+ * Deutschland“ (Stand September 2018, veröffentlicht auf hamburg.de) – soweit sich das Dokument lesen
+ * ließ – und für spätere Änderungen mit berlin.de (einmalige Feiertage) und Presseberichten
+ * (Reformationstag in neun Ländern). Nicht gegen die Feiertagsgesetze der Länder selbst geprüft;
+ * neue Feiertage müssen hier von Hand ergänzt werden.
  */
 export const BUNDESLAENDER: Record<string, string> = {
   BW: 'Baden-Württemberg',
@@ -82,6 +88,8 @@ export function feiertage(land: string, jahr: number): Feiertag[] {
   }
   // einmalige Feiertage in Berlin: 75. und 80. Jahrestag des Kriegsendes
   if (land === 'BE' && (jahr === 2020 || jahr === 2025)) liste.push({ datum: `${jahr}-05-08`, name: 'Tag der Befreiung' });
+  // ebenfalls einmalig in Berlin: 75. Jahrestag des Volksaufstands in der DDR
+  if (land === 'BE' && jahr === 2028) liste.push({ datum: '2028-06-17', name: 'Jahrestag des Volksaufstands vom 17. Juni 1953' });
   if (in_('BW', 'BY', 'HE', 'NW', 'RP', 'SL')) liste.push({ datum: plusTage(ostern, 60), name: 'Fronleichnam' });
   if (in_('SN', 'TH')) liste.push({ datum: plusTage(ostern, 60), name: 'Fronleichnam', teilweise: true });
   if (land === 'BY') liste.push({ datum: `${jahr}-08-08`, name: 'Augsburger Friedensfest (nur Stadt Augsburg)', teilweise: true });

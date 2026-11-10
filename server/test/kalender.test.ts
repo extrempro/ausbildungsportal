@@ -101,6 +101,9 @@ test('Feiertage: einzelne Daten und Besonderheiten', () => {
   assert.equal(namen('MV', 2022)['Internationaler Frauentag'], undefined);
   assert.equal(namen('BE', 2025)['Tag der Befreiung'].datum, '2025-05-08');
   assert.equal(namen('BE', 2026)['Tag der Befreiung'], undefined);
+  assert.equal(feiertage('BE', 2028).filter((f) => f.datum === '2028-06-17').length, 1, 'einmaliger Feiertag in Berlin');
+  assert.equal(feiertage('BE', 2027).filter((f) => f.datum.endsWith('-06-17')).length, 0);
+  assert.equal(feiertage('HH', 2028).filter((f) => f.datum === '2028-06-17').length, 0);
   assert.equal(namen('TH', 2026)['Weltkindertag'].datum, '2026-09-20');
   assert.deepEqual(feiertageZwischen('HH', '2026-12-20', '2027-01-05').map((f) => f.datum), ['2026-12-25', '2026-12-26', '2027-01-01']);
 });
