@@ -279,6 +279,11 @@ export function AzubiDetail({ id }: { id: number }) {
       <section className="karte">
         <h2>Ausbildung</h2>
         <ProfilUebersicht p={p} />
+        <p className="abstand">
+          <Link zu={`/azubis/${p.azubi.id}/berichtsheft`} className="knopf schlicht">
+            Berichtsheft ansehen
+          </Link>
+        </p>
       </section>
 
       {p.bearbeitbar && stammdaten && (

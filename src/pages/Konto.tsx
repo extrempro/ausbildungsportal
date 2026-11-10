@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Konto, Theme } from '../api';
+import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 
 export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<void> }) {
   const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
@@ -45,6 +46,79 @@ export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<
   );
 }
 
+function Unterschrift() {
+  const [gespeichert, setGespeichert] = useState<string | null | undefined>(undefined);
+  const [neu, setNeu] = useState('');
+  const [zeichnen, setZeichnen] = useState(false);
+  const [fehler, setFehler] = useState('');
+
+  useEffect(() => {
+    api<{ pfad: string | null }>('GET', '/api/ich/unterschrift').then((r) => setGespeichert(r.pfad), () => setGespeichert(null));
+  }, []);
+
+  const speichere = async () => {
+    try {
+      const r = await api<{ pfad: string }>('PUT', '/api/ich/unterschrift', { pfad: neu });
+      setGespeichert(r.pfad);
+      setZeichnen(false);
+      setNeu('');
+      setFehler('');
+    } catch (e) {
+      setFehler(e instanceof Error ? e.message : 'Fehler');
+    }
+  };
+  const loesche = async () => {
+    if (!window.confirm('Hinterlegte Unterschrift löschen? Bereits unterschriebene Nachweise bleiben unverändert.')) return;
+    await api('DELETE', '/api/ich/unterschrift');
+    setGespeichert(null);
+  };
+
+  if (gespeichert === undefined) return <p className="leise">Lädt …</p>;
+  return (
+    <>
+      <p className="leise klein">
+        Mit dieser Unterschrift werden Ausbildungsnachweise beim Einreichen bzw. Abzeichnen unterschrieben. Am Nachweis wird eine Kopie gespeichert – eine spätere Änderung
+        verändert alte Nachweise nicht.
+      </p>
+      {gespeichert && !zeichnen && (
+        <>
+          <div className="signatur-feld gross">
+            <UnterschriftBild pfad={gespeichert} titel="Meine Unterschrift" />
+          </div>
+          <div className="aktionen links">
+            <button type="button" className="knopf schlicht" onClick={() => setZeichnen(true)}>
+              Neu unterschreiben
+            </button>
+            <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
+              Löschen
+            </button>
+          </div>
+        </>
+      )}
+      {(!gespeichert || zeichnen) && (
+        <>
+          <UnterschriftFeld onAendern={setNeu} />
+          {fehler && (
+            <p className="hinweis fehler" role="alert">
+              {fehler}
+            </p>
+          )}
+          <div className="aktionen links">
+            <button type="button" className="knopf" disabled={!neu} onClick={() => void speichere()}>
+              Unterschrift speichern
+            </button>
+            {zeichnen && (
+              <button type="button" className="knopf schlicht" onClick={() => setZeichnen(false)}>
+                Abbrechen
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: () => void | Promise<void> }) {
   const setzeTheme = async (theme: Theme) => {
     await api('PUT', '/api/ich/theme', { theme });
@@ -80,6 +154,13 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
           </select>
         </label>
       </section>
+
+      {konto.rolle !== 'admin' && (
+        <section className="karte">
+          <h2>Unterschrift</h2>
+          <Unterschrift />
+        </section>
+      )}
 
       {konto.anmeldung === 'lokal' && (
         <section className="karte">

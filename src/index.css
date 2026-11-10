@@ -380,6 +380,224 @@ div.reihe {
   border-top: 1px solid var(--c-border);
 }
 
+textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 400;
+  color: var(--c-text);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+/* Berichtsheft */
+.pille.rot {
+  background: var(--c-rot-bg);
+  color: var(--c-rot-fg);
+}
+
+.pille.blau {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+h1 .pille {
+  font-size: 14px;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter .rechts {
+  margin-left: auto;
+}
+
+.knopf[aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+fieldset.abschnitt {
+  border: 0;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+fieldset.abschnitt legend {
+  font-weight: 700;
+  font-size: 16px;
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.zeile {
+  display: grid;
+  grid-template-columns: 1fr 96px auto;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+.zeile.vier {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.mehrzeilig {
+  white-space: pre-wrap;
+}
+
+.zahl {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.abstand {
+  margin: 16px 0 24px;
+}
+
+.blatt-kopf {
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--c-text);
+}
+
+.blatt h3 {
+  border-top: 0;
+  padding-top: 0;
+  margin: 20px 0 4px;
+}
+
+.blatt-tabelle td {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.blatt-tabelle td.zahl {
+  width: 80px;
+  padding-left: 16px;
+}
+
+.blatt-summe {
+  margin: 24px 0 16px;
+}
+
+.signaturen {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.signatur-feld {
+  height: 72px;
+  border-bottom: 1px solid var(--c-text);
+  margin-bottom: 4px;
+}
+
+.signatur-feld.gross {
+  height: 120px;
+  max-width: 360px;
+  margin-bottom: 16px;
+}
+
+.unterschrift-bild {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+}
+
+.unterschrift-feld {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 3 / 1;
+  margin-bottom: 12px;
+  color: #0f172a;
+  background: #ffffff;
+  border: 2px dashed var(--c-border);
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.unterschrift-linie {
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+
+@media (max-width: 640px) {
+  .zeile {
+    grid-template-columns: 1fr 80px;
+  }
+
+  .zeile > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .signaturen {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Drucken: nur der Nachweis, schwarz auf weiß, jede Woche auf einer eigenen Seite */
+@media print {
+  :root,
+  html.dark {
+    --c-bg: #ffffff;
+    --c-card: #ffffff;
+    --c-text: #000000;
+    --c-muted: #333333;
+    --c-border: #999999;
+    color-scheme: light;
+  }
+
+  .leiste,
+  .fuss,
+  .nicht-drucken {
+    display: none !important;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .karte {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .druckseite {
+    break-after: page;
+  }
+
+  .druckseite:last-child {
+    break-after: auto;
+  }
+
+  .blatt-tabelle tr,
+  .signaturen {
+    break-inside: avoid;
+  }
+}
+
 /* Tabellen */
 .tabelle-rahmen {
   padding: 0;

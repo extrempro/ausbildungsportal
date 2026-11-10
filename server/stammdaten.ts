@@ -4,8 +4,8 @@ import type { DB } from './db';
 import { heute } from './datum';
 import { BUNDESLAENDER, feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
-import { ausbildungsstand, gueltigesDatum, hoechsteVerkuerzung, plusTage } from './kalender';
-import type { Ausbildungsstand } from './kalender';
+import { ausbildungsdauer, ausbildungsstand, gueltigesDatum, hoechsteVerkuerzung, plusTage } from './kalender';
+import type { Ausbildungsstand, Dauer } from './kalender';
 import { protokolliere } from './protokoll';
 import { darfAzubiSehen, darfAzubiVerwalten } from './rechte';
 import type { BenutzerZeile } from './typen';
@@ -92,7 +92,7 @@ function alleSchulen(db: DB): Berufsschule[] {
   return db.prepare('SELECT * FROM berufsschule ORDER BY name COLLATE NOCASE').all() as unknown as Berufsschule[];
 }
 
-function leseProfil(db: DB, azubiId: number): Profil {
+export function leseProfil(db: DB, azubiId: number): Profil {
   const z = db.prepare('SELECT * FROM azubi_profil WHERE benutzer_id = ?').get(azubiId) as ProfilZeile | undefined;
   if (!z) return { ...LEERES_PROFIL };
   return {
@@ -109,7 +109,7 @@ function leseProfil(db: DB, azubiId: number): Profil {
   };
 }
 
-function standAus(db: DB, p: Profil, tag: string): { beruf: Beruf | null; stand: Ausbildungsstand } {
+export function standAus(db: DB, p: Profil, tag: string): { beruf: Beruf | null; stand: Ausbildungsstand } {
   const beruf = p.berufId ? ((db.prepare('SELECT * FROM beruf WHERE id = ?').get(p.berufId) as Beruf | undefined) ?? null) : null;
   const stand = ausbildungsstand(
     { ausbildungsbeginn: p.ausbildungsbeginn, vertragsende: p.vertragsende, verkuerzung_monate: p.verkuerzungMonate, verkuerzung_art: p.verkuerzungArt },
@@ -117,6 +117,15 @@ function standAus(db: DB, p: Profil, tag: string): { beruf: Beruf | null; stand:
     tag,
   );
   return { beruf, stand };
+}
+
+/** Dauer der Ausbildung eines Azubis oder null, solange kein Ausbildungsbeginn eingetragen ist. */
+export function dauerVon(db: DB, p: Profil): Dauer | null {
+  const beruf = p.berufId ? (db.prepare('SELECT regeldauer_monate FROM beruf WHERE id = ?').get(p.berufId) as { regeldauer_monate: number } | undefined) : undefined;
+  return ausbildungsdauer(
+    { ausbildungsbeginn: p.ausbildungsbeginn, vertragsende: p.vertragsende, verkuerzung_monate: p.verkuerzungMonate, verkuerzung_art: p.verkuerzungArt },
+    beruf?.regeldauer_monate ?? STANDARD_REGELDAUER,
+  );
 }
 
 /** Kurzangaben für die Azubi-Liste. */
@@ -182,7 +191,7 @@ function pruefeSchule(body: Record<string, unknown>) {
 }
 
 /** Azubi, den der Aufrufer sehen darf – sonst 404, damit fremde und unbekannte IDs gleich aussehen. */
-function sichtbarerAzubi(c: Ctx): BenutzerZeile {
+export function sichtbarerAzubi(c: Ctx): BenutzerZeile {
   const id = idAus(c.p.id);
   if (!darfAzubiSehen(c.k.db, c.b, id, heute(c.k.jetzt()))) throw new Fehler(404, 'Nicht gefunden');
   return holeBenutzer(c.k.db, id)!;
@@ -190,7 +199,7 @@ function sichtbarerAzubi(c: Ctx): BenutzerZeile {
 
 // ---------- Routen ----------
 
-const FACH: ('ausbilder' | 'beauftragter' | 'azubi')[] = ['ausbilder', 'beauftragter', 'azubi'];
+export const FACH: ('ausbilder' | 'beauftragter' | 'azubi')[] = ['ausbilder', 'beauftragter', 'azubi'];
 
 export const STAMMDATEN_ROUTEN: Route[] = [
   {

@@ -171,3 +171,107 @@ export function standText(s: Pick<Stand, 'phase' | 'ausbildungsjahr' | 'beginn' 
   if (s.phase === 'beendet') return `beendet am ${datum(s.ende)}`;
   return `${s.ausbildungsjahr}. Ausbildungsjahr · bis ${datum(s.ende)}`;
 }
+
+// ---------- Berichtsheft ----------
+
+export type BerichtStatus = 'fehlt' | 'entwurf' | 'eingereicht' | 'zurueck' | 'abgezeichnet';
+export type Grund = 'urlaub' | 'krank' | 'feiertag' | 'sonstiges';
+
+export interface BerichtEintrag {
+  text: string;
+  stunden: number;
+}
+export interface BerichtAbwesenheit {
+  tag: string;
+  grund: Grund;
+  stunden: number;
+  text: string;
+}
+export interface BerichtInhalt {
+  betrieb: BerichtEintrag[];
+  unterweisung: BerichtEintrag[];
+  schule: BerichtEintrag[];
+  abwesenheit: BerichtAbwesenheit[];
+}
+
+export interface Bericht {
+  montag: string;
+  sonntag: string;
+  kw: number;
+  jahr: number;
+  ausbildungsjahr: number | null;
+  status: BerichtStatus;
+  inhalt: BerichtInhalt;
+  summe: { betrieb: number; unterweisung: number; schule: number; abwesenheit: number; gesamt: number };
+  soll: number;
+  kommentar: string;
+  eingereichtAm: string | null;
+  abgezeichnetAm: string | null;
+  signaturen: { art: 'azubi' | 'abzeichnung'; name: string; rolle: Rolle; pfad: string; zeit: string }[];
+  verlauf: { zeit: string; aktion: string; name: string; rolle: Rolle; kommentar: string }[];
+  kopf: { azubi: string; beruf: string; betrieb: string; ausbilder: string };
+  rechte: { schreiben: boolean; einreichen: boolean; zurueckziehen: boolean; loeschen: boolean; abzeichnen: boolean; oeffnen: boolean };
+}
+
+export interface WocheKurz {
+  montag: string;
+  sonntag: string;
+  kw: number;
+  jahr: number;
+  ausbildungsjahr: number | null;
+  status: BerichtStatus;
+  stunden: number;
+}
+
+export interface BerichtListe {
+  azubi: { id: number; anzeigename: string };
+  eigenes: boolean;
+  beginnFehlt: boolean;
+  soll: number;
+  wochen: WocheKurz[];
+  berichte?: Bericht[];
+}
+
+export interface OffenerBericht {
+  azubiId: number;
+  azubi: string;
+  montag: string;
+  sonntag: string;
+  kw: number;
+  jahr: number;
+  eingereichtAm: string | null;
+  stunden: number;
+}
+
+export const STATUS_TEXT: Record<BerichtStatus, string> = {
+  fehlt: 'fehlt',
+  entwurf: 'Entwurf',
+  eingereicht: 'eingereicht',
+  zurueck: 'zurückgegeben',
+  abgezeichnet: 'abgezeichnet',
+};
+
+export const STATUS_FARBE: Record<BerichtStatus, string> = {
+  fehlt: 'rot',
+  entwurf: 'grau',
+  eingereicht: 'blau',
+  zurueck: 'gelb',
+  abgezeichnet: 'gruen',
+};
+
+export const GRUND_TEXT: Record<Grund, string> = { urlaub: 'Urlaub', krank: 'Krank', feiertag: 'Feiertag', sonstiges: 'Sonstiges' };
+
+/** Stunden mit Komma: 7,5 statt 7.5 */
+export function h(n: number): string {
+  return String(Math.round(n * 100) / 100).replace('.', ',');
+}
+
+/** „02.11.–08.11.2026“ */
+export function wocheText(montag: string, sonntag: string): string {
+  return `${montag.slice(8, 10)}.${montag.slice(5, 7)}.–${datum(sonntag)}`;
+}
+
+/** Adresse des Berichtshefts: das eigene oder das eines betreuten Azubis. */
+export function berichtsheftPfad(azubiId: number, eigenes: boolean): string {
+  return eigenes ? '/berichtsheft' : `/azubis/${azubiId}/berichtsheft`;
+}

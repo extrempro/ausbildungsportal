@@ -42,6 +42,23 @@ export function tageZwischen(von: string, bis: string): number {
   return Math.round((d(bis).getTime() - d(von).getTime()) / 86_400_000);
 }
 
+/** Montag der Woche, in der das Datum liegt. */
+export function montagVon(datum: string): string {
+  return plusTage(datum, -((d(datum).getUTCDay() + 6) % 7));
+}
+
+export function istMontag(datum: unknown): datum is string {
+  return gueltigesDatum(datum) && montagVon(datum) === datum;
+}
+
+/** ISO-Kalenderwoche (KW 1 ist die Woche mit dem ersten Donnerstag des Jahres). */
+export function kalenderwoche(datum: string): { kw: number; jahr: number } {
+  const donnerstag = d(plusTage(montagVon(datum), 3));
+  const jahr = donnerstag.getUTCFullYear();
+  const kw = Math.floor((donnerstag.getTime() - Date.UTC(jahr, 0, 1)) / (7 * 86_400_000)) + 1;
+  return { kw, jahr };
+}
+
 // ---------- Ausbildungsdauer ----------
 
 /** Nach einer Verkürzung müssen mindestens so viele Monate Ausbildung bleiben. */

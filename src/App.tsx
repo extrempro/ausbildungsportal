@@ -4,6 +4,8 @@ import type { Konto, Theme } from './api';
 import { Anmelden } from './pages/Anmelden';
 import { AzubiDetail } from './pages/AzubiDetail';
 import { Azubis } from './pages/Azubis';
+import { BerichtSeite } from './pages/Bericht';
+import { Abzeichnen, BerichteDruck, Berichtsheft } from './pages/Berichtsheft';
 import { Konten } from './pages/Konten';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Protokoll } from './pages/Protokoll';
@@ -72,9 +74,16 @@ export function App() {
 
   const betreut = konto.rolle === 'ausbilder' || konto.rolle === 'beauftragter';
   const azubiId = /^\/azubis\/(\d{1,12})$/.exec(pfad)?.[1];
+  // Berichtsheft: das eigene (/berichtsheft…) oder das eines betreuten Azubis (/azubis/12/berichtsheft…)
+  const heft = /^(?:\/azubis\/(\d{1,12}))?\/berichtsheft(?:\/(druck|\d{4}-\d{2}-\d{2}))?$/.exec(pfad);
+  const heftAzubi = heft ? (heft[1] ? (betreut ? Number(heft[1]) : null) : konto.rolle === 'azubi' ? konto.id : null) : null;
 
   let seite;
   if (pfad === '/' && konto.rolle !== 'admin') seite = <Start konto={konto} />;
+  else if (heft && heftAzubi !== null && heft[2] === 'druck') seite = <BerichteDruck key={heftAzubi} azubiId={heftAzubi} />;
+  else if (heft && heftAzubi !== null && heft[2]) seite = <BerichtSeite key={`${heftAzubi}-${heft[2]}`} azubiId={heftAzubi} montag={heft[2]} eigenes={!heft[1]} />;
+  else if (heft && heftAzubi !== null) seite = <Berichtsheft key={heftAzubi} azubiId={heftAzubi} />;
+  else if (pfad === '/abzeichnen' && betreut) seite = <Abzeichnen />;
   else if (pfad === '/azubis' && betreut) seite = <Azubis ich={konto} />;
   else if (azubiId && betreut) seite = <AzubiDetail key={azubiId} id={Number(azubiId)} />;
   else if (pfad === '/verwaltung/stammdaten' && konto.rolle === 'ausbilder') seite = <Stammdaten />;
@@ -100,11 +109,17 @@ export function App() {
           </Link>
           <nav aria-label="Hauptnavigation">
             {konto.rolle !== 'admin' && <Link zu="/">Start</Link>}
+            {konto.rolle === 'azubi' && (
+              <Link zu="/berichtsheft" aktivAb="/berichtsheft">
+                Berichtsheft
+              </Link>
+            )}
             {betreut && (
               <Link zu="/azubis" aktivAb="/azubis">
                 Azubis
               </Link>
             )}
+            {betreut && <Link zu="/abzeichnen">Abzeichnen</Link>}
             {verwaltet && <Link zu="/verwaltung/konten">Konten</Link>}
             {konto.rolle === 'ausbilder' && <Link zu="/verwaltung/stammdaten">Stammdaten</Link>}
             {verwaltet && <Link zu="/verwaltung/protokoll">Protokoll</Link>}
