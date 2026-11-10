@@ -3823,3 +3823,148 @@ fieldset.vorlage-eintrag legend + * {
 .meldung-teams .pille {
   margin-left: 6px;
 }
+
+/* ---------- Baustein einfügen (Plan) und Sammelplanung ---------- */
+.baustein-ab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.baustein-ab input {
+  width: auto;
+}
+
+.sammel {
+  display: grid;
+  gap: 0;
+}
+
+.sammel h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.sammel h2 .ablauf-nr {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.sammel-gruppen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sammel-gruppen [aria-pressed='true'] {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.sammel-azubis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 4px 16px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.sammel-azubis label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.sammel-azubis label:hover {
+  background: var(--c-chip);
+}
+
+.sammel-azubis input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+}
+
+.sammel-azubis label > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sammel-felder {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px 16px;
+  margin-top: 16px;
+}
+
+.sammel-felder .ganz {
+  grid-column: 1 / -1;
+}
+
+.sammel-felder p {
+  margin: 0;
+}
+
+.sammel-ergebnis {
+  margin-top: 16px;
+}
+
+.sammel-ergebnis ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sammel-ergebnis li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+
+.sammel-ergebnis .pille {
+  margin-left: 0;
+}
+
+@media (max-width: 699px) {
+  .sammel-felder {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .baustein-leiste > * {
+    flex: 1 1 100%;
+  }
+
+  .baustein-ab {
+    justify-content: space-between;
+  }
+}
+
+.ue-planen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.ue-planen a.knopf {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}

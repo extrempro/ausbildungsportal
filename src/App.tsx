@@ -9,6 +9,7 @@ import { Abzeichnen } from './pages/Abzeichnen';
 import { BerichteDruck, Berichtsheft } from './pages/Berichtsheft';
 import { Konten } from './pages/Konten';
 import { PlanSeite } from './pages/Plan';
+import { Sammelplanung } from './pages/Sammelplanung';
 import { UebersichtSeite } from './pages/Uebersicht';
 import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
@@ -253,7 +254,8 @@ export function App() {
   else if (heft && heftAzubi !== null && heft[2]) seite = <BerichtSeite key={`${heftAzubi}-${heft[2]}`} azubiId={heftAzubi} montag={heft[2]} eigenes={!heft[1]} />;
   else if (heft && heftAzubi !== null) seite = <Berichtsheft key={heftAzubi} azubiId={heftAzubi} />;
   else if (plan && planAzubi !== null) seite = <PlanSeite key={planAzubi} azubiId={planAzubi} />;
-  else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite />;
+  else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite darfPlanen={konto.rolle === 'ausbilder'} />;
+  else if (pfad === '/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
   else if (pfad === '/verwaltung/vorlagen' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
   else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} onFuehrung={starteFuehrung} />;
@@ -295,14 +297,14 @@ export function App() {
             { zu: '/', text: 'Start', icon: 'start' },
             { zu: '/azubis', text: 'Azubis', icon: 'azubis', aktivAb: '/azubis' },
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
-            { zu: '/uebersicht', text: 'Übersicht', icon: 'uebersicht' },
+            { zu: '/uebersicht', text: 'Übersicht', icon: 'uebersicht', aktivAb: konto.rolle === 'ausbilder' && pfad === '/sammelplanung' ? '/sammelplanung' : undefined },
           ];
   const verwaltung: Punkt[] =
     konto.rolle === 'ausbilder'
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/stammdaten', text: 'Stammdaten', icon: 'stammdaten' },
-          { zu: '/verwaltung/vorlagen', text: 'Planvorlagen', icon: 'vorlagen' },
+          { zu: '/verwaltung/vorlagen', text: 'Planbausteine', icon: 'vorlagen' },
         ]
       : [];
   const persoenlich: Punkt[] = [

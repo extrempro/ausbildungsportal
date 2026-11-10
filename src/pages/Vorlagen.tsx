@@ -54,7 +54,7 @@ function dateiname(titel: string): string {
     .replace(/ß/g, 'ss')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
-  return `planvorlage-${kurz || 'ohne-titel'}.json`;
+  return `baustein-${kurz || 'ohne-titel'}.json`;
 }
 
 /** Liest eine Export-Datei; wirft einen verständlichen Fehler, wenn sie nicht passt. Die genaue Prüfung macht der Server. */
@@ -66,12 +66,12 @@ function ausDatei(text: string): DateiVorlage[] {
     throw new Error('Die Datei lässt sich nicht lesen. Bitte eine Datei wählen, die hier mit „Exportieren“ erzeugt wurde.');
   }
   const d = roh as { format?: unknown; vorlagen?: unknown };
-  if (typeof roh !== 'object' || roh === null || d.format !== FORMAT || !Array.isArray(d.vorlagen)) throw new Error('Das ist keine Planvorlagen-Datei aus dem Ausbildungsportal.');
-  if (d.vorlagen.length === 0) throw new Error('Die Datei enthält keine Vorlagen.');
-  if (d.vorlagen.length > 50) throw new Error('Die Datei enthält mehr als 50 Vorlagen.');
+  if (typeof roh !== 'object' || roh === null || d.format !== FORMAT || !Array.isArray(d.vorlagen)) throw new Error('Das ist keine Baustein-Datei aus dem Ausbildungsportal.');
+  if (d.vorlagen.length === 0) throw new Error('Die Datei enthält keine Bausteine.');
+  if (d.vorlagen.length > 50) throw new Error('Die Datei enthält mehr als 50 Bausteine.');
   return d.vorlagen.map((v: unknown, i) => {
     const x = v as Partial<DateiVorlage>;
-    if (typeof v !== 'object' || v === null || typeof x.titel !== 'string' || !Array.isArray(x.eintraege)) throw new Error(`Vorlage ${i + 1} in der Datei ist unvollständig.`);
+    if (typeof v !== 'object' || v === null || typeof x.titel !== 'string' || !Array.isArray(x.eintraege)) throw new Error(`Baustein ${i + 1} in der Datei ist unvollständig.`);
     return { titel: x.titel, beruf: typeof x.beruf === 'string' ? x.beruf : null, eintraege: x.eintraege };
   });
 }
@@ -126,11 +126,11 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
       await onFertig();
       if (vorlage) {
         setZeilen(geordnet);
-        setMeldung({ text: 'Gespeichert. Pläne, in die diese Vorlage schon übernommen wurde, ändern sich dadurch nicht.', fehler: false });
+        setMeldung({ text: 'Gespeichert. Pläne, in die dieser Baustein schon eingefügt wurde, ändern sich dadurch nicht.', fehler: false });
       } else {
         setTitel('');
         setZeilen([]);
-        setMeldung({ text: 'Vorlage angelegt.', fehler: false });
+        setMeldung({ text: 'Baustein angelegt.', fehler: false });
       }
     } catch (e) {
       setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
@@ -141,8 +141,8 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
     <>
       <div className="reihe">
         <label>
-          Titel der Vorlage
-          <input value={titel} maxLength={120} placeholder="z. B. Fachinformatiker – 1. Ausbildungsjahr" onChange={(e) => setTitel(e.target.value)} />
+          Titel des Bausteins
+          <input value={titel} maxLength={120} placeholder="z. B. IT-Support" onChange={(e) => setTitel(e.target.value)} />
         </label>
         <label>
           Beruf
@@ -157,7 +157,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
         </label>
       </div>
       <h3 className="vorlage-zwischen">Einträge ({zeilen.length})</h3>
-      {zeilen.length === 0 && <p className="leise">Noch keine Einträge. Mit „Eintrag hinzufügen“ planst du den ersten Abschnitt, zum Beispiel einen Einsatz in den Wochen 1 bis 8.</p>}
+      {zeilen.length === 0 && <p className="leise">Noch keine Einträge. Mit „Eintrag hinzufügen“ legst du fest, was zum Baustein gehört – zum Beispiel einen Einsatz über 8 Wochen und eine Aufgabe in der ersten Woche.</p>}
       {zeilen.map((z, i) => (
         <fieldset className={`abschnitt vorlage-eintrag ${z.art}`} key={i}>
           <legend>
@@ -176,7 +176,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
               </select>
             </label>
             <label>
-              Ab Ausbildungswoche
+              Ab Woche des Bausteins
               <input type="number" min={1} max={260} value={z.abWoche} onChange={(e) => aendere(i, { abWoche: Number(e.target.value) })} />
             </label>
             <label>
@@ -221,7 +221,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
           Eintrag hinzufügen
         </button>
         <button type="button" className="knopf" disabled={!titel.trim()} onClick={() => void speichere()}>
-          {vorlage ? 'Vorlage speichern' : 'Vorlage anlegen'}
+          {vorlage ? 'Baustein speichern' : 'Baustein anlegen'}
         </button>
       </div>
       <p className="leise klein">Beim Speichern werden die Einträge nach Wochen geordnet.</p>
@@ -266,10 +266,10 @@ export function Vorlagen() {
     }
   };
   const loesche = async (v: Planvorlage) => {
-    if (!window.confirm(`Vorlage „${v.titel}“ löschen?\n\nSchon übernommene Einträge in Plänen bleiben erhalten. Tipp: vorher exportieren, falls du sie später noch einmal brauchst.`)) return;
+    if (!window.confirm(`Baustein „${v.titel}“ löschen?\n\nSchon eingefügte Einträge in Plänen bleiben erhalten. Tipp: vorher exportieren, falls du ihn später noch einmal brauchst.`)) return;
     try {
       await api('DELETE', `/api/planvorlagen/${v.id}`);
-      await lade(`Vorlage „${v.titel}“ gelöscht.`);
+      await lade(`Baustein „${v.titel}“ gelöscht.`);
     } catch (e) {
       zeigeFehler(e);
     }
@@ -285,7 +285,7 @@ export function Vorlagen() {
       for (const v of neue) {
         const beruf = v.beruf ? d.berufe.find((b) => berufName(b) === v.beruf) : undefined;
         if (v.beruf && !beruf) hinweise.push(`Der Beruf „${v.beruf}“ ist hier nicht angelegt – „${v.titel}“ gilt deshalb für alle Berufe.`);
-        const titel = freierTitel(v.titel.trim() || 'Vorlage ohne Titel', 'Import', vergeben);
+        const titel = freierTitel(v.titel.trim() || 'Baustein ohne Titel', 'Import', vergeben);
         if (titel !== v.titel) hinweise.push(`„${v.titel}“ gab es schon – importiert als „${titel}“.`);
         try {
           await api('POST', '/api/planvorlagen', { titel, berufId: beruf?.id ?? null, eintraege: v.eintraege });
@@ -295,7 +295,7 @@ export function Vorlagen() {
         vergeben.push(titel);
         anzahl++;
       }
-      await lade([`${anzahl === 1 ? 'Eine Vorlage' : `${anzahl} Vorlagen`} importiert.`, ...hinweise].join(' '));
+      await lade([`${anzahl === 1 ? 'Ein Baustein' : `${anzahl} Bausteine`} importiert.`, ...hinweise].join(' '));
     } catch (e) {
       await lade().catch(() => {});
       zeigeFehler(e);
@@ -309,15 +309,18 @@ export function Vorlagen() {
       <p className="klein">
         <Link zu="/verwaltung/stammdaten">← Stammdaten</Link>
       </p>
-      <h1>Planvorlagen</h1>
-      <p className="leise">Eine Vorlage ist ein Ablauf in Wochen ab Ausbildungsbeginn. Du legst ihn einmal an und übernimmst ihn dann in den Plan jedes neuen Azubis.</p>
+      <h1>Planbausteine</h1>
+      <p className="leise">
+        Ein Baustein ist ein Stück Ausbildung, das immer wieder vorkommt – zum Beispiel die Station „IT-Support“ mit 8 Wochen Einsatz und den Aufgaben dazu. Du legst ihn einmal an und fügst ihn in jeden Plan dort ein, wo er für diesen Azubi hingehört. So bleibt jeder Plan
+        individuell, ohne dass du die Texte neu schreibst.
+      </p>
       <ol className="ablauf-liste abz-hilfe">
         <li>
           <span className="ablauf-nr">1</span>
           <span>
-            <strong>Vorlage anlegen</strong>
+            <strong>Baustein anlegen</strong>
             <br />
-            <span className="leise klein">Titel und, wenn sie nur für einen Beruf gilt, den Beruf wählen.</span>
+            <span className="leise klein">Titel und, wenn er nur für einen Beruf gilt, den Beruf wählen.</span>
           </span>
         </li>
         <li>
@@ -325,33 +328,35 @@ export function Vorlagen() {
           <span>
             <strong>Einträge planen</strong>
             <br />
-            <span className="leise klein">Je Eintrag: Art, ab welcher Ausbildungswoche, wie viele Wochen.</span>
+            <span className="leise klein">Je Eintrag: Art, Dauer und ab welcher Woche des Bausteins. Woche 1 ist später die Woche, in der du ihn einfügst.</span>
           </span>
         </li>
         <li>
           <span className="ablauf-nr">3</span>
           <span>
-            <strong>In einen Plan übernehmen</strong>
+            <strong>In Pläne einfügen</strong>
             <br />
-            <span className="leise klein">Im Ausbildungsplan eines Azubis unter „Vorlage übernehmen“. Danach ist der Plan unabhängig von der Vorlage.</span>
+            <span className="leise klein">
+              Im Ausbildungsplan eines Azubis unter „Baustein einfügen“ mit der Startwoche – oder für mehrere Azubis auf einmal in der <Link zu="/sammelplanung">Sammelplanung</Link>.
+            </span>
           </span>
         </li>
       </ol>
 
       <div className="vorlage-leiste">
         <a className="knopf" href="#neue-vorlage">
-          Neue Vorlage
+          Neuer Baustein
         </a>
         <button type="button" className="knopf schlicht" onClick={() => datei.current?.click()}>
           Importieren
         </button>
-        <button type="button" className="knopf schlicht" disabled={d.vorlagen.length === 0} onClick={() => ladeHerunter('planvorlagen.json', alsDatei(d.vorlagen, d.berufe))}>
+        <button type="button" className="knopf schlicht" disabled={d.vorlagen.length === 0} onClick={() => ladeHerunter('planbausteine.json', alsDatei(d.vorlagen, d.berufe))}>
           Alle exportieren
         </button>
-        <input ref={datei} type="file" accept="application/json,.json" hidden aria-label="Datei mit Planvorlagen zum Importieren" onChange={(e) => e.target.files?.[0] && void importiere(e.target.files[0])} />
+        <input ref={datei} type="file" accept="application/json,.json" hidden aria-label="Datei mit Bausteinen zum Importieren" onChange={(e) => e.target.files?.[0] && void importiere(e.target.files[0])} />
       </div>
       <p className="leise klein">
-        Exportieren speichert Vorlagen als Datei – zur Sicherung oder um sie in ein anderes Ausbildungsportal zu übernehmen. Importieren legt die Vorlagen aus einer solchen Datei zusätzlich an; vorhandene Vorlagen werden nie überschrieben. Die Datei enthält keine Daten von Azubis.
+        Exportieren speichert Bausteine als Datei – zur Sicherung oder um sie in ein anderes Ausbildungsportal zu übernehmen. Importieren legt die Bausteine aus einer solchen Datei zusätzlich an; vorhandene werden nie überschrieben. Die Datei enthält keine Daten von Azubis.
       </p>
       {meldung && (
         <p className={`hinweis ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
@@ -359,8 +364,8 @@ export function Vorlagen() {
         </p>
       )}
 
-      <h2>Vorhandene Vorlagen ({d.vorlagen.length})</h2>
-      {d.vorlagen.length === 0 && <p className="karte leise">Noch keine Vorlage. Lege unten die erste an oder importiere eine Datei.</p>}
+      <h2>Vorhandene Bausteine ({d.vorlagen.length})</h2>
+      {d.vorlagen.length === 0 && <p className="karte leise">Noch kein Baustein. Lege unten den ersten an oder importiere eine Datei.</p>}
       {d.vorlagen.map((v) => {
         const ende = letzteWoche(v.eintraege);
         return (
@@ -400,7 +405,7 @@ export function Vorlagen() {
                 Duplizieren
               </button>
               <button type="button" className="knopf schlicht klein gefahr" onClick={() => void loesche(v)}>
-                Vorlage löschen
+                Baustein löschen
               </button>
             </div>
             <h3 className="vorlage-zwischen">Bearbeiten</h3>
@@ -409,7 +414,7 @@ export function Vorlagen() {
         );
       })}
       <section className="karte" id="neue-vorlage">
-        <h2>Neue Vorlage</h2>
+        <h2>Neuer Baustein</h2>
         <VorlageFormular key={d.vorlagen.length} vorlage={null} berufe={d.berufe} onFertig={lade} />
       </section>
     </>

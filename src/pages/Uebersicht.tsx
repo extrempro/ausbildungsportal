@@ -120,7 +120,7 @@ function WochenListe({ d }: { d: Uebersicht }) {
 }
 
 /** Alle sichtbaren Azubis: oben diese und nächste Woche, darunter der Zeitstrahl nach Monaten und Ausbildungsjahren. */
-export function UebersichtSeite() {
+export function UebersichtSeite({ darfPlanen = false }: { darfPlanen?: boolean }) {
   const [von, setVon] = useState('');
   const [anzahl, setAnzahl] = useState(26);
   const [d, setD] = useState<Uebersicht | null>(null);
@@ -151,6 +151,14 @@ export function UebersichtSeite() {
     <>
       <h1>Übersicht</h1>
       <p className="leise">Wer ist wann wo? Schulblöcke und Einsätze kommen aus den Ausbildungsplänen, Urlaub aus den Berichten.</p>
+      {darfPlanen && (
+        <p className="nicht-drucken ue-planen">
+          <Link zu="/sammelplanung" className="knopf schlicht">
+            Für mehrere Azubis planen
+          </Link>
+          <span className="leise klein">Schulblock oder Baustein in mehrere Pläne auf einmal eintragen.</span>
+        </p>
+      )}
 
       {d.azubis.length === 0 ? (
         <p className="karte leise">Keine Azubis vorhanden.</p>

@@ -221,6 +221,77 @@ function weiseZu(db: DB, jetzt: Date, wer: BenutzerZeile, azubi: BenutzerZeile, 
   return true;
 }
 
+/** Legt einen geprüften Eintrag im Plan eines Azubis an (Rechte, Höchstzahl, Zuweisung, Aktivität). */
+function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boolean): { id: number; zugewiesen: boolean } {
+  const { db } = c.k;
+  if (!darfPlanBearbeiten(db, c.b, azubi.id, e.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diese Art von Eintrag darfst du hier nicht anlegen', 'rolle');
+  const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
+  if (anzahl >= MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hat schon ${MAX_EINTRAEGE} Einträge`);
+  const jetzt = c.k.jetzt();
+  let zugewiesen = false;
+  const id = transaktion(db, () => {
+    const r = db
+      .prepare(
+        `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, zustaendig_id, erledigt, unteraufgaben, erstellt_von, geaendert_von, geaendert)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString());
+    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel);
+    if (zuweisen && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
+    return Number(r.lastInsertRowid);
+  });
+  return { id, zugewiesen };
+}
+
+/**
+ * Fügt einen Baustein (Planvorlage) in den Plan ein. Woche 1 des Bausteins ist die Startwoche:
+ * die gewählte Woche oder, ohne Angabe, die Woche des Ausbildungsbeginns.
+ * Was erst nach dem Ende der Ausbildung beginnen würde, entfällt; was hineinragt, wird gekürzt.
+ */
+function fuegeBausteinEin(c: Ctx, azubi: BenutzerZeile, v: VorlageZeile, ab: string | null): number {
+  const { db } = c.k;
+  const dauer = dauerVon(db, leseProfil(db, azubi.id));
+  if (!dauer) throw new Fehler(409, 'Für diesen Azubi ist noch kein Ausbildungsbeginn eingetragen');
+  const erste = montagVon(dauer.beginn);
+  const letzte = montagVon(dauer.ende);
+  const start = ab ?? erste;
+  if (start < erste || start > letzte) throw new Fehler(409, 'Die Startwoche liegt außerhalb der Ausbildungszeit');
+  const neu = json<VorlageEintrag[]>(v.eintraege, [])
+    .map((e) => ({ e, von: plusTage(start, 7 * (e.abWoche - 1)) }))
+    .filter((x) => x.von <= letzte)
+    .map(({ e, von }) => {
+      const bis = plusTage(von, 7 * (e.wochen - 1));
+      return { e, von, bis: bis > letzte ? letzte : bis };
+    });
+  const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
+  if (anzahl + neu.length > MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hätte danach mehr als ${MAX_EINTRAEGE} Einträge`);
+  const jetzt = c.k.jetzt();
+  transaktion(db, () => {
+    const einfuegen = db.prepare(
+      `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, unteraufgaben, erstellt_von, geaendert_von, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const { e, von, bis } of neu) {
+      einfuegen.run(azubi.id, e.art, von, bis, e.titel, e.text, JSON.stringify(e.unteraufgaben.map((t) => ({ text: t, erledigt: false }))), c.b.id, c.b.id, jetzt.toISOString());
+    }
+    protokolliere(db, jetzt, 'fach', 'planvorlage_uebernommen', c.b, azubi, `${v.titel}: ${neu.length} Einträge`);
+    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, neu[0]?.von ?? null, `Baustein „${v.titel}“`, neu.length);
+  });
+  return neu.length;
+}
+
+function holeBaustein(db: DB, x: unknown): VorlageZeile {
+  const v = db.prepare('SELECT * FROM planvorlage WHERE id = ?').get(Number(x)) as VorlageZeile | undefined;
+  if (!v) throw new Fehler(400, 'Unbekannter Baustein');
+  return v;
+}
+
+/** Startwoche aus der Anfrage: leer = Ausbildungsbeginn, sonst der Montag der genannten Woche. */
+function startwocheAus(x: unknown): string | null {
+  if (x === undefined || x === null || x === '') return null;
+  if (!gueltigesDatum(x)) throw new Fehler(400, 'Die Startwoche ist kein gültiges Datum');
+  return montagVon(x);
+}
+
 // ---------- Routen ----------
 
 export const PLAN_ROUTEN: Route[] = [
@@ -303,22 +374,7 @@ export const PLAN_ROUTEN: Route[] = [
       const azubi = sichtbarerAzubi(c);
       const roh = koerper(c);
       const e = eingabeAus(db, c.b.rolle === 'azubi' ? { ...roh, zustaendigId: null } : roh);
-      if (!darfPlanBearbeiten(db, c.b, azubi.id, e.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diese Art von Eintrag darfst du hier nicht anlegen', 'rolle');
-      const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
-      if (anzahl >= MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hat schon ${MAX_EINTRAEGE} Einträge`);
-      const jetzt = c.k.jetzt();
-      let zugewiesen = false;
-      const id = transaktion(db, () => {
-        const r = db
-          .prepare(
-            `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, zustaendig_id, erledigt, unteraufgaben, erstellt_von, geaendert_von, geaendert)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          )
-          .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString());
-        merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel);
-        if (roh.zuweisen === true && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
-        return Number(r.lastInsertRowid);
-      });
+      const { id, zugewiesen } = legeEintragAn(c, azubi, e, roh.zuweisen === true);
       return { status: 201, body: { eintrag: ansicht(c, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(id) as unknown as EintragZeile), zugewiesen } };
     },
   },
@@ -400,7 +456,7 @@ export const PLAN_ROUTEN: Route[] = [
   },
 
   {
-    // Vorlage in den Plan übernehmen: Wochen zählen ab der Woche des Ausbildungsbeginns
+    // Baustein in den Plan einfügen: Woche 1 ist die gewählte Startwoche (ohne Angabe die Woche des Ausbildungsbeginns)
     m: 'POST',
     p: '/api/azubis/:id/plan/vorlage',
     wer: ['ausbilder'],
@@ -408,35 +464,85 @@ export const PLAN_ROUTEN: Route[] = [
       const { db } = c.k;
       const id = idAus(c.p.id);
       if (!darfAzubiVerwalten(db, c.b, id)) throw new Fehler(404, 'Nicht gefunden');
-      const azubi = holeBenutzer(db, id)!;
-      const v = db.prepare('SELECT * FROM planvorlage WHERE id = ?').get(Number(koerper(c).vorlageId)) as VorlageZeile | undefined;
-      if (!v) throw new Fehler(400, 'Unbekannte Vorlage');
-      const dauer = dauerVon(db, leseProfil(db, id));
-      if (!dauer) throw new Fehler(409, 'Für diesen Azubi ist noch kein Ausbildungsbeginn eingetragen');
-      const start = montagVon(dauer.beginn);
-      // was erst nach dem Ende der Ausbildung beginnen würde, entfällt; was hineinragt, wird gekürzt
-      const letzte = montagVon(dauer.ende);
-      const neu = json<VorlageEintrag[]>(v.eintraege, [])
-        .map((e) => ({ e, von: plusTage(start, 7 * (e.abWoche - 1)) }))
-        .filter((x) => x.von <= letzte)
-        .map(({ e, von }) => {
-          const bis = plusTage(von, 7 * (e.wochen - 1));
-          return { e, von, bis: bis > letzte ? letzte : bis };
-        });
-      const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(id) as { n: number }).n;
-      if (anzahl + neu.length > MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hätte danach mehr als ${MAX_EINTRAEGE} Einträge`);
-      const jetzt = c.k.jetzt();
-      transaktion(db, () => {
-        const einfuegen = db.prepare(
-          `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, unteraufgaben, erstellt_von, geaendert_von, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        );
-        for (const { e, von, bis } of neu) {
-          einfuegen.run(id, e.art, von, bis, e.titel, e.text, JSON.stringify(e.unteraufgaben.map((t) => ({ text: t, erledigt: false }))), c.b.id, c.b.id, jetzt.toISOString());
+      const roh = koerper(c);
+      return { status: 200, body: { uebernommen: fuegeBausteinEin(c, holeBenutzer(db, id)!, holeBaustein(db, roh.vorlageId), startwocheAus(roh.ab)) } };
+    },
+  },
+
+  // ---------- Für mehrere Azubis auf einmal planen ----------
+  {
+    m: 'GET',
+    p: '/api/plan/sammel',
+    wer: ['ausbilder'],
+    h: (c) => {
+      const { db } = c.k;
+      const tag = heute(c.k.jetzt());
+      return {
+        status: 200,
+        body: {
+          heute: tag,
+          azubis: sichtbareAzubis(db, c.b, tag).map((id) => {
+            const b = holeBenutzer(db, id)!;
+            const profil = leseProfil(db, id);
+            const dauer = dauerVon(db, profil);
+            const { beruf, stand } = standAus(db, profil, tag);
+            const schule = profil.berufsschuleId ? (db.prepare('SELECT name FROM berufsschule WHERE id = ?').get(profil.berufsschuleId) as { name: string } | undefined) : undefined;
+            return {
+              id,
+              anzeigename: b.anzeigename,
+              beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
+              berufsschule: schule?.name ?? '',
+              ausbildungsjahr: stand.phase === 'laufend' ? stand.ausbildungsjahr : null,
+              phase: stand.phase,
+              beginn: dauer?.beginn ?? null,
+              ende: dauer?.ende ?? null,
+            };
+          }),
+          bausteine: (db.prepare('SELECT * FROM planvorlage ORDER BY titel COLLATE NOCASE').all() as unknown as VorlageZeile[]).map(vorlageAnsicht),
+          personen: db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown[],
+        },
+      };
+    },
+  },
+  {
+    // Ein Eintrag oder ein Baustein für mehrere Azubis. Jeder Azubi wird einzeln behandelt:
+    // Wo es nicht passt (Woche außerhalb der Ausbildung, Plan voll), wird er ausgelassen und der Grund gemeldet.
+    m: 'POST',
+    p: '/api/plan/sammel',
+    wer: ['ausbilder'],
+    h: (c) => {
+      const { db } = c.k;
+      const roh = koerper(c);
+      const ids = Array.isArray(roh.azubiIds) ? [...new Set(roh.azubiIds.map(Number))] : [];
+      if (ids.length === 0 || ids.length > 200 || ids.some((id) => !darfAzubiVerwalten(db, c.b, id))) throw new Fehler(400, 'Bitte mindestens einen Azubi auswählen');
+      const baustein = roh.vorlageId !== undefined && roh.vorlageId !== null && roh.vorlageId !== '' ? holeBaustein(db, roh.vorlageId) : null;
+      let ab: string | null = null;
+      let eintrag: Eingabe | null = null;
+      if (baustein) {
+        ab = startwocheAus(roh.ab);
+      } else {
+        if (!istObjekt(roh.eintrag)) throw new Fehler(400, 'Eintrag oder Baustein fehlt');
+        eintrag = eingabeAus(db, roh.eintrag);
+      }
+      const ergebnis = ids.map((id) => {
+        const azubi = holeBenutzer(db, id)!;
+        try {
+          if (baustein) {
+            const anzahl = fuegeBausteinEin(c, azubi, baustein, ab);
+            if (anzahl === 0) return { id, anzeigename: azubi.anzeigename, ok: false, anzahl: 0, grund: 'Der Baustein hat keine Einträge, die in die Ausbildungszeit fallen' };
+            return { id, anzeigename: azubi.anzeigename, ok: true, anzahl, grund: '' };
+          }
+          const dauer = dauerVon(db, leseProfil(db, id));
+          if (!dauer) throw new Fehler(409, 'Für diesen Azubi ist noch kein Ausbildungsbeginn eingetragen');
+          if (eintrag!.bis < montagVon(dauer.beginn) || eintrag!.von > montagVon(dauer.ende)) throw new Fehler(409, 'Der Zeitraum liegt außerhalb der Ausbildungszeit');
+          legeEintragAn(c, azubi, eintrag!, roh.zuweisen === true);
+          return { id, anzeigename: azubi.anzeigename, ok: true, anzahl: 1, grund: '' };
+        } catch (e) {
+          if (!(e instanceof Fehler)) throw e;
+          return { id, anzeigename: azubi.anzeigename, ok: false, anzahl: 0, grund: e.message };
         }
-        protokolliere(db, jetzt, 'fach', 'planvorlage_uebernommen', c.b, azubi, `${v.titel}: ${neu.length} Einträge`);
-        merkeAktivitaet(db, jetzt, 'plan_neu', id, c.b, neu[0]?.von ?? null, `Vorlage „${v.titel}“`, neu.length);
       });
-      return { status: 200, body: { uebernommen: neu.length } };
+      return { status: 200, body: { ergebnis, eingetragen: ergebnis.filter((x) => x.ok).length } };
     },
   },
 

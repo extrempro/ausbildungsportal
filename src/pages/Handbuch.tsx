@@ -247,7 +247,8 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <li>Mit „+“ an einer Woche oder „Eintrag hinzufügen“ legst du Schulblöcke, Einsätze, Aufgaben und Notizen an. Ein Eintrag kann über mehrere Wochen gehen.</li>
             <li>Bei Einsätzen und Aufgaben kannst du eine zuständige Person wählen. Ist es ein Ausbildungsbeauftragter, lässt er sich beim Speichern gleich für den Zeitraum zuweisen.</li>
             <li>
-              Wiederkehrende Abläufe legst du als <Link zu="/verwaltung/vorlagen">Planvorlage</Link> an (Wochen ab Ausbildungsbeginn) und übernimmst sie in den Plan. Vorlagen lassen sich dort als Datei exportieren und wieder importieren – zur Sicherung oder für ein anderes Portal.
+              Was immer wieder vorkommt – etwa eine Station mit ihren Aufgaben –, legst du als <Link zu="/verwaltung/vorlagen">Planbaustein</Link> an und fügst es im Plan ab der passenden Woche ein. Was für mehrere Azubis gleich ist, zum Beispiel ein Schulblock, trägst du in der{' '}
+              <Link zu="/sammelplanung">Sammelplanung</Link> für alle auf einmal ein. Bausteine lassen sich als Datei exportieren und wieder importieren.
             </li>
             <li>Azubis können eigene Aufgaben und Notizen eintragen. Diese sind mit „vom Azubi eingetragen“ gekennzeichnet; du kannst sie ändern.</li>
           </ul>
@@ -280,7 +281,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 Unter <Link zu="/azubis">Azubis</Link> das Profil ausfüllen: Beruf, Berufsschule, Ausbildungsbeginn, Wochenstunden, Prüfungstermine. <strong>Erst mit einem Ausbildungsbeginn</strong> gibt es Berichtsheft und Plan.
               </li>
               <li>Bei Bedarf Ausbildungsbeauftragte mit Zeitraum zuweisen.</li>
-              <li>Im Ausbildungsplan eine Planvorlage übernehmen oder die Einträge von Hand anlegen.</li>
+              <li>Im Ausbildungsplan Bausteine einfügen oder die Einträge von Hand anlegen.</li>
               <li>Dem Azubi das Handbuch zeigen (Reiter „Azubi“ oben auf dieser Seite) und beim ersten Bericht helfen.</li>
             </ol>
           ),

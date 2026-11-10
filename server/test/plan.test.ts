@@ -341,3 +341,64 @@ test('Logo: nur der Super-Admin hinterlegt es, nur echte PNG-, JPEG- oder WebP-B
   assert.deepEqual(koerper(await ruf(w.u, 'DELETE', '/api/branding/logo?schema=hell', { cookies: als(w, w.admin) })), { logo: null, logoDunkel: `data:image/png;base64,${png}` });
   assert.deepEqual(koerper(await ruf(w.u, 'DELETE', '/api/branding/logo?schema=dunkel', { cookies: als(w, w.admin) })), { logo: null, logoDunkel: null });
 });
+
+test('Baustein ab einer gewählten Woche einfügen: Woche 1 ist die Startwoche, mehrfach möglich, nur innerhalb der Ausbildung', async () => {
+  const w = await welt();
+  const cookies = als(w, w.ausbilder);
+  const v = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'IT-Support', eintraege: [{ art: 'einsatz', abWoche: 1, wochen: 8, titel: 'IT-Support' }, { art: 'aufgabe', abWoche: 2, wochen: 1, titel: 'Erstes Ticket', unteraufgaben: ['annehmen', 'lösen'] }] } })).vorlage;
+  const fuege = (ab: unknown, a = w.azubi) => ruf(w.u, 'POST', `/api/azubis/${a.id}/plan/vorlage`, { cookies, body: { vorlageId: v.id, ab } });
+  assert.equal(koerper(await fuege('2026-11-18')).uebernommen, 2, 'Mittwoch rastet auf den Montag ein');
+  let e = (await plan(w, w.ausbilder)).eintraege;
+  assert.deepEqual(e.map((x: any) => [x.titel, x.von, x.bis]), [['IT-Support', '2026-11-16', '2027-01-04'], ['Erstes Ticket', '2026-11-23', '2026-11-23']]);
+  assert.equal(koerper(await fuege('2027-03-01')).uebernommen, 2, 'derselbe Baustein lässt sich später noch einmal einfügen');
+  assert.equal((await plan(w, w.ausbilder)).eintraege.length, 4);
+  // kurz vor dem Ende: gekürzt bzw. weggelassen (Ende 31.07.2028, letzte Woche beginnt am 31.07.2028)
+  assert.equal(koerper(await fuege('2028-07-31', w.ben)).uebernommen, 1);
+  e = (await plan(w, w.ausbilder, w.ben)).eintraege;
+  assert.deepEqual([e[0].von, e[0].bis], ['2028-07-31', '2028-07-31']);
+  for (const [ab, status] of [['2025-07-21', 409], ['2028-08-07', 409], ['quatsch', 400]] as const) assert.equal((await fuege(ab)).status, status, ab);
+  assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan/vorlage`, { cookies: als(w, w.beauftragter), body: { vorlageId: v.id, ab: '2026-11-16' } })).status, 403);
+});
+
+test('Sammelplanung: ein Eintrag oder Baustein für mehrere Azubis; wer nicht passt, wird mit Grund ausgelassen', async () => {
+  const w = await welt();
+  const cookies = als(w, w.ausbilder);
+  const spaet = konto(w.u.db, 'azubi', 'Cem Azubi');
+  await ruf(w.u, 'PUT', `/api/azubis/${spaet.id}/profil`, { cookies, body: { ausbildungsbeginn: '2027-08-01', ausbilderId: w.ausbilder.id } });
+  const ohne = konto(w.u.db, 'azubi', 'Dana Azubi');
+  const alle = [w.azubi.id, w.ben.id, spaet.id, ohne.id];
+  const sammel = (body: unknown, wer = w.ausbilder) => ruf(w.u, 'POST', '/api/plan/sammel', { cookies: als(w, wer), body });
+
+  const seite = koerper(await ruf(w.u, 'GET', '/api/plan/sammel', { cookies }));
+  assert.deepEqual(seite.azubis.map((a: any) => [a.anzeigename, a.ausbildungsjahr, a.beginn]), [['Anna Azubi', 2, '2025-08-01'], ['Ben Azubi', 2, '2025-08-01'], ['Cem Azubi', null, '2027-08-01'], ['Dana Azubi', null, null]]);
+  assert.equal((await ruf(w.u, 'GET', '/api/plan/sammel', { cookies: als(w, w.beauftragter) })).status, 403);
+
+  // einzelner Eintrag: Schulblock für alle
+  const r = koerper(await sammel({ azubiIds: alle, eintrag: { art: 'schule', von: '2026-11-23', bis: '2026-12-04', titel: 'Berufsschule Block 2' } }));
+  assert.equal(r.eingetragen, 2);
+  assert.deepEqual(r.ergebnis.map((x: any) => [x.anzeigename, x.ok, x.grund]), [
+    ['Anna Azubi', true, ''],
+    ['Ben Azubi', true, ''],
+    ['Cem Azubi', false, 'Der Zeitraum liegt außerhalb der Ausbildungszeit'],
+    ['Dana Azubi', false, 'Für diesen Azubi ist noch kein Ausbildungsbeginn eingetragen'],
+  ]);
+  for (const a of [w.azubi, w.ben]) {
+    const e = (await plan(w, w.ausbilder, a)).eintraege;
+    assert.deepEqual(e.map((x: any) => [x.art, x.von, x.bis, x.titel]), [['schule', '2026-11-23', '2026-11-30', 'Berufsschule Block 2']]);
+  }
+  assert.equal((await plan(w, w.ausbilder, spaet)).eintraege.length, 0);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: als(w, w.ben) })).neu, 1, 'jeder Azubi sieht den Eintrag in seiner Glocke');
+
+  // Baustein für mehrere
+  const v = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'Lager', eintraege: [{ art: 'einsatz', abWoche: 1, wochen: 4, titel: 'Lager' }] } })).vorlage;
+  const b = koerper(await sammel({ azubiIds: [w.azubi.id, spaet.id], vorlageId: v.id, ab: '2027-01-11' }));
+  assert.deepEqual(b.ergebnis.map((x: any) => [x.ok, x.anzahl, x.grund]), [[true, 1, ''], [false, 0, 'Die Startwoche liegt außerhalb der Ausbildungszeit']]);
+  assert.equal((await plan(w, w.ausbilder)).eintraege.length, 2);
+
+  // fehlerhafte Anfragen legen nichts an
+  for (const falsch of [{ azubiIds: [], eintrag: { art: 'notiz', von: '2026-11-23', titel: 'x' } }, { azubiIds: [w.azubi.id, w.beauftragter.id], eintrag: { art: 'notiz', von: '2026-11-23', titel: 'x' } }, { azubiIds: [w.azubi.id] }, { azubiIds: [w.azubi.id], eintrag: { art: 'schule', von: '2026-11-23' } }, { azubiIds: [w.azubi.id], vorlageId: 999 }]) {
+    assert.equal((await sammel(falsch)).status, 400, JSON.stringify(falsch).slice(0, 70));
+  }
+  assert.equal((await sammel({ azubiIds: [w.azubi.id], eintrag: { art: 'notiz', von: '2026-11-23', titel: 'x' } }, w.beauftragter)).status, 403);
+  assert.equal((await plan(w, w.ausbilder)).eintraege.length, 2);
+});

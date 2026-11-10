@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.14.0] – 2026-11-10
+
+### Neu
+
+- Planbausteine statt Planvorlagen: Ein Baustein ist ein Stück Ausbildung, das immer wieder vorkommt, zum Beispiel eine Station mit ihren Aufgaben. Im Ausbildungsplan fügst du ihn ab einer Woche deiner Wahl ein – auch mehrfach und bei jedem Azubi an anderer Stelle. Bisher begann eine Vorlage immer mit dem Ausbildungsbeginn.
+- Sammelplanung (Ausbilder, erreichbar über die Übersicht): einen Eintrag oder einen Baustein in die Pläne mehrerer Azubis auf einmal eintragen, etwa einen Schulblock für eine Klasse. Auswahl einzeln oder per Schnellauswahl nach Ausbildungsjahr, Berufsschule oder Beruf. Wer in dem Zeitraum nicht in der Ausbildung ist, wird ausgelassen; das Ergebnis nennt je Azubi, was passiert ist.
+
+### Geändert
+
+- Die bisherigen Planvorlagen sind jetzt Bausteine; es geht nichts verloren. Dateien aus dem bisherigen Export lassen sich weiter importieren.
+
 ## [0.13.0] – 2026-11-10
 
 ### Neu

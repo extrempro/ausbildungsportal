@@ -48,7 +48,7 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
   { titel: 'Wer ist wann wo?', text: 'Die Übersicht zeigt diese und die nächste Woche und darunter den Zeitstrahl: Schule, Einsätze und Urlaub aller Azubis.', pfad: '/uebersicht', ziel: ['.ue-oben', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Unterschreibe hier einmal.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
   ...(rolle === 'ausbilder'
-    ? [{ titel: 'Verwaltung', text: 'Konten anlegen, Stammdaten (Betrieb, Berufe, Berufsschulen) und Planvorlagen pflegen – alles unter „Verwaltung“ bzw. „Mehr“.', pfad: '/', ziel: ['button[aria-controls="menue-verwaltung"]', '.tabs button'] }]
+    ? [{ titel: 'Verwaltung', text: 'Konten anlegen, Stammdaten (Betrieb, Berufe, Berufsschulen) und Planbausteine pflegen – alles unter „Verwaltung“ bzw. „Mehr“.', pfad: '/', ziel: ['button[aria-controls="menue-verwaltung"]', '.tabs button'] }]
     : []),
   ENDE,
 ];
