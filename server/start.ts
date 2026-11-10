@@ -19,7 +19,7 @@ export function appVersion(): string {
 export async function erzeugeKontext(
   db: DB,
   cfg: Config,
-  optionen: { log?: (t: string) => void; jetzt?: () => Date; entra?: Entra | null } = {},
+  optionen: { log?: (t: string) => void; jetzt?: () => Date; entra?: Entra | null; sende?: Kontext['sende'] } = {},
 ): Promise<Kontext> {
   const jetzt = optionen.jetzt ?? (() => new Date());
   const entra =
@@ -44,6 +44,13 @@ export async function erzeugeKontext(
     dummyHash: await hashePasswort(zufallsPasswort()),
     versuche: new Map(),
     gemeldeteHerkunft: new Set(),
+    sende:
+      optionen.sende ??
+      (async (url, body) => {
+        // Umleitungen werden nicht verfolgt, nach acht Sekunden ist Schluss – eine hängende Gegenstelle bremst das Portal nicht
+        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), redirect: 'error', signal: AbortSignal.timeout(8000) });
+        return { ok: r.ok, status: r.status };
+      }),
   };
   await ersterStart(k);
   return k;

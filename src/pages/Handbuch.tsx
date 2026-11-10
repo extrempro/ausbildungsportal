@@ -30,7 +30,7 @@ const BEDIENUNG: Kapitel = {
     <ul className="punkte">
       <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
       <li>Die Glocke oben rechts zeigt, was es Neues gibt: neue Einträge im Ausbildungsplan und Neues zu Berichten (eingereicht, abgezeichnet, zurückgegeben). Die Zahl sagt, wie viel neu ist. Ein Tipp auf eine Zeile führt dich direkt dorthin. Was du selbst gemacht hast, steht dort nicht.</li>
-      <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
+      <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
       <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
       <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
       <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>

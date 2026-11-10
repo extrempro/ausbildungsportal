@@ -3736,3 +3736,90 @@ fieldset.vorlage-eintrag legend + * {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Fehlermeldung: Bildschirmfoto und Teams ---------- */
+.dialog-hintergrund.unsichtbar {
+  visibility: hidden;
+}
+
+.melden-bild {
+  margin: 12px 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+}
+
+.melden-bild legend {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.melden-bild p {
+  margin: 0 0 8px;
+}
+
+.melden-bild .knopfzeile {
+  margin: 0 0 8px;
+}
+
+.melden-bild img,
+.meldung-bild img {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  margin-bottom: 10px;
+  border: 1px solid var(--c-rand-feld, var(--c-border));
+  border-radius: 8px;
+  background: #fff;
+}
+
+.meldung-bild {
+  display: block;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.meldung-bild.gross {
+  cursor: zoom-out;
+}
+
+.meldung-bild.gross img {
+  max-height: none;
+}
+
+.meldung-bild-hinweis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 4px 0 0;
+}
+
+.meldung-teams {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.meldung-teams > div {
+  flex: 1 1 320px;
+}
+
+.meldung-teams p {
+  margin: 6px 0 0;
+}
+
+.meldung-teams .hinweis {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.meldung-teams .pille {
+  margin-left: 6px;
+}

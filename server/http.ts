@@ -36,7 +36,8 @@ function sicherheitsHeader(k: Kontext): Record<string, string> {
     'Referrer-Policy': 'no-referrer',
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Cross-Origin-Resource-Policy': 'same-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    // display-capture: „Bildschirmfoto aufnehmen“ beim Melden eines Fehlers – nur für das Portal selbst
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), display-capture=(self)',
     ...(k.cfg.sicher ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}),
   };
 }

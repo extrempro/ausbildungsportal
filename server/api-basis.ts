@@ -38,6 +38,8 @@ export interface Kontext {
   versuche: Map<string, { anzahl: number; bis: number }>;
   /** Adressen, für die der Hinweis auf eine unpassende APP_URL schon im Log steht */
   gemeldeteHerkunft: Set<string>;
+  /** schickt JSON an eine fremde Adresse (Teams-Webhook); in Tests ersetzt */
+  sende: (url: string, body: unknown) => Promise<{ ok: boolean; status: number }>;
 }
 
 export class Fehler extends Error {

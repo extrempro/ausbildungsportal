@@ -22,6 +22,10 @@ export interface Config {
   entra: EntraEinstellung | null;
   /** Anmeldung als Testkonto ohne Entra – nie in Produktion */
   devAnmeldung: boolean;
+  /** Adresse eines Teams-Workflows (Webhook), der bei jeder neuen Fehlermeldung benachrichtigt wird */
+  fehlerWebhook: string | null;
+  /** auch den Text der Meldung an Teams schicken (sonst nur: dass eine Meldung da ist) */
+  fehlerWebhookMitText: boolean;
   adminBenutzer: string;
   adminPasswort: string;
 }
@@ -51,6 +55,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     entra = { tenantId: tenantId.toLowerCase(), clientId, clientSecret };
   }
 
+  const fehlerWebhook = (env.FEHLER_WEBHOOK_URL || '').trim() || null;
+  if (fehlerWebhook) {
+    let ziel: URL | null = null;
+    try {
+      ziel = new URL(fehlerWebhook);
+    } catch {
+      // unten gemeldet
+    }
+    if (!ziel || ziel.protocol !== 'https:') throw new Error('FEHLER_WEBHOOK_URL muss eine vollständige https-Adresse sein');
+  }
+
   return {
     port,
     host: env.HOST || '0.0.0.0',
@@ -62,6 +77,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     trustProxy: env.TRUST_PROXY === 'true',
     entra,
     devAnmeldung: !production && env.DEV_ANMELDUNG === 'true',
+    fehlerWebhook,
+    fehlerWebhookMitText: env.FEHLER_WEBHOOK_MIT_TEXT === 'true',
     adminBenutzer: (env.ADMIN_BENUTZER || '').trim().toLowerCase(),
     adminPasswort: env.ADMIN_PASSWORT || '',
   };
