@@ -19,7 +19,9 @@ import { Start } from './pages/Start';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
+import { FehlerMelden } from './fehler';
 import { Glocke } from './glocke';
+import { Meldungen } from './pages/Meldungen';
 import { Icon } from './icons';
 import type { IconName } from './icons';
 import { geheZu, Link, usePfad } from './router';
@@ -31,6 +33,8 @@ interface Punkt {
   kurz?: string;
   icon: IconName;
   aktivAb?: string;
+  /** Zahl am Menüpunkt, z. B. offene Fehlermeldungen */
+  zahl?: number;
 }
 type Menue = 'verwaltung' | 'ich' | 'mehr' | 'glocke' | null;
 
@@ -57,6 +61,10 @@ export function App() {
   // interaktive Führung: läuft gerade / wird beim ersten Besuch einmal angeboten
   const [fuehrung, setFuehrung] = useState(false);
   const [angebot, setAngebot] = useState(false);
+  // Fenster „Fehler melden“ und (Super-Admin) Zahl der offenen Meldungen
+  const [melden, setMelden] = useState(false);
+  const [offeneMeldungen, setOffeneMeldungen] = useState(0);
+  const schliesseMelden = useCallback(() => setMelden(false), []);
   // Knopf „Nach oben“ erscheint erst, wenn man ein Stück gescrollt hat
   const [weitUnten, setWeitUnten] = useState(false);
   useEffect(() => {
@@ -125,6 +133,11 @@ export function App() {
     setFuehrung(true);
   };
   const beendeFuehrung = useCallback(() => setFuehrung(false), []);
+
+  useEffect(() => {
+    if (konto?.rolle !== 'admin' || konto.passwortWechsel) return;
+    api<{ offen: number }>('GET', '/api/fehlermeldungen').then((r) => setOffeneMeldungen(r.offen), () => {});
+  }, [konto?.rolle, konto?.passwortWechsel, pfad]);
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
   useEffect(() => setMenue(null), [pfad]);
@@ -251,6 +264,7 @@ export function App() {
   else if (pfad === '/verwaltung/stammdaten' && konto.rolle === 'ausbilder') seite = <Stammdaten />;
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
+  else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
   else
     seite = (
@@ -268,6 +282,7 @@ export function App() {
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
+          { zu: '/verwaltung/meldungen', text: 'Fehlermeldungen', kurz: 'Meldungen', icon: 'kaefer', zahl: offeneMeldungen },
           { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'vorlagen' },
         ]
       : konto.rolle === 'azubi'
@@ -321,6 +336,18 @@ export function App() {
         <button type="button" onClick={starteFuehrung}>
           <Icon name="fuehrung" />
           Führung starten
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          onClick={() => {
+            setMenue(null);
+            setMelden(true);
+          }}
+        >
+          <Icon name="kaefer" />
+          Fehler melden
         </button>
       </li>
       {installation && (
@@ -377,6 +404,11 @@ export function App() {
             {haupt.map((p) => (
               <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb}>
                 {p.text}
+                {!!p.zahl && (
+                  <span className="nav-zahl" aria-label={`${p.zahl} offen`}>
+                    {p.zahl}
+                  </span>
+                )}
               </Link>
             ))}
             {verwaltung.length > 0 && (
@@ -449,6 +481,7 @@ export function App() {
         </button>
       )}
       {fuehrung && <Fuehrung rolle={konto.rolle} onEnde={beendeFuehrung} />}
+      {melden && <FehlerMelden version={version} onZu={schliesseMelden} />}
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}
         <span className="fuss-links">
@@ -465,6 +498,11 @@ export function App() {
           <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb}>
             <Icon name={p.icon} groesse={22} />
             <span>{p.kurz ?? p.text}</span>
+            {!!p.zahl && (
+              <span className="nav-zahl" aria-label={`${p.zahl} offen`}>
+                {p.zahl}
+              </span>
+            )}
           </Link>
         ))}
         <button type="button" className={inMehr ? 'aktiv' : undefined} aria-expanded={menue === 'mehr'} aria-controls="menue-mehr" onClick={() => schalte('mehr')}>

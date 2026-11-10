@@ -2,6 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Konto, Rolle } from '../api';
+import { Icon } from '../icons';
+
+const HILFE = 'konten-hilfe';
+function hilfeOffen(): boolean {
+  try {
+    return localStorage.getItem(HILFE) !== '0';
+  } catch {
+    return true;
+  }
+}
 
 interface Antwort {
   konten: Konto[];
@@ -13,6 +23,16 @@ export function Konten({ ich }: { ich: Konto }) {
   const [fehler, setFehler] = useState('');
   const [startpasswort, setStartpasswort] = useState<{ name: string; passwort: string } | null>(null);
   const [rolle, setRolle] = useState<Rolle>('azubi');
+  const [hilfe, setHilfe] = useState(hilfeOffen);
+  const [meldung, setMeldung] = useState('');
+  const schalteHilfe = () => {
+    setHilfe(!hilfe);
+    try {
+      localStorage.setItem(HILFE, hilfe ? '0' : '1');
+    } catch {
+      // ohne Speicher bleibt die Erklärung beim nächsten Besuch offen
+    }
+  };
 
   const lade = useCallback(async () => {
     try {
@@ -27,6 +47,7 @@ export function Konten({ ich }: { ich: Konto }) {
   /** Führt eine Änderung aus, zeigt Fehler an und lädt die Liste neu. */
   const tue = async <T,>(aktion: () => Promise<T>): Promise<T | undefined> => {
     setFehler('');
+    setMeldung('');
     try {
       const r = await aktion();
       await lade();
@@ -46,6 +67,7 @@ export function Konten({ ich }: { ich: Konto }) {
     );
     if (!r) return;
     form.reset();
+    if (!r.startpasswort) setMeldung(`Konto für ${r.konto.anzeigename} angelegt. Es wird keine E-Mail verschickt – bitte gib der Person selbst Bescheid, dass sie sich jetzt mit ihrem Microsoft-Konto anmelden kann.`);
     setStartpasswort(r.startpasswort ? { name: r.konto.anmeldename, passwort: r.startpasswort } : null);
   };
 
@@ -53,19 +75,19 @@ export function Konten({ ich }: { ich: Konto }) {
     const frage =
       k.rolle === 'azubi'
         ? `Konto „${k.anzeigename}“ mit allen Daten dieses Azubis endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Wenn die Berichte noch gebraucht werden, vorher exportieren – oder das Konto nur sperren.`
-        : `Konto „${k.anzeigename}“ endgültig löschen? Das lässt sich nicht rückgängig machen.`;
-    if (window.confirm(frage)) void tue(() => api('DELETE', `/api/konten/${k.id}`));
+        : `Konto „${k.anzeigename}“ endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Zuweisungen zu Azubis entfallen. Bereits abgezeichnete Berichte bleiben mit Name und Unterschrift gültig.`;
+    if (window.confirm(frage)) void tue(() => api('DELETE', `/api/konten/${k.id}`)).then((r) => r !== undefined && setMeldung(`Konto „${k.anzeigename}“ gelöscht.`));
   };
 
   const zuruecksetzen = async (k: Konto) => {
-    if (!window.confirm(`Passwort von „${k.anzeigename}“ zurücksetzen? Das bisherige gilt dann nicht mehr.`)) return;
+    if (!window.confirm(`Passwort von „${k.anzeigename}“ zurücksetzen?\n\nDas bisherige Passwort gilt sofort nicht mehr und die Person wird überall abgemeldet. Du bekommst ein Startpasswort angezeigt, das du ihr weitergibst.`)) return;
     const r = await tue(() => api<{ startpasswort: string }>('POST', `/api/konten/${k.id}/passwort-zuruecksetzen`));
     if (r) setStartpasswort({ name: k.anmeldename, passwort: r.startpasswort });
   };
 
   const loesen = (k: Konto) => {
-    if (window.confirm(`Verknüpfung von „${k.anzeigename}“ mit dem Microsoft-Konto lösen?\n\nDie nächste Anmeldung mit dem Anmeldenamen ${k.anmeldename} verknüpft das Konto neu.`)) {
-      void tue(() => api('POST', `/api/konten/${k.id}/entra-loesen`));
+    if (window.confirm(`Verknüpfung von „${k.anzeigename}“ mit dem Microsoft-Konto lösen?\n\nNur nötig, wenn das Microsoft-Konto neu angelegt wurde oder sich beim ersten Mal die falsche Person angemeldet hat. Es gehen keine Daten verloren. Die Person wird abgemeldet; die nächste Anmeldung mit ${k.anmeldename} verknüpft das Konto neu.`)) {
+      void tue(() => api('POST', `/api/konten/${k.id}/entra-loesen`)).then((r) => r !== undefined && setMeldung(`Verknüpfung von „${k.anzeigename}“ gelöst. Das Konto wartet jetzt wieder auf die erste Anmeldung.`));
     }
   };
 
@@ -85,6 +107,11 @@ export function Konten({ ich }: { ich: Konto }) {
           {fehler}
         </p>
       )}
+      {meldung && (
+        <p className="hinweis gut" role="status">
+          {meldung}
+        </p>
+      )}
       {startpasswort && (
         <div className="hinweis" role="status">
           <p>
@@ -98,6 +125,85 @@ export function Konten({ ich }: { ich: Konto }) {
           </button>
         </div>
       )}
+
+      <section className={`karte anleitung${hilfe ? '' : ' zu'}`}>
+        <button type="button" className="anleitung-kopf" aria-expanded={hilfe} aria-controls="konten-hilfe" onClick={schalteHilfe}>
+          <Icon name="hilfe" />
+          <span className="anleitung-titel">Was bewirkt was?</span>
+          <span className="anleitung-schalter">
+            {hilfe ? 'Einklappen' : 'Anzeigen'}
+            <Icon name="unten" groesse={16} />
+          </span>
+        </button>
+        {hilfe && (
+          <div id="konten-hilfe" className="konten-hilfe">
+            <h3>Rollen</h3>
+            <dl className="erklaerung">
+              <dt>Azubi</dt>
+              <dd>Sieht nur den eigenen Ausbildungsplan und das eigene Berichtsheft. Schreibt Berichte und reicht sie ein.</dd>
+              <dt>Ausbildungsbeauftragte</dt>
+              <dd>Betreut die Azubis, die ihr oder ihm zugewiesen sind: Plan und Berichte lesen, Berichte abzeichnen, Aufgaben und Notizen eintragen. Andere Azubis sind nicht sichtbar. Die Zuweisung geschieht im Profil des Azubis.</dd>
+              {ich.rolle === 'admin' && (
+                <>
+                  <dt>Ausbilder</dt>
+                  <dd>Sieht alle Azubis, plant die Ausbildung, zeichnet Berichte ab, pflegt Stammdaten und verwaltet die Konten von Azubis und Ausbildungsbeauftragten.</dd>
+                  <dt>Super-Admin</dt>
+                  <dd>Betreibt das Portal: Konten, Protokoll, Fehlermeldungen und Logo. Sieht keine Pläne, Berichte oder Stammdaten. Meldet sich als Einziger mit Benutzername und Passwort an.</dd>
+                </>
+              )}
+            </dl>
+            <h3>Funktionen</h3>
+            <dl className="erklaerung">
+              <dt>Konto anlegen</dt>
+              <dd>
+                Gibt einer Person Zugang. Ab sofort kann sie sich {ich.rolle === 'admin' ? 'mit ihrem Microsoft-Konto (Super-Admins: mit dem Startpasswort) ' : 'mit ihrem Microsoft-Konto '}
+                anmelden. Das Portal verschickt keine E-Mail – sag der Person selbst Bescheid. Ohne Konto hier kommt niemand hinein, auch nicht mit gültigem Microsoft-Konto.
+              </dd>
+              <dt>Rolle ändern</dt>
+              <dd>
+                Wirkt sofort; die Person wird abgemeldet und sieht nach der nächsten Anmeldung die neue Ansicht. <strong>Alle Zuweisungen dieses Kontos entfallen</strong> und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert. Gedacht für echte Wechsel, zum Beispiel wenn ein
+                früherer Azubi Ausbildungsbeauftragter wird.
+              </dd>
+              <dt>Sperren / Entsperren</dt>
+              <dd>
+                Sperren meldet die Person sofort ab und verhindert jede weitere Anmeldung. Alle Daten bleiben erhalten, Entsperren macht es rückgängig. Gedacht für Pausen und fürs Ausscheiden, solange die Berichte noch gebraucht werden – im Zweifel sperren statt löschen.
+              </dd>
+              <dt>Verknüpfung lösen</dt>
+              <dd>
+                Bei der ersten Anmeldung merkt sich das Portal das Microsoft-Konto der Person fest. Lösen brauchst du nur, wenn die IT das Microsoft-Konto neu angelegt hat oder sich beim ersten Mal jemand Falsches angemeldet hat. Es gehen keine Daten verloren; die nächste Anmeldung
+                verknüpft neu.
+              </dd>
+              {ich.rolle === 'admin' && (
+                <>
+                  <dt>Passwort zurücksetzen</dt>
+                  <dd>Nur für Super-Admin-Konten. Das alte Passwort gilt sofort nicht mehr, du bekommst einmalig ein Startpasswort angezeigt. Bei der nächsten Anmeldung muss ein eigenes Passwort vergeben werden. Passwörter von Microsoft-Konten verwaltet Microsoft, nicht das Portal.</dd>
+                </>
+              )}
+              <dt>Löschen</dt>
+              <dd>
+                Endgültig, ohne Papierkorb. <strong>Bei einem Azubi werden alle Berichte, der Ausbildungsplan, das Profil und die Zuweisungen mit gelöscht.</strong> Bei Ausbildungsbeauftragten{ich.rolle === 'admin' ? ' und Ausbildern' : ''} entfallen die Zuweisungen; bereits abgezeichnete
+                Berichte bleiben mit Name und Unterschrift gültig. Gedacht für das Ende der Aufbewahrung, nicht für eine Pause.
+              </dd>
+            </dl>
+            <h3>Stand</h3>
+            <dl className="erklaerung">
+              <dt>
+                <span className="pille gelb">wartet auf erste Anmeldung</span>
+              </dt>
+              <dd>Das Konto ist angelegt, die Person hat sich aber noch nie angemeldet.</dd>
+              <dt>
+                <span className="pille gruen">aktiv</span>
+              </dt>
+              <dd>Die Person hat sich angemeldet und kann das Portal nutzen.</dd>
+              <dt>
+                <span className="pille grau">gesperrt</span>
+              </dt>
+              <dd>Anmeldung nicht möglich, Daten bleiben erhalten.</dd>
+            </dl>
+            <p className="leise klein">Das eigene Konto lässt sich weder sperren noch löschen. Jede Änderung an Konten steht mit deinem Namen im Protokoll, das der Super-Admin einsehen kann.</p>
+          </div>
+        )}
+      </section>
 
       <section className="karte">
         <h2>Neues Konto</h2>
@@ -165,7 +271,7 @@ export function Konten({ ich }: { ich: Konto }) {
                       value={k.rolle}
                       onChange={(e) => {
                         const neu = e.target.value as Rolle;
-                        if (window.confirm(`„${k.anzeigename}“ wird ${ROLLE_TEXT[neu]}. Bestehende Zuweisungen dieses Kontos entfallen. Fortfahren?`)) {
+                        if (window.confirm(`„${k.anzeigename}“ wird ${ROLLE_TEXT[neu]}.\n\nDie Person wird abgemeldet und sieht danach die neue Ansicht. Alle Zuweisungen dieses Kontos entfallen und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert.\n\nFortfahren?`)) {
                           void tue(() => api('PATCH', `/api/konten/${k.id}`, { rolle: neu }));
                         }
                       }}
@@ -193,11 +299,19 @@ export function Konten({ ich }: { ich: Konto }) {
                 <td>
                   {k.verwaltbar && (
                     <div className="aktionen">
-                      <button className="knopf schlicht" onClick={() => void tue(() => api('PATCH', `/api/konten/${k.id}`, { status: k.status === 'aktiv' ? 'gesperrt' : 'aktiv' }))}>
+                      <button
+                        className="knopf schlicht"
+                        title={k.status === 'aktiv' ? 'Meldet die Person ab und verhindert die Anmeldung. Daten bleiben erhalten.' : 'Erlaubt die Anmeldung wieder.'}
+                        onClick={() =>
+                          void tue(() => api('PATCH', `/api/konten/${k.id}`, { status: k.status === 'aktiv' ? 'gesperrt' : 'aktiv' })).then(
+                            (r) => r !== undefined && setMeldung(k.status === 'aktiv' ? `„${k.anzeigename}“ ist gesperrt und wurde abgemeldet. Alle Daten bleiben erhalten.` : `„${k.anzeigename}“ kann sich wieder anmelden.`),
+                          )
+                        }
+                      >
                         {k.status === 'aktiv' ? 'Sperren' : 'Entsperren'}
                       </button>
                       {k.anmeldung === 'entra' && k.verknuepft && (
-                        <button className="knopf schlicht" onClick={() => loesen(k)}>
+                        <button className="knopf schlicht" title="Nur nötig, wenn das Microsoft-Konto neu angelegt wurde. Es gehen keine Daten verloren." onClick={() => loesen(k)}>
                           Verknüpfung lösen
                         </button>
                       )}
@@ -207,7 +321,7 @@ export function Konten({ ich }: { ich: Konto }) {
                         </button>
                       )}
                       {k.loeschbar && (
-                        <button className="knopf schlicht gefahr" onClick={() => loeschen(k)}>
+                        <button className="knopf schlicht gefahr" title={k.rolle === 'azubi' ? 'Endgültig – löscht auch alle Berichte und den Plan dieses Azubis.' : 'Endgültig. Abgezeichnete Berichte bleiben gültig.'} onClick={() => loeschen(k)}>
                           Löschen
                         </button>
                       )}

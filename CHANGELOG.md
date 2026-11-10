@@ -1,5 +1,20 @@
 # Änderungen
 
+## [0.12.0] – 2026-11-10
+
+### Neu
+
+- Fehler melden: Im Menü am Namen bzw. unter „Mehr“ kann jede angemeldete Person ein Problem beschreiben. Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden automatisch mitgeschickt; das Formular zeigt vorher genau, was das ist.
+- Super-Admin: neue Seite „Fehlermeldungen“ mit offenen und erledigten Meldungen. Meldungen lassen sich als erledigt markieren, als Text ohne Namen kopieren und löschen. Die Zahl der offenen Meldungen steht am Menüpunkt.
+- Planvorlagen exportieren und importieren: einzelne oder alle Vorlagen als Datei speichern und in diesem oder einem anderen Ausbildungsportal wieder einlesen. Der Import legt Vorlagen zusätzlich an und überschreibt nichts; der Beruf wird über seinen Namen zugeordnet. Dazu „Duplizieren“.
+- Konten: Der Abschnitt „Was bewirkt was?“ erklärt jede Rolle, jede Funktion (anlegen, Rolle ändern, sperren, Verknüpfung lösen, Passwort zurücksetzen, löschen) mit ihren Folgen und wofür sie gedacht ist, dazu die drei Stände eines Kontos.
+
+### Geändert
+
+- Planvorlagen neu gegliedert: drei Schritte als Einstieg, je Vorlage Beruf, Zahl der Einträge und Dauer, ein Zeitstrahl nach Art und der Ablauf als Liste. Einträge im Formular tragen Art, Wochen und Titel in der Überschrift und werden beim Speichern nach Wochen geordnet.
+- Glocke: Das Fenster hebt sich deutlich ab – blauer Kopf, blauer Rand, die Seite dahinter wird abgedunkelt; dazu ein Knopf zum Schließen.
+- Konten: Nach jeder Aktion steht eine Bestätigung da, was passiert ist. Die Rückfragen vor dem Löschen, dem Rollenwechsel, dem Lösen der Verknüpfung und dem Zurücksetzen des Passworts nennen die Folgen.
+
 ## [0.11.0] – 2026-11-10
 
 ### Neu

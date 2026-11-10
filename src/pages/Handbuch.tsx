@@ -30,6 +30,7 @@ const BEDIENUNG: Kapitel = {
     <ul className="punkte">
       <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
       <li>Die Glocke oben rechts zeigt, was es Neues gibt: neue Einträge im Ausbildungsplan und Neues zu Berichten (eingereicht, abgezeichnet, zurückgegeben). Die Zahl sagt, wie viel neu ist. Ein Tipp auf eine Zeile führt dich direkt dorthin. Was du selbst gemacht hast, steht dort nicht.</li>
+      <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
       <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
       <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
       <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
@@ -246,7 +247,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <li>Mit „+“ an einer Woche oder „Eintrag hinzufügen“ legst du Schulblöcke, Einsätze, Aufgaben und Notizen an. Ein Eintrag kann über mehrere Wochen gehen.</li>
             <li>Bei Einsätzen und Aufgaben kannst du eine zuständige Person wählen. Ist es ein Ausbildungsbeauftragter, lässt er sich beim Speichern gleich für den Zeitraum zuweisen.</li>
             <li>
-              Wiederkehrende Abläufe legst du als <Link zu="/verwaltung/vorlagen">Planvorlage</Link> an (Wochen ab Ausbildungsbeginn) und übernimmst sie in den Plan.
+              Wiederkehrende Abläufe legst du als <Link zu="/verwaltung/vorlagen">Planvorlage</Link> an (Wochen ab Ausbildungsbeginn) und übernimmst sie in den Plan. Vorlagen lassen sich dort als Datei exportieren und wieder importieren – zur Sicherung oder für ein anderes Portal.
             </li>
             <li>Azubis können eigene Aufgaben und Notizen eintragen. Diese sind mit „vom Azubi eingetragen“ gekennzeichnet; du kannst sie ändern.</li>
           </ul>
@@ -293,7 +294,8 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <li>
                 <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf alle Berichte drucken oder als PDF speichern.
               </li>
-              <li>Ändert sich der Microsoft-Anmeldename, hilft „Verknüpfung lösen“.</li>
+              <li>„Verknüpfung lösen“ brauchst du nur, wenn die IT das Microsoft-Konto einer Person neu angelegt hat. Es gehen keine Daten verloren.</li>
+              <li>Auf der Seite selbst erklärt „Was bewirkt was?“ jede Rolle und jede Funktion mit ihren Folgen.</li>
             </ul>
           ),
         },
@@ -314,7 +316,12 @@ const ADMIN: Kapitel[] = [
   {
     id: 'aufgabe',
     titel: 'Deine Aufgaben als Super-Admin',
-    inhalt: <p>Du verwaltest Konten, siehst das Protokoll und stellst das Logo ein. Ausbildungspläne, Berichte und Stammdaten siehst du nicht.</p>,
+    inhalt: (
+      <p>
+        Du verwaltest Konten, siehst das Protokoll, bearbeitest <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link> und stellst das Logo ein. Ausbildungspläne, Berichte und Stammdaten siehst du nicht. Fehlermeldungen kommen von allen Nutzern über „Fehler melden“; die Zahl am Menüpunkt zeigt die
+        offenen. „Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben.
+      </p>
+    ),
   },
   {
     id: 'konten',
