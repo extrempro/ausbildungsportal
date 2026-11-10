@@ -180,14 +180,12 @@ test('Kalender: Feiertage nach Bundesland, Ferien aus der Datei, Zeitraum begren
   assert.equal((await ruf(u, 'GET', '/api/kalender?bundesland=HH&von=2026-01-01&bis=2026-12-31', { cookies: sitzung(u, w.admin) })).status, 403);
 });
 
-test('Änderungen an Stammdaten und Profil stehen im Protokoll – nicht für den Super-Admin', async () => {
+test('Änderungen an Stammdaten und Profil stehen im Protokoll', async () => {
   const u = await umgebung();
   const w = alle(u);
   const { cookies } = await mitStammdaten(u, w);
   await ruf(u, 'PUT', `/api/azubis/${w.azubi.id}/profil`, { cookies, body: { ausbildungsbeginn: '2025-08-01' } });
-  const beimAusbilder = koerper(await ruf(u, 'GET', '/api/protokoll', { cookies })).eintraege as { aktion: string; ziel_name: string }[];
-  assert.ok(beimAusbilder.some((e) => e.aktion === 'profil_geaendert' && e.ziel_name === w.azubi.anzeigename));
-  assert.ok(beimAusbilder.some((e) => e.aktion === 'stammdaten_geaendert'));
-  const beimAdmin = koerper(await ruf(u, 'GET', '/api/protokoll', { cookies: sitzung(u, w.admin) })).eintraege as { aktion: string }[];
-  assert.ok(!beimAdmin.some((e) => e.aktion === 'profil_geaendert' || e.aktion === 'stammdaten_geaendert'));
+  const protokoll = koerper(await ruf(u, 'GET', '/api/protokoll', { cookies: sitzung(u, w.admin) })).eintraege as { aktion: string; ziel_name: string }[];
+  assert.ok(protokoll.some((e) => e.aktion === 'profil_geaendert' && e.ziel_name === w.azubi.anzeigename));
+  assert.ok(protokoll.some((e) => e.aktion === 'stammdaten_geaendert'));
 });

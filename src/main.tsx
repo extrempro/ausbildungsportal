@@ -11,6 +11,16 @@ try {
   // kein Zugriff auf den Speicher – dann bleibt es bis zum Laden des Kontos hell
 }
 
+// Service Worker: zeigt ohne Verbindung eine verständliche Seite und macht das Portal als App installierbar.
+// Er speichert keine Inhalte der Anwendung. Browser erlauben ihn nur über HTTPS (oder auf localhost).
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // ohne Service Worker läuft das Portal normal weiter
+    });
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

@@ -1,8 +1,24 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { api, berichtsheftPfad, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '../api';
 import type { BerichtListe, BerichtStatus, OffenerBericht } from '../api';
 import { Link } from '../router';
 import { BerichtBlatt } from './Bericht';
+
+/** Was der Azubi mit einer Woche als Nächstes tun kann. */
+const AKTION: Record<BerichtStatus, string> = { fehlt: 'Schreiben', entwurf: 'Weiterschreiben', zurueck: 'Überarbeiten', eingereicht: 'Ansehen', abgezeichnet: 'Ansehen' };
+
+function Schritt({ nr, titel, children }: { nr: number; titel: string; children: ReactNode }) {
+  return (
+    <li>
+      <span className="ablauf-nr">{nr}</span>
+      <div>
+        <strong>{titel}</strong>
+        <div className="leise klein">{children}</div>
+      </div>
+    </li>
+  );
+}
 
 const FILTER: { wert: BerichtStatus | 'alle'; text: string }[] = [
   { wert: 'alle', text: 'Alle' },
@@ -14,13 +30,30 @@ const FILTER: { wert: BerichtStatus | 'alle'; text: string }[] = [
 ];
 
 /** Liste aller Wochen der Ausbildung mit dem Stand des jeweiligen Berichts. */
+function lies(schluessel: string): string | null {
+  try {
+    return localStorage.getItem(schluessel);
+  } catch {
+    return null;
+  }
+}
+function merke(schluessel: string, wert: string): void {
+  try {
+    localStorage.setItem(schluessel, wert);
+  } catch {
+    // ohne Speicher bleibt die Anleitung einfach offen
+  }
+}
+
 export function Berichtsheft({ azubiId }: { azubiId: number }) {
   const [daten, setDaten] = useState<BerichtListe | null>(null);
   const [fehler, setFehler] = useState('');
   const [filter, setFilter] = useState<BerichtStatus | 'alle'>('alle');
+  const [hatUnterschrift, setHatUnterschrift] = useState(true);
 
   useEffect(() => {
     api<BerichtListe>('GET', `/api/azubis/${azubiId}/berichte`).then(setDaten, (e: Error) => setFehler(e.message));
+    api<{ pfad: string | null }>('GET', '/api/ich/unterschrift').then((r) => setHatUnterschrift(!!r.pfad), () => {});
   }, [azubiId]);
 
   if (fehler) {
@@ -46,8 +79,35 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
       )}
       <h1>Berichtsheft{daten.eigenes ? '' : ` von ${daten.azubi.anzeigename}`}</h1>
       <p className="leise">
-        Ein Bericht (Ausbildungsnachweis) je Kalenderwoche. {daten.eigenes ? 'Du schreibst und reichst ein; dein Ausbilder oder deine Ausbildungsbeauftragten zeichnen ab.' : 'Nur der Azubi selbst kann die Berichte bearbeiten.'}
+        {daten.eigenes
+          ? 'Für jede Woche deiner Ausbildung schreibst du einen Bericht (Ausbildungsnachweis): Was hast du gemacht, und wie viele Stunden?'
+          : 'Ein Bericht (Ausbildungsnachweis) je Kalenderwoche. Nur der Azubi selbst kann die Berichte bearbeiten.'}
       </p>
+
+      {daten.eigenes && !daten.beginnFehlt && (
+        <details className="karte so-gehts" open={lies('heft-anleitung') !== '0'} onToggle={(e) => merke('heft-anleitung', (e.target as HTMLDetailsElement).open ? '1' : '0')}>
+          <summary>So funktioniert das Berichtsheft</summary>
+          <ol className="ablauf-liste">
+            <Schritt nr={1} titel="Woche öffnen und schreiben">
+              Wähle unten bei der Woche „Schreiben“. Trag ein, was du gemacht hast, und die Stunden dazu.
+            </Schritt>
+            <Schritt nr={2} titel="Speichern oder einreichen">
+              Noch nicht fertig? „Als Entwurf speichern“ – du schreibst später weiter. Fertig? „Einreichen“ – damit gibst du den Bericht ab.
+            </Schritt>
+            <Schritt nr={3} titel="Dein Ausbilder zeichnet ab">
+              Er liest den Bericht und unterschreibt. Möchte er eine Änderung, bekommst du den Bericht zurück – dann steht hier „zurückgegeben“.
+            </Schritt>
+          </ol>
+          <p className="leise klein">
+            Tipp: Schreib den Bericht am Ende jeder Woche. Mehr dazu im <Link zu="/handbuch">Handbuch</Link>.
+          </p>
+        </details>
+      )}
+      {daten.eigenes && !hatUnterschrift && (
+        <p className="hinweis">
+          Bevor du einen Bericht einreichen kannst, brauchst du eine Unterschrift. <Link zu="/konto">Jetzt unter „Konto“ unterschreiben</Link>
+        </p>
+      )}
 
       {daten.beginnFehlt ? (
         <p className="hinweis">
@@ -75,6 +135,9 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                   <th>Zeitraum</th>
                   <th>Stand</th>
                   <th className="zahl">Stunden</th>
+                  <th>
+                    <span className="nur-vorleser">Aktion</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -96,12 +159,20 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                     <td data-label="Stand">
                       <span className={`pille ${STATUS_FARBE[w.status]}`}>{STATUS_TEXT[w.status]}</span>
                     </td>
-                    <td className="zahl" data-label="Stunden">{w.status === 'fehlt' ? '–' : `${h(w.stunden)} / ${h(daten.soll)}`}</td>
+                    <td className="zahl" data-label="Stunden">{w.status === 'fehlt' ? '–' : `${h(w.stunden)} von ${h(daten.soll)}`}</td>
+                    <td className="aktion">
+                      <Link zu={`${basis}/${w.montag}`} className={`knopf klein${daten.eigenes && (w.status === 'fehlt' || w.status === 'zurueck' || w.status === 'entwurf') ? '' : ' schlicht'}`}>
+                        {daten.eigenes ? AKTION[w.status] : 'Ansehen'}
+                        <span className="nur-vorleser">
+                          , KW {w.kw}/{w.jahr}
+                        </span>
+                      </Link>
+                    </td>
                   </tr>
                 ))}
                 {sichtbar.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="leise">
+                    <td colSpan={5} className="leise">
                       Keine Wochen mit diesem Stand.
                     </td>
                   </tr>

@@ -302,3 +302,32 @@ test('Versionshinweise: Changelog wird gelesen, für alle angemeldeten Konten', 
     assert.equal(r.eintraege[0].version, r.version, 'die laufende Version steht oben im Changelog');
   }
 });
+
+test('Logo: nur der Super-Admin hinterlegt es, nur echte PNG-, JPEG- oder WebP-Bilder; lesbar ohne Anmeldung', async () => {
+  const w = await welt();
+  // kleinstes gültiges PNG (1 × 1 Pixel)
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const setze = (daten: unknown, wer = w.admin) => ruf(w.u, 'PUT', '/api/branding/logo', { cookies: als(w, wer), body: { daten } });
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/branding')).logo, null);
+  for (const wer of [w.ausbilder, w.beauftragter, w.azubi]) assert.equal((await setze(`data:image/png;base64,${png}`, wer)).status, 403);
+  for (const falsch of [
+    '',
+    42,
+    png,
+    `data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>').toString('base64')}`,
+    `data:image/png;base64,${Buffer.from('<script>alert(1)</script> kein Bild').toString('base64')}`,
+    `data:image/png;base64,${Buffer.concat([Buffer.from(png, 'base64'), Buffer.alloc(160 * 1024)]).toString('base64')}`,
+    `data:image/png;base64,${png}" onload="alert(1)`,
+  ]) {
+    assert.equal((await setze(falsch)).status, 400, String(falsch).slice(0, 40));
+  }
+  // der Typ richtet sich nach dem Inhalt, nicht nach der Angabe
+  const r = await setze(`data:image/jpeg;base64,${png}`);
+  assert.equal(r.status, 200);
+  assert.equal(koerper(r).logo, `data:image/png;base64,${png}`);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/branding')).logo, `data:image/png;base64,${png}`, 'auch ohne Anmeldung – für die Anmeldeseite');
+  assert.equal((await ruf(w.u, 'DELETE', '/api/branding/logo', { cookies: als(w, w.ausbilder) })).status, 403);
+  assert.equal((await ruf(w.u, 'DELETE', '/api/branding/logo', { cookies: als(w, w.admin) })).status, 200);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/branding')).logo, null);
+  assert.ok(w.u.db.prepare("SELECT 1 FROM protokoll WHERE aktion = 'logo_geaendert'").get());
+});

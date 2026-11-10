@@ -627,6 +627,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const ueberfaellig = offen.filter((e) => dieseWoche && e.bis < dieseWoche);
   const faellig = (berichte?.wochen ?? []).filter((w) => dieseWoche && w.montag < dieseWoche);
   const fehlend = faellig.filter((w) => w.status === 'fehlt');
+  const zurueck = (berichte?.wochen ?? []).filter((w) => w.status === 'zurueck');
   const rest = aktuelle && aktuelle.nummer ? gesamt - aktuelle.nummer : null;
   // nächste eingetragene Prüfung; ohne Prüfungstermin zählt die Kachel bis zum Ende der Ausbildung
   const pruefung = d.pruefungen.find((p) => p.datum >= d.heute) ?? null;
@@ -768,6 +769,11 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               )}
               {berichte && !berichte.beginnFehlt && (
                 <Kennzahl wert={fehlend.length} einheit={fehlend.length === 1 ? 'Bericht fehlt' : 'Berichte fehlen'} text={`${faellig.length - fehlend.length} von ${faellig.length} fälligen Wochen geschrieben`} warnung={fehlend.length > 0}>
+                  {zurueck.length > 0 && (
+                    <span className="kennzahl-warnung klein">
+                      {zurueck.length} {zurueck.length === 1 ? 'Bericht wurde' : 'Berichte wurden'} zurückgegeben – bitte überarbeiten
+                    </span>
+                  )}
                   <Link zu={basis} className="klein">
                     Zum Berichtsheft
                   </Link>

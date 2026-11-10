@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.8.0 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
+**Stand: Version 0.9.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -10,7 +10,7 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
-| Super-Admin | lokal mit Passwort | ausschließlich Konten anlegen, sperren und löschen – kein Zugriff auf Pläne und Berichte |
+| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, das Logo des Betriebs hinterlegen – kein Zugriff auf Pläne, Berichte und Stammdaten |
 | Ausbilder | Microsoft | alle Azubis sehen, alle Nachweise abzeichnen, zurückgeben und eine Abzeichnung aufheben, Ausbildungspläne und Planvorlagen pflegen, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
 | Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, während der Zuweisung Aufgaben und Notizen im Plan anlegen |
 | Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan eigene Aufgaben und Notizen eintragen und Aufgaben abhaken |
@@ -117,7 +117,10 @@ Das Portal läuft im Browser auf PC, Tablet und Android-Handy; eine eigene App i
 
 - **PC und Tablet quer (ab 1024 px):** Navigation oben, seltene Punkte unter „Verwaltung“, Persönliches im Menü am Namen.
 - **Tablet hoch und Handy:** die wichtigsten Bereiche als Leiste unten, alles Weitere unter „Mehr“. Tabellen erscheinen auf dem Handy als Liste.
-- **Android:** über das Browser-Menü „Zum Startbildschirm hinzufügen“ startet das Portal wie eine App (setzt HTTPS voraus).
+- **Als App (Progressive Web App):** Auf Android (Chrome: „App installieren“) und iOS (Safari: Teilen → „Zum Home-Bildschirm“) lässt sich das Portal auf den Startbildschirm legen und startet dann ohne Browserleiste. Das setzt HTTPS voraus. Der Service Worker speichert keine Inhalte; ohne Verbindung zeigt er nur einen Hinweis. Die Schritte stehen im Handbuch.
+- **Startseite:** Azubis landen direkt in ihrem Ausbildungsplan, Ausbilder und Beauftragte auf einer Übersicht mit offenen Berichten.
+- **Handbuch** je Rolle in der App (Menü am Namen bzw. „Mehr“), für Azubis in einfacher Sprache.
+- **Logo:** Der Super-Admin hinterlegt unter „Erscheinungsbild“ das Logo des Betriebs (PNG, JPEG oder WebP bis 150 KB).
 - Alles ist mit der Tastatur bedienbar; Bedienflächen sind mindestens 40 × 40 px groß; hell und dunkel.
 
 Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchgesehen und vermessen. Befunde, Maßnahmen und offene Punkte stehen in [docs/iso-9241.md](docs/iso-9241.md). Das ist eine Durchsicht, keine Konformitätserklärung – Tests mit echten Nutzern gab es nicht.
@@ -128,7 +131,7 @@ Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchge
 - Lokales Passwort: scrypt, 5 Fehlversuche → 15 Minuten Wartezeit, Begrenzung je IP.
 - Sitzungen liegen im Server (SQLite, nur als Hash); Cookie `HttpOnly`, `SameSite=Lax`, über HTTPS zusätzlich `Secure` und `__Host-`. Ende nach 8 Stunden ohne Aktivität, spätestens nach 24 Stunden. Sperren wirkt sofort.
 - Schreibende Anfragen nur von der eigenen Adresse (`Origin`-Prüfung), strenge Content-Security-Policy.
-- Protokoll über Anmeldungen und Kontenänderungen, ohne Passwörter und ohne Inhalte.
+- Protokoll über Anmeldungen und Änderungen (Konten, Zuweisungen, Stammdaten, Stand von Berichten), ohne Passwörter und ohne Inhalte. Einsehen kann es nur der Super-Admin.
 
 Der Server nutzt außer Node.js selbst nur **eine** Bibliothek: `openid-client` für die Microsoft-Anmeldung. Mehr dazu und der Meldeweg für Lücken: [SECURITY.md](SECURITY.md).
 

@@ -3,9 +3,11 @@
   "short_name": "Ausbildung",
   "description": "Ausbildungsplan und Berichtsheft",
   "lang": "de",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f8fafc",
   "theme_color": "#2563eb",
   "icons": [

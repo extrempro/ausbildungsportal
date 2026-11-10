@@ -38,6 +38,9 @@ export function Azubis({ ich }: { ich: Konto }) {
                 <th>Name</th>
                 <th>Beruf</th>
                 <th>Stand</th>
+                <th>
+                  <span className="nur-vorleser">Direkt zu</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -53,6 +56,16 @@ export function Azubis({ ich }: { ich: Konto }) {
                   </td>
                   <td data-label="Beruf">{a.beruf || <span className="leise">noch nicht eingetragen</span>}</td>
                   <td data-label="Stand">{standText(a)}</td>
+                  <td>
+                    <div className="kurzwege">
+                      <Link zu={`/azubis/${a.id}/plan`} className="knopf schlicht klein" >
+                        {ich.rolle === 'ausbilder' ? 'Plan bearbeiten' : 'Ausbildungsplan'}
+                      </Link>
+                      <Link zu={`/azubis/${a.id}/berichtsheft`} className="knopf schlicht klein">
+                        Berichtsheft
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

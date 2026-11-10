@@ -17,9 +17,18 @@ const AKTION: Record<string, string> = {
   entra_verknuepft: 'Mit Microsoft-Konto verknüpft',
   entra_geloest: 'Verknüpfung gelöst',
   zuweisung_geaendert: 'Zuweisung geändert',
+  bericht_eingereicht: 'Bericht eingereicht',
+  bericht_abgezeichnet: 'Bericht abgezeichnet',
+  bericht_zurueckgegeben: 'Bericht zurückgegeben',
+  bericht_geoeffnet: 'Abzeichnung aufgehoben',
+  planvorlage_uebernommen: 'Planvorlage übernommen',
+  profil_geaendert: 'Azubi-Profil geändert',
+  stammdaten_geaendert: 'Stammdaten geändert',
+  logo_geaendert: 'Logo geändert',
+  logo_entfernt: 'Logo entfernt',
 };
 
-export function Protokoll({ nurKonto }: { nurKonto: boolean }) {
+export function Protokoll() {
   const [eintraege, setEintraege] = useState<ProtokollEintrag[] | null>(null);
   const [fehler, setFehler] = useState('');
 
@@ -30,7 +39,7 @@ export function Protokoll({ nurKonto }: { nurKonto: boolean }) {
   return (
     <>
       <h1>Protokoll</h1>
-      <p className="leise">{nurKonto ? 'Anmeldungen und Änderungen an Konten.' : 'Anmeldungen, Änderungen an Konten und Zuweisungen.'} Die neuesten 200 Einträge.</p>
+      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und am Stand von Berichten. Inhalte von Berichten und Plänen stehen hier nicht. Die neuesten 200 Einträge.</p>
       {fehler && (
         <p className="hinweis fehler" role="alert">
           {fehler}
