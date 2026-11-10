@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.5.0 (Phase 3 – Berichtsheft).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile und das Berichtsheft mit Abzeichnen sind fertig, dazu das Docker-Setup. Der Ausbildungsplan folgt in der nächsten Phase.
+**Stand: Version 0.6.0 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -11,9 +11,9 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
 | Super-Admin | lokal mit Passwort | ausschließlich Konten anlegen, sperren und löschen – kein Zugriff auf Pläne und Berichte |
-| Ausbilder | Microsoft | alle Azubis sehen, alle Nachweise abzeichnen, zurückgeben und eine Abzeichnung aufheben, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
-| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben |
-| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen |
+| Ausbilder | Microsoft | alle Azubis sehen, alle Nachweise abzeichnen, zurückgeben und eine Abzeichnung aufheben, Ausbildungspläne und Planvorlagen pflegen, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
+| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, während der Zuweisung Aufgaben und Notizen im Plan anlegen |
+| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan Aufgaben abhaken |
 
 Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
 
@@ -96,6 +96,19 @@ Ein Ausbildungsnachweis je Kalenderwoche, von der ersten bis zur laufenden Woche
 - **Ablauf:** Entwurf → eingereicht → abgezeichnet. Ausbilder und zuständige Beauftragte können mit Kommentar zurückgeben. Ein abgezeichneter Nachweis ist gesperrt; nur ein Ausbilder kann die Abzeichnung mit Begründung aufheben. Jeder Schritt steht im Verlauf des Nachweises.
 - **Unterschrift:** Jede Person hinterlegt unter „Konto“ einmal ihre Unterschrift (mit Finger, Stift oder Maus gezeichnet). Beim Einreichen und Abzeichnen wird eine Kopie mit Name und Zeitpunkt am Nachweis gespeichert. Das ist ein Unterschriftsbild, **keine qualifizierte elektronische Signatur**. Ob die zuständige Kammer diese Form des Nachweises anerkennt, bitte dort klären.
 - **Drucken:** Einzelne oder alle Nachweise über den Druckdialog des Browsers, dort auch „Als PDF speichern“.
+
+## Ausbildungsplan
+
+Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Ausbildung, mit Schulferien und Feiertagen.
+
+- **Arten:** Berufsschule (Schulblock), Einsatz (Abteilung oder Einsatzort), Aufgabe (mit Unteraufgaben zum Abhaken) und Notiz.
+- **Wer plant:** Ausbilder alles. Ausbildungsbeauftragte legen Aufgaben und Notizen an, solange ihre Zuweisung läuft. Azubis sehen ihren Plan und haken Aufgaben ab.
+- **Zuständig:** Bei Einsätzen und Aufgaben lässt sich eine zuständige Person wählen – Ausbilder oder Ausbildungsbeauftragte. Ist es ein Beauftragter, kann der Ausbilder ihn beim Speichern gleich für den Zeitraum zuweisen.
+- **Planvorlagen:** Abläufe in Wochen ab Ausbildungsbeginn (z. B. „Woche 1–8 Einsatz IT-Support“), je Beruf oder für alle. Eine Vorlage wird in den Plan eines Azubis kopiert; danach ist der Plan unabhängig von ihr.
+- **Übersicht:** alle Azubis nebeneinander über 26 Wochen – Schule und Einsätze aus den Plänen, Urlaub aus den Berichten. Krankheit erscheint dort nicht.
+- Beim Schreiben eines Berichts steht dabei, was laut Plan in der Woche ansteht.
+
+Unten auf jeder Seite führt „Versionshinweise“ zu den Änderungen je Version (aus `CHANGELOG.md`). Das Farbschema lässt sich oben rechts zwischen hell und dunkel umschalten; „automatisch“ steht unter „Konto“.
 
 ## Sicherheit in Kürze
 

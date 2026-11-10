@@ -87,6 +87,25 @@ export function darfAbzeichnen(db: DB, wer: Wer, azubiId: number, montag: string
   return false;
 }
 
+/**
+ * Darf im Ausbildungsplan dieses Azubis Einträge dieser Art anlegen, ändern oder löschen.
+ * Ausbilder: alles. Beauftragte: nur Aufgaben und Notizen, solange ihre Zuweisung läuft.
+ * Schulblöcke und Einsätze plant allein der Ausbilder. Azubis haken nur ab (eigene Route).
+ */
+export function darfPlanBearbeiten(db: DB, wer: Wer, azubiId: number, art: string, heute: string): boolean {
+  if (!Number.isInteger(azubiId) || !istAzubi(db, azubiId)) return false;
+  if (wer.rolle === 'ausbilder') return true;
+  if (wer.rolle === 'beauftragter' && (art === 'aufgabe' || art === 'notiz')) {
+    return !!db
+      .prepare(
+        `SELECT 1 FROM zuweisung WHERE azubi_id = ? AND beauftragter_id = ?
+           AND (von IS NULL OR von <= ?) AND (bis IS NULL OR bis >= ?)`,
+      )
+      .get(azubiId, wer.id, heute, heute);
+  }
+  return false;
+}
+
 /** IDs aller Azubis, die das Konto sehen darf. */
 export function sichtbareAzubis(db: DB, wer: Wer, heute: string): number[] {
   let zeilen: { id: number }[] = [];

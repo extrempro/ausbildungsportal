@@ -90,6 +90,18 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'POST /api/berichte/abzeichnen': 'ausbilder,beauftragter',
     'POST /api/azubis/:id/berichte/:montag/zurueckgeben': 'ausbilder,beauftragter',
     'POST /api/azubis/:id/berichte/:montag/oeffnen': 'ausbilder',
+    'GET /api/versionshinweise': 'alle',
+    'GET /api/azubis/:id/plan': 'ausbilder,beauftragter,azubi',
+    'POST /api/azubis/:id/plan': 'ausbilder,beauftragter',
+    'PUT /api/azubis/:id/plan/:eid': 'ausbilder,beauftragter',
+    'DELETE /api/azubis/:id/plan/:eid': 'ausbilder,beauftragter',
+    'POST /api/azubis/:id/plan/:eid/haken': 'ausbilder,beauftragter,azubi',
+    'POST /api/azubis/:id/plan/vorlage': 'ausbilder',
+    'GET /api/planvorlagen': 'ausbilder',
+    'POST /api/planvorlagen': 'ausbilder',
+    'PUT /api/planvorlagen/:id': 'ausbilder',
+    'DELETE /api/planvorlagen/:id': 'ausbilder',
+    'GET /api/uebersicht': 'ausbilder,beauftragter',
   });
 });
 

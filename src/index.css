@@ -555,6 +555,221 @@ fieldset.abschnitt legend {
 }
 
 /* Drucken: nur der Nachweis, schwarz auf weiß, jede Woche auf einer eigenen Seite */
+/* ---------- Ausbildungsplan ---------- */
+table.plan td {
+  vertical-align: top;
+}
+
+table.plan td.woche {
+  width: 1%;
+  white-space: nowrap;
+}
+
+table.plan td.woche .pille {
+  margin-left: 6px;
+}
+
+table.plan tr.heute td,
+table.uebersicht .heute {
+  background: var(--c-accent-soft);
+}
+
+.plan-eintrag {
+  margin-bottom: 6px;
+}
+
+.plan-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.plan-kopf input[type='checkbox'] {
+  align-self: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+}
+
+.zeile.zwei {
+  grid-template-columns: 1fr auto;
+}
+
+@media (max-width: 640px) {
+  /* Wochen untereinander statt als Tabelle */
+  table.plan thead {
+    display: none;
+  }
+
+  table.plan tr,
+  table.plan td {
+    display: block;
+  }
+
+  table.plan td {
+    border: 0;
+  }
+
+  table.plan td.woche {
+    width: auto;
+    padding-bottom: 0;
+    white-space: normal;
+  }
+
+  table.plan tr {
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .zeile.zwei > button {
+    grid-column: auto;
+  }
+}
+
+.plan-text {
+  margin: 2px 0 0;
+}
+
+.erledigt {
+  text-decoration: line-through;
+  color: var(--c-muted);
+}
+
+.unterliste {
+  list-style: none;
+  margin: 2px 0 0 4px;
+  padding: 0;
+}
+
+.link-knopf {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-accent);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-knopf.leise {
+  color: var(--c-muted);
+  text-decoration: none;
+}
+
+.link-knopf.leise:hover {
+  color: var(--c-accent);
+}
+
+.filter select {
+  width: auto;
+  min-width: 14rem;
+}
+
+/* ---------- Übersicht aller Azubis ---------- */
+table.uebersicht th,
+table.uebersicht td {
+  padding: 6px;
+  vertical-align: top;
+  border-right: 1px solid var(--c-border);
+  font-size: 13px;
+}
+
+table.uebersicht thead th {
+  white-space: nowrap;
+  text-align: center;
+  font-weight: 600;
+}
+
+table.uebersicht td {
+  min-width: 5.5rem;
+  max-width: 7rem;
+}
+
+table.uebersicht .fest {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 9rem;
+  background: var(--c-card);
+  text-align: left;
+}
+
+table.uebersicht td.ausserhalb {
+  background: var(--c-chip);
+}
+
+.ue {
+  display: block;
+  overflow: hidden;
+  margin-bottom: 2px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ue.schule {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.ue.einsatz {
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+}
+
+.ue.urlaub {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+}
+
+.legende {
+  display: flex;
+  gap: 6px;
+}
+
+.legende .ue {
+  margin: 0;
+}
+
+/* ---------- Versionshinweise, Schalter hell/dunkel ---------- */
+.punkte {
+  margin: 4px 0 12px;
+  padding-left: 20px;
+}
+
+.punkte li {
+  margin-bottom: 4px;
+}
+
+.karte h2 .pille {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+details.karte > h2 {
+  margin-top: 20px;
+}
+
+code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--c-code);
+  font-size: 0.9em;
+}
+
+.knopf.symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
 @media print {
   :root,
   html.dark {

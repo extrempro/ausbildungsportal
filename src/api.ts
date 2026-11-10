@@ -205,6 +205,7 @@ export interface Bericht {
   summe: { betrieb: number; unterweisung: number; schule: number; abwesenheit: number; gesamt: number };
   soll: number;
   kommentar: string;
+  plan: { art: PlanArt; titel: string }[];
   eingereichtAm: string | null;
   abgezeichnetAm: string | null;
   signaturen: { art: 'azubi' | 'abzeichnung'; name: string; rolle: Rolle; pfad: string; zeit: string }[];
@@ -274,4 +275,87 @@ export function wocheText(montag: string, sonntag: string): string {
 /** Adresse des Berichtshefts: das eigene oder das eines betreuten Azubis. */
 export function berichtsheftPfad(azubiId: number, eigenes: boolean): string {
   return eigenes ? '/berichtsheft' : `/azubis/${azubiId}/berichtsheft`;
+}
+
+// ---------- Ausbildungsplan ----------
+
+export type PlanArt = 'schule' | 'einsatz' | 'aufgabe' | 'notiz';
+export const PLAN_ARTEN: PlanArt[] = ['schule', 'einsatz', 'aufgabe', 'notiz'];
+export const ART_TEXT: Record<PlanArt, string> = { schule: 'Berufsschule', einsatz: 'Einsatz', aufgabe: 'Aufgabe', notiz: 'Notiz' };
+export const ART_FARBE: Record<PlanArt, string> = { schule: 'blau', einsatz: 'gruen', aufgabe: 'gelb', notiz: 'grau' };
+
+export interface Unteraufgabe {
+  text: string;
+  erledigt: boolean;
+}
+
+export interface PlanEintrag {
+  id: number;
+  art: PlanArt;
+  von: string;
+  bis: string;
+  titel: string;
+  text: string;
+  zustaendigId: number | null;
+  zustaendig: string;
+  erledigt: boolean;
+  unteraufgaben: Unteraufgabe[];
+}
+
+export interface PlanWoche {
+  montag: string;
+  kw: number;
+  jahr: number;
+  ausbildungsjahr: number | null;
+}
+
+export interface PlanAntwort {
+  azubi: { id: number; anzeigename: string };
+  eigenes: boolean;
+  heute: string;
+  beginnFehlt: boolean;
+  beruf: string;
+  wochen: PlanWoche[];
+  eintraege: PlanEintrag[];
+  feiertage: { datum: string; name: string }[];
+  ferien: { name: string; von: string; bis: string }[];
+  ferienVorhanden: boolean;
+  rechte: { arten: PlanArt[]; zuweisen: boolean };
+  personen: { id: number; anzeigename: string; rolle: Rolle }[];
+  vorlagen: { id: number; titel: string; berufId: number | null; passt: boolean }[];
+}
+
+export interface VorlageEintrag {
+  art: PlanArt;
+  abWoche: number;
+  wochen: number;
+  titel: string;
+  text: string;
+  unteraufgaben: string[];
+}
+
+export interface Planvorlage {
+  id: number;
+  berufId: number | null;
+  titel: string;
+  eintraege: VorlageEintrag[];
+}
+
+export interface Uebersicht {
+  heute: string;
+  wochen: { montag: string; kw: number; jahr: number }[];
+  azubis: { id: number; anzeigename: string; beruf: string; wochen: { inAusbildung: boolean; schule: boolean; einsatz: string[]; urlaubstage: number }[] }[];
+}
+
+export interface Versionshinweis {
+  version: string;
+  datum: string;
+  gruppen: { titel: string; punkte: string[] }[];
+}
+
+/** JJJJ-MM-TT plus n Tage */
+export function plusTage(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
 }

@@ -1,5 +1,22 @@
 # Änderungen
 
+## [0.6.0] – 2026-11-10
+
+### Neu
+
+- Ausbildungsplan (Phase 4): je Azubi ein Plan in Kalenderwochen mit Schulblöcken, Einsätzen, Aufgaben (mit Unteraufgaben) und Notizen; Schulferien und Feiertage stehen an den Wochen.
+- Ausbilder planen alles, Ausbildungsbeauftragte legen während ihrer Zuweisung Aufgaben und Notizen an, Azubis haken Aufgaben ab.
+- Zuständig für einen Einsatz oder eine Aufgabe können Ausbilder und Ausbildungsbeauftragte sein. Bei einem Beauftragten lässt sich die Zuweisung für den Zeitraum gleich mit anlegen.
+- Planvorlagen je Beruf: Abläufe in Wochen ab Ausbildungsbeginn, die sich in den Plan eines Azubis übernehmen lassen.
+- Übersicht aller Azubis über 26 Wochen: Schule, Einsätze und Urlaub laut Bericht.
+- Im Bericht steht beim Schreiben, was laut Ausbildungsplan in der Woche ansteht.
+- Versionshinweise in der App (Link unten auf jeder Seite): die zehn neuesten Versionen einzeln, ältere zusammengefasst.
+- Schalter für hell/dunkel oben rechts.
+
+### Behoben
+
+- Mit dunklem Farbschema blitzte die Seite beim Laden kurz hell auf.
+
 ## [0.5.0] – 2026-11-10
 
 ### Neu

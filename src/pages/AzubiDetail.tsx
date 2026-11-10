@@ -282,6 +282,9 @@ export function AzubiDetail({ id }: { id: number }) {
         <p className="abstand">
           <Link zu={`/azubis/${p.azubi.id}/berichtsheft`} className="knopf schlicht">
             Berichtsheft ansehen
+          </Link>{' '}
+          <Link zu={`/azubis/${p.azubi.id}/plan`} className="knopf schlicht">
+            Ausbildungsplan
           </Link>
         </p>
       </section>
