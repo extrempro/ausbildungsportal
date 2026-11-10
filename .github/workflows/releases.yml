@@ -1,0 +1,25 @@
+# Legt nach jeder neuen Version automatisch ein GitHub-Release mit Tag an (Text aus CHANGELOG.md).
+name: Releases
+
+on:
+  push:
+    branches: [main]
+    paths: [CHANGELOG.md]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: releases
+
+jobs:
+  releases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fehlende Releases anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/releases.py

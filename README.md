@@ -1,0 +1,104 @@
+# Ausbildungsportal
+
+Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
+
+**Stand: Version 0.2.0 (Phase 1 – Fundament).** Anmeldung, Konten, Rechte und Protokoll sind fertig. Berichtsheft und Ausbildungsplan folgen in den nächsten Phasen, Docker in Phase 5.
+
+> **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft ist bisher nur gegen einen nachgebildeten Anbieter getestet, nicht gegen ein echtes Entra-Verzeichnis. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
+
+## Rollen
+
+| Rolle | Anmeldung | Darf |
+| --- | --- | --- |
+| Super-Admin | lokal mit Passwort | ausschließlich Konten anlegen, sperren und löschen – kein Zugriff auf Pläne und Berichte |
+| Ausbilder | Microsoft | alle Azubis sehen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
+| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, im Zeitraum der Zuweisung abzeichnen |
+| Azubi | Microsoft | nur die eigenen Daten |
+
+Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
+
+## Voraussetzungen
+
+- Node.js ab 22.16 (nutzt das eingebaute `node:sqlite`)
+- für die Microsoft-Anmeldung: eine App-Registrierung in Entra, siehe [docs/entra-einrichtung.md](docs/entra-einrichtung.md)
+
+## Starten
+
+```bash
+npm install
+cp .env.example .env      # APP_URL und später die ENTRA_*-Werte eintragen
+npm run build             # Oberfläche nach dist/ bauen
+npm start                 # Server auf Port 3000
+```
+
+Beim **ersten Start** legt die App den Super-Admin an. Ohne `ADMIN_BENUTZER`/`ADMIN_PASSWORT` heißt er `admin`, und das Startpasswort steht einmalig in der Ausgabe. Bei der ersten Anmeldung muss es geändert werden (mindestens 14 Zeichen).
+
+Danach als Super-Admin den ersten Ausbilder anlegen (Microsoft-Anmeldename + Rolle). Der Ausbilder legt Azubis und Beauftragte selbst an.
+
+### Entwickeln
+
+```bash
+npm run dev               # baut die Oberfläche bei Änderungen neu und startet den Server neu
+npm test                  # Tests (node:test)
+npm run typecheck
+```
+
+Mit `DEV_ANMELDUNG=true` in der `.env` kann man sich lokal ohne Entra als vorhandenes Konto anmelden. Die Einstellung wird in Produktion ignoriert.
+
+## Konfiguration
+
+Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`):
+
+| Variable | Bedeutung |
+| --- | --- |
+| `APP_URL` | Adresse, unter der die Nutzer die App im Browser sehen. Bestimmt die Umleitungs-URI für Entra (`<APP_URL>/api/auth/entra/callback`) und ob Cookies nur über HTTPS gehen |
+| `PORT`, `HOST` | worauf der Server lauscht (Standard `3000`, `0.0.0.0`) |
+| `DATA_DIR` | Ordner für Datenbank und Sicherungen (Standard `./data`) |
+| `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | App-Registrierung in Entra; ohne sie kann sich nur der Super-Admin anmelden |
+| `ADMIN_BENUTZER`, `ADMIN_PASSWORT` | nur für den ersten Start |
+| `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
+| `DEV_ANMELDUNG` | nur zum Entwickeln |
+
+## Sicherheit in Kürze
+
+- Microsoft-Anmeldung: OpenID Connect, Authorization Code Flow mit PKCE über die Bibliothek [openid-client](https://github.com/panva/openid-client); geprüft werden Signatur, Aussteller, Empfänger, Ablauf, Nonce und Mandant. Konten hängen an der Objekt-ID aus Entra, nicht am Namen. Wer kein Konto in der App hat, kommt nicht hinein.
+- Lokales Passwort: scrypt, 5 Fehlversuche → 15 Minuten Wartezeit, Begrenzung je IP.
+- Sitzungen liegen im Server (SQLite, nur als Hash); Cookie `HttpOnly`, `SameSite=Lax`, über HTTPS zusätzlich `Secure` und `__Host-`. Ende nach 8 Stunden ohne Aktivität, spätestens nach 24 Stunden. Sperren wirkt sofort.
+- Schreibende Anfragen nur von der eigenen Adresse (`Origin`-Prüfung), strenge Content-Security-Policy.
+- Protokoll über Anmeldungen und Kontenänderungen, ohne Passwörter und ohne Inhalte.
+
+Der Server nutzt außer Node.js selbst nur **eine** Bibliothek: `openid-client` für die Microsoft-Anmeldung. Mehr dazu und der Meldeweg für Lücken: [SECURITY.md](SECURITY.md).
+
+Für den Betrieb gilt: nur über HTTPS (Reverse Proxy) und am besten nur im VPN. `data/` und `.env` gehören nie ins Git.
+
+## Betrieb
+
+```bash
+npm run backup                    # Sicherung nach data/backups/ (auch im laufenden Betrieb)
+npm run admin-reset [benutzer]    # Notfall: neues Startpasswort für einen Super-Admin
+```
+
+Datenbank-Änderungen kommen als nummerierte Migrationen (`server/migrations/`); vor jeder Migration legt die App automatisch eine Sicherung an.
+
+## Aufbau
+
+```
+server/
+  index.ts        Start
+  http.ts         Webserver: /api und das gebaute Frontend
+  api.ts          alle Routen mit ihren Rechten, ein einziger Einstieg (behandle)
+  rechte.ts       zentrale Rechteprüfung
+  entra.ts        Anmeldung über Microsoft Entra ID (openid-client)
+  passwort.ts     scrypt, Passwortregeln
+  sitzung.ts      Sitzungen
+  protokoll.ts    Protokoll
+  migrations/     Datenbank-Schema
+  test/           Tests, u. a. jede Route × jede Rolle
+src/              Oberfläche (React)
+scripts/          build, dev, backup, admin-reset
+docs/             Entra-Einrichtung
+```
+
+## Lizenz
+
+MIT, siehe [LICENSE](LICENSE). Grundgerüst und Design-Tokens stammen aus dem [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass).
