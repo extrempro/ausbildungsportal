@@ -1,3 +1,4 @@
+import { wechsleZumBesitzer } from '../server/benutzer-wechsel';
 import { loadConfig } from '../server/config';
 import { openDatabase } from '../server/db';
 import { hashePasswort, zufallsPasswort } from '../server/passwort';
@@ -9,6 +10,7 @@ import type { BenutzerZeile } from '../server/typen';
  * Aufruf: npm run admin-reset [benutzername]   (in Docker: docker compose exec app npm run admin-reset)
  */
 const cfg = loadConfig();
+wechsleZumBesitzer(cfg.dataDir);
 const db = await openDatabase(cfg.dataDir);
 const name = (process.argv[2] ?? '').trim().toLowerCase();
 const admins = db.prepare("SELECT * FROM benutzer WHERE rolle = 'admin' ORDER BY id").all() as unknown as BenutzerZeile[];

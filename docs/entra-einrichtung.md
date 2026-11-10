@@ -1,6 +1,6 @@
 # Anmeldung über Microsoft Entra ID einrichten
 
-Stand: 10.11.2026 · passt zu Version 0.3.0
+Stand: 10.11.2026 · passt zu Version 0.3.1
 
 Diese Anleitung beschreibt, wie das Ausbildungsportal im eigenen Entra-Mandanten als Anwendung angelegt wird, damit sich Azubis, Ausbildungsbeauftragte und Ausbilder mit ihrem Microsoft-Konto anmelden können. Der Super-Admin meldet sich weiterhin lokal an und braucht nichts davon.
 
@@ -116,7 +116,7 @@ Danach die App neu starten (`docker compose up -d` bzw. `npm start`). Fehlen die
 | `AADSTS700016` application not found | falsche Client-ID oder falscher Mandant | `ENTRA_CLIENT_ID` und `ENTRA_TENANT_ID` prüfen |
 | App meldet „Kein Zugang – bitte an den Ausbilder wenden“ | Microsoft-Anmeldung war erfolgreich, aber in der App gibt es kein Konto mit diesem Anmeldenamen | Konto anlegen (Schritt 7) bzw. Schreibweise des UPN prüfen |
 | Anmeldung springt immer wieder zur Anmeldeseite | Cookie wird nicht angenommen: `APP_URL` beginnt mit `https://`, die App wird aber über `http://` aufgerufen | über die HTTPS-Adresse aufrufen bzw. `APP_URL` berichtigen |
-| „Anfrage von fremder Herkunft abgelehnt“ | `APP_URL` stimmt nicht mit der Adresse im Browser überein | `APP_URL` berichtigen, App neu starten |
+| „Die App ist für die Adresse … eingerichtet, aufgerufen wurde sie über …“ | `APP_URL` stimmt nicht mit der Adresse im Browser überein (z. B. eigener Port in `docker-compose.override.yml`) | `APP_URL` auf die Adresse im Browser setzen, App neu starten |
 | App meldet „Die Anmeldung über Microsoft ist fehlgeschlagen“ | Entra hat abgelehnt oder das Token war ungültig; der genaue Grund (z. B. `AADSTS…`) steht im Log der App | `docker compose logs app` bzw. die Ausgabe von `npm start` ansehen |
 
 ## Schlüssel erneuern (alle 24 Monate oder früher)

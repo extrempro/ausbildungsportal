@@ -53,6 +53,8 @@ export interface Kontext {
   dummyHash: string;
   /** Anmeldeversuche je IP */
   versuche: Map<string, { anzahl: number; bis: number }>;
+  /** Adressen, für die der Hinweis auf eine unpassende APP_URL schon im Log steht */
+  gemeldeteHerkunft: Set<string>;
 }
 
 export class Fehler extends Error {
@@ -662,7 +664,21 @@ export async function behandle(k: Kontext, a: Anfrage): Promise<Antwort> {
 
     // Schutz vor fremden Seiten, die im Namen des angemeldeten Nutzers schreiben wollen (CSRF)
     if (a.methode !== 'GET' && a.headers.origin !== new URL(k.cfg.appUrl).origin) {
-      throw new Fehler(403, 'Anfrage von fremder Herkunft abgelehnt (stimmt APP_URL mit der Adresse im Browser überein?)', 'herkunft');
+      // Häufigste Ursache ist keine fremde Seite, sondern eine APP_URL, die nicht zur Adresse im Browser passt
+      // (z. B. eigener Port oder eigene IP in docker-compose.override.yml). Deshalb beide Adressen nennen.
+      const von = a.headers.origin ?? '';
+      const lesbar = /^https?:\/\/[A-Za-z0-9.\-:[\]]{1,200}$/.test(von) ? von : '';
+      if (lesbar && !k.gemeldeteHerkunft.has(lesbar) && k.gemeldeteHerkunft.size < 20) {
+        k.gemeldeteHerkunft.add(lesbar);
+        k.log(`Anfrage von ${lesbar} abgelehnt: Die App ist für ${k.cfg.appUrl} eingerichtet. Wird sie unter ${lesbar} aufgerufen, muss APP_URL=${lesbar} in der .env stehen.`);
+      }
+      throw new Fehler(
+        403,
+        lesbar
+          ? `Die App ist für die Adresse ${k.cfg.appUrl} eingerichtet, aufgerufen wurde sie über ${lesbar}. Bitte APP_URL in der .env auf die Adresse im Browser setzen und die App neu starten.`
+          : 'Anfrage von fremder Herkunft abgelehnt',
+        'herkunft',
+      );
     }
     if (route.begrenzt && zuVieleVersuche(k, a.ip, route.begrenzt)) throw new Fehler(429, 'Zu viele Anmeldeversuche – bitte später erneut versuchen');
 

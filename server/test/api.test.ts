@@ -237,6 +237,22 @@ test('schreibende Anfragen ohne oder mit fremdem Origin werden abgelehnt', async
   assert.equal((await ruf(u, 'POST', '/api/konten', { cookies, body })).status, 201);
 });
 
+test('passt APP_URL nicht zur Adresse im Browser, nennt die Meldung beide Adressen', async () => {
+  // typischer Fall: eigener Port oder eigene IP in docker-compose.override.yml, APP_URL nicht angepasst
+  const u = await umgebung({ APP_URL: 'http://localhost:3000' });
+  const versuch = () => ruf(u, 'POST', '/api/auth/lokal', { body: { benutzername: 'chef', passwort: START }, origin: 'http://100.64.0.10:8989' });
+  const a = await versuch();
+  assert.equal(a.status, 403);
+  assert.match(koerper(a).fehler, /für die Adresse http:\/\/localhost:3000 eingerichtet.*über http:\/\/100\.64\.0\.10:8989.*APP_URL/);
+  await versuch();
+  assert.equal(u.logs.filter((l) => l.includes('APP_URL=http://100.64.0.10:8989')).length, 1, 'Hinweis steht genau einmal im Log');
+  const boese = await ruf(u, 'POST', '/api/auth/lokal', { body: {}, origin: 'http://x/<script>alert(1)</script>' });
+  assert.equal(koerper(boese).fehler, 'Anfrage von fremder Herkunft abgelehnt', 'unlesbare Herkunft wird nicht wiedergegeben');
+
+  const passend = await umgebung({ APP_URL: 'http://100.64.0.10:8989' });
+  assert.equal((await ruf(passend, 'POST', '/api/auth/lokal', { body: { benutzername: 'chef', passwort: START }, origin: 'http://100.64.0.10:8989' })).status, 200);
+});
+
 // ---------- Kontenverwaltung ----------
 
 test('Super-Admin legt alle Rollen an; weitere Super-Admins bekommen ein einmaliges Startpasswort', async () => {

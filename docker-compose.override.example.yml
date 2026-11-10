@@ -1,11 +1,21 @@
 # Eigene Einstellungen für Docker Compose – nur auf deinem Server.
 # Kopieren nach docker-compose.override.yml; Docker Compose liest die Datei automatisch mit.
 # docker-compose.override.yml steht in .gitignore, git pull überschreibt sie also nicht.
-# !override ersetzt die Portzuordnung aus docker-compose.yml (Docker Compose ab Version 2.24).
-# Kontrolle: docker compose config
 #
-# Die App braucht HTTPS (Microsoft-Anmeldung und Cookies). Sie selbst spricht nur HTTP –
-# davor gehört ein Reverse Proxy mit Zertifikat. APP_URL in .env ist die Adresse dieses Proxys.
+# WICHTIG
+# 1. "ports: !override" (mit dem Ausrufezeichen) ERSETZT die Zuordnung aus docker-compose.yml.
+#    Ohne "!override" kommt der neue Port nur dazu und 127.0.0.1:3000 bleibt zusätzlich offen.
+#    Braucht Docker Compose ab Version 2.24. Kontrolle, was am Ende gilt:  docker compose config
+#    Die Datei muss genau docker-compose.override.yml heißen und neben docker-compose.yml liegen.
+#    Übernommen wird sie mit  docker compose up -d  (nicht mit restart, und nicht mit -f docker-compose.yml).
+#    Welcher Port wirklich offen ist, zeigt  docker compose ps . Im Log der App steht immer Port 3000 –
+#    das ist der Port im Container.
+# 2. APP_URL in der .env muss die Adresse sein, die im Browser steht – mit dem Port von hier,
+#    wenn die App direkt (ohne Reverse Proxy) aufgerufen wird. Sonst lädt die Seite, aber
+#    Anmelden und Speichern werden abgelehnt. Nach einer Änderung:  docker compose up -d
+# 3. Die Microsoft-Anmeldung braucht HTTPS. Die App selbst spricht nur HTTP – davor gehört ein
+#    Reverse Proxy mit Zertifikat; APP_URL ist dann die https-Adresse dieses Proxys.
+#    Ohne HTTPS funktioniert nur die lokale Anmeldung des Super-Admins.
 
 services:
   app:
@@ -13,15 +23,25 @@ services:
       # links: Adresse und Port auf dem Server, rechts: Port im Container (immer 3000)
 
       # Reverse Proxy auf demselben Server → Proxy leitet an 127.0.0.1:8989 weiter
+      #   .env:  APP_URL=https://ausbildung.firma.de   TRUST_PROXY=true
       - "127.0.0.1:8989:3000"
 
-      # Reverse Proxy auf einem anderen Rechner: an die Adresse des Servers im VPN bzw. internen Netz
-      # binden und den Port per Firewall auf den Proxy beschränken:
+      # Nur über das VPN erreichbar: an die VPN-Adresse des Servers binden (bei NetBird: netbird status).
+      # Dann die Zeile oben löschen oder auskommentieren.
+      #   direkter Aufruf zum Testen   → .env:  APP_URL=http://100.64.0.10:8989
+      #   Reverse Proxy auf anderem Rechner → .env:  APP_URL=https://ausbildung.firma.de   TRUST_PROXY=true
       # - "100.64.0.10:8989:3000"
 
       # Alle Netze – nur zum Ausprobieren, nicht für den Betrieb:
       # - "8989:3000"
 
+# Meldet Docker beim Start "cannot assign requested address", gibt es die VPN-Adresse noch nicht,
+# weil das VPN nach Docker startet. Abhilfe unter Linux mit NetBird:
+#   sudo systemctl edit docker   und dort eintragen:
+#     [Unit]
+#     After=netbird.service
+#     Wants=netbird.service
+#
 # Reverse Proxy als Container in derselben Compose-Datei: Ziel ist dann app:3000,
-# und „ports“ kann ganz entfallen:
+# und die Ports können ganz entfallen:
 #     ports: !reset []

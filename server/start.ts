@@ -43,6 +43,7 @@ export async function erzeugeKontext(
     jetzt,
     dummyHash: await hashePasswort(zufallsPasswort()),
     versuche: new Map(),
+    gemeldeteHerkunft: new Set(),
   };
   await ersterStart(k);
   return k;
