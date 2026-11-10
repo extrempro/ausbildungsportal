@@ -360,7 +360,7 @@ export interface Planvorlage {
 export interface Uebersicht {
   heute: string;
   wochen: { montag: string; kw: number; jahr: number }[];
-  azubis: { id: number; anzeigename: string; beruf: string; wochen: { inAusbildung: boolean; schule: boolean; einsatz: string[]; urlaubstage: number }[] }[];
+  azubis: { id: number; anzeigename: string; beruf: string; ausbildungsjahr: number | null; wochen: { inAusbildung: boolean; schule: boolean; einsatz: string[]; urlaubstage: number }[] }[];
 }
 
 export interface Versionshinweis {

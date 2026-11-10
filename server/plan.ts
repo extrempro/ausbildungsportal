@@ -512,7 +512,7 @@ export const PLAN_ROUTEN: Route[] = [
         const b = holeBenutzer(db, id)!;
         const profil = leseProfil(db, id);
         const dauer = dauerVon(db, profil);
-        const { beruf } = standAus(db, profil, tag);
+        const { beruf, stand } = standAus(db, profil, tag);
         const eintraege = db.prepare("SELECT art, von, bis, titel FROM plan_eintrag WHERE azubi_id = ? AND art IN ('schule', 'einsatz') AND von <= ? AND bis >= ? ORDER BY von, id").all(id, letzte, start) as unknown as { art: Art; von: string; bis: string; titel: string }[];
         // Urlaub steht nicht im Plan, sondern in den Berichten (Abwesenheit mit Grund „Urlaub“)
         const urlaub = new Map<string, number>();
@@ -524,6 +524,8 @@ export const PLAN_ROUTEN: Route[] = [
           id,
           anzeigename: b.anzeigename,
           beruf: beruf?.bezeichnung ?? '',
+          // zum Gruppieren der Übersicht
+          ausbildungsjahr: stand.phase === 'laufend' ? stand.ausbildungsjahr : null,
           wochen: wochen.map((w) => ({
             inAusbildung: !!dauer && w.montag >= montagVon(dauer.beginn) && w.montag <= dauer.ende,
             schule: eintraege.some((e) => e.art === 'schule' && e.von <= w.montag && e.bis >= w.montag),

@@ -17,6 +17,7 @@ import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
+import { Fuehrung } from './fuehrung';
 import { Icon } from './icons';
 import type { IconName } from './icons';
 import { geheZu, Link, usePfad } from './router';
@@ -51,6 +52,17 @@ export function App() {
   const [version, setVersion] = useState('');
   const [dunkel, setDunkel] = useState(false);
   const [menue, setMenue] = useState<Menue>(null);
+  // interaktive Führung: läuft gerade / wird beim ersten Besuch einmal angeboten
+  const [fuehrung, setFuehrung] = useState(false);
+  const [angebot, setAngebot] = useState(false);
+  // Knopf „Nach oben“ erscheint erst, wenn man ein Stück gescrollt hat
+  const [weitUnten, setWeitUnten] = useState(false);
+  useEffect(() => {
+    const pruefe = () => setWeitUnten(window.scrollY > 700);
+    pruefe();
+    window.addEventListener('scroll', pruefe, { passive: true });
+    return () => window.removeEventListener('scroll', pruefe);
+  }, []);
   const [logos, setLogos] = useState<Logos>({ logo: null, logoDunkel: null });
   // Android/Chrome meldet, wenn sich das Portal als App installieren lässt; iOS kennt das nicht (dort über „Teilen“)
   const [installation, setInstallation] = useState<{ prompt: () => Promise<unknown> } | null>(null);
@@ -87,6 +99,30 @@ export function App() {
   useEffect(() => {
     if (konto) setDunkel(wendeThemeAn(konto.theme));
   }, [konto]);
+
+  // Führung einmal je Konto und Browser anbieten
+  useEffect(() => {
+    if (!konto || konto.passwortWechsel) return;
+    try {
+      setAngebot(localStorage.getItem(`fuehrung-${konto.id}`) === null);
+    } catch {
+      // ohne Speicher kein Angebot – die Führung bleibt über das Menü erreichbar
+    }
+  }, [konto?.id, konto?.passwortWechsel]);
+  const merkeFuehrung = () => {
+    setAngebot(false);
+    try {
+      if (konto) localStorage.setItem(`fuehrung-${konto.id}`, '1');
+    } catch {
+      // siehe oben
+    }
+  };
+  const starteFuehrung = () => {
+    merkeFuehrung();
+    setMenue(null);
+    setFuehrung(true);
+  };
+  const beendeFuehrung = useCallback(() => setFuehrung(false), []);
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
   useEffect(() => setMenue(null), [pfad]);
@@ -204,7 +240,7 @@ export function App() {
   else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite />;
   else if (pfad === '/verwaltung/vorlagen' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
-  else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} />;
+  else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} onFuehrung={starteFuehrung} />;
   else if (pfad === '/verwaltung/erscheinungsbild' && konto.rolle === 'admin') seite = <Erscheinungsbild logos={logos} onGeaendert={setLogos} />;
   else if (pfad === '/abzeichnen' && betreut) seite = <Abzeichnen />;
   else if (pfad === '/azubis' && betreut) seite = <Azubis ich={konto} />;
@@ -278,6 +314,12 @@ export function App() {
     ));
   const schalter = (
     <>
+      <li>
+        <button type="button" onClick={starteFuehrung}>
+          <Icon name="fuehrung" />
+          Führung starten
+        </button>
+      </li>
       {installation && (
         <li>
           <button
@@ -315,7 +357,7 @@ export function App() {
       </a>
       <header className="leiste">
         <div className="leiste-innen">
-          <Link zu={start} className="marke">
+          <Link zu={start} className="marke" aria-label="Ausbildungsportal – zur Startseite">
             {logo ? (
               <>
                 <img src={logo} alt="Logo des Betriebs" className="logo" />
@@ -371,8 +413,38 @@ export function App() {
       </header>
 
       <main id="inhalt" tabIndex={-1}>
+        {angebot && !fuehrung && (
+          <aside className="hinweis fuehrung-angebot nicht-drucken" aria-label="Führung durch das Portal">
+            <span>
+              <strong>Neu hier?</strong> Eine kurze Führung zeigt dir in einer Minute das Wichtigste.
+            </span>
+            <span className="fuehrung-rechts">
+              <button type="button" className="knopf klein" onClick={starteFuehrung}>
+                Führung starten
+              </button>
+              <button type="button" className="knopf schlicht klein" onClick={merkeFuehrung}>
+                Später
+              </button>
+            </span>
+          </aside>
+        )}
         {seite}
       </main>
+      {weitUnten && !fuehrung && (
+        <button
+          type="button"
+          className="nach-oben nicht-drucken"
+          aria-label="Nach oben"
+          title="Nach oben"
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+            document.getElementById('inhalt')?.focus({ preventScroll: true });
+          }}
+        >
+          <Icon name="oben" groesse={22} />
+        </button>
+      )}
+      {fuehrung && <Fuehrung rolle={konto.rolle} onEnde={beendeFuehrung} />}
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}
         <span className="fuss-links">

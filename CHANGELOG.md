@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.10.0] – 2026-11-10
+
+### Neu
+
+- Interaktive Führung für Azubis, Ausbildungsbeauftragte, Ausbilder und Super-Admin: wenige Schritte, jeder hebt eine Stelle im Portal hervor und erklärt sie in ein, zwei Sätzen. Sie wird beim ersten Besuch einmal angeboten, lässt sich mit Escape abbrechen und über „Führung starten“ im Menü oder im Handbuch beliebig oft wiederholen.
+- Knopf „Nach oben“ unten rechts, sobald man ein Stück gescrollt hat.
+- Übersicht: oben die Karten „Diese Woche“ und „Nächste Woche“ mit allen Azubis und dem, was ansteht. Der Zeitstrahl darunter hat Monate als Überschrift, ist nach Ausbildungsjahr gruppiert und lässt sich auf 13, 26 oder 52 Wochen stellen.
+
+### Geändert
+
+- Der Schriftzug „Ausbildungsportal“ ist klar von der Navigation abgesetzt: kleiner, in Großbuchstaben und durch eine Linie getrennt – er liest sich nicht mehr wie ein Menüpunkt neben „Ausbildungsplan“.
+- Neues Favicon und neue App-Symbole (Absolventenhut).
+
 ## [0.9.3] – 2026-11-10
 
 ### Geändert

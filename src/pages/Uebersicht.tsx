@@ -1,93 +1,210 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { api, plusTage } from '../api';
 import type { Uebersicht } from '../api';
 import { Link } from '../router';
 
-const WOCHEN = 26;
+type Azubi = Uebersicht['azubis'][number];
+type Zelle = Azubi['wochen'][number];
 
-/** Alle sichtbaren Azubis nebeneinander: Schule, Einsatz und Urlaub je Kalenderwoche. */
+const tagMonat = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
+/** Monat einer Woche = Monat ihres Donnerstags (wie bei der Kalenderwoche). */
+const monat = (montag: string) => new Date(`${plusTage(montag, 3)}T00:00:00Z`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/** Azubis nach Ausbildungsjahr; wer (noch) nicht in der Ausbildung ist, steht am Ende. */
+function gruppen(azubis: Azubi[]): { titel: string; azubis: Azubi[] }[] {
+  const jahre = [...new Set(azubis.map((a) => a.ausbildungsjahr))].sort((x, y) => (x ?? 99) - (y ?? 99));
+  return jahre.map((j) => ({ titel: j === null ? 'Ohne laufende Ausbildung' : `${j}. Ausbildungsjahr`, azubis: azubis.filter((a) => a.ausbildungsjahr === j) }));
+}
+
+/** Wo ein Azubi in einer Woche ist – als kurze Wörter für die Karten oben. */
+function Lage({ z }: { z: Zelle }) {
+  if (!z.inAusbildung) return <span className="leise">nicht in der Ausbildung</span>;
+  if (!z.schule && z.einsatz.length === 0 && z.urlaubstage === 0) return <span className="leise">nichts geplant</span>;
+  return (
+    <>
+      {z.schule && <span className="ue schule">Berufsschule</span>}
+      {z.einsatz.map((t, i) => (
+        <span key={i} className="ue einsatz">
+          {t}
+        </span>
+      ))}
+      {z.urlaubstage > 0 && (
+        <span className="ue urlaub">
+          {z.urlaubstage} {z.urlaubstage === 1 ? 'Tag' : 'Tage'} Urlaub
+        </span>
+      )}
+    </>
+  );
+}
+
+/** Karte „Diese Woche“ bzw. „Nächste Woche“: alle Azubis untereinander mit dem, was ansteht. */
+function WochenKarte({ titel, d, index, hervor }: { titel: string; d: Uebersicht; index: number; hervor?: boolean }) {
+  const w = d.wochen[index];
+  const zeile = (a: Azubi) => a.wochen[index];
+  const inSchule = d.azubis.filter((a) => zeile(a).schule).length;
+  const imUrlaub = d.azubis.filter((a) => zeile(a).urlaubstage > 0).length;
+  return (
+    <section className={`karte ue-karte${hervor ? ' hervor' : ''}`} aria-label={titel}>
+      <span className="ueberschrift-klein">{titel}</span>
+      <h2>
+        KW {w.kw} · {tagMonat(w.montag)}–{tagMonat(plusTage(w.montag, 6))}
+      </h2>
+      <p className="leise klein">
+        {inSchule} in der Berufsschule · {imUrlaub} mit Urlaub
+      </p>
+      <ul className="ue-liste">
+        {d.azubis.map((a) => (
+          <li key={a.id}>
+            <Link zu={`/azubis/${a.id}/plan`}>{a.anzeigename}</Link>
+            <span className="ue-lage">
+              <Lage z={zeile(a)} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** Alle sichtbaren Azubis: oben diese und nächste Woche, darunter der Zeitstrahl nach Monaten und Ausbildungsjahren. */
 export function UebersichtSeite() {
   const [von, setVon] = useState('');
+  const [anzahl, setAnzahl] = useState(26);
   const [d, setD] = useState<Uebersicht | null>(null);
+  const [jetzt, setJetzt] = useState<Uebersicht | null>(null);
   const [fehler, setFehler] = useState('');
 
   useEffect(() => {
-    api<Uebersicht>('GET', `/api/uebersicht?wochen=${WOCHEN}${von ? `&von=${von}` : ''}`).then(setD, (e: Error) => setFehler(e.message));
-  }, [von]);
+    api<Uebersicht>('GET', `/api/uebersicht?wochen=${anzahl}${von ? `&von=${von}` : ''}`).then(setD, (e: Error) => setFehler(e.message));
+  }, [von, anzahl]);
+  // die Karten oben zeigen immer die laufende und die nächste Woche – unabhängig vom gewählten Zeitraum
+  useEffect(() => {
+    api<Uebersicht>('GET', '/api/uebersicht?wochen=2').then(setJetzt, () => {});
+  }, []);
 
   if (fehler) return <p className="hinweis fehler">{fehler}</p>;
   if (!d) return <p className="leise">Lädt …</p>;
   const start = d.wochen[0].montag;
+  const istHeute = (montag: string) => montag <= d.heute && plusTage(montag, 6) >= d.heute;
+  // Monate als Überschrift über den Kalenderwochen
+  const monate: { name: string; wochen: number }[] = [];
+  for (const w of d.wochen) {
+    const name = monat(w.montag);
+    if (monate[monate.length - 1]?.name === name) monate[monate.length - 1].wochen++;
+    else monate.push({ name, wochen: 1 });
+  }
 
   return (
     <>
       <h1>Übersicht</h1>
-      <p className="leise">
-        Schulblöcke und Einsätze aus den Ausbildungsplänen, Urlaub aus den Berichten – {WOCHEN} Wochen ab dem {start.slice(8, 10)}.{start.slice(5, 7)}.{start.slice(0, 4)}.
-      </p>
-      <div className="filter nicht-drucken">
-        <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, -7 * 13))}>
-          ← 13 Wochen
-        </button>
-        <button type="button" className="knopf schlicht" onClick={() => setVon('')}>
-          Heute
-        </button>
-        <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, 7 * 13))}>
-          13 Wochen →
-        </button>
-        <span className="legende rechts">
-          <span className="ue schule">Schule</span>
-          <span className="ue einsatz">Einsatz</span>
-          <span className="ue urlaub">Urlaub</span>
-        </span>
-      </div>
+      <p className="leise">Wer ist wann wo? Schulblöcke und Einsätze kommen aus den Ausbildungsplänen, Urlaub aus den Berichten.</p>
+
       {d.azubis.length === 0 ? (
         <p className="karte leise">Keine Azubis vorhanden.</p>
       ) : (
-        <div className="karte tabelle-rahmen">
-          <table className="uebersicht">
-            <thead>
-              <tr>
-                <th className="fest">Azubi</th>
-                {d.wochen.map((w) => (
-                  <th key={w.montag} className={w.montag <= d.heute && plusTage(w.montag, 6) >= d.heute ? 'heute' : undefined}>
-                    KW {w.kw}
-                    <div className="leise klein">
-                      {w.montag.slice(8, 10)}.{w.montag.slice(5, 7)}.
-                    </div>
+        <>
+          {jetzt && jetzt.azubis.length > 0 && (
+            <div className="ue-oben">
+              <WochenKarte titel="Diese Woche" d={jetzt} index={0} hervor />
+              <WochenKarte titel="Nächste Woche" d={jetzt} index={1} />
+            </div>
+          )}
+
+          <h2 className="abschnitt-titel">Zeitstrahl</h2>
+          <div className="filter nicht-drucken">
+            <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, -7 * 13))}>
+              ← 13 Wochen
+            </button>
+            <button type="button" className="knopf schlicht" onClick={() => setVon('')}>
+              Heute
+            </button>
+            <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, 7 * 13))}>
+              13 Wochen →
+            </button>
+            <div role="group" aria-label="Zeitraum" className="umschalter">
+              {[13, 26, 52].map((n) => (
+                <button key={n} type="button" aria-pressed={anzahl === n} onClick={() => setAnzahl(n)}>
+                  {n} Wochen
+                </button>
+              ))}
+            </div>
+            <span className="legende rechts" aria-label="Legende">
+              <span className="ue schule">Schule</span>
+              <span className="ue einsatz">Einsatz</span>
+              <span className="ue urlaub">Urlaub</span>
+            </span>
+          </div>
+          <div className="karte tabelle-rahmen">
+            <table className="uebersicht">
+              <caption className="nur-vorleser">
+                Schule, Einsätze und Urlaub je Azubi und Kalenderwoche, {anzahl} Wochen ab dem {tagMonat(start)}
+                {start.slice(0, 4)}
+              </caption>
+              <thead>
+                <tr className="monate">
+                  <th className="fest" rowSpan={2} scope="col">
+                    Azubi
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {d.azubis.map((a) => (
-                <tr key={a.id}>
-                  <th scope="row" className="fest">
-                    <Link zu={`/azubis/${a.id}/plan`}>{a.anzeigename}</Link>
-                    {a.beruf && <div className="leise klein">{a.beruf}</div>}
-                  </th>
-                  {a.wochen.map((z, i) => (
-                    <td key={d.wochen[i].montag} className={`${z.inAusbildung ? '' : 'ausserhalb'}${d.wochen[i].montag <= d.heute && plusTage(d.wochen[i].montag, 6) >= d.heute ? ' heute' : ''}`}>
-                      {z.schule && <span className="ue schule">Schule</span>}
-                      {z.einsatz.map((t, j) => (
-                        <span key={j} className="ue einsatz" title={t}>
-                          {t}
-                        </span>
-                      ))}
-                      {z.urlaubstage > 0 && (
-                        <span className="ue urlaub" title={`${z.urlaubstage} Urlaubstage laut Bericht`}>
-                          {z.urlaubstage} T Urlaub
-                        </span>
-                      )}
-                    </td>
+                  {monate.map((m, i) => (
+                    <th key={m.name + i} colSpan={m.wochen} scope="colgroup">
+                      {m.wochen > 1 ? m.name : m.name.slice(0, 3)}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                <tr>
+                  {d.wochen.map((w) => (
+                    <th key={w.montag} scope="col" className={`${istHeute(w.montag) ? 'heute' : ''}${monat(w.montag) !== monat(plusTage(w.montag, -7)) ? ' monat-start' : ''}`}>
+                      KW {w.kw}
+                      <div className="leise klein">{tagMonat(w.montag)}</div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {gruppen(d.azubis).map((g) => (
+                  <Fragment key={g.titel}>
+                    <tr className="gruppe">
+                      <th className="fest" scope="rowgroup">
+                        {g.titel}
+                      </th>
+                      <td colSpan={d.wochen.length}>
+                        {g.azubis.length} {g.azubis.length === 1 ? 'Azubi' : 'Azubis'}
+                      </td>
+                    </tr>
+                    {g.azubis.map((a) => (
+                      <tr key={a.id}>
+                        <th scope="row" className="fest">
+                          <Link zu={`/azubis/${a.id}/plan`}>{a.anzeigename}</Link>
+                          {a.beruf && <div className="leise klein">{a.beruf}</div>}
+                        </th>
+                        {a.wochen.map((z, i) => {
+                          const w = d.wochen[i];
+                          return (
+                            <td key={w.montag} className={`${z.inAusbildung ? '' : 'ausserhalb'}${istHeute(w.montag) ? ' heute' : ''}${monat(w.montag) !== monat(plusTage(w.montag, -7)) ? ' monat-start' : ''}`}>
+                              {z.schule && <span className="ue schule">Schule</span>}
+                              {z.einsatz.map((t, j) => (
+                                <span key={j} className="ue einsatz" title={t}>
+                                  {t}
+                                </span>
+                              ))}
+                              {z.urlaubstage > 0 && (
+                                <span className="ue urlaub" title={`${z.urlaubstage} Urlaubstage laut Bericht`}>
+                                  {z.urlaubstage} T Urlaub
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="leise klein">Graue Felder liegen außerhalb der Ausbildung. Urlaub erscheint erst, wenn der Azubi ihn im Bericht der Woche eingetragen hat. Ein Klick auf den Namen öffnet den Ausbildungsplan.</p>
+        </>
       )}
-      <p className="leise klein">Graue Felder liegen außerhalb der Ausbildung. Urlaub erscheint erst, wenn der Azubi ihn im Bericht der Woche eingetragen hat.</p>
     </>
   );
 }
