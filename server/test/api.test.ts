@@ -92,6 +92,8 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/abzeichnen': 'ausbilder,beauftragter',
     'POST /api/fehlermeldungen': 'alle',
     'GET /api/fehlermeldungen': 'admin',
+    'GET /api/fehlermeldungen/:id/bild': 'admin',
+    'POST /api/fehlermeldungen/webhook-test': 'admin',
     'PATCH /api/fehlermeldungen/:id': 'admin',
     'DELETE /api/fehlermeldungen/:id': 'admin',
     'GET /api/aktivitaeten': 'ausbilder,beauftragter,azubi',

@@ -17,7 +17,7 @@ services:
       # Eigenen Port oder Freigabe im Netz nicht hier ändern, sondern in docker-compose.override.yml
       # (Vorlage: docker-compose.override.example.yml).
       - "127.0.0.1:3000:3000"
-    # Einstellungen aus .env (Vorlage: .env.example): APP_URL, ENTRA_*, TRUST_PROXY, beim ersten Start ADMIN_*.
+    # Einstellungen aus .env (Vorlage: .env.example): APP_URL, ENTRA_*, TRUST_PROXY, FEHLER_WEBHOOK_*, beim ersten Start ADMIN_*.
     # Fehlt die Datei, startet die App mit Standardwerten; dann kann sich nur der Super-Admin anmelden.
     env_file:
       - path: .env

@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.13.0] – 2026-11-10
+
+### Neu
+
+- Fehler melden mit Bildschirmfoto: Ein Bild lässt sich auswählen, aus der Zwischenablage einfügen oder am PC direkt aufnehmen. Es ist freiwillig, wird vor dem Senden gezeigt und lässt sich wieder entfernen. Der Browser verkleinert es. Der Super-Admin sieht es erst nach einem Klick auf „Bildschirmfoto anzeigen“; es wird mit der Meldung gelöscht.
+- Benachrichtigung in Teams: Ist in der `.env` die Adresse eines Teams-Workflows hinterlegt (`FEHLER_WEBHOOK_URL`), geht bei jeder neuen Fehlermeldung ein Hinweis in den Kanal – mit Nummer, Rolle, Seite und Link ins Portal, ohne Namen und ohne Bild. Den Text der Meldung schickt das Portal nur mit `FEHLER_WEBHOOK_MIT_TEXT=true`. Auf der Seite „Fehlermeldungen“ steht, ob die Benachrichtigung eingerichtet ist, mit einem Knopf für eine Testnachricht.
+
 ## [0.12.0] – 2026-11-10
 
 ### Neu
