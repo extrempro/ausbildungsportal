@@ -423,10 +423,11 @@ export const BERICHT_ROUTEN: Route[] = [
       for (const id of sichtbareAzubis(db, c.b, heute(c.k.jetzt()))) {
         const azubi = holeBenutzer(db, id)!;
         const zeilen = db.prepare("SELECT * FROM bericht WHERE azubi_id = ? AND status = 'eingereicht' ORDER BY montag").all(id) as unknown as BerichtZeile[];
+        const soll = leseProfil(db, id).wochenstunden;
         for (const z of zeilen) {
           // Beauftragte sehen hier nur Wochen, die sie abzeichnen dürfen
           if (!darfAbzeichnen(db, c.b, id, z.montag)) continue;
-          offen.push({ azubiId: id, azubi: azubi.anzeigename, montag: z.montag, sonntag: plusTage(z.montag, 6), ...kalenderwoche(z.montag), eingereichtAm: z.eingereicht_am, stunden: summe(inhaltAus(z)).gesamt });
+          offen.push({ azubiId: id, azubi: azubi.anzeigename, montag: z.montag, sonntag: plusTage(z.montag, 6), ...kalenderwoche(z.montag), eingereichtAm: z.eingereicht_am, stunden: summe(inhaltAus(z)).gesamt, soll });
         }
       }
       return { status: 200, body: { offen, hatUnterschrift: unterschriftVon(db, c.b.id) !== null } };

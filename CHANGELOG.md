@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.10.2] – 2026-11-10
+
+### Geändert
+
+- Abzeichnen ist nach Azubi gegliedert. Je Bericht stehen Woche, Stunden im Verhältnis zu den Wochenstunden und der Zeitpunkt des Einreichens. „Lesen“ klappt den Bericht direkt in der Zeile auf; darunter lässt er sich abzeichnen oder mit Kommentar zurückgeben, ohne die Seite zu verlassen. Mehrere Berichte lassen sich anhaken – je Azubi oder alle – und über eine Leiste am unteren Rand gemeinsam abzeichnen.
+- Ausbildungsplan: Die Legende bleibt beim Scrollen unter der Kopfzeile stehen; auf dem Handy in einer Zeile zum Wischen.
+
 ## [0.10.1] – 2026-11-10
 
 ### Geändert
