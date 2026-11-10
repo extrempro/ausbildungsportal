@@ -267,10 +267,10 @@ test('Abzeichnung aufheben: nur Ausbilder, mit Begründung, Unterschriften falle
   assert.deepEqual([b.status, b.signaturen.length, b.abgezeichnetAm], ['zurueck', 0, null]);
   assert.equal((await schreibe(w)).status, 200, 'Azubi kann wieder bearbeiten');
   const protokoll = koerper(await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.admin) })).eintraege as { aktion: string; detail: string; ziel_name: string }[];
-  const aktionen = protokoll.map((e) => e.aktion);
-  for (const a of ['bericht_eingereicht', 'bericht_abgezeichnet', 'bericht_geoeffnet']) assert.ok(aktionen.includes(a), a);
-  assert.deepEqual([protokoll.find((e) => e.aktion === 'bericht_geoeffnet')?.detail, protokoll.find((e) => e.aktion === 'bericht_geoeffnet')?.ziel_name], ['KW 45/2026', 'Anna Azubi']);
+  // Einreichen, Abzeichnen, Zurückgeben und Aufheben stehen im Verlauf des Berichts – nicht im Protokoll des Super-Admins
+  assert.ok(!protokoll.some((e) => e.aktion.startsWith('bericht_')), 'keine Berichts-Ereignisse im Protokoll');
   assert.ok(!JSON.stringify(protokoll).includes('Switch konfiguriert'), 'keine Berichtsinhalte im Protokoll');
+  assert.deepEqual((await lies(w, w.ausbilder)).verlauf.map((v: { aktion: string }) => v.aktion), ['eingereicht', 'abgezeichnet', 'abzeichnung_aufgehoben']);
   assert.equal((await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.ausbilder) })).status, 403, 'das Protokoll sieht nur der Super-Admin');
 });
 

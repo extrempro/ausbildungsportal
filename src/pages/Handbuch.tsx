@@ -324,7 +324,7 @@ const ADMIN: Kapitel[] = [
           Unter <Link zu="/verwaltung/konten">Konten</Link> legst du Konten an, sperrst oder löschst sie – auch die der Ausbilder.
         </li>
         <li>Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto an. Beim Anlegen genügt der Microsoft-Anmeldename.</li>
-        <li>Nur der Super-Admin meldet sich lokal mit Passwort an (mindestens 14 Zeichen).</li>
+        <li>Nur der Super-Admin meldet sich lokal mit Passwort an (mindestens 14 Zeichen) – unter der Adresse des Portals mit <code>/super</code> am Ende.</li>
       </ul>
     ),
   },
@@ -333,7 +333,7 @@ const ADMIN: Kapitel[] = [
     titel: 'Protokoll',
     inhalt: (
       <p>
-        Das <Link zu="/verwaltung/protokoll">Protokoll</Link> zeigt Anmeldungen und Änderungen: an Konten, Zuweisungen, Stammdaten, Profilen und am Stand von Berichten (eingereicht, abgezeichnet, zurückgegeben). Inhalte von Berichten und Plänen stehen dort nie. Nur du kannst es einsehen.
+        Das <Link zu="/verwaltung/protokoll">Protokoll</Link> zeigt Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen dort nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Nur du kannst das Protokoll einsehen.
       </p>
     ),
   },

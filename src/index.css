@@ -2393,7 +2393,7 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
 }
 
 .fuehrung-dunkel {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.72);
   pointer-events: none;
 }
 
@@ -2401,29 +2401,62 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
 .fuehrung-ring {
   position: fixed;
   z-index: 61;
-  border: 3px solid var(--c-accent);
+  border: 3px solid #fbbf24;
   border-radius: 12px;
-  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.6);
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72);
   pointer-events: none;
 }
 
+/* Die Karte hebt sich von jeder Seite ab: kräftiger farbiger Kopf, heller Rand, tiefer Schatten.
+   Farben bewusst fest (nicht aus dem Farbschema), damit sie hell wie dunkel gleich auffällt. */
 .fuehrung-karte {
   position: fixed;
   z-index: 62;
   max-width: calc(100vw - 24px);
-  padding: 16px 18px;
-  border: 1px solid var(--c-border);
+  overflow: hidden;
+  border: 3px solid #fbbf24;
   border-radius: 16px;
   background: var(--c-card);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.35), 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.fuehrung-kopf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fuehrung-zaehler {
+  margin-left: auto;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.fuehrung-fortschritt {
+  height: 4px;
+  background: #bfdbfe;
+}
+
+.fuehrung-fortschritt span {
+  display: block;
+  height: 100%;
+  background: #fbbf24;
 }
 
 .fuehrung-karte h2 {
-  margin: 2px 0 6px;
+  margin: 14px 18px 6px;
 }
 
 .fuehrung-karte p {
-  margin: 0 0 14px;
+  margin: 0 18px 14px;
 }
 
 .fuehrung-knoepfe {
@@ -2432,6 +2465,21 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  padding: 0 18px 16px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* kurzes Aufblenden bei jedem Schritt lenkt den Blick auf die Karte */
+  .fuehrung-karte {
+    animation: fuehrung-ein 0.25s ease-out;
+  }
+
+  @keyframes fuehrung-ein {
+    from {
+      opacity: 0;
+      scale: 0.94;
+    }
+  }
 }
 
 /* ---------- Knopf „Nach oben“ ---------- */
@@ -2455,6 +2503,61 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
 
 .nach-oben:hover {
   background: var(--c-accent-soft);
+}
+
+/* ---------- Übersicht auf dem Handy: Wochen untereinander ---------- */
+.nur-schmal {
+  display: none;
+}
+
+.ue-blaettern {
+  display: flex;
+  gap: 8px;
+}
+
+.ue-wochen {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ue-monat {
+  padding: 16px 4px 6px;
+}
+
+.ue-woche {
+  margin: 0 0 8px;
+  padding: 10px 14px;
+}
+
+.ue-woche.hervor {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-soft);
+}
+
+.ue-woche.leer {
+  background: none;
+  box-shadow: none;
+}
+
+.ue-woche-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-height: 28px;
+}
+
+.ue-woche-kopf .pille {
+  margin-left: 0;
+}
+
+.ue-nichts {
+  margin-left: auto;
+}
+
+.ue-woche .ue-liste {
+  margin-top: 6px;
 }
 
 /* ---------- Breiten: PC ab 1024 px, darunter Tablet und Handy ---------- */
@@ -2681,6 +2784,38 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
   .ue-oben {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
+  }
+
+  /* breite Tabelle und Karten weichen der Wochenliste */
+  .nur-breit {
+    display: none !important;
+  }
+
+  .nur-schmal {
+    display: block;
+  }
+
+  .ue-leiste {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ue-blaettern .knopf {
+    flex: 1;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .ue-leiste .umschalter button {
+    flex: 1;
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .ue-woche .ue-liste li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 4px 0 8px;
   }
 
   .ue-liste li {

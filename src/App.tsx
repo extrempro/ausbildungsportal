@@ -175,7 +175,7 @@ export function App() {
   }, [konto?.id, konto?.passwortWechsel]);
 
   if (konto === undefined) return <p className="mitte leise">Lädt …</p>;
-  if (konto === null) return <Anmelden />;
+  if (konto === null) return <Anmelden superAdmin={pfad === '/super'} />;
 
   // Schalter in der Kopfzeile: wechselt fest auf hell oder dunkel; „automatisch“ gibt es unter Konto
   const wechsleTheme = async () => {
@@ -188,8 +188,9 @@ export function App() {
 
   const abmelden = async () => {
     await api('POST', '/api/auth/abmelden').catch(() => {});
+    const ziel = konto.rolle === 'admin' ? '/super' : '/anmelden';
     setKonto(null);
-    geheZu('/anmelden');
+    geheZu(ziel);
   };
 
   if (konto.passwortWechsel) {
@@ -210,7 +211,7 @@ export function App() {
   const verwaltet = konto.rolle === 'admin' || konto.rolle === 'ausbilder';
   // der Super-Admin hat nur die Kontenverwaltung
   const start = konto.rolle === 'admin' ? '/verwaltung/konten' : '/';
-  if (pfad === '/anmelden' || (konto.rolle === 'admin' && pfad === '/')) {
+  if (pfad === '/anmelden' || pfad === '/super' || (konto.rolle === 'admin' && pfad === '/')) {
     queueMicrotask(() => geheZu(start));
     return null;
   }

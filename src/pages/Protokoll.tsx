@@ -17,10 +17,6 @@ const AKTION: Record<string, string> = {
   entra_verknuepft: 'Mit Microsoft-Konto verknüpft',
   entra_geloest: 'Verknüpfung gelöst',
   zuweisung_geaendert: 'Zuweisung geändert',
-  bericht_eingereicht: 'Bericht eingereicht',
-  bericht_abgezeichnet: 'Bericht abgezeichnet',
-  bericht_zurueckgegeben: 'Bericht zurückgegeben',
-  bericht_geoeffnet: 'Abzeichnung aufgehoben',
   planvorlage_uebernommen: 'Planvorlage übernommen',
   profil_geaendert: 'Azubi-Profil geändert',
   stammdaten_geaendert: 'Stammdaten geändert',
@@ -39,7 +35,7 @@ export function Protokoll() {
   return (
     <>
       <h1>Protokoll</h1>
-      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und am Stand von Berichten. Inhalte von Berichten und Plänen stehen hier nicht. Die neuesten 200 Einträge.</p>
+      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen hier nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Die neuesten 200 Einträge.</p>
       {fehler && (
         <p className="hinweis fehler" role="alert">
           {fehler}

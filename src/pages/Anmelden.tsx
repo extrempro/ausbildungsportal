@@ -12,7 +12,8 @@ const FEHLER: Record<string, string> = {
   entra_aus: 'Die Anmeldung über Microsoft ist noch nicht eingerichtet.',
 };
 
-export function Anmelden() {
+/** Anmeldeseite. Unter /super steht statt der Microsoft-Anmeldung die lokale Anmeldung des Super-Admins. */
+export function Anmelden({ superAdmin = false }: { superAdmin?: boolean }) {
   const [status, setStatus] = useState<{ entra: boolean; dev: boolean } | null>(null);
   const [fehler, setFehler] = useState(() => FEHLER[new URLSearchParams(window.location.search).get('fehler') ?? ''] ?? '');
   const [laeuft, setLaeuft] = useState(false);
@@ -42,38 +43,52 @@ export function Anmelden() {
     <main className="schmal">
       <img src={logo ?? '/favicon.svg'} alt={logo ? 'Logo des Betriebs' : ''} className={logo ? 'anmelde-logo' : 'anmelde-logo symbol'} />
       <h1>Ausbildungsportal</h1>
-      <p className="leise">Ausbildungsplan und Berichtsheft</p>
+      <p className="leise">{superAdmin ? 'Verwaltung' : 'Ausbildungsplan und Berichtsheft'}</p>
       {fehler && (
         <p className="hinweis fehler" role="alert">
           {fehler}
         </p>
       )}
-      <div className="karte">
-        {status?.entra ? (
-          <a className="knopf gross" href="/api/auth/entra/login">
-            Mit Microsoft anmelden
-          </a>
-        ) : (
-          <p className="leise">{status ? 'Die Anmeldung über Microsoft ist noch nicht eingerichtet.' : 'Lädt …'}</p>
-        )}
-      </div>
+      {superAdmin ? (
+        <div className="karte">
+          <h2>Anmeldung für den Super-Admin</h2>
+          <form onSubmit={sende('/api/auth/lokal', (f) => ({ benutzername: f.get('benutzername'), passwort: f.get('passwort') }))}>
+            <label>
+              Benutzername
+              <input name="benutzername" autoComplete="username" autoCapitalize="none" required />
+            </label>
+            <label>
+              Passwort
+              <input name="passwort" type="password" autoComplete="current-password" required />
+            </label>
+            <button className="knopf" disabled={laeuft}>
+              Anmelden
+            </button>
+          </form>
+          <p className="leise klein abstand">
+            Azubis, Ausbildungsbeauftragte und Ausbilder melden sich <a href="/">auf der Startseite mit Microsoft</a> an.
+          </p>
+        </div>
+      ) : (
+        <div className="karte">
+          {status?.entra ? (
+            <a className="knopf gross" href="/api/auth/entra/login">
+              Mit Microsoft anmelden
+            </a>
+          ) : (
+            <p className="leise">
+              {status ? (
+                <>
+                  Die Anmeldung über Microsoft ist noch nicht eingerichtet. Der Super-Admin meldet sich unter <a href="/super">/super</a> an.
+                </>
+              ) : (
+                'Lädt …'
+              )}
+            </p>
+          )}
+        </div>
+      )}
 
-      <details className="karte" open={status ? !status.entra : false}>
-        <summary>Anmeldung für den Super-Admin</summary>
-        <form onSubmit={sende('/api/auth/lokal', (f) => ({ benutzername: f.get('benutzername'), passwort: f.get('passwort') }))}>
-          <label>
-            Benutzername
-            <input name="benutzername" autoComplete="username" autoCapitalize="none" required />
-          </label>
-          <label>
-            Passwort
-            <input name="passwort" type="password" autoComplete="current-password" required />
-          </label>
-          <button className="knopf" disabled={laeuft}>
-            Anmelden
-          </button>
-        </form>
-      </details>
 
       {status?.dev && (
         <details className="karte">

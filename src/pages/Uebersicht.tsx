@@ -66,6 +66,59 @@ function WochenKarte({ titel, d, index, hervor }: { titel: string; d: Uebersicht
   );
 }
 
+/**
+ * Handy: statt der breiten Tabelle eine Liste der Wochen untereinander.
+ * Die laufende und die nächste Woche zeigen alle Azubis, spätere Wochen nur, wer etwas eingetragen hat.
+ */
+function WochenListe({ d }: { d: Uebersicht }) {
+  let letzterMonat = '';
+  return (
+    <ol className="ue-wochen">
+      {d.wochen.map((w, i) => {
+        const heute = w.montag <= d.heute && plusTage(w.montag, 6) >= d.heute;
+        const naechste = plusTage(w.montag, -7) <= d.heute && w.montag > d.heute;
+        const belegt = (z: Zelle) => z.schule || z.einsatz.length > 0 || z.urlaubstage > 0;
+        const zeigen = d.azubis.filter((a) => (heute || naechste ? true : belegt(a.wochen[i])));
+        const name = monat(w.montag);
+        const neuerMonat = name !== letzterMonat;
+        letzterMonat = name;
+        return (
+          <Fragment key={w.montag}>
+            {neuerMonat && (
+              <li className="ue-monat ueberschrift-klein" aria-hidden="true">
+                {name}
+              </li>
+            )}
+            <li className={`karte ue-woche${heute ? ' hervor' : ''}${zeigen.length === 0 ? ' leer' : ''}`}>
+              <div className="ue-woche-kopf">
+                <strong>KW {w.kw}</strong>
+                <span className="leise klein">
+                  {tagMonat(w.montag)}–{tagMonat(plusTage(w.montag, 6))}
+                </span>
+                {heute && <span className="pille voll">Diese Woche</span>}
+                {naechste && <span className="pille grau">Nächste Woche</span>}
+                {zeigen.length === 0 && <span className="leise klein ue-nichts">nichts geplant</span>}
+              </div>
+              {zeigen.length > 0 && (
+                <ul className="ue-liste">
+                  {zeigen.map((a) => (
+                    <li key={a.id}>
+                      <Link zu={`/azubis/${a.id}/plan`}>{a.anzeigename}</Link>
+                      <span className="ue-lage">
+                        <Lage z={a.wochen[i]} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          </Fragment>
+        );
+      })}
+    </ol>
+  );
+}
+
 /** Alle sichtbaren Azubis: oben diese und nächste Woche, darunter der Zeitstrahl nach Monaten und Ausbildungsjahren. */
 export function UebersichtSeite() {
   const [von, setVon] = useState('');
@@ -104,23 +157,25 @@ export function UebersichtSeite() {
       ) : (
         <>
           {jetzt && jetzt.azubis.length > 0 && (
-            <div className="ue-oben">
+            <div className="ue-oben nur-breit">
               <WochenKarte titel="Diese Woche" d={jetzt} index={0} hervor />
               <WochenKarte titel="Nächste Woche" d={jetzt} index={1} />
             </div>
           )}
 
-          <h2 className="abschnitt-titel">Zeitstrahl</h2>
-          <div className="filter nicht-drucken">
-            <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, -7 * 13))}>
-              ← 13 Wochen
-            </button>
-            <button type="button" className="knopf schlicht" onClick={() => setVon('')}>
-              Heute
-            </button>
-            <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, 7 * 13))}>
-              13 Wochen →
-            </button>
+          <h2 className="abschnitt-titel nur-breit">Zeitstrahl</h2>
+          <div className="filter ue-leiste nicht-drucken">
+            <div className="ue-blaettern">
+              <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, -7 * 13))} aria-label="13 Wochen früher">
+                ← Früher
+              </button>
+              <button type="button" className="knopf schlicht" onClick={() => setVon('')}>
+                Heute
+              </button>
+              <button type="button" className="knopf schlicht" onClick={() => setVon(plusTage(start, 7 * 13))} aria-label="13 Wochen später">
+                Später →
+              </button>
+            </div>
             <div role="group" aria-label="Zeitraum" className="umschalter">
               {[13, 26, 52].map((n) => (
                 <button key={n} type="button" aria-pressed={anzahl === n} onClick={() => setAnzahl(n)}>
@@ -128,13 +183,17 @@ export function UebersichtSeite() {
                 </button>
               ))}
             </div>
-            <span className="legende rechts" aria-label="Legende">
+            <span className="legende rechts nur-breit" aria-label="Legende">
               <span className="ue schule">Schule</span>
               <span className="ue einsatz">Einsatz</span>
               <span className="ue urlaub">Urlaub</span>
             </span>
           </div>
-          <div className="karte tabelle-rahmen">
+          {/* Handy: Wochen untereinander statt der breiten Tabelle */}
+          <div className="nur-schmal">
+            <WochenListe d={d} />
+          </div>
+          <div className="karte tabelle-rahmen nur-breit">
             <table className="uebersicht">
               <caption className="nur-vorleser">
                 Schule, Einsätze und Urlaub je Azubi und Kalenderwoche, {anzahl} Wochen ab dem {tagMonat(start)}
@@ -202,7 +261,9 @@ export function UebersichtSeite() {
               </tbody>
             </table>
           </div>
-          <p className="leise klein">Graue Felder liegen außerhalb der Ausbildung. Urlaub erscheint erst, wenn der Azubi ihn im Bericht der Woche eingetragen hat. Ein Klick auf den Namen öffnet den Ausbildungsplan.</p>
+          <p className="leise klein">
+            <span className="nur-breit">Graue Felder liegen außerhalb der Ausbildung. </span>Urlaub erscheint erst, wenn der Azubi ihn im Bericht der Woche eingetragen hat. Ein Klick auf den Namen öffnet den Ausbildungsplan.
+          </p>
         </>
       )}
     </>

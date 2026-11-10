@@ -6,7 +6,6 @@ import { heute } from './datum';
 import { feiertageZwischen, istBundesland } from './feiertage';
 import { ausbildungsjahrAm, gueltigesDatum, istMontag, kalenderwoche, montagVon, plusTage } from './kalender';
 import { planDerWoche } from './plan';
-import { protokolliere } from './protokoll';
 import { darfAbzeichnen, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import type { BenutzerZeile } from './typen';
@@ -15,6 +14,8 @@ import type { BenutzerZeile } from './typen';
  * Berichtsheft: ein Ausbildungsnachweis je Azubi und Kalenderwoche.
  * Ablauf: Entwurf → eingereicht → abgezeichnet; oder mit Kommentar zurück an den Azubi.
  * Nur der Azubi schreibt; abzeichnen dürfen Ausbilder und – im Zeitraum ihrer Zuweisung – Beauftragte.
+ * Jeder Schritt steht im Verlauf des Berichts (bericht_verlauf), den nur die Beteiligten sehen –
+ * bewusst nicht im Protokoll des Super-Admins.
  */
 export type BerichtStatus = 'entwurf' | 'eingereicht' | 'zurueck' | 'abgezeichnet';
 const GRUENDE = ['urlaub', 'krank', 'feiertag', 'sonstiges'] as const;
@@ -386,7 +387,6 @@ export const BERICHT_ROUTEN: Route[] = [
         db.prepare("UPDATE bericht SET status = 'eingereicht', eingereicht_am = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?").run(jetzt.toISOString(), jetzt.toISOString(), azubi.id, montag);
         unterzeichne(db, jetzt, azubi.id, montag, 'azubi', azubi, pfad);
         vermerke(db, jetzt, azubi.id, montag, 'eingereicht', azubi);
-        protokolliere(db, jetzt, 'fach', 'bericht_eingereicht', azubi, azubi, wocheText(montag));
       });
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },
@@ -469,7 +469,6 @@ export const BERICHT_ROUTEN: Route[] = [
           );
           unterzeichne(db, jetzt, z.azubi.id, z.montag, 'abzeichnung', c.b, pfad);
           vermerke(db, jetzt, z.azubi.id, z.montag, 'abgezeichnet', c.b);
-          protokolliere(db, jetzt, 'fach', 'bericht_abgezeichnet', c.b, z.azubi, wocheText(z.montag));
         }
       });
       return { status: 200, body: { abgezeichnet: ziele.length } };
@@ -497,7 +496,6 @@ export const BERICHT_ROUTEN: Route[] = [
         // der Azubi unterschreibt die überarbeitete Fassung neu
         db.prepare("DELETE FROM bericht_signatur WHERE azubi_id = ? AND montag = ? AND art = 'azubi'").run(id, montag);
         vermerke(db, jetzt, id, montag, 'zurueckgegeben', c.b, kommentar);
-        protokolliere(db, jetzt, 'fach', 'bericht_zurueckgegeben', c.b, azubi, wocheText(montag));
       });
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },
@@ -529,7 +527,6 @@ export const BERICHT_ROUTEN: Route[] = [
         );
         db.prepare('DELETE FROM bericht_signatur WHERE azubi_id = ? AND montag = ?').run(id, montag);
         vermerke(db, jetzt, id, montag, 'abzeichnung_aufgehoben', c.b, kommentar);
-        protokolliere(db, jetzt, 'fach', 'bericht_geoeffnet', c.b, azubi, wocheText(montag));
       });
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },

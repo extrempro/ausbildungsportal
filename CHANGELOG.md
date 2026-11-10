@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.10.1] – 2026-11-10
+
+### Geändert
+
+- Die Anmeldung des Super-Admins liegt auf der eigenen Seite `/super`. Die normale Anmeldeseite zeigt nur noch die Microsoft-Anmeldung. Nach dem Abmelden landet der Super-Admin wieder auf `/super`; die Adresse steht beim Start auch im Log.
+- Das Protokoll enthält keine Ereignisse zu Berichten mehr (eingereicht, abgezeichnet, zurückgegeben, Abzeichnung aufgehoben). Vorhandene Einträge dieser Art werden beim Update gelöscht. Die Schritte stehen weiterhin im Verlauf des jeweiligen Berichts, den nur Azubi, Ausbilder und zuständige Beauftragte sehen.
+
+### Behoben
+
+- Die Karte der interaktiven Führung war auf manchen Seiten schwer zu finden. Sie hat jetzt einen kräftigen blauen Kopf mit „Führung“ und Schrittzahl, einen gelben Rand wie der Rahmen um die erklärte Stelle, einen Fortschrittsbalken und blendet bei jedem Schritt kurz auf; der Hintergrund ist stärker abgedunkelt.
+- Die Übersicht war auf dem Handy nicht nutzbar: Die breite Tabelle ließ sich nur mühsam verschieben. Auf schmalen Bildschirmen stehen die Wochen jetzt untereinander – die laufende und die nächste Woche mit allen Azubis, spätere Wochen mit denen, für die etwas eingetragen ist. Blättern und Zeitraum passen in die Breite.
+
 ## [0.10.0] – 2026-11-10
 
 ### Neu
