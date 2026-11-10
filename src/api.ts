@@ -373,3 +373,14 @@ export function plusTage(iso: string, n: number): string {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+/** Logo des Betriebs je Darstellung; fehlt das dunkle, gilt das helle auch dort. */
+export interface Logos {
+  logo: string | null;
+  logoDunkel: string | null;
+}
+
+/** Was in der hellen bzw. dunklen Darstellung gezeigt wird (null = Standard-Symbol). */
+export function logoFuer(l: Logos, dunkel: boolean): string | null {
+  return dunkel ? (l.logoDunkel ?? l.logo) : l.logo;
+}

@@ -330,4 +330,13 @@ test('Logo: nur der Super-Admin hinterlegt es, nur echte PNG-, JPEG- oder WebP-B
   assert.equal((await ruf(w.u, 'DELETE', '/api/branding/logo', { cookies: als(w, w.admin) })).status, 200);
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/branding')).logo, null);
   assert.ok(w.u.db.prepare("SELECT 1 FROM protokoll WHERE aktion = 'logo_geaendert'").get());
+
+  // helles und dunkles Logo sind getrennt
+  const fuer = (schema: unknown) => ruf(w.u, 'PUT', '/api/branding/logo', { cookies: als(w, w.admin), body: { daten: `data:image/png;base64,${png}`, schema } });
+  assert.equal((await fuer('bunt')).status, 400);
+  assert.deepEqual(koerper(await fuer('dunkel')), { logo: null, logoDunkel: `data:image/png;base64,${png}` });
+  assert.equal((await fuer('hell')).status, 200);
+  assert.equal((await ruf(w.u, 'DELETE', '/api/branding/logo?schema=bunt', { cookies: als(w, w.admin) })).status, 400);
+  assert.deepEqual(koerper(await ruf(w.u, 'DELETE', '/api/branding/logo?schema=hell', { cookies: als(w, w.admin) })), { logo: null, logoDunkel: `data:image/png;base64,${png}` });
+  assert.deepEqual(koerper(await ruf(w.u, 'DELETE', '/api/branding/logo?schema=dunkel', { cookies: als(w, w.admin) })), { logo: null, logoDunkel: null });
 });

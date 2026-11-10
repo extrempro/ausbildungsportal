@@ -33,7 +33,7 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
     }
   };
   const loesche = async () => {
-    if (!beruf || !window.confirm(`Beruf „${beruf.bezeichnung}“ löschen?`)) return;
+    if (!beruf || !window.confirm(`Beruf „${beruf.bezeichnung}“ für das ganze Portal löschen?\n\nEr steht dann auch anderen Ausbildern nicht mehr zur Auswahl.`)) return;
     try {
       await api('DELETE', `/api/stammdaten/berufe/${beruf.id}`);
       await onFertig('Beruf gelöscht.');
@@ -90,7 +90,7 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
     }
   };
   const loesche = async () => {
-    if (!schule || !window.confirm(`Berufsschule „${schule.name}“ löschen?`)) return;
+    if (!schule || !window.confirm(`Berufsschule „${schule.name}“ für das ganze Portal löschen?\n\nSie steht dann auch anderen Ausbildern nicht mehr zur Auswahl.`)) return;
     try {
       await api('DELETE', `/api/stammdaten/berufsschulen/${schule.id}`);
       await onFertig('Berufsschule gelöscht.');
@@ -177,6 +177,10 @@ export function Stammdaten() {
         <Link zu="/verwaltung/vorlagen">Planvorlagen für den Ausbildungsplan verwalten</Link>
       </p>
       <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Ausbildungsnachweise und bestimmen Dauer, Feiertage und Ferien.</p>
+      <p className="hinweis" role="note">
+        <strong>Diese Stammdaten gelten für das ganze Portal</strong> – für alle Azubis und alle Ausbilder, nicht nur für deine eigenen. Bitte nichts ändern oder löschen, nur weil du es selbst gerade nicht brauchst: Andere Ausbilder
+        arbeiten mit denselben Berufen und Berufsschulen.
+      </p>
       <Zeile m={meldung} />
       <datalist id="regeldauern">
         <option value="24" />

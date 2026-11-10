@@ -67,6 +67,9 @@ export function Start({ konto }: { konto: Konto }) {
                     {a.status === 'gesperrt' && <span className="pille grau">gesperrt</span>}
                   </div>
                   <div className="kurzwege">
+                    <Link zu={`/azubis/${a.id}`} className="knopf schlicht klein">
+                      Profil
+                    </Link>
                     <Link zu={`/azubis/${a.id}/plan`} className="knopf schlicht klein">
                       Ausbildungsplan
                     </Link>

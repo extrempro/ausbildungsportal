@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { api } from '../api';
+import { api, logoFuer } from '../api';
+import type { Logos } from '../api';
 
 const FEHLER: Record<string, string> = {
   kein_zugang: 'Kein Zugang: Für dieses Microsoft-Konto gibt es im Ausbildungsportal kein Konto. Bitte an den Ausbilder wenden.',
@@ -15,11 +16,13 @@ export function Anmelden() {
   const [status, setStatus] = useState<{ entra: boolean; dev: boolean } | null>(null);
   const [fehler, setFehler] = useState(() => FEHLER[new URLSearchParams(window.location.search).get('fehler') ?? ''] ?? '');
   const [laeuft, setLaeuft] = useState(false);
-  const [logo, setLogo] = useState<string | null>(null);
+  const [logos, setLogos] = useState<Logos>({ logo: null, logoDunkel: null });
+  // die Darstellung steht schon fest, bevor jemand angemeldet ist (letzter Besuch oder Einstellung des Geräts)
+  const logo = logoFuer(logos, document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
     api<{ entra: boolean; dev: boolean }>('GET', '/api/auth/status').then(setStatus, () => setStatus({ entra: false, dev: false }));
-    api<{ logo: string | null }>('GET', '/api/branding').then((r) => setLogo(r.logo), () => {});
+    api<Logos>('GET', '/api/branding').then(setLogos, () => {});
   }, []);
 
   const sende = (pfad: string, daten: (f: FormData) => unknown) => async (e: FormEvent<HTMLFormElement>) => {

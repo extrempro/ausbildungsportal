@@ -50,6 +50,9 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
   const [fehler, setFehler] = useState('');
   const [filter, setFilter] = useState<BerichtStatus | 'alle'>('alle');
   const [hatUnterschrift, setHatUnterschrift] = useState(true);
+  // Anleitung: von sich aus nur offen, solange noch kein Bericht geschrieben ist; danach eingeklappt.
+  // Wer sie selbst auf- oder zuklappt, behält seine Wahl.
+  const [anleitung, setAnleitung] = useState<boolean | null>(() => (lies('heft-anleitung') === '1' ? true : lies('heft-anleitung') === '0' ? false : null));
 
   useEffect(() => {
     api<BerichtListe>('GET', `/api/azubis/${azubiId}/berichte`).then(setDaten, (e: Error) => setFehler(e.message));
@@ -67,6 +70,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
   if (!daten) return <p className="leise">Lädt …</p>;
 
   const basis = berichtsheftPfad(azubiId, daten.eigenes);
+  const anleitungOffen = anleitung ?? daten.wochen.every((w) => w.status === 'fehlt');
   const anzahl = (s: BerichtStatus | 'alle') => (s === 'alle' ? daten.wochen.length : daten.wochen.filter((w) => w.status === s).length);
   const sichtbar = daten.wochen.filter((w) => filter === 'alle' || w.status === filter);
 
@@ -85,8 +89,17 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
       </p>
 
       {daten.eigenes && !daten.beginnFehlt && (
-        <details className="karte so-gehts" open={lies('heft-anleitung') !== '0'} onToggle={(e) => merke('heft-anleitung', (e.target as HTMLDetailsElement).open ? '1' : '0')}>
-          <summary>So funktioniert das Berichtsheft</summary>
+        <details className="karte so-gehts" open={anleitungOffen}>
+          <summary
+            onClick={(e) => {
+              // selbst schalten, damit die Wahl gemerkt wird
+              e.preventDefault();
+              setAnleitung(!anleitungOffen);
+              merke('heft-anleitung', anleitungOffen ? '0' : '1');
+            }}
+          >
+            So funktioniert das Berichtsheft
+          </summary>
           <ol className="ablauf-liste">
             <Schritt nr={1} titel="Woche öffnen und schreiben">
               Wähle unten bei der Woche „Schreiben“. Trag ein, was du gemacht hast, und die Stunden dazu.
