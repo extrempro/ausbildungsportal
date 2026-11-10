@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.6.1 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
+**Stand: Version 0.7.0 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -13,7 +13,7 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 | Super-Admin | lokal mit Passwort | ausschließlich Konten anlegen, sperren und löschen – kein Zugriff auf Pläne und Berichte |
 | Ausbilder | Microsoft | alle Azubis sehen, alle Nachweise abzeichnen, zurückgeben und eine Abzeichnung aufheben, Ausbildungspläne und Planvorlagen pflegen, Stammdaten und Azubi-Profile pflegen, Konten für Azubis und Beauftragte anlegen, sperren und löschen, Beauftragte zuweisen |
 | Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, während der Zuweisung Aufgaben und Notizen im Plan anlegen |
-| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan Aufgaben abhaken |
+| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan eigene Aufgaben und Notizen eintragen und Aufgaben abhaken |
 
 Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
 
@@ -102,7 +102,8 @@ Ein Ausbildungsnachweis je Kalenderwoche, von der ersten bis zur laufenden Woche
 Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Ausbildung, mit Schulferien und Feiertagen. Der Aufbau folgt dem FISI-Lernkompass: oben „Diese Woche“, „Nächste Woche“ und Kennzahlen (Wochen bis zum Ende, fehlende Berichte, offene Aufgaben), links eine Übersicht mit Fortschritt und einem Band aller Wochen je Ausbildungsjahr, rechts alle Kalenderwochen nach Jahr und Monat.
 
 - **Arten:** Berufsschule (Schulblock), Einsatz (Abteilung oder Einsatzort), Aufgabe (mit Unteraufgaben zum Abhaken) und Notiz.
-- **Wer plant:** Ausbilder alles. Ausbildungsbeauftragte legen Aufgaben und Notizen an, solange ihre Zuweisung läuft. Azubis sehen ihren Plan und haken Aufgaben ab.
+- **Wer plant:** Ausbilder alles. Ausbildungsbeauftragte legen Aufgaben und Notizen an, solange ihre Zuweisung läuft. Azubis tragen eigene Aufgaben und Notizen ein und haken Aufgaben ab; ändern und löschen können sie nur, was sie selbst eingetragen haben.
+- **Prüfungen:** Prüfungstermine stehen im Azubi-Profil (Bezeichnung frei, z. B. „Abschlussprüfung Teil 1“). Sie erscheinen in ihrer Woche, im Wochenband und oben in der Kachel „Wochen bis zur Prüfung“; ohne Termin zählt die Kachel bis zum Ende der Ausbildung.
 - **Zuständig:** Bei Einsätzen und Aufgaben lässt sich eine zuständige Person wählen – Ausbilder oder Ausbildungsbeauftragte. Ist es ein Beauftragter, kann der Ausbilder ihn beim Speichern gleich für den Zeitraum zuweisen.
 - **Planvorlagen:** Abläufe in Wochen ab Ausbildungsbeginn (z. B. „Woche 1–8 Einsatz IT-Support“), je Beruf oder für alle. Eine Vorlage wird in den Plan eines Azubis kopiert; danach ist der Plan unabhängig von ihr.
 - **Übersicht:** alle Azubis nebeneinander über 26 Wochen – Schule und Einsätze aus den Plänen, Urlaub aus den Berichten. Krankheit erscheint dort nicht.
