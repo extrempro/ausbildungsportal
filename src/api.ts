@@ -150,6 +150,8 @@ export interface AzubiKurz {
   beginn: string | null;
   ende: string | null;
   tage: number | null;
+  /** eingereichte (wartende), zurückgegebene und für vergangene Wochen fehlende Berichte */
+  berichte: { wartend: number; zurueck: number; fehlend: number };
 }
 
 export interface ZuweisungZeile {

@@ -274,6 +274,20 @@ test('Abzeichnung aufheben: nur Ausbilder, mit Begründung, Unterschriften falle
   assert.equal((await ruf(w.u, 'GET', '/api/protokoll', { cookies: als(w, w.ausbilder) })).status, 403, 'das Protokoll sieht nur der Super-Admin');
 });
 
+test('Azubi-Liste nennt je Azubi wartende, zurückgegebene und fehlende Berichte', async () => {
+  const w = await welt();
+  await schreibe(w);
+  await reicheEin(w);
+  await schreibe(w, w.azubi, '2026-10-26', { betrieb: [{ text: 'x', stunden: 40 }] });
+  await reicheEin(w, w.azubi, '2026-10-26');
+  await ruf(w.u, 'POST', pfad(w.azubi, '2026-10-26', 'zurueckgeben'), { cookies: als(w, w.ausbilder), body: { kommentar: 'genauer' } });
+  const liste = koerper(await ruf(w.u, 'GET', '/api/azubis', { cookies: als(w, w.ausbilder) })).azubis as { anzeigename: string; berichte: { wartend: number; zurueck: number; fehlend: number } }[];
+  const von = (name: string) => liste.find((a) => a.anzeigename === name)!.berichte;
+  // Ausbildungsbeginn 01.08.2025, heute 10.11.2026: 67 Wochen sind vorbei (28.07.2025 bis 02.11.2026)
+  assert.deepEqual(von('Anna Azubi'), { wartend: 1, zurueck: 1, fehlend: 65 });
+  assert.deepEqual(von('Ben Azubi'), { wartend: 0, zurueck: 0, fehlend: 67 });
+});
+
 test('Löschen eines Azubi-Kontos entfernt Berichte, Unterschriften und Verlauf', async () => {
   const w = await welt();
   await schreibe(w);
