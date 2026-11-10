@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { FormEvent } from 'react';
 import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT } from '../api';
@@ -29,12 +29,41 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
   const person = daten.personen.find((p) => p.id === e.zustaendigId);
   const kannZuweisen = daten.rechte.zuweisen && e.art === 'einsatz' && person?.rolle === 'beauftragter';
 
-  // Escape schließt den Dialog
-  useEffect(() => {
-    const taste = (ev: KeyboardEvent) => ev.key === 'Escape' && onAbbruch();
-    window.addEventListener('keydown', taste);
-    return () => window.removeEventListener('keydown', taste);
+  // Schließen fragt nach, wenn schon etwas eingegeben wurde
+  const flaeche = useRef<HTMLElement>(null);
+  // schon beim ersten Rendern merken – danach liegt der Fokus bereits im Titelfeld
+  const vorher = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  const geaendert = useRef(false);
+  geaendert.current = JSON.stringify(e) !== JSON.stringify(start);
+  const schliesse = useCallback(() => {
+    if (!geaendert.current || window.confirm('Die Eingaben verwerfen?')) onAbbruch();
   }, [onAbbruch]);
+
+  // Dialog: Escape schließt, Tab bleibt im Dialog, die Seite dahinter scrollt nicht mit,
+  // und nach dem Schließen steht der Fokus wieder dort, wo er vorher war
+  useEffect(() => {
+    document.body.classList.add('dialog-offen');
+    const taste = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') schliesse();
+      if (ev.key !== 'Tab' || !flaeche.current) return;
+      const ziele = [...flaeche.current.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href]')].filter((x) => !x.hasAttribute('disabled'));
+      const erstes = ziele[0];
+      const letztes = ziele[ziele.length - 1];
+      if (ev.shiftKey && document.activeElement === erstes) {
+        ev.preventDefault();
+        letztes?.focus();
+      } else if (!ev.shiftKey && document.activeElement === letztes) {
+        ev.preventDefault();
+        erstes?.focus();
+      }
+    };
+    window.addEventListener('keydown', taste);
+    return () => {
+      window.removeEventListener('keydown', taste);
+      document.body.classList.remove('dialog-offen');
+      vorher.current?.focus();
+    };
+  }, [schliesse]);
 
   const sende = async (ev: FormEvent) => {
     ev.preventDefault();
@@ -67,8 +96,8 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
   };
 
   return (
-    <div className="dialog-hintergrund" onMouseDown={(ev) => ev.target === ev.currentTarget && onAbbruch()}>
-    <section className="karte dialog" id="plan-formular" role="dialog" aria-modal="true" aria-labelledby="plan-formular-titel">
+    <div className="dialog-hintergrund" onMouseDown={(ev) => ev.target === ev.currentTarget && schliesse()}>
+    <section ref={flaeche} className="karte dialog" id="plan-formular" role="dialog" aria-modal="true" aria-labelledby="plan-formular-titel">
       <h2 id="plan-formular-titel">{e.id === null ? 'Neuer Eintrag' : 'Eintrag bearbeiten'}</h2>
       <form className="reihe" onSubmit={(ev) => void sende(ev)}>
         <label>
@@ -141,7 +170,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
         )}
         <div className="aktionen links ganz">
           <button className="knopf">Speichern</button>
-          <button type="button" className="knopf schlicht" onClick={onAbbruch}>
+          <button type="button" className="knopf schlicht" onClick={schliesse}>
             Abbrechen
           </button>
           {e.id !== null && (
@@ -247,7 +276,11 @@ function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: W
     <div className={`eintrag ${e.art}`}>
       <div className="eintrag-kopf">
         <span className="eintrag-art">{ART_TEXT[e.art]}</span>
-        {e.art === 'aufgabe' && <input type="checkbox" aria-label={`„${e.titel}“ erledigt`} checked={e.erledigt} onChange={(ev) => a.hake(e, { erledigt: ev.target.checked })} />}
+        {e.art === 'aufgabe' && (
+          <label className="haken nur-haken">
+            <input type="checkbox" aria-label={`„${e.titel}“ erledigt`} checked={e.erledigt} onChange={(ev) => a.hake(e, { erledigt: ev.target.checked })} />
+          </label>
+        )}
         <span className={`eintrag-titel${e.erledigt ? ' erledigt' : ''}`}>{e.titel}</span>
         {e.bearbeitbar && (
           <button type="button" className="link-knopf nicht-drucken" onClick={() => a.bearbeite(e)} aria-label={`„${e.titel}“ bearbeiten`}>
@@ -772,12 +805,12 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               {/* Auf kleinen Bildschirmen ersetzt das die Seitenleiste */}
               <nav aria-label="Zum Ausbildungsjahr springen" className="filter jahr-sprung nicht-drucken">
                 {[...jahre.entries()].map(([j, ws]) => (
-                  <button key={j} type="button" className="link-knopf" onClick={() => zeige(ws[0].montag)}>
+                  <button key={j} type="button" className="knopf schlicht" onClick={() => zeige(ws[0].montag)}>
                     {j === 0 ? 'Außerhalb' : `${j}. Jahr`}
                   </button>
                 ))}
                 {aktuelle && (
-                  <button type="button" className="link-knopf" onClick={() => zeige(aktuelle.montag)}>
+                  <button type="button" className="knopf schlicht" onClick={() => zeige(aktuelle.montag)}>
                     Diese Woche
                   </button>
                 )}

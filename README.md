@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.7.0 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
+**Stand: Version 0.8.0 (Phase 4 – Ausbildungsplan).** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen und der Ausbildungsplan sind fertig, dazu das Docker-Setup. Offen sind noch Export je Azubi und ein Handbuch.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -110,6 +110,17 @@ Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Au
 - Beim Schreiben eines Berichts steht dabei, was laut Plan in der Woche ansteht.
 
 Unten auf jeder Seite führt „Versionshinweise“ zu den Änderungen je Version (aus `CHANGELOG.md`). Das Farbschema lässt sich oben rechts zwischen hell und dunkel umschalten; „automatisch“ steht unter „Konto“.
+
+## Geräte und Bedienbarkeit
+
+Das Portal läuft im Browser auf PC, Tablet und Android-Handy; eine eigene App ist nicht nötig.
+
+- **PC und Tablet quer (ab 1024 px):** Navigation oben, seltene Punkte unter „Verwaltung“, Persönliches im Menü am Namen.
+- **Tablet hoch und Handy:** die wichtigsten Bereiche als Leiste unten, alles Weitere unter „Mehr“. Tabellen erscheinen auf dem Handy als Liste.
+- **Android:** über das Browser-Menü „Zum Startbildschirm hinzufügen“ startet das Portal wie eine App (setzt HTTPS voraus).
+- Alles ist mit der Tastatur bedienbar; Bedienflächen sind mindestens 40 × 40 px groß; hell und dunkel.
+
+Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchgesehen und vermessen. Befunde, Maßnahmen und offene Punkte stehen in [docs/iso-9241.md](docs/iso-9241.md). Das ist eine Durchsicht, keine Konformitätserklärung – Tests mit echten Nutzern gab es nicht.
 
 ## Sicherheit in Kürze
 

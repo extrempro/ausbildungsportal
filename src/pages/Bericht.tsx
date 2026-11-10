@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
-import { geheZu, Link } from '../router';
+import { geheZu, Link, setzeUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
 const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
@@ -29,7 +29,7 @@ function summeVon(i: BerichtInhalt): number {
   return s(i.betrieb) + s(i.unterweisung) + s(i.schule) + s(i.abwesenheit);
 }
 
-/** Der Nachweis zum Lesen und Drucken: Kopf, Inhalte, Summe, Unterschriften. */
+/** Der Bericht zum Lesen und Drucken: Kopf, Inhalte, Summe, Unterschriften. */
 export function BerichtBlatt({ b }: { b: Bericht }) {
   const azubi = b.signaturen.find((s) => s.art === 'azubi');
   const abzeichnung = b.signaturen.find((s) => s.art === 'abzeichnung');
@@ -212,7 +212,12 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
     if (!geaendert) return;
     const warne = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener('beforeunload', warne);
-    return () => window.removeEventListener('beforeunload', warne);
+    // auch beim Wechsel innerhalb der App nachfragen
+    setzeUngespeichert(true);
+    return () => {
+      window.removeEventListener('beforeunload', warne);
+      setzeUngespeichert(false);
+    };
   }, [geaendert]);
 
   if (nichtGefunden) {

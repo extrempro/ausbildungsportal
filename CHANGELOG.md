@@ -1,5 +1,27 @@
 # Änderungen
 
+## [0.8.0] – 2026-11-10
+
+### Neu
+
+- Bedienung auf Tablet und Android-Handy: Navigation als Leiste unten, weitere Bereiche unter „Mehr“, Tabellen auf dem Handy als Liste, Dialoge von unten.
+- Auf Android lässt sich das Portal über „Zum Startbildschirm hinzufügen“ wie eine App ablegen (Manifest und App-Symbole).
+- Seite „Hilfe“ mit einer kurzen Anleitung je Rolle.
+- Startseite mit Kacheln: wartende Berichte, fehlende und zurückgegebene Wochen.
+- Prüfbericht zur ISO 9241 in `docs/iso-9241.md`.
+
+### Geändert
+
+- Überarbeitetes Erscheinungsbild: einzeilige Kopfzeile mit den Menüs „Verwaltung“ und am eigenen Namen, Karten mit weichem Schatten, klarere Eingabefelder.
+- Der Seitentitel im Browser nennt die Seite. Nach einem Seitenwechsel steht der Fokus am Inhalt; „Zum Inhalt springen“ ist der erste Tab-Halt.
+- Bedienflächen sind mindestens 40 × 40 px groß; kleinste Schrift 12 px; alle Farbpaare erreichen den Mindestkontrast.
+- Durchgehend „Bericht“ statt wechselnd „Bericht“ und „Nachweis“.
+
+### Behoben
+
+- Ungespeicherte Eingaben im Bericht gingen bei einem Klick in die Navigation ohne Rückfrage verloren.
+- Im Dialog für Plan-Einträge lief die Tab-Taste aus dem Dialog heraus; ein Klick daneben verwarf die Eingaben.
+
 ## [0.7.0] – 2026-11-10
 
 ### Neu

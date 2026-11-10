@@ -1,0 +1,32 @@
+/** Kleine Strich-Symbole für die Navigation – selbst gezeichnet, keine Abhängigkeit. Immer zusätzlich zu einem Text, nie allein. */
+const PFADE = {
+  start: 'M3 11.5 12 4l9 7.5M5.5 10v10h13V10M10 20v-5h4v5',
+  heft: 'M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7.5h6M9 11h4',
+  plan: 'M4 6h16v14H4zM4 10.5h16M8 3.5v4M16 3.5v4M8 14.5h3M13 14.5h3',
+  azubis: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.3a3.5 3.5 0 0 1 0 6.4M18 14.2A6.5 6.5 0 0 1 21.5 20',
+  abzeichnen: 'M4 4h16v16H4zM8 12.5l3 3 5-6.5',
+  uebersicht: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  mehr: 'M4 6.5h16M4 12h16M4 17.5h16',
+  konten: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 19a5.5 5.5 0 0 1 11 0M17.5 8v6M14.5 11h6',
+  konto: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0',
+  stammdaten: 'M5 21V4h10v17M15 9h4.5v12M3 21h18M8 8h4M8 12h4M8 16h4',
+  vorlagen: 'M8.5 8.5H20V20H8.5zM4 15.5V4h11.5',
+  protokoll: 'M8.5 6.5H20M8.5 12H20M8.5 17.5H20M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01',
+  hilfe: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.6 9.2a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8M12 16.8h.01',
+  versionen: 'M12 3v4M12 17v4M3 12h4M17 12h4M5.8 5.8l2.7 2.7M15.5 15.5l2.7 2.7M18.2 5.8l-2.7 2.7M8.5 15.5l-2.7 2.7',
+  sonne: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  mond: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
+  abmelden: 'M14.5 4H19v16h-4.5M10 8l-4 4 4 4M6 12h9.5',
+  unten: 'M6 9.5l6 6 6-6',
+  zu: 'M6 6l12 12M18 6 6 18',
+} as const;
+
+export type IconName = keyof typeof PFADE;
+
+export function Icon({ name, groesse = 20 }: { name: IconName; groesse?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={groesse} height={groesse} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d={PFADE[name]} />
+    </svg>
+  );
+}

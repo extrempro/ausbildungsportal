@@ -68,7 +68,7 @@ function Unterschrift() {
     }
   };
   const loesche = async () => {
-    if (!window.confirm('Hinterlegte Unterschrift löschen? Bereits unterschriebene Nachweise bleiben unverändert.')) return;
+    if (!window.confirm('Hinterlegte Unterschrift löschen? Bereits unterschriebene Berichte bleiben unverändert.')) return;
     await api('DELETE', '/api/ich/unterschrift');
     setGespeichert(null);
   };
@@ -77,8 +77,8 @@ function Unterschrift() {
   return (
     <>
       <p className="leise klein">
-        Mit dieser Unterschrift werden Ausbildungsnachweise beim Einreichen bzw. Abzeichnen unterschrieben. Am Nachweis wird eine Kopie gespeichert – eine spätere Änderung
-        verändert alte Nachweise nicht.
+        Mit dieser Unterschrift werden Berichte beim Einreichen bzw. Abzeichnen unterschrieben. Am Bericht wird eine Kopie gespeichert – eine spätere Änderung
+        verändert alte Berichte nicht.
       </p>
       {gespeichert && !zeichnen && (
         <>

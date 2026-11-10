@@ -37,7 +37,7 @@ export function Protokoll({ nurKonto }: { nurKonto: boolean }) {
         </p>
       )}
       <div className="karte tabelle-rahmen">
-        <table>
+        <table className="stapel">
           <thead>
             <tr>
               <th>Zeit</th>
@@ -50,11 +50,11 @@ export function Protokoll({ nurKonto }: { nurKonto: boolean }) {
           <tbody>
             {(eintraege ?? []).map((e) => (
               <tr key={e.id}>
-                <td className="eng">{zeit(e.zeit)}</td>
-                <td>{AKTION[e.aktion] ?? e.aktion}</td>
-                <td>{e.benutzer_name || '–'}</td>
-                <td>{e.ziel_name || '–'}</td>
-                <td className="leise">{e.detail}</td>
+                <td className="eng" data-label="Zeit">{zeit(e.zeit)}</td>
+                <td data-label="Ereignis">{AKTION[e.aktion] ?? e.aktion}</td>
+                <td data-label="Wer">{e.benutzer_name || '–'}</td>
+                <td data-label="Betrifft">{e.ziel_name || '–'}</td>
+                <td className="leise" data-label={e.detail ? 'Einzelheiten' : undefined}>{e.detail}</td>
               </tr>
             ))}
             {eintraege?.length === 0 && (
