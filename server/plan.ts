@@ -7,14 +7,15 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
 import { ausbildungsjahrAm, gueltigesDatum, kalenderwoche, montagVon, plusTage } from './kalender';
 import { protokolliere } from './protokoll';
-import { darfAzubiVerwalten, darfPlanBearbeiten, sichtbareAzubis } from './rechte';
+import { darfAzubiVerwalten, darfPlanBearbeiten, darfPlanEintragAendern, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import type { BenutzerZeile } from './typen';
 
 /**
  * Ausbildungsplan: Einträge je Azubi über ganze Kalenderwochen.
  * Arten: Schulblock, Einsatz (Abteilung/Einsatzort mit zuständiger Person), Aufgabe (mit Unteraufgaben), Notiz.
- * Ausbilder planen alles; Beauftragte legen während ihrer Zuweisung Aufgaben und Notizen an; Azubis haken ab.
+ * Ausbilder planen alles; Beauftragte legen während ihrer Zuweisung Aufgaben und Notizen an;
+ * Azubis legen eigene Aufgaben und Notizen an und haken ab.
  */
 export const ARTEN = ['schule', 'einsatz', 'aufgabe', 'notiz'] as const;
 export type Art = (typeof ARTEN)[number];
@@ -35,6 +36,7 @@ interface EintragZeile {
   zustaendig_id: number | null;
   erledigt: number;
   unteraufgaben: string;
+  erstellt_von: number | null;
   geaendert: string;
 }
 
@@ -159,7 +161,8 @@ function json<T>(s: string, leer: T): T {
   }
 }
 
-function ansicht(db: DB, z: EintragZeile) {
+function ansicht(c: Ctx, z: EintragZeile) {
+  const { db } = c.k;
   const zustaendig = z.zustaendig_id ? holeBenutzer(db, z.zustaendig_id) : undefined;
   return {
     id: z.id,
@@ -172,6 +175,9 @@ function ansicht(db: DB, z: EintragZeile) {
     zustaendig: zustaendig?.anzeigename ?? '',
     erledigt: z.erledigt === 1,
     unteraufgaben: json<Unteraufgabe[]>(z.unteraufgaben, []),
+    // vom Azubi selbst angelegt (im Unterschied zu dem, was Ausbilder und Beauftragte geplant haben)
+    vomAzubi: z.erstellt_von === z.azubi_id,
+    bearbeitbar: darfPlanEintragAendern(db, c.b, z, heute(c.k.jetzt())),
   };
 }
 
@@ -236,6 +242,10 @@ export const PLAN_ROUTEN: Route[] = [
         if (!erste || z.von < erste) erste = z.von;
         if (!letzte || z.bis > letzte) letzte = z.bis;
       }
+      // Prüfungen nach dem Vertragsende (z. B. mündliche Prüfung) bleiben sichtbar
+      for (const p of profil.pruefungen) {
+        if (erste && letzte && montagVon(p.datum) > letzte) letzte = montagVon(p.datum);
+      }
       const wochen: { montag: string; kw: number; jahr: number; ausbildungsjahr: number | null }[] = [];
       if (erste && letzte) {
         for (let m = erste; m <= letzte && wochen.length < 400; m = plusTage(m, 7)) {
@@ -264,13 +274,14 @@ export const PLAN_ROUTEN: Route[] = [
           ende: dauer?.ende ?? null,
           beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
           wochen,
-          eintraege: zeilen.map((z) => ansicht(db, z)),
+          eintraege: zeilen.map((z) => ansicht(c, z)),
+          pruefungen: profil.pruefungen,
           feiertage: erste && istBundesland(betriebLand) ? feiertageZwischen(betriebLand, erste, ende).filter((f) => !f.teilweise) : [],
           ferien: ferien ? ferienZwischen(ferien, erste!, ende) : [],
           ferienVorhanden: ferien?.vorhanden ?? false,
           rechte: { arten: darfAlles ? ARTEN : darfAufgaben ? ['aufgabe', 'notiz'] : [], zuweisen: c.b.rolle === 'ausbilder' },
           // Auswahl für „zuständig“ und Vorlagen nur für die, die planen
-          personen: darfAufgaben
+          personen: darfAufgaben && c.b.rolle !== 'azubi'
             ? (db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown[])
             : [],
           vorlagen:
@@ -285,12 +296,12 @@ export const PLAN_ROUTEN: Route[] = [
   {
     m: 'POST',
     p: '/api/azubis/:id/plan',
-    wer: ['ausbilder', 'beauftragter'],
+    wer: FACH,
     h: (c) => {
       const { db } = c.k;
       const azubi = sichtbarerAzubi(c);
       const roh = koerper(c);
-      const e = eingabeAus(db, roh);
+      const e = eingabeAus(db, c.b.rolle === 'azubi' ? { ...roh, zustaendigId: null } : roh);
       if (!darfPlanBearbeiten(db, c.b, azubi.id, e.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diese Art von Eintrag darfst du hier nicht anlegen', 'rolle');
       const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
       if (anzahl >= MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hat schon ${MAX_EINTRAEGE} Einträge`);
@@ -306,23 +317,23 @@ export const PLAN_ROUTEN: Route[] = [
         if (roh.zuweisen === true && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
         return Number(r.lastInsertRowid);
       });
-      return { status: 201, body: { eintrag: ansicht(db, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(id) as unknown as EintragZeile), zugewiesen } };
+      return { status: 201, body: { eintrag: ansicht(c, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(id) as unknown as EintragZeile), zugewiesen } };
     },
   },
 
   {
     m: 'PUT',
     p: '/api/azubis/:id/plan/:eid',
-    wer: ['ausbilder', 'beauftragter'],
+    wer: FACH,
     h: (c) => {
       const { db } = c.k;
       const azubi = sichtbarerAzubi(c);
       const alt = holeEintrag(c, azubi.id);
       const roh = koerper(c);
-      const e = eingabeAus(db, roh);
+      const e = eingabeAus(db, c.b.rolle === 'azubi' ? { ...roh, zustaendigId: null } : roh);
       const tag = heute(c.k.jetzt());
-      // sowohl die bisherige als auch die neue Art müssen erlaubt sein
-      if (!darfPlanBearbeiten(db, c.b, azubi.id, alt.art, tag) || !darfPlanBearbeiten(db, c.b, azubi.id, e.art, tag)) {
+      // der vorhandene Eintrag muss änderbar und die neue Art erlaubt sein
+      if (!darfPlanEintragAendern(db, c.b, alt, tag) || !darfPlanBearbeiten(db, c.b, azubi.id, e.art, tag)) {
         throw new Fehler(403, 'Diesen Eintrag darfst du nicht ändern', 'rolle');
       }
       const jetzt = c.k.jetzt();
@@ -343,19 +354,19 @@ export const PLAN_ROUTEN: Route[] = [
         );
         if (roh.zuweisen === true && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
       });
-      return { status: 200, body: { eintrag: ansicht(db, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(alt.id) as unknown as EintragZeile), zugewiesen } };
+      return { status: 200, body: { eintrag: ansicht(c, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(alt.id) as unknown as EintragZeile), zugewiesen } };
     },
   },
 
   {
     m: 'DELETE',
     p: '/api/azubis/:id/plan/:eid',
-    wer: ['ausbilder', 'beauftragter'],
+    wer: FACH,
     h: (c) => {
       const { db } = c.k;
       const azubi = sichtbarerAzubi(c);
       const alt = holeEintrag(c, azubi.id);
-      if (!darfPlanBearbeiten(db, c.b, azubi.id, alt.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diesen Eintrag darfst du nicht löschen', 'rolle');
+      if (!darfPlanEintragAendern(db, c.b, alt, heute(c.k.jetzt()))) throw new Fehler(403, 'Diesen Eintrag darfst du nicht löschen', 'rolle');
       db.prepare('DELETE FROM plan_eintrag WHERE id = ?').run(alt.id);
       return { status: 200, body: { ok: true } };
     },
@@ -382,7 +393,7 @@ export const PLAN_ROUTEN: Route[] = [
         erledigt = roh.erledigt === true;
       }
       db.prepare('UPDATE plan_eintrag SET erledigt = ?, unteraufgaben = ?, geaendert_von = ?, geaendert = ? WHERE id = ?').run(erledigt ? 1 : 0, JSON.stringify(unter), c.b.id, c.k.jetzt().toISOString(), alt.id);
-      return { status: 200, body: { eintrag: ansicht(db, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(alt.id) as unknown as EintragZeile) } };
+      return { status: 200, body: { eintrag: ansicht(c, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(alt.id) as unknown as EintragZeile) } };
     },
   },
 

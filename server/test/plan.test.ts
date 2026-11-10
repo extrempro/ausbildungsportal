@@ -44,8 +44,9 @@ test('Plan lesen: Wochen der Ausbildung mit Ausbildungsjahr, Feiertage und Ferie
   assert.equal(p.wochen.at(-1).montag, '2028-07-31', 'letzte Woche enthält das Ende am 31.07.2028');
   assert.ok(p.feiertage.some((f: any) => f.datum === '2026-10-31'), 'Reformationstag in Hamburg');
   assert.ok(p.ferienVorhanden && p.ferien.length > 0, 'Hamburger Ferien');
-  assert.deepEqual(p.rechte, { arten: [], zuweisen: false });
+  assert.deepEqual(p.rechte, { arten: ['aufgabe', 'notiz'], zuweisen: false });
   assert.deepEqual(p.personen, []);
+  assert.deepEqual(p.pruefungen, []);
   assert.deepEqual(p.vorlagen, []);
 });
 
@@ -114,6 +115,7 @@ test('Beauftragte: nur zugewiesene Azubis, nur Aufgaben und Notizen, nur solange
   const a = await lege(w, w.beauftragter, { art: 'aufgabe', von: '2026-11-09', titel: 'Drucker einrichten', unteraufgaben: ['Treiber', { text: 'Testseite', erledigt: true }, ''] });
   assert.equal(a.status, 201);
   assert.deepEqual(koerper(a).eintrag.unteraufgaben, [{ text: 'Treiber', erledigt: false }, { text: 'Testseite', erledigt: true }]);
+  assert.deepEqual([koerper(a).eintrag.bearbeitbar, koerper(a).eintrag.vomAzubi], [true, false]);
   assert.equal((await lege(w, w.beauftragter, EINSATZ)).status, 403, 'Einsätze plant der Ausbilder');
   assert.equal((await lege(w, w.beauftragter, { art: 'schule', von: '2026-11-09', titel: 'x' })).status, 403);
   assert.equal(koerper(await lege(w, w.beauftragter, { art: 'aufgabe', von: '2026-11-09', titel: 'x', zuweisen: true })).zugewiesen, false);
@@ -135,15 +137,41 @@ test('Beauftragte: nur zugewiesene Azubis, nur Aufgaben und Notizen, nur solange
   assert.equal((await ruf(w.u, 'DELETE', pfad(eigene), { cookies: als(w, w.beauftragter) })).status, 403);
 });
 
-test('Azubi: sieht nur den eigenen Plan, ändert nichts außer Haken an Aufgaben', async () => {
+test('Azubi: eigene Aufgaben und Notizen anlegen und ändern; Geplantes von Ausbilder und Beauftragten nur abhaken', async () => {
   const w = await welt();
   const aufgabe = koerper(await lege(w, w.ausbilder, { art: 'aufgabe', von: '2026-11-09', titel: 'Server aufsetzen', unteraufgaben: ['Installieren', 'Härten'] })).eintrag;
   const einsatz = koerper(await lege(w, w.ausbilder, EINSATZ)).eintrag;
   const cookies = als(w, w.azubi);
+  const pfad = (id: number, a = w.azubi) => `/api/azubis/${a.id}/plan/${id}`;
   assert.equal((await ruf(w.u, 'GET', `/api/azubis/${w.ben.id}/plan`, { cookies })).status, 404);
-  assert.equal((await lege(w, w.azubi, { art: 'notiz', von: '2026-11-09', titel: 'x' })).status, 403);
-  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${aufgabe.id}`, { cookies, body: { art: 'aufgabe', von: '2026-11-09', titel: 'leichter' } })).status, 403);
-  assert.equal((await ruf(w.u, 'DELETE', `/api/azubis/${w.azubi.id}/plan/${aufgabe.id}`, { cookies })).status, 403);
+
+  // anlegen: nur Aufgabe und Notiz, nur im eigenen Plan, ohne Zuständigen
+  const eigene = await lege(w, w.azubi, { art: 'aufgabe', von: '2026-11-09', titel: 'Lernzettel Subnetting', unteraufgaben: ['Kapitel 1'], zustaendigId: w.ausbilder.id, zuweisen: true });
+  assert.equal(eigene.status, 201);
+  const e = koerper(eigene).eintrag;
+  assert.deepEqual([e.zustaendigId, e.vomAzubi, e.bearbeitbar, koerper(eigene).zugewiesen], [null, true, true, false]);
+  assert.equal((await lege(w, w.azubi, { art: 'notiz', von: '2026-11-09', titel: 'Berufsschule: Buch mitbringen' })).status, 201);
+  assert.equal((await lege(w, w.azubi, EINSATZ)).status, 403);
+  assert.equal((await lege(w, w.azubi, { art: 'schule', von: '2026-11-09', titel: 'x' })).status, 403);
+  assert.equal((await lege(w, w.azubi, { art: 'notiz', von: '2026-11-09', titel: 'x' }, w.ben)).status, 404, 'fremder Plan');
+
+  // ändern und löschen: nur Selbstangelegtes
+  assert.equal(koerper(await ruf(w.u, 'PUT', pfad(e.id), { cookies, body: { art: 'notiz', von: '2026-11-16', titel: 'umbenannt' } })).eintrag.titel, 'umbenannt');
+  assert.equal((await ruf(w.u, 'PUT', pfad(e.id), { cookies, body: { ...EINSATZ } })).status, 403, 'eigene Notiz wird kein Einsatz');
+  assert.equal((await ruf(w.u, 'PUT', pfad(aufgabe.id), { cookies, body: { art: 'aufgabe', von: '2026-11-09', titel: 'leichter' } })).status, 403, 'Aufgabe des Ausbilders');
+  assert.equal((await ruf(w.u, 'DELETE', pfad(aufgabe.id), { cookies })).status, 403);
+  assert.equal((await ruf(w.u, 'DELETE', pfad(einsatz.id), { cookies })).status, 403);
+  assert.equal((await ruf(w.u, 'DELETE', pfad(e.id, w.ben), { cookies: als(w, w.ben) })).status, 404, 'Ben kommt nicht an Annas Eintrag');
+  const p = await plan(w, w.azubi);
+  assert.deepEqual(p.eintraege.map((x: any) => [x.titel, x.bearbeitbar, x.vomAzubi]).sort(), [
+    ['Berufsschule: Buch mitbringen', true, true],
+    ['IT-Support', false, false],
+    ['Server aufsetzen', false, false],
+    ['umbenannt', true, true],
+  ]);
+  // der Ausbilder darf auch die Einträge des Azubis ändern
+  assert.ok((await plan(w, w.ausbilder)).eintraege.every((x: any) => x.bearbeitbar));
+  assert.equal((await ruf(w.u, 'DELETE', pfad(e.id), { cookies })).status, 200);
 
   const haken = (id: number, body: unknown, wer = w.azubi, a = w.azubi) => ruf(w.u, 'POST', `/api/azubis/${a.id}/plan/${id}/haken`, { cookies: als(w, wer), body });
   let r = koerper(await haken(aufgabe.id, { unteraufgabe: 1, erledigt: true })).eintrag;
@@ -157,6 +185,22 @@ test('Azubi: sieht nur den eigenen Plan, ändert nichts außer Haken an Aufgaben
   assert.equal((await haken(aufgabe.id, { erledigt: false }, w.ben)).status, 404, 'fremder Azubi');
   assert.equal((await haken(aufgabe.id, { erledigt: false }, w.ben, w.ben)).status, 404, 'Eintrag gehört nicht zu Ben');
   assert.equal((await haken(aufgabe.id, { erledigt: false }, w.admin)).status, 403);
+});
+
+test('Prüfungstermine im Profil: geprüft, sortiert, im Plan sichtbar', async () => {
+  const w = await welt();
+  const cookies = als(w, w.ausbilder);
+  const setze = (pruefungen: unknown) => ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/profil`, { cookies, body: { ausbildungsbeginn: '2025-08-01', pruefungen } });
+  for (const falsch of [[{ bezeichnung: 'AP1', datum: '2027-13-01' }], [{ bezeichnung: 'ohne Datum', datum: '' }], [{ bezeichnung: '', datum: '2027-03-01' }], 'nein', Array(9).fill({ bezeichnung: 'x', datum: '2027-03-01' })]) {
+    assert.equal((await setze(falsch)).status, 400, JSON.stringify(falsch).slice(0, 60));
+  }
+  assert.equal((await setze([{ bezeichnung: 'Abschlussprüfung Teil 2', datum: '2028-08-15' }, { bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-09' }, { bezeichnung: '', datum: '' }])).status, 200);
+  const p = await plan(w, w.azubi);
+  assert.deepEqual(p.pruefungen, [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-09' }, { bezeichnung: 'Abschlussprüfung Teil 2', datum: '2028-08-15' }]);
+  assert.equal(p.wochen.at(-1).montag, '2028-08-14', 'die Woche einer Prüfung nach dem Vertragsende ist im Plan');
+  assert.equal(p.wochen.at(-1).ausbildungsjahr, null);
+  assert.equal((await setze(undefined)).status, 200);
+  assert.deepEqual((await plan(w, w.azubi)).pruefungen, []);
 });
 
 test('Planvorlagen: anlegen, ändern, in einen Plan übernehmen (Wochen ab Ausbildungsbeginn), löschen', async () => {

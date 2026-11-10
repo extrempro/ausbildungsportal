@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import type { FormEvent } from 'react';
-import { api, ART_FARBE, ART_TEXT, berichtsheftPfad, datum, plusTage, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT } from '../api';
+import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT } from '../api';
 import type { BerichtListe, BerichtStatus, PlanAntwort, PlanArt, PlanEintrag, PlanWoche, Unteraufgabe } from '../api';
 import { Link } from '../router';
 
@@ -25,7 +25,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
   const [fehler, setFehler] = useState('');
   const basis = `/api/azubis/${daten.azubi.id}/plan`;
   const setze = (teil: Partial<Entwurf>) => setE((alt) => ({ ...alt, ...teil }));
-  const mitPerson = e.art === 'einsatz' || e.art === 'aufgabe';
+  const mitPerson = (e.art === 'einsatz' || e.art === 'aufgabe') && daten.personen.length > 0;
   const person = daten.personen.find((p) => p.id === e.zustaendigId);
   const kannZuweisen = daten.rechte.zuweisen && e.art === 'einsatz' && person?.rolle === 'beauftragter';
 
@@ -222,80 +222,106 @@ function useAktiverAbschnitt(ids: string[]): string | null {
 const d2 = (tag: string | null, w: Woche) => !!tag && tag >= w.montag && tag <= w.sonntag;
 
 interface Aktionen {
-  darf: (e: PlanEintrag) => boolean;
   bearbeite: (e: PlanEintrag) => void;
   hake: (e: PlanEintrag, body: { erledigt: boolean; unteraufgabe?: number }) => void;
 }
 
-/** Einträge, Ferien und Feiertage einer Woche. `voll` zeigt Beschreibung und Unteraufgaben immer (Karten oben). */
+const WOCHENTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const tagKurz = (iso: string) => `${WOCHENTAG[new Date(`${iso}T00:00:00Z`).getUTCDay()]} ${tagMonat(iso)}`;
+const montagVon = (iso: string) => plusTage(iso, -((new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7));
+
+/** Ein Plan-Eintrag als Kästchen: links die Art, daneben Titel, darunter Zeitraum, Zuständigkeit, Beschreibung und Unteraufgaben. */
+function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: Woche; voll?: boolean; eigenes: boolean; a: Aktionen }) {
+  const wochen = Math.round((Date.parse(e.bis) - Date.parse(e.von)) / 604800000) + 1;
+  const nr = Math.round((Date.parse(woche.montag) - Date.parse(e.von)) / 604800000) + 1;
+  // Beschreibung und Unteraufgaben stehen in der ersten Woche (in den Karten oben immer)
+  const ausfuehrlich = voll || e.von === woche.montag;
+  const erledigt = e.unteraufgaben.filter((u) => u.erledigt).length;
+  const meta = [
+    wochen > 1 && `Woche ${nr} von ${wochen} (${tagMonat(e.von)}–${tagMonat(plusTage(e.bis, 6))})`,
+    e.zustaendig && `Zuständig: ${e.zustaendig}`,
+    e.unteraufgaben.length > 0 && `${erledigt} von ${e.unteraufgaben.length} Unteraufgaben erledigt`,
+    e.vomAzubi && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
+  ].filter(Boolean);
+  return (
+    <div className={`eintrag ${e.art}`}>
+      <div className="eintrag-kopf">
+        <span className="eintrag-art">{ART_TEXT[e.art]}</span>
+        {e.art === 'aufgabe' && <input type="checkbox" aria-label={`„${e.titel}“ erledigt`} checked={e.erledigt} onChange={(ev) => a.hake(e, { erledigt: ev.target.checked })} />}
+        <span className={`eintrag-titel${e.erledigt ? ' erledigt' : ''}`}>{e.titel}</span>
+        {e.bearbeitbar && (
+          <button type="button" className="link-knopf nicht-drucken" onClick={() => a.bearbeite(e)} aria-label={`„${e.titel}“ bearbeiten`}>
+            Bearbeiten
+          </button>
+        )}
+      </div>
+      {meta.length > 0 && <div className="eintrag-meta">{meta.join(' · ')}</div>}
+      {ausfuehrlich && e.text && <div className="eintrag-text mehrzeilig">{e.text}</div>}
+      {ausfuehrlich && e.unteraufgaben.length > 0 && (
+        <ul className="unterliste">
+          {e.unteraufgaben.map((u, i) => (
+            <li key={i}>
+              <label className="haken">
+                <input type="checkbox" checked={u.erledigt} onChange={(ev) => a.hake(e, { unteraufgabe: i, erledigt: ev.target.checked })} />
+                <span className={u.erledigt ? 'erledigt' : undefined}>{u.text}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Feste Zeile ohne Bearbeitung: Prüfung, Beginn oder Ende der Ausbildung. */
+function Marke({ art, klasse, titel, zusatz }: { art: string; klasse: string; titel: string; zusatz: string }) {
+  return (
+    <div className={`eintrag ${klasse}`}>
+      <div className="eintrag-kopf">
+        <span className="eintrag-art">{art}</span>
+        <span className="eintrag-titel">{titel}</span>
+        <span className="eintrag-zusatz">{zusatz}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Alles, was in einer Woche ansteht – in fester Reihenfolge: Prüfungen, Beginn/Ende, Schule, Einsatz, Aufgaben, Notizen,
+ * zuletzt Ferien und Feiertage. `voll` zeigt Beschreibung und Unteraufgaben immer (Karten oben).
+ */
 function WochenInhalt({ woche, daten, frei, voll, leer, a }: { woche: Woche; daten: PlanAntwort; frei: boolean; voll?: boolean; leer?: string; a: Aktionen }) {
   const eintraege = daten.eintraege.filter((e) => e.von <= woche.montag && e.bis >= woche.montag).sort((x, y) => REIHENFOLGE.indexOf(x.art) - REIHENFOLGE.indexOf(y.art) || x.von.localeCompare(y.von) || x.id - y.id);
+  const pruefungen = daten.pruefungen.filter((p) => d2(p.datum, woche));
   const ferien = frei ? daten.ferien.filter((f) => f.von <= woche.sonntag && f.bis >= woche.montag) : [];
   const feiertage = frei ? daten.feiertage.filter((f) => f.datum >= woche.montag && f.datum <= woche.sonntag) : [];
-  const marken = [d2(daten.beginn, woche) && `Ausbildungsbeginn · ${tagMonat(daten.beginn!)}`, d2(daten.ende, woche) && `Ende der Ausbildung · ${tagMonat(daten.ende!)}`].filter(Boolean);
-  if (!eintraege.length && !ferien.length && !feiertage.length && !marken.length) return leer ? <p className="leise klein">{leer}</p> : null;
+  const beginnt = d2(daten.beginn, woche);
+  const endet = d2(daten.ende, woche);
+  if (!eintraege.length && !pruefungen.length && !ferien.length && !feiertage.length && !beginnt && !endet) return leer ? <p className="leise klein">{leer}</p> : null;
   return (
     <>
-      {marken.map((m) => (
-        <div className="plan-kopf plan-eintrag" key={String(m)}>
-          <span className="pille gruen"><strong>{m}</strong></span>
-        </div>
+      {pruefungen.map((p) => (
+        <Marke key={p.bezeichnung + p.datum} art="Prüfung" klasse="pruefung" titel={p.bezeichnung} zusatz={tagKurz(p.datum)} />
       ))}
-      {eintraege.map((e) => {
-        const erste = voll || e.von === woche.montag;
-        const wochen = Math.round((Date.parse(e.bis) - Date.parse(e.von)) / 604800000) + 1;
-        const nr = Math.round((Date.parse(woche.montag) - Date.parse(e.von)) / 604800000) + 1;
-        return (
-          <div key={e.id} className="plan-eintrag">
-            <div className="plan-kopf">
-              {e.art === 'aufgabe' && <input type="checkbox" aria-label={`„${e.titel}“ erledigt`} checked={e.erledigt} onChange={(ev) => a.hake(e, { erledigt: ev.target.checked })} />}
-              <span className={`pille ${ART_FARBE[e.art]}`}>{ART_TEXT[e.art]}</span>
-              {a.darf(e) ? (
-                <button type="button" className={`link-knopf${e.erledigt ? ' erledigt' : ''}`} onClick={() => a.bearbeite(e)} title="Eintrag bearbeiten">
-                  {e.titel}
-                </button>
-              ) : (
-                <span className={e.erledigt ? 'erledigt' : undefined}>{e.titel}</span>
-              )}
-              {wochen > 1 && (
-                <span className="leise klein">
-                  Woche {nr} von {wochen}
-                </span>
-              )}
-              {e.zustaendig && <span className="leise klein">· {e.zustaendig}</span>}
-            </div>
-            {erste && e.text && <div className="plan-text leise klein mehrzeilig">{e.text}</div>}
-            {erste && e.unteraufgaben.length > 0 && (
-              <ul className="unterliste">
-                {e.unteraufgaben.map((u, i) => (
-                  <li key={i}>
-                    <label className="haken">
-                      <input type="checkbox" checked={u.erledigt} onChange={(ev) => a.hake(e, { unteraufgabe: i, erledigt: ev.target.checked })} />
-                      <span className={u.erledigt ? 'erledigt' : undefined}>{u.text}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      })}
-      {ferien.map((f) => (
-        <div className="plan-kopf plan-eintrag" key={f.name + f.von}>
-          <span className="pille ferien">Schulferien</span>
-          <span className="leise">
-            {f.name} <span className="klein">({tagMonat(f.von)}–{tagMonat(f.bis)})</span>
-          </span>
-        </div>
+      {beginnt && <Marke art="Start" klasse="marke" titel="Ausbildungsbeginn" zusatz={tagKurz(daten.beginn!)} />}
+      {endet && <Marke art="Ende" klasse="marke" titel="Ende der Ausbildung" zusatz={tagKurz(daten.ende!)} />}
+      {eintraege.map((e) => (
+        <EintragKarte key={e.id} e={e} woche={woche} voll={voll} eigenes={daten.eigenes} a={a} />
       ))}
-      {feiertage.map((f) => (
-        <div className="plan-kopf plan-eintrag" key={f.datum}>
-          <span className="pille umrandet">Feiertag</span>
-          <span className="leise">
-            {f.name} <span className="klein">({tagMonat(f.datum)})</span>
-          </span>
+      {(ferien.length > 0 || feiertage.length > 0) && (
+        <div className="frei-zeile">
+          {ferien.map((f) => (
+            <span className="pille ferien" key={f.name + f.von}>
+              {f.name} {tagMonat(f.von)}–{tagMonat(f.bis)}
+            </span>
+          ))}
+          {feiertage.map((f) => (
+            <span className="pille umrandet" key={f.datum}>
+              Feiertag: {f.name} · {tagKurz(f.datum)}
+            </span>
+          ))}
         </div>
-      ))}
+      )}
     </>
   );
 }
@@ -366,7 +392,7 @@ function Kennzahl({ wert, einheit, text, warnung, children }: { wert: number | s
 }
 
 /** Ein schmaler Balken pro Woche: Schule violett, Ferien gelb, heute blau; die gelesene Woche ist höher. */
-function Jahresband({ wochen, schule, ferien, heute, gelesen, onSpringe }: { wochen: Woche[]; schule: Set<string>; ferien: Set<string>; heute?: string; gelesen?: string; onSpringe: (montag: string) => void }) {
+function Jahresband({ wochen, schule, ferien, pruefung, heute, gelesen, onSpringe }: { wochen: Woche[]; schule: Set<string>; ferien: Set<string>; pruefung: Set<string>; heute?: string; gelesen?: string; onSpringe: (montag: string) => void }) {
   const schulAnzahl = wochen.filter((w) => schule.has(w.montag)).length;
   return (
     <div role="img" aria-label={`${wochen.length} Wochen, davon ${schulAnzahl} Schulwochen`} className="jahresband">
@@ -375,7 +401,7 @@ function Jahresband({ wochen, schule, ferien, heute, gelesen, onSpringe }: { woc
           key={w.montag}
           title={`KW ${w.kw} · ${tagMonat(w.montag)}–${tagMonat(w.sonntag)}`}
           onClick={() => onSpringe(w.montag)}
-          className={`${w.montag === heute ? 'heute' : schule.has(w.montag) ? 'schule' : ferien.has(w.montag) ? 'ferien' : ''}${w.montag === gelesen ? ' gelesen' : ''}`}
+          className={`${pruefung.has(w.montag) ? 'pruefung' : w.montag === heute ? 'heute' : schule.has(w.montag) ? 'schule' : ferien.has(w.montag) ? 'ferien' : ''}${w.montag === gelesen ? ' gelesen' : ''}`}
         />
       ))}
     </div>
@@ -383,7 +409,7 @@ function Jahresband({ wochen, schule, ferien, heute, gelesen, onSpringe }: { woc
 }
 
 /** Seitenleiste: wo man gerade liest, Fortschritt der Ausbildung und je Jahr ein Band aller Wochen. */
-function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, onSpringe }: { jahre: Map<number, Woche[]>; gelesen: Woche | null; heute: Woche | null; gesamt: number; schule: Set<string>; ferien: Set<string>; onSpringe: (montag: string) => void }) {
+function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, pruefung, onSpringe }: { jahre: Map<number, Woche[]>; gelesen: Woche | null; heute: Woche | null; gesamt: number; schule: Set<string>; ferien: Set<string>; pruefung: Set<string>; onSpringe: (montag: string) => void }) {
   const ort = gelesen ?? heute;
   const fortschritt = heute && heute.nummer ? Math.min(100, Math.round((heute.nummer / gesamt) * 100)) : null;
   return (
@@ -445,7 +471,7 @@ function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, onSpringe 
                   {ws[ws.length - 1].sonntag.slice(2, 4)} · {ws.filter((w) => schule.has(w.montag)).length} Schulw.
                 </span>
               </button>
-              <Jahresband wochen={ws} schule={schule} ferien={ferien} heute={heute?.montag} gelesen={ort?.montag} onSpringe={onSpringe} />
+              <Jahresband wochen={ws} schule={schule} ferien={ferien} pruefung={pruefung} heute={heute?.montag} gelesen={ort?.montag} onSpringe={onSpringe} />
               {aktiv && monate.length > 1 && (
                 <ul className="kompass-monate">
                   {monate.map((m) => (
@@ -466,6 +492,11 @@ function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, onSpringe 
         <span>
           <i className="schule" /> Schule
         </span>
+        {pruefung.size > 0 && (
+          <span>
+            <i className="pruefung" /> Prüfung
+          </span>
+        )}
         {ferien.size > 0 && (
           <span>
             <i className="ferien" /> Ferien
@@ -531,7 +562,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     return s;
   }, [d, wochen, zeigeFrei]);
 
-  const istBelegt = (w: Woche) => !!d && (w.montag <= d.heute && w.sonntag >= d.heute ? true : w.nummer === 1 || d2(d.ende, w) || d.eintraege.some((e) => e.von <= w.montag && e.bis >= w.montag));
+  const pruefungsWochen = useMemo(() => new Set((d?.pruefungen ?? []).map((p) => montagVon(p.datum))), [d?.pruefungen]);
+
+  const istBelegt = (w: Woche) => !!d && (w.montag <= d.heute && w.sonntag >= d.heute ? true : w.nummer === 1 || d2(d.ende, w) || pruefungsWochen.has(w.montag) || d.eintraege.some((e) => e.von <= w.montag && e.bis >= w.montag));
   const sichtbar = nurBelegt ? wochen.filter(istBelegt) : wochen;
   const gelesenId = useAktiverAbschnitt(sichtbar.map((w) => `kw-${w.montag}`));
 
@@ -562,6 +595,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const faellig = (berichte?.wochen ?? []).filter((w) => dieseWoche && w.montag < dieseWoche);
   const fehlend = faellig.filter((w) => w.status === 'fehlt');
   const rest = aktuelle && aktuelle.nummer ? gesamt - aktuelle.nummer : null;
+  // nächste eingetragene Prüfung; ohne Prüfungstermin zählt die Kachel bis zum Ende der Ausbildung
+  const pruefung = d.pruefungen.find((p) => p.datum >= d.heute) ?? null;
+  const bisPruefung = pruefung ? Math.round((Date.parse(montagVon(pruefung.datum)) - Date.parse(montagVon(d.heute))) / 604800000) : 0;
 
   const neu = (w: Woche | null): Entwurf => ({ id: null, art: d.rechte.arten.includes('einsatz') ? 'einsatz' : 'aufgabe', titel: '', von: w?.montag ?? d.heute, bis: '', text: '', zustaendigId: null, zuweisen: true, erledigt: false, unteraufgaben: [] });
   const oeffne = (e: Entwurf) => {
@@ -584,7 +620,6 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     }
   };
   const a: Aktionen = {
-    darf: (e) => d.rechte.arten.includes(e.art),
     bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben }),
     hake: (e, body) => void hake(e, body),
   };
@@ -611,9 +646,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
       <p className="leise">
         {d.beruf ? `${d.beruf} · ` : ''}
         {d.eigenes
-          ? 'Deine Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Aufgaben kannst du abhaken.'
+          ? 'Deine Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Du kannst eigene Aufgaben und Notizen eintragen und Aufgaben abhaken.'
           : d.rechte.arten.includes('einsatz')
-            ? 'Die Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Zum Ändern den Titel eines Eintrags anklicken.'
+            ? 'Die Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Jeder Eintrag lässt sich über „Bearbeiten“ ändern.'
             : plant
               ? 'Du kannst Aufgaben und Notizen anlegen; Schulblöcke und Einsätze plant der Ausbilder.'
               : 'Nur zur Ansicht.'}
@@ -678,7 +713,26 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               a={a}
             />
             <div className="karte kennzahlen">
-              <Kennzahl wert={rest ?? '–'} einheit={rest === null ? '' : rest === 1 ? 'Woche' : 'Wochen'} text={rest === null ? 'Die laufende Woche liegt außerhalb der Ausbildung' : `bis zum Ende der Ausbildung (${datum(d.ende)})`} />
+              {pruefung ? (
+                <Kennzahl wert={bisPruefung} einheit={bisPruefung === 1 ? 'Woche' : 'Wochen'} text={`bis zur Prüfung „${pruefung.bezeichnung}“ (${tagKurz(pruefung.datum)}${pruefung.datum.slice(0, 4)})`}>
+                  {d.pruefungen
+                    .filter((p) => p !== pruefung && p.datum > d.heute)
+                    .map((p) => (
+                      <span className="leise klein" key={p.bezeichnung + p.datum}>
+                        danach: {p.bezeichnung} am {datum(p.datum)}
+                      </span>
+                    ))}
+                  <span className="leise klein">Ende der Ausbildung: {datum(d.ende)}</span>
+                </Kennzahl>
+              ) : (
+                <Kennzahl wert={rest ?? '–'} einheit={rest === null ? '' : rest === 1 ? 'Woche' : 'Wochen'} text={rest === null ? 'Die laufende Woche liegt außerhalb der Ausbildung' : `bis zum Ende der Ausbildung (${datum(d.ende)})`}>
+                  {d.rechte.zuweisen && (
+                    <Link zu={`/azubis/${azubiId}`} className="klein">
+                      Prüfungstermine im Profil eintragen
+                    </Link>
+                  )}
+                </Kennzahl>
+              )}
               {berichte && !berichte.beginnFehlt && (
                 <Kennzahl wert={fehlend.length} einheit={fehlend.length === 1 ? 'Bericht fehlt' : 'Berichte fehlen'} text={`${faellig.length - fehlend.length} von ${faellig.length} fälligen Wochen geschrieben`} warnung={fehlend.length > 0}>
                   <Link zu={basis} className="klein">
@@ -692,7 +746,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
 
           <div className="plan-bereich">
             <aside className="karte plan-seite nicht-drucken">
-              <PlanKompass jahre={jahre} gelesen={gelesen} heute={aktuelle} gesamt={gesamt} schule={schule} ferien={ferienWochen} onSpringe={zeige} />
+              <PlanKompass jahre={jahre} gelesen={gelesen} heute={aktuelle} gesamt={gesamt} schule={schule} ferien={ferienWochen} pruefung={pruefungsWochen} onSpringe={zeige} />
             </aside>
 
             <div className="plan-wochen">
@@ -759,10 +813,11 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
                   <i className="streifen" /> Schulwoche
                 </span>
                 {REIHENFOLGE.map((art) => (
-                  <span key={art} className={`pille ${ART_FARBE[art]}`}>
+                  <span key={art} className={`legende-art ${art}`}>
                     {ART_TEXT[art]}
                   </span>
                 ))}
+                {d.pruefungen.length > 0 && <span className="legende-art pruefung">Prüfung</span>}
                 {zeigeFrei && <span className="pille ferien">Schulferien</span>}
                 {zeigeFrei && <span className="pille umrandet">Feiertag</span>}
               </div>

@@ -1,4 +1,4 @@
-import { Fehler, holeBenutzer, idAus, koerper, text } from './api-basis';
+import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import type { Ctx, Route } from './api-basis';
 import type { DB } from './db';
 import { heute } from './datum';
@@ -47,6 +47,12 @@ interface ProfilZeile {
   verkuerzung_grund: string;
   vorzeitige_zulassung: number;
   wochenstunden: number;
+  pruefungen: string;
+}
+
+export interface Pruefung {
+  bezeichnung: string;
+  datum: string;
 }
 
 export interface Profil {
@@ -60,6 +66,7 @@ export interface Profil {
   verkuerzungGrund: string;
   vorzeitigeZulassung: boolean;
   wochenstunden: number;
+  pruefungen: Pruefung[];
 }
 
 const STANDARD_REGELDAUER = 36;
@@ -74,6 +81,7 @@ const LEERES_PROFIL: Profil = {
   verkuerzungGrund: '',
   vorzeitigeZulassung: false,
   wochenstunden: 40,
+  pruefungen: [],
 };
 
 // ---------- Lesen ----------
@@ -95,6 +103,12 @@ function alleSchulen(db: DB): Berufsschule[] {
 export function leseProfil(db: DB, azubiId: number): Profil {
   const z = db.prepare('SELECT * FROM azubi_profil WHERE benutzer_id = ?').get(azubiId) as ProfilZeile | undefined;
   if (!z) return { ...LEERES_PROFIL };
+  let pruefungen: Pruefung[] = [];
+  try {
+    pruefungen = JSON.parse(z.pruefungen) as Pruefung[];
+  } catch {
+    // unlesbar → keine Termine
+  }
   return {
     berufId: z.beruf_id,
     berufsschuleId: z.berufsschule_id,
@@ -106,6 +120,7 @@ export function leseProfil(db: DB, azubiId: number): Profil {
     verkuerzungGrund: z.verkuerzung_grund,
     vorzeitigeZulassung: z.vorzeitige_zulassung === 1,
     wochenstunden: z.wochenstunden,
+    pruefungen,
   };
 }
 
@@ -387,17 +402,30 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       const stunden = Number(body.wochenstunden ?? 40);
       if (!Number.isFinite(stunden) || stunden < 1 || stunden > 60) throw new Fehler(400, 'Wochenstunden müssen zwischen 1 und 60 liegen');
 
+      const roh = body.pruefungen ?? [];
+      if (!Array.isArray(roh) || roh.length > 8) throw new Fehler(400, 'Höchstens acht Prüfungstermine');
+      const pruefungen: Pruefung[] = roh
+        .map((x) => {
+          if (!istObjekt(x)) throw new Fehler(400, 'Ungültiger Prüfungstermin');
+          const datum = datumOderLeer(x.datum, 'Prüfungstermin');
+          const bezeichnung = text(x.bezeichnung, 80, 'Bezeichnung der Prüfung', !!datum);
+          if (bezeichnung && !datum) throw new Fehler(400, `Für „${bezeichnung}“ fehlt das Datum`);
+          return { bezeichnung, datum };
+        })
+        .filter((x) => x.datum)
+        .sort((a, b) => a.datum.localeCompare(b.datum));
+
       db.prepare(
         `INSERT INTO azubi_profil (benutzer_id, beruf_id, berufsschule_id, ausbilder_id, ausbildungsbeginn, vertragsende, verkuerzung_monate,
-                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, geaendert, geaendert_von)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(benutzer_id) DO UPDATE SET
            beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id,
            ausbildungsbeginn = excluded.ausbildungsbeginn, vertragsende = excluded.vertragsende,
            verkuerzung_monate = excluded.verkuerzung_monate, verkuerzung_art = excluded.verkuerzung_art,
            verkuerzung_grund = excluded.verkuerzung_grund, vorzeitige_zulassung = excluded.vorzeitige_zulassung,
-           wochenstunden = excluded.wochenstunden, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von`,
-      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, c.k.jetzt().toISOString(), c.b.id);
+           wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von`,
+      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id);
       protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi);
       const profil = leseProfil(db, id);
       return { status: 200, body: { profil, stand: standAus(db, profil, heute(c.k.jetzt())).stand } };

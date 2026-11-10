@@ -110,6 +110,12 @@ export interface Profil {
   verkuerzungGrund: string;
   vorzeitigeZulassung: boolean;
   wochenstunden: number;
+  pruefungen: Pruefung[];
+}
+
+export interface Pruefung {
+  bezeichnung: string;
+  datum: string;
 }
 
 export interface Stand {
@@ -300,6 +306,10 @@ export interface PlanEintrag {
   zustaendig: string;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
+  /** vom Azubi selbst angelegt */
+  vomAzubi: boolean;
+  /** das angemeldete Konto darf den Eintrag ändern und löschen */
+  bearbeitbar: boolean;
 }
 
 export interface PlanWoche {
@@ -320,6 +330,7 @@ export interface PlanAntwort {
   beruf: string;
   wochen: PlanWoche[];
   eintraege: PlanEintrag[];
+  pruefungen: Pruefung[];
   feiertage: { datum: string; name: string }[];
   ferien: { name: string; von: string; bis: string }[];
   ferienVorhanden: boolean;

@@ -88,13 +88,15 @@ export function darfAbzeichnen(db: DB, wer: Wer, azubiId: number, montag: string
 }
 
 /**
- * Darf im Ausbildungsplan dieses Azubis Einträge dieser Art anlegen, ändern oder löschen.
+ * Darf im Ausbildungsplan dieses Azubis Einträge dieser Art anlegen.
  * Ausbilder: alles. Beauftragte: nur Aufgaben und Notizen, solange ihre Zuweisung läuft.
- * Schulblöcke und Einsätze plant allein der Ausbilder. Azubis haken nur ab (eigene Route).
+ * Azubis: Aufgaben und Notizen im eigenen Plan. Schulblöcke und Einsätze plant allein der Ausbilder.
+ * Ändern und Löschen: siehe darfPlanEintragAendern.
  */
 export function darfPlanBearbeiten(db: DB, wer: Wer, azubiId: number, art: string, heute: string): boolean {
   if (!Number.isInteger(azubiId) || !istAzubi(db, azubiId)) return false;
   if (wer.rolle === 'ausbilder') return true;
+  if (wer.rolle === 'azubi') return wer.id === azubiId && (art === 'aufgabe' || art === 'notiz');
   if (wer.rolle === 'beauftragter' && (art === 'aufgabe' || art === 'notiz')) {
     return !!db
       .prepare(
@@ -104,6 +106,16 @@ export function darfPlanBearbeiten(db: DB, wer: Wer, azubiId: number, art: strin
       .get(azubiId, wer.id, heute, heute);
   }
   return false;
+}
+
+/**
+ * Darf einen vorhandenen Plan-Eintrag ändern oder löschen.
+ * Wie beim Anlegen – Azubis aber nur Einträge, die sie selbst angelegt haben
+ * (was Ausbilder oder Beauftragte eingetragen haben, können sie nur abhaken).
+ */
+export function darfPlanEintragAendern(db: DB, wer: Wer, eintrag: { azubi_id: number; art: string; erstellt_von: number | null }, heute: string): boolean {
+  if (!darfPlanBearbeiten(db, wer, eintrag.azubi_id, eintrag.art, heute)) return false;
+  return wer.rolle !== 'azubi' || eintrag.erstellt_von === wer.id;
 }
 
 /** IDs aller Azubis, die das Konto sehen darf. */

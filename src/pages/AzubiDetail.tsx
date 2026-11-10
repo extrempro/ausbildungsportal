@@ -42,6 +42,18 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
       )}
       <dt>Wochenstunden</dt>
       <dd>{String(p.profil.wochenstunden).replace('.', ',')}</dd>
+      {p.profil.pruefungen.length > 0 && (
+        <>
+          <dt>Prüfungen</dt>
+          <dd>
+            {p.profil.pruefungen.map((x) => (
+              <div key={x.bezeichnung + x.datum}>
+                {x.bezeichnung}: {datum(x.datum)}
+              </div>
+            ))}
+          </dd>
+        </>
+      )}
     </dl>
   );
 }
@@ -131,6 +143,27 @@ function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; st
           Vorzeitige Zulassung zur Abschlussprüfung
         </label>
       </div>
+      <fieldset className="abschnitt">
+        <legend>Prüfungstermine</legend>
+        <p className="leise klein">Erscheinen im Ausbildungsplan des Azubis. Die Bezeichnung ist frei, z. B. „Abschlussprüfung Teil 1“ oder „Zwischenprüfung“.</p>
+        {wert.pruefungen.map((x, i) => (
+          <div className="zeile drei" key={i}>
+            <input aria-label={`Bezeichnung der Prüfung ${i + 1}`} value={x.bezeichnung} maxLength={80} placeholder="Bezeichnung" onChange={(e) => setze('pruefungen', wert.pruefungen.map((y, j) => (j === i ? { ...y, bezeichnung: e.target.value } : y)))} />
+            <input type="date" aria-label={`Datum der Prüfung ${i + 1}`} value={x.datum} onChange={(e) => setze('pruefungen', wert.pruefungen.map((y, j) => (j === i ? { ...y, datum: e.target.value } : y)))} />
+            <button type="button" className="knopf schlicht" onClick={() => setze('pruefungen', wert.pruefungen.filter((_, j) => j !== i))}>
+              Entfernen
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="knopf schlicht"
+          disabled={wert.pruefungen.length >= 8}
+          onClick={() => setze('pruefungen', [...wert.pruefungen, { bezeichnung: ['Abschlussprüfung Teil 1', 'Abschlussprüfung Teil 2'][wert.pruefungen.length] ?? '', datum: '' }])}
+        >
+          Prüfungstermin hinzufügen
+        </button>
+      </fieldset>
       <p className="leise klein">
         Fehlen Beruf oder Berufsschule in der Auswahl, lassen sie sich unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> anlegen. Die App rechnet nur mit den
         eingetragenen Monaten; ob eine Verkürzung zulässig ist, entscheidet die zuständige Kammer.
