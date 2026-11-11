@@ -631,7 +631,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor.</li>
           <li>Private Termine der Azubis stehen nicht im Kalender.</li>
           <li>Der Kalender ist nur zum Lesen. Geplant wird im Ausbildungsplan{rolle === 'ausbilder' ? ' oder in der Sammelplanung' : ''}.</li>
-          <li>Am Handy seitlich wischen; die Spalte mit den Namen bleibt stehen.</li>
+          <li>Am Handy steht statt der breiten Tabelle je Azubi eine Karte: oben das Jahr als schmale Leiste, darunter „Jetzt und als Nächstes“ als Text. „Ganzes Jahr“ klappt alle Einträge der Reihe nach auf.</li>
         </ul>
       </>
     ),

@@ -148,14 +148,22 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
         </p>
       ) : (
         <>
-          <div className="filter" role="group" aria-label="Nach Stand filtern">
-            {FILTER.filter((f) => f.wert === 'alle' || anzahl(f.wert) > 0).map((f) => (
-              <button key={f.wert} type="button" className="knopf schlicht" aria-pressed={filter === f.wert} onClick={() => setFilter(f.wert)}>
-                {f.text} ({anzahl(f.wert)})
-              </button>
-            ))}
+          {/* zwei getrennte Gruppen: links filtern, rechts das Heft ausgeben – am Handy untereinander, jede mit eigener Überschrift */}
+          <div className="heft-leiste">
+            <div className="heft-gruppe">
+              <span className="ueberschrift-klein nur-schmal">Wochen anzeigen</span>
+              <div className="filter heft-filter" role="group" aria-label="Nach Stand filtern">
+                {FILTER.filter((f) => f.wert === 'alle' || anzahl(f.wert) > 0).map((f) => (
+                  <button key={f.wert} type="button" className="knopf schlicht" aria-pressed={filter === f.wert} onClick={() => setFilter(f.wert)}>
+                    {f.text} ({anzahl(f.wert)})
+                  </button>
+                ))}
+              </div>
+            </div>
             {anzahl('alle') > anzahl('fehlt') && (
-              <span className="heft-pdf rechts">
+              <div className="heft-gruppe">
+                <span className="ueberschrift-klein nur-schmal">Ganzes Berichtsheft</span>
+                <span className="heft-pdf">
                 {/* Abkürzung: das ganze Heft sofort als PDF – ohne die Seite mit der Auswahl */}
                 <PdfKnopf
                   symbol
@@ -167,6 +175,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                   <Icon name="heft" /> Berichtsheft drucken …
                 </Link>
               </span>
+              </div>
             )}
           </div>
           <div className="karte tabelle-rahmen">

@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.30.1] – 2026-11-11
+
+### Geändert
+
+- **Berichtsheft am Handy:** Über der Liste stehen zwei klar getrennte Gruppen mit Überschrift – „Wochen anzeigen“ (Filter als gleich breite Knöpfe in zwei Spalten) und „Ganzes Berichtsheft“ („Berichtsheft drucken …“ über die ganze Breite, das PDF-Symbol rechts daneben). Die Knöpfe einer Woche stehen links beieinander.
+- **Jahreskalender für Ausbilder und Beauftragte am Handy:** statt der breiten Tabelle je Azubi eine Karte – oben das Jahr als schmale Leiste, darunter „Jetzt und als Nächstes“ als Text (Art, Zeitraum, Titel); „Ganzes Jahr“ klappt alle Einträge der Reihe nach auf. Nichts mehr zum seitlichen Wischen. Am PC bleibt die Tabelle mit Balken.
+- Tablet: Die Knöpfe einer Berichtszeile brechen um, statt die Seite breiter als den Bildschirm zu machen.
+
 ## [0.30.0] – 2026-11-11
 
 ### Geändert
