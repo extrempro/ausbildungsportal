@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.39.3] – 2026-11-11
+
+### Neu
+
+- **Gestaltungsübersicht** (`docs/gestaltung.md`): Farben, Schrift, Abstände und die vorhandenen Bausteine (Knöpfe, Karten, Meldungen, Marken, Formulare) an einer Stelle – für alle, die am Portal mitarbeiten. Am Portal selbst ändert sich nichts.
+
 ## [0.39.2] – 2026-11-11
 
 ### Neu

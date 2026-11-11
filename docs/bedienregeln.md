@@ -2,7 +2,7 @@
 
 Stand: 11.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.22.2
 
-Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md).
+Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md), Farben und Bausteine in [gestaltung.md](gestaltung.md).
 
 ## Vor dem Pull Request prüfen
 

@@ -35,6 +35,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `src/dialoge.tsx` | `rueckfrage()`, `melde()`, `<Ladefehler>` |
 | `src/index.css` | das eine Stylesheet |
 | `docs/bedienregeln.md` | Checkliste für die Bedienung – **vor jedem Pull Request lesen** |
+| `docs/gestaltung.md` | Farben, Schrift und vorhandene Bausteine – **vor neuem CSS lesen** |
 
 Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines CSS, esbuild. **Keine neuen Abhängigkeiten** ohne Rückfrage beim Nutzer.
 
@@ -51,7 +52,7 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 
 ## Bedienung und Gestaltung – die häufigsten Punkte
 
-Vollständig in `docs/bedienregeln.md`. Nimm vorhandene Bausteine, bevor du etwas neu baust.
+Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aussehen). Nimm vorhandene Bausteine, bevor du etwas neu baust.
 
 - **Rückfrage:** `rueckfrage(text, { ja: 'Konto löschen', gefahr: true })` – nie `window.confirm`.
 - **Bestätigung:** `melde('…')`. **Fehler:** an der Stelle, `.hinweis.fehler` mit `role="alert"`.
