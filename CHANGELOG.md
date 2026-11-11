@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.23.1] – 2026-11-11
+
+### Geändert
+
+- Stammdaten: Das Feld „Lernmodul“ steht jetzt immer am Ausbildungsberuf. Liegen auf dem Server noch keine Lerninhalte, ist es gesperrt, und ein Hinweis sagt, was fehlt und wo die Anleitung steht. Sind Inhalte da, nennt die Seite sie mit Umfang und Stand. Vorher fehlte das Feld ohne Erklärung.
+- Beim Start schreibt das Portal ins Log, welche Lerninhalte es gefunden hat – oder dass der Ordner leer ist.
+
 ## [0.23.0] – 2026-11-11
 
 ### Neu

@@ -1,7 +1,7 @@
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { api } from '../api';
+import { api, datum } from '../api';
 import { useEingaben } from '../router';
 import type { Beruf, Berufsschule, Stammdaten as Daten } from '../api';
 import { HandbuchLink } from '../handbuchLink';
@@ -59,20 +59,18 @@ function BerufFormular({ beruf, pakete, onFertig }: { beruf?: Beruf; pakete: Dat
         Regeldauer in Monaten
         <input name="regeldauer" type="number" min={12} max={60} step={1} defaultValue={beruf?.regeldauer_monate ?? 36} list="regeldauern" required />
       </label>
-      {(pakete.length > 0 || beruf?.lernpaket) && (
-        <label>
-          Lernmodul
-          <select name="lernpaket" defaultValue={beruf?.lernpaket ?? ''}>
-            <option value="">– aus –</option>
-            {pakete.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.titel} ({p.themenfelder} Themenfelder{p.fehler > 0 ? `, ${p.fehler} Fehler in den Inhalten` : ''})
-              </option>
-            ))}
-            {beruf?.lernpaket && !pakete.some((p) => p.id === beruf.lernpaket) && <option value={beruf.lernpaket}>{beruf.lernpaket} (Inhalte fehlen auf dem Server)</option>}
-          </select>
-        </label>
-      )}
+      <label>
+        Lernmodul
+        <select name="lernpaket" defaultValue={beruf?.lernpaket ?? ''} disabled={pakete.length === 0 && !beruf?.lernpaket}>
+          <option value="">{pakete.length === 0 && !beruf?.lernpaket ? '– nicht verfügbar –' : '– aus –'}</option>
+          {pakete.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.titel} ({p.themenfelder} Themenfelder{p.fehler > 0 ? `, ${p.fehler} Fehler in den Inhalten` : ''})
+            </option>
+          ))}
+          {beruf?.lernpaket && !pakete.some((p) => p.id === beruf.lernpaket) && <option value={beruf.lernpaket}>{beruf.lernpaket} (Inhalte fehlen auf dem Server)</option>}
+        </select>
+      </label>
       <div className="aktionen links">
         <button className={beruf ? 'knopf schlicht' : 'knopf'}>{beruf ? 'Beruf speichern' : 'Beruf anlegen'}</button>
         {beruf && (
@@ -240,6 +238,20 @@ export function Stammdaten() {
 
       <section className="karte">
         <h2>Ausbildungsberufe</h2>
+        <p className="leise">
+          Mit dem Feld <strong>Lernmodul</strong> schaltest du für einen Beruf Lerninhalte ein. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“. Ihren Lernstand sehen nur sie selbst.
+        </p>
+        {daten.lernpakete.length === 0 ? (
+          <p className="hinweis">
+            <strong>Auf dem Server liegen noch keine Lerninhalte</strong> – deshalb lässt sich das Lernmodul noch nicht auswählen. Wer das Portal betreibt, bindet sie als Ordner ein; wie das geht, steht in der Datei <code>lerninhalte/README.md</code> des Portals. Danach erscheinen
+            sie hier von selbst.
+          </p>
+        ) : (
+          <p className="leise klein">
+            Vorhandene Lerninhalte:{' '}
+            {daten.lernpakete.map((p) => `${p.titel} (${p.themenfelder} Themenfelder, ${p.unterthemen} Unterthemen, Stand ${datum(p.stand)}${p.fehler > 0 ? `, ${p.fehler} Fehler – siehe Log des Portals` : ''})`).join(' · ')}
+          </p>
+        )}
         {daten.berufe.length === 0 && <p className="leise">Noch kein Beruf angelegt.</p>}
         {daten.berufe.map((b) => (
           <BerufFormular key={`${b.id}-${b.bezeichnung}-${b.fachrichtung}-${b.regeldauer_monate}-${b.lernpaket}`} beruf={b} pakete={daten.lernpakete} onFertig={fertig} />
