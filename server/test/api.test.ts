@@ -126,6 +126,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'PUT /api/planvorlagen/:id': 'ausbilder',
     'DELETE /api/planvorlagen/:id': 'ausbilder',
     'GET /api/uebersicht': 'ausbilder,beauftragter',
+    'GET /api/jahreskalender': 'azubi,ausbilder,beauftragter',
   });
 });
 

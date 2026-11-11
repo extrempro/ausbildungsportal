@@ -683,6 +683,11 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               : 'Nur zur Ansicht.'}{' '}
         Schule, Einsätze und Prüfungen lassen sich unter <Link zu="/konto">Konto</Link> als Kalender abonnieren. <HandbuchLink kapitel="plan">{d.eigenes ? 'Den Ausbildungsplan lesen' : 'Ausbildungsplan'}</HandbuchLink>
       </p>
+      <p className="aktionen links nicht-drucken">
+        <Link zu={d.eigenes ? '/jahreskalender' : `/jahreskalender/${azubiId}`} className="knopf schlicht">
+          Jahreskalender anzeigen
+        </Link>
+      </p>
 
       {d.beginnFehlt && (
         <p className="hinweis">
