@@ -10,7 +10,7 @@ import { Link } from '../router';
 import { PaketFuss } from './Lernen';
 import type { LernPaket } from './Lernen';
 
-type Typ = 'begriff' | 'befehl' | 'tabelle' | 'merksatz' | 'frage';
+type Typ = 'begriff' | 'befehl' | 'tabelle' | 'merksatz' | 'frage' | 'zusatz';
 
 interface Eintrag {
   typ: Typ;
@@ -18,6 +18,8 @@ interface Eintrag {
   text: string;
   tabelle?: Tabelle;
   loesung?: string[];
+  abschnitte?: string[];
+  volltext?: string;
   feld: string;
   sub: string;
   subTitel: string;
@@ -29,10 +31,10 @@ interface Daten {
   eintraege: Eintrag[];
 }
 
-const TYPEN: Typ[] = ['begriff', 'befehl', 'tabelle', 'merksatz', 'frage'];
-const TYP_TEXT: Record<Typ, string> = { begriff: 'Begriff', befehl: 'Befehl', tabelle: 'Tabelle', merksatz: 'Merksatz', frage: 'Prüfungsfrage' };
-const TYP_MEHRZAHL: Record<Typ, string> = { begriff: 'Begriffe', befehl: 'Befehle', tabelle: 'Tabellen', merksatz: 'Merksätze', frage: 'Prüfungsfragen' };
-const TYP_FARBE: Record<Typ, string> = { begriff: 'blau', befehl: 'grau', tabelle: 'grau', merksatz: 'gelb', frage: 'gruen' };
+const TYPEN: Typ[] = ['begriff', 'befehl', 'tabelle', 'merksatz', 'frage', 'zusatz'];
+const TYP_TEXT: Record<Typ, string> = { begriff: 'Begriff', befehl: 'Befehl', tabelle: 'Tabelle', merksatz: 'Merksatz', frage: 'Prüfungsfrage', zusatz: 'Zusatzwissen' };
+const TYP_MEHRZAHL: Record<Typ, string> = { begriff: 'Begriffe', befehl: 'Befehle', tabelle: 'Tabellen', merksatz: 'Merksätze', frage: 'Prüfungsfragen', zusatz: 'Zusatzwissen' };
+const TYP_FARBE: Record<Typ, string> = { begriff: 'blau', befehl: 'grau', tabelle: 'grau', merksatz: 'gelb', frage: 'gruen', zusatz: 'violett' };
 
 /** Kleinbuchstaben, Umlaute vereinheitlicht, Auszeichnung entfernt – damit „Schluessel“ auch „Schlüssel“ findet. */
 function normalisiere(s: string): string {
@@ -88,7 +90,7 @@ export function LernKompendium() {
     if (!daten) return [];
     const feldTitel = new Map(daten.themenfelder.map((f) => [f.id, f.titel]));
     return daten.eintraege.map((e, i) => {
-      const mehr = e.tabelle ? [...e.tabelle.kopf, ...e.tabelle.zeilen.flat()].join(' ') : (e.loesung ?? []).join(' ');
+      const mehr = e.tabelle ? [...e.tabelle.kopf, ...e.tabelle.zeilen.flat()].join(' ') : (e.volltext ?? (e.loesung ?? []).join(' '));
       const ft = feldTitel.get(e.feld) ?? '';
       return { ...e, nr: i, feldTitel: ft, buchstabe: buchstabeVon(e.titel), such: normalisiere(`${e.titel} ${e.text} ${mehr} ${e.subTitel} ${ft}`) };
     });
@@ -113,7 +115,7 @@ export function LernKompendium() {
       <h1>Kompendium</h1>
       <LernReiter />
       <p className="leise">
-        Zum Nachschlagen: {alle.length} Einträge aus allen Cheatsheets – Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen. <HandbuchLink kapitel="kompendium">Im Kompendium nachschlagen</HandbuchLink>
+        Zum Nachschlagen: {alle.length} Einträge aus allen Cheatsheets – Begriffe, Befehle, Tabellen, Merksätze, Prüfungsfragen und Zusatzwissen. <HandbuchLink kapitel="kompendium">Im Kompendium nachschlagen</HandbuchLink>
       </p>
 
       <section className="karte komp-filter" aria-label="Suche und Filter">
@@ -208,9 +210,18 @@ export function LernKompendium() {
                     </ol>
                   </details>
                 )}
+                {e.abschnitte && e.abschnitte.length > 0 && (
+                  <p className="lern-marken">
+                    {e.abschnitte.map((a) => (
+                      <span key={a} className="pille grau">
+                        {a}
+                      </span>
+                    ))}
+                  </p>
+                )}
                 <p className="klein komp-weg">
-                  <Link zu={`/lernen/${e.feld}#u-${e.sub}`}>
-                    Zum Cheatsheet: {e.feldTitel} › {e.subTitel}
+                  <Link zu={`/lernen/${e.feld}#${e.typ === 'zusatz' ? 'z' : 'u'}-${e.sub}`}>
+                    {e.typ === 'zusatz' ? 'Zum Zusatzwissen' : 'Zum Cheatsheet'}: {e.feldTitel} › {e.typ === 'zusatz' ? e.titel : e.subTitel}
                   </Link>
                 </p>
               </li>

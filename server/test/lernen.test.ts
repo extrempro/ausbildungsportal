@@ -47,6 +47,21 @@ Teile 192.168.10.0/24 in 4 Subnetze.
 ## Häufige Fehler
 - Netzadresse als Host vergeben.
 
+## Zusatz: Subnetze planen {#planen}
+typ: text
+zu: subnetting, wiso.vertrag
+
+Wie man ein Netz aufteilt.
+
+Erst zählen, dann rechnen.
+
+### Vorgehen
+1. Hosts zählen
+2. Präfix wählen
+
+### Checkliste: Fertig?
+- Reserve eingeplant
+
 ## Links
 - [Elektronik-Kompendium](https://www.elektronik-kompendium.de/) – Erklärungen
 `;
@@ -290,6 +305,7 @@ test('Kompendium: alle Bausteine aus allen Cheatsheets, nach Titel sortiert, mit
     'begriff:Netzadresse',
     'tabelle:Präfixe',
     'merksatz:Subnetting',
+    'zusatz:Subnetze planen',
     'frage:Teile 192.168.10.0/24 in 4 Subnetze.',
   ]);
   const frage = k.eintraege.at(-1);
@@ -297,4 +313,40 @@ test('Kompendium: alle Bausteine aus allen Cheatsheets, nach Titel sortiert, mit
   assert.deepEqual(k.eintraege[4].tabelle.kopf, ['Präfix', 'Hosts']);
   // ohne Lernmodul am Beruf: nichts
   assert.equal((await ruf(w.u, 'GET', '/api/lernen/kompendium', { cookies: als(w, w.maler) })).status, 404);
+});
+
+test('Zusatzwissen: Inhalt, Verweise in beide Richtungen, Haken „gelesen“ – privat', async () => {
+  const w = await welt();
+  const c = als(w, w.anna);
+  const t = koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).thema;
+  const z = t.zusatz[0];
+  assert.deepEqual([z.id, z.titel, z.typ, z.intro, z.gelesen], ['planen', 'Subnetze planen', 'text', 'Wie man ein Netz aufteilt.', false]);
+  assert.deepEqual(z.absaetze, ['Erst zählen, dann rechnen.']);
+  assert.deepEqual(z.abschnitte.map((a: { art: string; titel: string }) => [a.art, a.titel]), [['text', 'Vorgehen'], ['checkliste', 'Fertig?']]);
+  assert.deepEqual(z.zu, [{ feld: 'netz', feldTitel: 'Netzwerkgrundlagen', id: 'subnetting', titel: 'Subnetting' }, { feld: 'wiso', feldTitel: 'Wirtschaft', id: 'vertrag', titel: 'Ausbildungsvertrag' }]);
+  assert.equal('ablaufDatei' in z, false);
+  assert.deepEqual(t.unterthemen[0].vertiefung, [{ feld: 'netz', feldTitel: 'Netzwerkgrundlagen', id: 'planen', titel: 'Subnetze planen' }]);
+  assert.deepEqual(t.unterthemen[1].vertiefung, []);
+  // das andere Themenfeld verweist herüber
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/lernen/thema/wiso', { cookies: c })).thema.unterthemen[0].vertiefung[0].feld, 'netz');
+
+  assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: 'ja' } })).status, 400);
+  assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.subnetting', { cookies: c, body: { gelesen: true } })).status, 404);
+  assert.deepEqual(koerper(await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } })), { id: 'netz.planen', gelesen: true });
+  assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } })).status, 200);
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c })).themenfelder[0].zusatz, [{ id: 'planen', titel: 'Subnetze planen', gelesen: true }]);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).thema.zusatz[0].gelesen, true);
+  // zählt nicht zur Ampel
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c })).themenfelder[0].unterthemen[0].status, 'rot');
+  // Ben sieht Annas Haken nicht; andere Rollen kommen nicht heran
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.ben) })).themenfelder[0].zusatz[0].gelesen, false);
+  for (const wer of [w.ausbilder, w.bea, admin(w.u.db), w.maler]) assert.ok([403, 404].includes((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: als(w, wer), body: { gelesen: true } })).status));
+  assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM lern_zusatz').get() as { n: number }).n, 1);
+  assert.equal(koerper(await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: false } })).gelesen, false);
+  assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM lern_zusatz').get() as { n: number }).n, 0);
+
+  // im Kompendium auffindbar – auch über Text aus den Abschnitten
+  const e = koerper(await ruf(w.u, 'GET', '/api/lernen/kompendium', { cookies: c })).eintraege.find((x: { typ: string }) => x.typ === 'zusatz');
+  assert.deepEqual([e.titel, e.text, e.feld, e.sub, e.abschnitte], ['Subnetze planen', 'Wie man ein Netz aufteilt.', 'netz', 'planen', ['Vorgehen', 'Fertig?']]);
+  assert.match(e.volltext, /Reserve eingeplant/);
 });

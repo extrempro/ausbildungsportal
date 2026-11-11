@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.25.0] – 2026-11-11
+
+### Neu
+
+- **Lernmodul: Zusatzwissen.** Unten im Themenfeld steht das Zusatzwissen des Inhaltspakets: Texte mit Grafiken, Tabellen und Schritten, Checklisten, Vergleiche als Karten und **Abläufe Schritt für Schritt** (Geräte in einer Reihe, ein Paket wandert; weiter per Knopf oder von selbst mit wählbarem Tempo).
+- Zusatzwissen ist freiwillig und zählt nicht zur Ampel. Der Azubi kann es als „Gelesen“ abhaken – privat wie der übrige Lernstand (neue Tabelle `lern_zusatz`, Migration 015).
+- Verweise in beide Richtungen: Am Unterthema steht „Vertiefung im Zusatzwissen“, am Zusatzwissen „Vertieft: …“ – auch über Themenfelder hinweg.
+- Navigation am Rand nennt das Zusatzwissen des geöffneten Themenfelds; im Kompendium gibt es die Art „Zusatzwissen“, die Suche findet auch im Text.
+- Schnittstelle `PATCH /api/lernen/zusatz/:id` (nur Azubi, nur der eigene Haken).
+- Handbuch für Azubis: Kapitel „Lernen“ und „Kompendium“ ergänzt.
+
 ## [0.24.0] – 2026-11-11
 
 ### Neu

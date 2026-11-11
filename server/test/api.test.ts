@@ -68,6 +68,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/lernen/kompendium': 'azubi',
     'GET /api/lernen/thema/:id': 'azubi',
     'PATCH /api/lernen/unterthema/:id': 'azubi',
+    'PATCH /api/lernen/zusatz/:id': 'azubi',
     'GET /api/ich/kalender': 'ausbilder,beauftragter,azubi',
     'POST /api/ich/kalender': 'ausbilder,beauftragter,azubi',
     'DELETE /api/ich/kalender': 'ausbilder,beauftragter,azubi',

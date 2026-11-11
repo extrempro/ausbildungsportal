@@ -307,6 +307,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Ampel">Damit schätzt du dich selbst ein: „Offen“ (noch nichts gemacht), „In Arbeit“ (kenne ich, brauche aber noch das Cheatsheet), „Sicher“ (kann ich ohne Hilfe erklären und anwenden).</Begriff>
           <Begriff wort="Lernpunkt">Steht ein Unterthema auf „In Arbeit“, kannst du notieren, was dir noch schwerfällt. Der Text bleibt, auch wenn du später auf „Sicher“ stellst.</Begriff>
           <Begriff wort="Notiz">Eine freie Notiz zu jedem Unterthema, zum Beispiel „in der Berufsschule nachfragen“.</Begriff>
+          <Begriff wort="Zusatzwissen">Vertiefungen zu einem Themenfeld, zum Beispiel ein Ablauf Schritt für Schritt oder ein Vergleich. Zusatzwissen ist freiwillig und zählt nicht zur Ampel. Du findest es unten im Themenfeld im gestrichelten Rahmen.</Begriff>
         </dl>
         <ol className="schritte">
           <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
@@ -321,6 +322,9 @@ const AZUBI: Kapitel[] = [
           <li>Die Ampel eines Themenfelds ergibt sich aus den Unterthemen: „Sicher“, wenn mindestens 80 von 100 Unterthemen sicher sind und keines offen ist. „Offen“, wenn alle offen sind. Sonst „In Arbeit“.</li>
           <li>Die Prozentzahl: sicher zählt ganz, in Arbeit halb, offen gar nicht.</li>
           <li>Steht bei einem Unterthema „Inhalt aktualisiert“, wurde das Cheatsheet geändert, seit du es bewertet hast. Lies es noch einmal und wähle „Als gesehen merken“.</li>
+          <li>Steht an einem Unterthema „Vertiefung“, gibt es dazu Zusatzwissen. Der Link darunter bringt dich hin – manchmal in ein anderes Themenfeld. Beim Zusatzwissen steht umgekehrt unter „Vertieft:“, zu welchen Unterthemen es gehört.</li>
+          <li>Bei einem Ablauf gehst du mit „Nächster Schritt“ weiter oder lässt ihn mit „Ablauf abspielen“ von selbst laufen; das Tempo kannst du wählen. Die Tabellen daneben zeigen, was sich in diesem Schritt ändert.</li>
+          <li>Hast du ein Zusatzwissen durch, setz den Haken bei „Gelesen“. Auch diesen Haken siehst nur du.</li>
           <li>Die Cheatsheets ersetzen nicht die Berufsschule. Sie helfen dir, den Stoff zu sortieren und Lücken zu finden.</li>
         </ul>
       </>
@@ -332,12 +336,12 @@ const AZUBI: Kapitel[] = [
     inhalt: (
       <>
         <p>
-          Das <Link zu="/lernen/kompendium">Kompendium</Link> ist ein Nachschlagewerk: Es sammelt alles aus allen Cheatsheets in einer Liste von A bis Z – Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen. Praktisch, wenn du im Betrieb schnell etwas wissen willst und nicht weißt, in welchem Themenfeld es steht. Du findest es unter „Lernen“ oben neben „Themenfelder“.
+          Das <Link zu="/lernen/kompendium">Kompendium</Link> ist ein Nachschlagewerk: Es sammelt alles aus allen Cheatsheets in einer Liste von A bis Z – Begriffe, Befehle, Tabellen, Merksätze, Prüfungsfragen und das Zusatzwissen. Praktisch, wenn du im Betrieb schnell etwas wissen willst und nicht weißt, in welchem Themenfeld es steht. Du findest es unter „Lernen“ oben neben „Themenfelder“.
         </p>
         <ol className="schritte">
           <li>Bei „Suchen“ ein Wort eintippen, zum Beispiel „DHCP“. Die Liste zeigt sofort nur noch passende Einträge. Die Fundstellen sind gelb markiert.</li>
           <li>Wenn du willst: ein Themenfeld wählen oder nur eine Art anzeigen, zum Beispiel „Befehle“.</li>
-          <li>Unter jedem Eintrag steht „Zum Cheatsheet“. Damit springst du zum passenden Unterthema; das Cheatsheet ist dann schon aufgeklappt.</li>
+          <li>Unter jedem Eintrag steht „Zum Cheatsheet“ (beim Zusatzwissen „Zum Zusatzwissen“). Damit springst du zur passenden Stelle; der Inhalt ist dann schon aufgeklappt.</li>
         </ol>
         <ul className="punkte">
           <li>Mehrere Suchwörter: Es erscheinen nur Einträge, in denen alle vorkommen.</li>

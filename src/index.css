@@ -5812,3 +5812,485 @@ html.dark {
     display: block;
   }
 }
+
+/* ---------- Lernmodul: Zusatzwissen ---------- */
+.zusatz-bereich {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 24px 0;
+  padding: 20px;
+  border: 2px dashed var(--c-border);
+  border-radius: 14px;
+}
+
+.zusatz-bereich > .karte {
+  margin: 0;
+}
+
+.zusatz-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.zusatz-kopf h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.zusatz-kopf h2 svg,
+.lern-vertiefung strong svg {
+  color: var(--c-accent);
+}
+
+.zusatz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-margin-top: 80px;
+}
+
+.zusatz.gelesen {
+  border-left: 4px solid var(--ampel-gruen);
+}
+
+.zusatz-titelzeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.zusatz-titelzeile > div {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.zusatz-titelzeile h3,
+.zusatz-titelzeile p {
+  margin: 0;
+}
+
+.zusatz-titelzeile p {
+  margin-top: 4px;
+}
+
+.zusatz-gelesen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.zusatz-gelesen input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--c-accent);
+}
+
+.zusatz-vertieft {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--c-muted);
+}
+
+.zusatz-inhalt {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-wrap: anywhere;
+}
+
+.zusatz-inhalt p {
+  margin: 0;
+}
+
+.zusatz-abschnitt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.zusatz-abschnitt h4 {
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 17px;
+}
+
+.zusatz-abschnitt .punkte,
+.zusatz-schritte {
+  margin: 0;
+}
+
+.zusatz-schritte {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 22px;
+}
+
+.zusatz-haken {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zusatz-haken li {
+  display: flex;
+  gap: 8px;
+}
+
+.zusatz-haken svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ampel-gruen);
+}
+
+.zusatz-vergleich {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.zusatz-vergleich-karte {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-bg);
+  font-size: 14px;
+}
+
+.zusatz-vergleich-karte > strong {
+  font-size: 16px;
+}
+
+.zusatz-vergleich-karte pre {
+  margin: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--c-code);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-x: auto;
+}
+
+.zusatz-vergleich-karte .plus {
+  color: var(--ampel-gruen);
+}
+
+.zusatz-vergleich-karte .minus {
+  color: var(--ampel-rot);
+}
+
+/* Hinweis am Unterthema: Dazu gibt es Zusatzwissen */
+.lern-vertiefung {
+  margin: 8px 0 12px;
+  padding: 10px 14px;
+  border: 1px dashed var(--c-border);
+  border-radius: 10px;
+}
+
+.lern-vertiefung strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+.lern-vertiefung ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lern-vertiefung a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-weight: 600;
+}
+
+.lern-navi-zwischen {
+  margin: 8px 0 2px 24px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.lern-navi-unter button svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--c-accent);
+}
+
+/* Ablauf Schritt für Schritt */
+.ablauf {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ablauf .filter {
+  margin: 0;
+}
+
+.ablauf-rahmen {
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.ablauf-buehne {
+  min-width: 640px;
+}
+
+.ablauf-geraete {
+  display: flex;
+  align-items: center;
+}
+
+.ablauf-glied {
+  display: contents;
+}
+
+.ablauf-leitung {
+  flex: 1 1 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-track);
+  transition: background-color 0.3s;
+}
+
+.ablauf-leitung.an {
+  background: var(--c-accent);
+}
+
+.ablauf-geraet {
+  flex: none;
+  width: 120px;
+  padding: 8px;
+  border: 2px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-card);
+  text-align: center;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.ablauf-geraet strong,
+.ablauf-geraet span {
+  display: block;
+}
+
+.ablauf-geraet strong {
+  font-size: 14px;
+}
+
+.ablauf-geraet span {
+  color: var(--c-muted);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.ablauf-geraet.an {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+}
+
+.ablauf-geraet.an strong {
+  color: var(--c-accent);
+}
+
+.ablauf-bahn {
+  position: relative;
+  height: 44px;
+  margin-top: 8px;
+}
+
+.ablauf-linie {
+  position: absolute;
+  top: 50%;
+  right: 60px;
+  left: 60px;
+  height: 2px;
+  background: var(--c-track);
+}
+
+.ablauf-halt {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-track);
+  transform: translate(-50%, -50%);
+}
+
+.ablauf-paket {
+  position: absolute;
+  top: 50%;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  transition: left 1.6s ease-in-out, background-color 0.3s;
+}
+
+.ablauf-paket.blockiert {
+  background: #dc2626;
+}
+
+.ablauf-paket.kopie {
+  border: 2px dashed var(--c-accent);
+  background: var(--c-card);
+  color: var(--c-accent);
+  box-shadow: none;
+  opacity: 0.9;
+  transition: none;
+  animation: ablauf-einblenden 0.9s ease-out;
+}
+
+@keyframes ablauf-einblenden {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  to {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ablauf-paket,
+  .ablauf-paket.kopie {
+    transition: none;
+    animation: none;
+  }
+}
+
+.ablauf-erklaerung {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.ablauf-schritt {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--c-accent-soft);
+}
+
+.ablauf-schritt strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 17px;
+}
+
+.ablauf-zaehler {
+  color: var(--c-accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ablauf caption {
+  padding: 8px 12px 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ablauf .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.ablauf .hervor {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+.ablauf .hervor-neutral {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ablauf-erlaubt td {
+  background: color-mix(in srgb, var(--ampel-gruen) 18%, transparent);
+  font-weight: 600;
+}
+
+.ablauf-verboten td {
+  background: color-mix(in srgb, var(--ampel-rot) 18%, transparent);
+  font-weight: 600;
+}
+
+.ablauf-hinweis {
+  margin: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--c-border);
+}
+
+.ablauf-steuerung {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ablauf-steuerung .aktionen {
+  margin: 0;
+}
+
+.ablauf-tempo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+.ablauf-tempo select {
+  width: auto;
+}
+
+@media (max-width: 640px) {
+  .zusatz-bereich {
+    padding: 12px;
+  }
+}
+
+.zusatz-titelzeile h3 {
+  padding: 0;
+  border: 0;
+}
