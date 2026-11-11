@@ -6,6 +6,7 @@ import type { FormEvent } from 'react';
 import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, STATUS_FARBE, STATUS_TEXT } from '../api';
 import type { BerichtListe, BerichtStatus, PlanAntwort, PlanArt, PlanEintrag, PlanWoche, Unteraufgabe } from '../api';
 import { Link, useUngespeichert } from '../router';
+import { HandbuchLink } from '../handbuchLink';
 
 interface Entwurf {
   id: number | null;
@@ -680,7 +681,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
             : plant
               ? 'Du kannst Aufgaben und Notizen anlegen; Schulblöcke und Einsätze plant der Ausbilder.'
               : 'Nur zur Ansicht.'}{' '}
-        Schule, Einsätze und Prüfungen lassen sich unter <Link zu="/konto">Konto</Link> als Kalender abonnieren.
+        Schule, Einsätze und Prüfungen lassen sich unter <Link zu="/konto">Konto</Link> als Kalender abonnieren. <HandbuchLink kapitel="plan">{d.eigenes ? 'Den Ausbildungsplan lesen' : 'Ausbildungsplan'}</HandbuchLink>
       </p>
 
       {d.beginnFehlt && (

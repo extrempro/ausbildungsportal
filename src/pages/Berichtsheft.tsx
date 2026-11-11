@@ -6,6 +6,7 @@ import type { BerichtListe, BerichtStatus } from '../api';
 import { Icon } from '../icons';
 import { Link } from '../router';
 import { BerichtBlatt, DruckHinweis } from './Bericht';
+import { HandbuchLink } from '../handbuchLink';
 
 /**
  * Merkt, ob der Azubi die Anleitung selbst auf- oder zugeklappt hat.
@@ -93,7 +94,8 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
       <p className="leise">
         {daten.eigenes
           ? 'Für jede Woche deiner Ausbildung schreibst du einen Bericht (Ausbildungsnachweis): Was hast du gemacht, und wie viele Stunden?'
-          : 'Ein Bericht (Ausbildungsnachweis) je Kalenderwoche. Nur der Azubi selbst kann die Berichte bearbeiten.'}
+          : 'Ein Bericht (Ausbildungsnachweis) je Kalenderwoche. Nur der Azubi selbst kann die Berichte bearbeiten.'}{' '}
+        <HandbuchLink kapitel={daten.eigenes ? 'bericht' : 'abzeichnen'}>{daten.eigenes ? 'Einen Bericht schreiben' : 'Berichte lesen, abzeichnen, zurückgeben'}</HandbuchLink>
       </p>
 
       {daten.eigenes && !daten.beginnFehlt && (

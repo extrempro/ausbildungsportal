@@ -54,7 +54,7 @@ function summeVon(i: BerichtInhalt): number {
 export function DruckHinweis() {
   return (
     <p className="leise klein nicht-drucken druck-hinweis">
-      Im Druckfenster kannst du auch „Als PDF speichern“ wählen. Stehen am Rand des Ausdrucks Datum, Titel oder Adresse der Seite? Dann schalte im Druckfenster unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus – der Browser merkt sich das.
+      Im Druckfenster kannst du auch „Als PDF speichern“ wählen. <HandbuchLink kapitel="drucken">Drucken und als PDF speichern</HandbuchLink>
     </p>
   );
 }
@@ -570,6 +570,11 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
             </button>
           )}
         </div>
+      )}
+      {!b.rechte.schreiben && (b.rechte.abzeichnen || b.rechte.oeffnen) && (
+        <p className="hilfe-zeile klein nicht-drucken">
+          <HandbuchLink kapitel="abzeichnen">Berichte lesen, abzeichnen, zurückgeben</HandbuchLink>
+        </p>
       )}
       {/* beim Schreiben: Auf dem Bildschirm steht das Formular, gedruckt wird das Blatt mit dem aktuellen Stand der Eingabe */}
       {b.rechte.schreiben && (
