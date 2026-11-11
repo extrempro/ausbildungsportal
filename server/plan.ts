@@ -14,11 +14,14 @@ import type { BenutzerZeile } from './typen';
 
 /**
  * Ausbildungsplan: Einträge je Azubi über ganze Kalenderwochen.
- * Arten: Schulblock, Einsatz (Abteilung/Einsatzort mit zuständiger Person), Aufgabe (mit Unteraufgaben), Notiz.
+ * Arten: Schulblock, Einsatz (Abteilung/Einsatzort mit zuständiger Person), Aufgabe (mit Unteraufgaben), Notiz
+ * und Termin – ein einzelner Tag mit freiwilliger Uhrzeit, den nur der Azubi selbst einträgt (z. B. JAV-Sitzung).
  * Ausbilder planen alles; Beauftragte legen während ihrer Zuweisung Aufgaben und Notizen an;
  * Azubis legen eigene Aufgaben und Notizen an und haken ab.
  */
-export const ARTEN = ['schule', 'einsatz', 'aufgabe', 'notiz'] as const;
+export const ARTEN = ['schule', 'einsatz', 'aufgabe', 'notiz', 'termin'] as const;
+/** was Ausbilder planen – in Bausteinen und der Sammelplanung gibt es keine Termine */
+const PLANBAR: readonly Art[] = ['schule', 'einsatz', 'aufgabe', 'notiz'];
 export type Art = (typeof ARTEN)[number];
 
 interface Unteraufgabe {
@@ -39,6 +42,9 @@ interface EintragZeile {
   unteraufgaben: string;
   erstellt_von: number | null;
   geaendert: string;
+  tag: string | null;
+  zeit_von: string;
+  zeit_bis: string;
 }
 
 interface VorlageEintrag {
@@ -112,10 +118,32 @@ interface Eingabe {
   zustaendig: BenutzerZeile | null;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
+  /** nur Termine */
+  tag: string | null;
+  zeitVon: string;
+  zeitBis: string;
+}
+
+function uhrzeit(x: unknown, feld: string): string {
+  if (x === undefined || x === null || x === '') return '';
+  if (typeof x !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(x)) throw new Fehler(400, `${feld} ist keine gültige Uhrzeit`);
+  return x;
+}
+
+/** Ein Termin: ein Tag, freiwillig mit Beginn und Ende. Er steht in der Woche dieses Tages. */
+function terminAus(roh: Record<string, unknown>): Eingabe {
+  if (!gueltigesDatum(roh.tag)) throw new Fehler(400, 'Datum fehlt oder ist kein gültiges Datum');
+  const zeitVon = uhrzeit(roh.zeitVon, 'Beginn');
+  const zeitBis = uhrzeit(roh.zeitBis, 'Ende');
+  if (zeitBis && !zeitVon) throw new Fehler(400, 'Ein Ende braucht auch einen Beginn');
+  if (zeitBis && zeitBis <= zeitVon) throw new Fehler(400, 'Das Ende liegt nicht nach dem Beginn');
+  const montag = montagVon(roh.tag);
+  return { art: 'termin', von: montag, bis: montag, titel: text(roh.titel, 120, 'Titel'), text: freitext(roh.text, 2000, 'Ort oder Anmerkung'), zustaendig: null, erledigt: false, unteraufgaben: [], tag: roh.tag, zeitVon, zeitBis };
 }
 
 function eingabeAus(db: DB, roh: Record<string, unknown>): Eingabe {
   const art = artAus(roh.art);
+  if (art === 'termin') return terminAus(roh);
   if (!gueltigesDatum(roh.von)) throw new Fehler(400, 'Beginn fehlt oder ist kein gültiges Datum');
   const von = montagVon(roh.von);
   const bisRoh = roh.bis === undefined || roh.bis === null || roh.bis === '' ? roh.von : roh.bis;
@@ -133,6 +161,9 @@ function eingabeAus(db: DB, roh: Record<string, unknown>): Eingabe {
     zustaendig: zustaendigAus(db, roh.zustaendigId, art),
     erledigt: art === 'aufgabe' && roh.erledigt === true,
     unteraufgaben,
+    tag: null,
+    zeitVon: '',
+    zeitBis: '',
   };
 }
 
@@ -141,6 +172,7 @@ function vorlageEintraegeAus(x: unknown): VorlageEintrag[] {
   return x.map((e) => {
     if (!istObjekt(e)) throw new Fehler(400, 'Ungültiger Eintrag in der Vorlage');
     const art = artAus(e.art);
+    if (!PLANBAR.includes(art)) throw new Fehler(400, 'Termine gibt es in Bausteinen nicht');
     return {
       art,
       abWoche: ganzzahl(e.abWoche, 1, 260, 'Woche'),
@@ -176,6 +208,9 @@ function ansicht(c: Ctx, z: EintragZeile) {
     zustaendig: zustaendig?.anzeigename ?? '',
     erledigt: z.erledigt === 1,
     unteraufgaben: json<Unteraufgabe[]>(z.unteraufgaben, []),
+    tag: z.tag,
+    zeitVon: z.zeit_von,
+    zeitBis: z.zeit_bis,
     // vom Azubi selbst angelegt (im Unterschied zu dem, was Ausbilder und Beauftragte geplant haben)
     vomAzubi: z.erstellt_von === z.azubi_id,
     bearbeitbar: darfPlanEintragAendern(db, c.b, z, heute(c.k.jetzt())),
@@ -202,7 +237,7 @@ function berufOderNull(db: DB, x: unknown): number | null {
 /** Plan-Einträge, die eine Woche berühren – als Hinweis beim Schreiben des Berichts. */
 export function planDerWoche(db: DB, azubiId: number, montag: string): { art: Art; titel: string }[] {
   const zeilen = db
-    .prepare("SELECT art, titel FROM plan_eintrag WHERE azubi_id = ? AND von <= ? AND bis >= ? AND art != 'notiz' ORDER BY CASE art WHEN 'schule' THEN 1 WHEN 'einsatz' THEN 2 ELSE 3 END, von, id")
+    .prepare("SELECT art, titel FROM plan_eintrag WHERE azubi_id = ? AND von <= ? AND bis >= ? AND art != 'notiz' ORDER BY CASE art WHEN 'schule' THEN 1 WHEN 'einsatz' THEN 2 WHEN 'termin' THEN 3 ELSE 4 END, von, tag, zeit_von, id")
     .all(azubiId, montag, montag) as unknown as { art: Art; titel: string }[];
   return zeilen.map((z) => ({ art: z.art, titel: z.titel }));
 }
@@ -259,10 +294,10 @@ function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boole
   const id = transaktion(db, () => {
     const r = db
       .prepare(
-        `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, zustaendig_id, erledigt, unteraufgaben, erstellt_von, geaendert_von, geaendert, sammel_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO plan_eintrag (azubi_id, art, von, bis, titel, text, zustaendig_id, erledigt, unteraufgaben, erstellt_von, geaendert_von, geaendert, sammel_id, tag, zeit_von, zeit_bis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString(), lauf?.id ?? null);
+      .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString(), lauf?.id ?? null, e.tag, e.zeitVon, e.zeitBis);
     merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel, 1, lauf?.id ?? null);
     if (zuweisen && darfAzubiVerwalten(db, c.b, azubi.id)) zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
     return Number(r.lastInsertRowid);
@@ -332,7 +367,7 @@ export const PLAN_ROUTEN: Route[] = [
       const tag = heute(c.k.jetzt());
       const profil = leseProfil(db, azubi.id);
       const dauer = dauerVon(db, profil);
-      const zeilen = db.prepare('SELECT * FROM plan_eintrag WHERE azubi_id = ? ORDER BY von, bis, id').all(azubi.id) as unknown as EintragZeile[];
+      const zeilen = db.prepare('SELECT * FROM plan_eintrag WHERE azubi_id = ? ORDER BY von, bis, tag, zeit_von, id').all(azubi.id) as unknown as EintragZeile[];
 
       // Wochen der Ausbildung; Einträge außerhalb (z. B. nach geändertem Beginn) bleiben sichtbar
       let erste = dauer ? montagVon(dauer.beginn) : null;
@@ -378,7 +413,7 @@ export const PLAN_ROUTEN: Route[] = [
           feiertage: erste && istBundesland(betriebLand) ? feiertageZwischen(betriebLand, erste, ende).filter((f) => !f.teilweise) : [],
           ferien: ferien ? ferienZwischen(ferien, erste!, ende) : [],
           ferienVorhanden: ferien?.vorhanden ?? false,
-          rechte: { arten: darfAlles ? ARTEN : darfAufgaben ? ['aufgabe', 'notiz'] : [], zuweisen: darfAzubiVerwalten(db, c.b, azubi.id) },
+          rechte: { arten: [...(darfAlles ? PLANBAR : darfAufgaben ? ['aufgabe', 'notiz'] : []), ...(darfPlanBearbeiten(db, c.b, azubi.id, 'termin', tag) ? ['termin'] : [])], zuweisen: darfAzubiVerwalten(db, c.b, azubi.id) },
           // Auswahl für „zuständig“ und Vorlagen nur für die, die planen
           personen: darfAufgaben && c.b.rolle !== 'azubi'
             ? (db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown[])
@@ -424,7 +459,7 @@ export const PLAN_ROUTEN: Route[] = [
       const jetzt = c.k.jetzt();
       let zugewiesen = false;
       transaktion(db, () => {
-        db.prepare('UPDATE plan_eintrag SET art = ?, von = ?, bis = ?, titel = ?, text = ?, zustaendig_id = ?, erledigt = ?, unteraufgaben = ?, geaendert_von = ?, geaendert = ? WHERE id = ?').run(
+        db.prepare('UPDATE plan_eintrag SET art = ?, von = ?, bis = ?, titel = ?, text = ?, zustaendig_id = ?, erledigt = ?, unteraufgaben = ?, tag = ?, zeit_von = ?, zeit_bis = ?, geaendert_von = ?, geaendert = ? WHERE id = ?').run(
           e.art,
           e.von,
           e.bis,
@@ -433,6 +468,9 @@ export const PLAN_ROUTEN: Route[] = [
           e.zustaendig?.id ?? null,
           e.erledigt ? 1 : 0,
           JSON.stringify(e.unteraufgaben),
+          e.tag,
+          e.zeitVon,
+          e.zeitBis,
           c.b.id,
           jetzt.toISOString(),
           alt.id,
@@ -552,6 +590,7 @@ export const PLAN_ROUTEN: Route[] = [
       } else {
         if (!istObjekt(roh.eintrag)) throw new Fehler(400, 'Eintrag oder Baustein fehlt');
         eintrag = eingabeAus(db, roh.eintrag);
+        if (!PLANBAR.includes(eintrag.art)) throw new Fehler(400, 'Termine tragen Azubis selbst ein – in der Sammelplanung gibt es sie nicht');
       }
       // ein Lauf mit einem Zeitstempel für alles – daran erkennt „Zurücknehmen“ später, was unverändert ist
       const zeit = c.k.jetzt();
@@ -688,6 +727,7 @@ export const PLAN_ROUTEN: Route[] = [
         const dauer = dauerVon(db, profil);
         const { beruf, stand } = standAus(db, profil, tag);
         const eintraege = db.prepare("SELECT art, von, bis, titel FROM plan_eintrag WHERE azubi_id = ? AND art IN ('schule', 'einsatz') AND von <= ? AND bis >= ? ORDER BY von, id").all(id, letzte, start) as unknown as { art: Art; von: string; bis: string; titel: string }[];
+        const termine = db.prepare("SELECT von, tag, zeit_von, titel FROM plan_eintrag WHERE azubi_id = ? AND art = 'termin' AND von <= ? AND von >= ? ORDER BY tag, zeit_von, id").all(id, letzte, start) as unknown as { von: string; tag: string; zeit_von: string; titel: string }[];
         // Urlaub steht nicht im Plan, sondern in den Berichten (Abwesenheit mit Grund „Urlaub“)
         const urlaub = new Map<string, number>();
         for (const z of db.prepare('SELECT montag, inhalt FROM bericht WHERE azubi_id = ? AND montag >= ? AND montag <= ?').all(id, start, letzte) as unknown as { montag: string; inhalt: string }[]) {
@@ -705,6 +745,7 @@ export const PLAN_ROUTEN: Route[] = [
             schule: eintraege.some((e) => e.art === 'schule' && e.von <= w.montag && e.bis >= w.montag),
             einsatz: eintraege.filter((e) => e.art === 'einsatz' && e.von <= w.montag && e.bis >= w.montag).map((e) => e.titel),
             urlaubstage: urlaub.get(w.montag) ?? 0,
+            termine: termine.filter((t) => t.von === w.montag).map((t) => ({ tag: t.tag, zeitVon: t.zeit_von, titel: t.titel })),
           })),
         };
       });

@@ -51,8 +51,8 @@ export function KalenderAbo({ konto }: { konto: Konto }) {
     <>
       <p>
         {betreut
-          ? 'Zeigt Berufsschule, Einsätze und Prüfungstermine deiner Azubis in deinem Kalender – zum Beispiel in Outlook oder auf dem Handy.'
-          : 'Zeigt Berufsschule, Einsätze und Prüfungstermine aus deinem Ausbildungsplan in deinem Kalender – zum Beispiel auf dem Handy oder in Outlook.'}{' '}
+          ? 'Zeigt Berufsschule, Einsätze, Prüfungstermine und eigene Termine deiner Azubis in deinem Kalender – zum Beispiel in Outlook oder auf dem Handy.'
+          : 'Zeigt Berufsschule, Einsätze, Prüfungstermine und deine eigenen Termine aus dem Ausbildungsplan in deinem Kalender – zum Beispiel auf dem Handy oder in Outlook.'}{' '}
         Dafür bekommst du einen persönlichen Link, den du einmal im Kalenderprogramm einträgst.
       </p>
       {fehler && (
@@ -119,7 +119,7 @@ export function KalenderAbo({ konto }: { konto: Konto }) {
                 <strong>Änderungen kommen mit Verzögerung an.</strong> Das Kalenderprogramm holt den Plan nur alle paar Stunden, manche nur einmal am Tag. Verbindlich ist immer der Ausbildungsplan im Portal.
               </li>
               <li>Der Kalender ist nur zum Lesen. Termine änderst du im Portal, nicht im Kalenderprogramm.</li>
-              <li>Enthalten sind Berufsschule, Einsätze und Prüfungstermine – als ganztägige Termine, Wochen von Montag bis Sonntag. Aufgaben, Notizen und Berichte stehen nicht im Kalender.</li>
+              <li>Enthalten sind Berufsschule, Einsätze und Prüfungstermine – als ganztägige Termine, Wochen von Montag bis Sonntag. Dazu kommen Termine, die Azubis selbst eintragen. Aufgaben, Notizen und Berichte stehen nicht im Kalender.</li>
             </ul>
           </details>
 

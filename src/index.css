@@ -1260,6 +1260,11 @@ a.bericht-link:hover {
   --art: var(--c-rot-fg);
 }
 
+.eintrag.termin,
+.legende-art.termin {
+  --art: var(--c-accent);
+}
+
 .eintrag.pruefung {
   background: var(--c-rot-bg);
 }
@@ -1548,6 +1553,11 @@ table.uebersicht td.ausserhalb {
 .ue.urlaub {
   background: var(--c-warn-bg);
   color: var(--c-warn-fg);
+}
+
+.ue.termin {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
 }
 
 .legende {

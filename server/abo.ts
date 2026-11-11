@@ -14,7 +14,7 @@ import type { BenutzerZeile } from './typen';
  * Kalenderprogramme können sich nicht über Microsoft anmelden. Deshalb gibt es je Konto einen Link mit einem langen,
  * zufälligen Geheimnis. Er gibt nur Lesezugriff, und bei jedem Abruf gelten die Rechte des Kontos von diesem Moment
  * (rechte.ts) – ein gesperrtes Konto oder eine beendete Zuweisung liefert sofort nichts mehr.
- * Bewusst nicht enthalten: Aufgaben, Notizen, Freitexte, Berichte, Ferien und Feiertage.
+ * Dazu die Termine, die Azubis selbst eintragen. Bewusst nicht enthalten: Aufgaben, Notizen, Freitexte, Berichte, Ferien und Feiertage.
  */
 
 const ROLLEN: Route['wer'] = ['ausbilder', 'beauftragter', 'azubi'];
@@ -82,11 +82,26 @@ const stempel = (iso: string) => {
   return (Number.isNaN(d.getTime()) ? new Date(0) : d).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 };
 
+/** Ganztägig (das Ende zählt in ICS nicht mehr mit) oder mit Uhrzeit – dann als Ortszeit ohne Zeitzone, also so, wie eingetragen. */
+function zeitraum(t: Termin): string[] {
+  if (!t.zeitVon) return [`DTSTART;VALUE=DATE:${tag(t.von)}`, `DTEND;VALUE=DATE:${tag(plusTage(t.bis, 1))}`];
+  const uhr = (z: string) => `${tag(t.von)}T${z.replace(':', '')}00`;
+  let ende = t.zeitBis;
+  if (!ende) {
+    const h = Number(t.zeitVon.slice(0, 2)) + 1;
+    ende = h > 23 ? '23:59' : `${String(h).padStart(2, '0')}${t.zeitVon.slice(2)}`;
+  }
+  return [`DTSTART:${uhr(t.zeitVon)}`, `DTEND:${uhr(ende)}`];
+}
+
 interface Termin {
   uid: string;
   von: string;
   /** letzter Tag (einschließlich) */
   bis: string;
+  /** HH:MM – dann ist es kein ganztägiger Termin; ohne Ende dauert er eine Stunde */
+  zeitVon?: string;
+  zeitBis?: string;
   titel: string;
   art: string;
   geaendert: string;
@@ -111,6 +126,13 @@ function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string
     geaendert: z.geaendert,
     beschreibung: [z.art === 'schule' ? 'Berufsschule' : 'Einsatz', z.zustaendig ? `Zuständig: ${z.zustaendig}` : ''].filter(Boolean).join('\n'),
   }));
+  // Termine, die der Azubi selbst eingetragen hat (z. B. JAV-Sitzung) – ohne den Freitext
+  const eigene = db
+    .prepare("SELECT id, tag, zeit_von, zeit_bis, titel, geaendert FROM plan_eintrag WHERE azubi_id = ? AND art = 'termin' ORDER BY tag, zeit_von, id")
+    .all(azubi.id) as unknown as { id: number; tag: string; zeit_von: string; zeit_bis: string; titel: string; geaendert: string }[];
+  for (const z of eigene) {
+    termine.push({ uid: `plan-${z.id}@${host}`, von: z.tag, bis: z.tag, zeitVon: z.zeit_von || undefined, zeitBis: z.zeit_bis || undefined, titel: vorn + z.titel, art: 'Termin', geaendert: z.geaendert, beschreibung: 'Termin' });
+  }
   const profil = leseProfil(db, azubi.id);
   const profilZeit = (db.prepare('SELECT geaendert FROM azubi_profil WHERE benutzer_id = ?').get(azubi.id) as { geaendert: string } | undefined)?.geaendert ?? '';
   profil.pruefungen.forEach((p, i) => {
@@ -139,8 +161,7 @@ export function alsIcs(name: string, termine: Termin[], jetzt: Date): string {
       `UID:${t.uid}`,
       `DTSTAMP:${stempel(jetzt.toISOString())}`,
       `LAST-MODIFIED:${stempel(t.geaendert)}`,
-      `DTSTART;VALUE=DATE:${tag(t.von)}`,
-      `DTEND;VALUE=DATE:${tag(plusTage(t.bis, 1))}`, // das Ende zählt in ICS nicht mehr mit
+      ...zeitraum(t),
       `SUMMARY:${text(t.titel)}`,
       `DESCRIPTION:${text(t.beschreibung)}`,
       `CATEGORIES:${text(t.art)}`,

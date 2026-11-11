@@ -18,9 +18,12 @@ interface Entwurf {
   zuweisen: boolean;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
+  tag: string;
+  zeitVon: string;
+  zeitBis: string;
 }
 
-const REIHENFOLGE: PlanArt[] = ['schule', 'einsatz', 'aufgabe', 'notiz'];
+const REIHENFOLGE: PlanArt[] = ['schule', 'einsatz', 'termin', 'aufgabe', 'notiz'];
 
 function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAntwort; start: Entwurf; onFertig: (text: string) => Promise<void>; onAbbruch: () => void }) {
   const [e, setE] = useState<Entwurf>(start);
@@ -76,6 +79,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
       titel: e.titel,
       von: e.von,
       bis: e.bis || e.von,
+      ...(e.art === 'termin' ? { tag: e.tag, zeitVon: e.zeitVon, zeitBis: e.zeitBis } : {}),
       text: e.text,
       zustaendigId: mitPerson ? e.zustaendigId : null,
       zuweisen: kannZuweisen && e.zuweisen,
@@ -84,13 +88,13 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
     };
     try {
       const r = e.id === null ? await api<{ zugewiesen: boolean }>('POST', basis, body) : await api<{ zugewiesen: boolean }>('PUT', `${basis}/${e.id}`, body);
-      await onFertig(`Eintrag gespeichert.${r.zugewiesen ? ` ${person?.anzeigename} ist dem Azubi für diesen Zeitraum zugewiesen.` : ''}`);
+      await onFertig(`${e.art === 'termin' ? 'Termin' : 'Eintrag'} gespeichert.${r.zugewiesen ? ` ${person?.anzeigename} ist dem Azubi für diesen Zeitraum zugewiesen.` : ''}`);
     } catch (err) {
       setFehler(err instanceof Error ? err.message : 'Fehler');
     }
   };
   const loesche = async () => {
-    if (e.id === null || !(await rueckfrage(`„${e.titel}“ aus dem Plan löschen?\n\nDer Eintrag verschwindet aus allen Wochen, in denen er steht.`, { ja: 'Eintrag löschen', gefahr: true }))) return;
+    if (e.id === null || !(await rueckfrage(e.art === 'termin' ? `Termin „${e.titel}“ löschen?\n\nEr verschwindet aus deinem Plan und aus abonnierten Kalendern.` : `„${e.titel}“ aus dem Plan löschen?\n\nDer Eintrag verschwindet aus allen Wochen, in denen er steht.`, { ja: 'Eintrag löschen', gefahr: true }))) return;
     try {
       await api('DELETE', `${basis}/${e.id}`);
       await onFertig('Eintrag gelöscht.');
@@ -227,11 +231,13 @@ function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: W
   // Beschreibung und Unteraufgaben stehen in der ersten Woche (in den Karten oben immer)
   const ausfuehrlich = voll || e.von === woche.montag;
   const erledigt = e.unteraufgaben.filter((u) => u.erledigt).length;
+  const uhr = e.zeitVon ? ` · ${e.zeitVon}${e.zeitBis ? `–${e.zeitBis}` : ''} Uhr` : '';
   const meta = [
     wochen > 1 && `Woche ${nr} von ${wochen} (${tagMonat(e.von)}–${tagMonat(plusTage(e.bis, 6))})`,
     e.zustaendig && `Zuständig: ${e.zustaendig}`,
     e.unteraufgaben.length > 0 && `${erledigt} von ${e.unteraufgaben.length} Unteraufgaben erledigt`,
-    e.vomAzubi && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
+    // Termine trägt immer der Azubi selbst ein – ihm muss das niemand sagen
+    e.vomAzubi && !(eigenes && e.art === 'termin') && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
   ].filter(Boolean);
   return (
     <div className={`eintrag ${e.art}`}>
@@ -243,6 +249,12 @@ function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: W
           </label>
         )}
         <span className={`eintrag-titel${e.erledigt ? ' erledigt' : ''}`}>{e.titel}</span>
+        {e.art === 'termin' && e.tag && (
+          <span className="eintrag-zusatz">
+            {tagKurz(e.tag)}
+            {uhr}
+          </span>
+        )}
         {e.bearbeitbar && (
           <button type="button" className="link-knopf nicht-drucken" onClick={() => a.bearbeite(e)} aria-label={`„${e.titel}“ bearbeiten`}>
             Bearbeiten
@@ -285,7 +297,7 @@ function Marke({ art, klasse, titel, zusatz }: { art: string; klasse: string; ti
  * zuletzt Ferien und Feiertage. `voll` zeigt Beschreibung und Unteraufgaben immer (Karten oben).
  */
 function WochenInhalt({ woche, daten, frei, voll, leer, a }: { woche: Woche; daten: PlanAntwort; frei: boolean; voll?: boolean; leer?: string; a: Aktionen }) {
-  const eintraege = daten.eintraege.filter((e) => e.von <= woche.montag && e.bis >= woche.montag).sort((x, y) => REIHENFOLGE.indexOf(x.art) - REIHENFOLGE.indexOf(y.art) || x.von.localeCompare(y.von) || x.id - y.id);
+  const eintraege = daten.eintraege.filter((e) => e.von <= woche.montag && e.bis >= woche.montag).sort((x, y) => REIHENFOLGE.indexOf(x.art) - REIHENFOLGE.indexOf(y.art) || x.von.localeCompare(y.von) || (x.tag ?? '').localeCompare(y.tag ?? '') || x.zeitVon.localeCompare(y.zeitVon) || x.id - y.id);
   const pruefungen = daten.pruefungen.filter((p) => d2(p.datum, woche));
   const ferien = frei ? daten.ferien.filter((f) => f.von <= woche.sonntag && f.bis >= woche.montag) : [];
   const feiertage = frei ? daten.feiertage.filter((f) => f.datum >= woche.montag && f.datum <= woche.sonntag) : [];
@@ -340,7 +352,7 @@ function WochenKarte({ titel, woche, ersatz, gesamt, schule, daten, frei, plant,
   plant: boolean;
   bericht?: BerichtStatus;
   basis: string;
-  onNeu: (w: Woche) => void;
+  onNeu: (w: Woche, art?: PlanArt) => void;
   onZeigen: (montag: string) => void;
   hervorheben?: boolean;
   a: Aktionen;
@@ -361,6 +373,11 @@ function WochenKarte({ titel, woche, ersatz, gesamt, schule, daten, frei, plant,
           {plant && (
             <button type="button" className="knopf schlicht" onClick={() => onNeu(woche)}>
               + Eintrag
+            </button>
+          )}
+          {daten.rechte.arten.includes('termin') && (
+            <button type="button" className="knopf schlicht" onClick={() => onNeu(woche, 'termin')}>
+              + Termin
             </button>
           )}
           <button type="button" className="knopf schlicht" onClick={() => onZeigen(woche.montag)}>
@@ -597,7 +614,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const pruefung = d.pruefungen.find((p) => p.datum >= d.heute) ?? null;
   const bisPruefung = pruefung ? Math.round((Date.parse(montagVon(pruefung.datum)) - Date.parse(montagVon(d.heute))) / 604800000) : 0;
 
-  const neu = (w: Woche | null): Entwurf => ({ id: null, art: d.rechte.arten.includes('einsatz') ? 'einsatz' : 'aufgabe', titel: '', von: w?.montag ?? d.heute, bis: '', text: '', zustaendigId: null, zuweisen: true, erledigt: false, unteraufgaben: [] });
+  const neu = (w: Woche | null, art?: PlanArt): Entwurf => ({ id: null, art: art ?? (d.rechte.arten.includes('einsatz') ? 'einsatz' : 'aufgabe'), titel: '', von: w?.montag ?? d.heute, bis: '', text: '', zustaendigId: null, zuweisen: true, erledigt: false, unteraufgaben: [], tag: w && !(w.montag <= d.heute && w.sonntag >= d.heute) ? w.montag : d.heute, zeitVon: '', zeitBis: '' });
   const oeffne = (e: Entwurf) => {
     setMeldung(null);
     setEntwurf(e);
@@ -626,7 +643,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     }
   };
   const a: Aktionen = {
-    bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben }),
+    bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben, tag: e.tag ?? e.von, zeitVon: e.zeitVon, zeitBis: e.zeitBis }),
     hake: (e, body) => void hake(e, body),
   };
   const uebernimm = async () => {
@@ -657,7 +674,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
       <p className="leise">
         {d.beruf ? `${d.beruf} · ` : ''}
         {d.eigenes
-          ? 'Deine Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Du kannst eigene Aufgaben und Notizen eintragen und Aufgaben abhaken.'
+          ? 'Deine Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Du kannst eigene Aufgaben, Notizen und Termine (zum Beispiel eine JAV-Sitzung) eintragen und Aufgaben abhaken.'
           : d.rechte.arten.includes('einsatz')
             ? 'Die Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Jeder Eintrag lässt sich über „Bearbeiten“ ändern.'
             : plant
@@ -706,7 +723,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               plant={plant}
               bericht={aktuelle ? berichtStatus.get(aktuelle.montag) : undefined}
               basis={basis}
-              onNeu={(w) => oeffne(neu(w))}
+              onNeu={(w, art) => oeffne(neu(w, art))}
               onZeigen={zeige}
               hervorheben
               a={a}
@@ -721,7 +738,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               frei={zeigeFrei}
               plant={plant}
               basis={basis}
-              onNeu={(w) => oeffne(neu(w))}
+              onNeu={(w, art) => oeffne(neu(w, art))}
               onZeigen={zeige}
               a={a}
             />
