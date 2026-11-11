@@ -51,7 +51,7 @@ npm run build             # Oberfläche nach dist/ bauen
 npm start                 # Server auf Port 3000
 ```
 
-Der Super-Admin meldet sich unter **`<Adresse>/super`** an (z. B. `https://ausbildung.example.de/super`); auf der normalen Anmeldeseite steht nur die Microsoft-Anmeldung. Das ist Übersichtlichkeit, kein Schutz – die Adresse ist nicht geheim, geschützt ist der Zugang durch Passwort und Sperre nach Fehlversuchen.
+Der Super-Admin meldet sich unter **`<Adresse>/super`** an (z. B. `https://ausbildung.example.de/super`); auf der normalen Anmeldeseite steht nur die Microsoft-Anmeldung. Das ist Übersichtlichkeit, kein Schutz – die Adresse ist nicht geheim, geschützt ist der Zugang durch Passwort und Sperre nach Fehlversuchen. Wie sich die Passwort-Anmeldung zusätzlich am Reverse Proxy auf das eigene Netz beschränken lässt, steht in [SECURITY.md](SECURITY.md#anmeldung-des-super-admins-am-reverse-proxy-schützen).
 
 Beim **ersten Start** legt die App den Super-Admin an. Ohne `ADMIN_BENUTZER`/`ADMIN_PASSWORT` heißt er `admin`, und das Startpasswort steht einmalig in der Ausgabe. Bei der ersten Anmeldung muss es geändert werden (mindestens 14 Zeichen).
 
