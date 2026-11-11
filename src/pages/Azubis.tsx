@@ -20,7 +20,7 @@ export function Azubis({ ich }: { ich: Konto }) {
     <>
       <h1>Azubis</h1>
       <p className="leise">
-        {ich.rolle === 'ausbilder' ? 'Alle Auszubildenden des Betriebs.' : 'Die Auszubildenden, die dir zugewiesen sind.'} Je Azubi siehst du den Stand der Ausbildung und der Berichte; darunter geht es direkt zu Profil, Ausbildungsplan und
+        {ich.rolle !== 'ausbilder' ? 'Die Auszubildenden, die dir zugewiesen sind.' : ich.alleAzubis ? 'Alle Auszubildenden des Betriebs.' : 'Die Auszubildenden, für die du zuständig bist oder die du vertrittst – und alle, die noch keinen Ausbilder haben.'} Je Azubi siehst du den Stand der Ausbildung und der Berichte; darunter geht es direkt zu Profil, Ausbildungsplan und
         Berichtsheft.
       </p>
       {fehler && (
@@ -33,7 +33,7 @@ export function Azubis({ ich }: { ich: Konto }) {
         <p className="karte leise">
           {ich.rolle === 'ausbilder' ? (
             <>
-              Noch keine Azubis. Unter <Link zu="/verwaltung/konten">Konten</Link> lassen sich welche anlegen.
+              {ich.alleAzubis ? 'Noch keine Azubis.' : 'Du bist noch für keinen Azubi zuständig.'} Unter <Link zu="/verwaltung/konten">Konten</Link> lassen sich Azubis anlegen.
             </>
           ) : (
             'Dir ist noch kein Azubi zugewiesen.'
@@ -45,6 +45,11 @@ export function Azubis({ ich }: { ich: Konto }) {
           Azubi suchen
           <input type="search" value={suche} onChange={(e) => setSuche(e.target.value)} placeholder="Name oder Beruf" />
         </label>
+      )}
+      {azubis?.some((a) => a.betreuung === 'ohne') && (
+        <p className="hinweis">
+          <strong>Ohne Ausbilder:</strong> Diese Azubis sehen alle Ausbilder, bis jemand sie übernimmt. Das geht im Profil des Azubis mit „Azubi übernehmen“.
+        </p>
       )}
       {sichtbar.length > 0 && (
         <ul className="azubi-karten">

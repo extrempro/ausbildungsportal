@@ -4,7 +4,7 @@ import { cookieName, ROUTEN } from '../api';
 import { LEERLAUF_MS } from '../sitzung';
 import { ROLLEN } from '../typen';
 import type { BenutzerZeile, Rolle } from '../typen';
-import { admin, APP, cookiesAus, koerper, konto, ohneWechsel, ruf, sitzung, umgebung, zuweisen } from './hilfe';
+import { admin, APP, cookiesAus, koerper, konto, ohneWechsel, ruf, sitzung, umgebung, zustaendig, zuweisen } from './hilfe';
 import type { Umgebung } from './hilfe';
 
 const START = 'Start-Passwort-2026!';
@@ -63,6 +63,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'POST /api/konten/:id/passwort-zuruecksetzen': 'admin',
     'DELETE /api/konten/:id': 'admin,ausbilder',
     'GET /api/azubis': 'ausbilder,beauftragter',
+    'POST /api/azubis/:id/uebernehmen': 'ausbilder',
     'GET /api/azubis/:id/zuweisungen': 'ausbilder,beauftragter,azubi',
     'PUT /api/azubis/:id/zuweisungen': 'ausbilder',
     'GET /api/protokoll': 'admin',
@@ -364,7 +365,7 @@ test('Kontenliste: Ausbilder sehen keinen Super-Admin; Azubis und Beauftragte se
   assert.deepEqual(beimAusbilder.rollen, ['beauftragter', 'azubi']);
   assert.deepEqual(beimAusbilder.konten.filter((k: { loeschbar: boolean }) => k.loeschbar).map((k: { rolle: string }) => k.rolle).sort(), ['azubi', 'beauftragter']);
   for (const k of beimAusbilder.konten) {
-    assert.deepEqual(Object.keys(k).sort(), ['anmeldename', 'anmeldung', 'anzeigename', 'erstellt', 'id', 'letzteAnmeldung', 'loeschbar', 'passwortWechsel', 'rolle', 'status', 'theme', 'verknuepft', 'verwaltbar'].sort());
+    assert.deepEqual(Object.keys(k).sort(), ['alleAzubis', 'anmeldename', 'anmeldung', 'anzeigename', 'erstellt', 'id', 'letzteAnmeldung', 'loeschbar', 'passwortWechsel', 'rolle', 'status', 'theme', 'verknuepft', 'verwaltbar'].sort());
   }
 });
 
@@ -487,7 +488,7 @@ test('Azubi-Liste und Zuweisungen: fremde Azubis sehen aus wie unbekannte (404)'
   }
 });
 
-test('Zuweisungen: nur Beauftragte zuweisbar, Zeitraum muss stimmen, bei Fehler bleibt alles beim Alten', async () => {
+test('Zuweisungen: Beauftragte und andere Ausbilder zuweisbar, Zeitraum muss stimmen, bei Fehler bleibt alles beim Alten', async () => {
   const u = await umgebung();
   const w = alle(u);
   zuweisen(u.db, w.azubi, w.beauftragter);
@@ -499,6 +500,113 @@ test('Zuweisungen: nur Beauftragte zuweisbar, Zeitraum muss stimmen, bei Fehler 
   assert.equal((await setze('alle')).status, 400);
   assert.equal((u.db.prepare('SELECT COUNT(*) AS n FROM zuweisung').get() as { n: number }).n, 1);
   assert.equal((await ruf(u, 'PUT', `/api/azubis/${w.beauftragter.id}/zuweisungen`, { cookies, body: { zuweisungen: [] } })).status, 404, 'Ziel ist kein Azubi');
+});
+
+// ---------- Ausbilder und ihre Azubis ----------
+
+test('Ausbilder sehen nur ihre Azubis: Liste, Konten, Profil, Plan, Berichte (404 bei fremden)', async () => {
+  const u = await umgebung();
+  const w = alle(u);
+  const a2 = konto(u.db, 'ausbilder', 'Zweite Ausbilderin');
+  const ben = konto(u.db, 'azubi', 'Ben');
+  zustaendig(u.db, w.azubi, w.ausbilder);
+  zustaendig(u.db, ben, a2);
+  const c1 = sitzung(u, w.ausbilder);
+  const c2 = sitzung(u, a2);
+
+  const liste = async (c: Record<string, string>) => koerper(await ruf(u, 'GET', '/api/azubis', { cookies: c })).azubis as { id: number; betreuung: string }[];
+  assert.deepEqual((await liste(c1)).map((a) => [a.id, a.betreuung]), [[w.azubi.id, 'eigen']]);
+  assert.deepEqual((await liste(c2)).map((a) => a.id), [ben.id]);
+
+  for (const pfad of [`/api/azubis/${ben.id}/profil`, `/api/azubis/${ben.id}/plan`, `/api/azubis/${ben.id}/berichte`, `/api/azubis/${ben.id}/zuweisungen`]) {
+    assert.equal((await ruf(u, 'GET', pfad, { cookies: c1 })).status, 404, pfad);
+    assert.equal((await ruf(u, 'GET', pfad, { cookies: c2 })).status, 200, pfad);
+  }
+  assert.equal((await ruf(u, 'PUT', `/api/azubis/${ben.id}/zuweisungen`, { cookies: c1, body: { zuweisungen: [] } })).status, 404);
+
+  const konten = koerper(await ruf(u, 'GET', '/api/konten', { cookies: c1 })).konten as { id: number }[];
+  assert.equal(konten.some((k) => k.id === ben.id), false, 'fremdes Azubi-Konto fehlt in der Liste');
+  assert.equal(konten.some((k) => k.id === w.azubi.id), true);
+  assert.equal((await ruf(u, 'PATCH', `/api/konten/${ben.id}`, { cookies: c1, body: { status: 'gesperrt' } })).status, 404);
+  assert.equal((await ruf(u, 'DELETE', `/api/konten/${ben.id}`, { cookies: c1 })).status, 404);
+});
+
+test('Wer als Ausbilder einen Azubi anlegt, ist zuständig; Azubis ohne Ausbilder lassen sich übernehmen', async () => {
+  const u = await umgebung();
+  const w = alle(u);
+  const a2 = konto(u.db, 'ausbilder');
+  const c1 = sitzung(u, w.ausbilder);
+  const c2 = sitzung(u, a2);
+
+  const neu = koerper(await ruf(u, 'POST', '/api/konten', { cookies: c1, body: { anmeldename: 'neu@firma.test', anzeigename: 'Neu', rolle: 'azubi' } })).konto.id as number;
+  assert.equal(koerper(await ruf(u, 'GET', `/api/azubis/${neu}/profil`, { cookies: c1 })).ausbilder.id, w.ausbilder.id);
+  assert.equal((await ruf(u, 'GET', `/api/azubis/${neu}/profil`, { cookies: c2 })).status, 404);
+  assert.equal((await ruf(u, 'POST', `/api/azubis/${neu}/uebernehmen`, { cookies: c2 })).status, 404, 'einen vergebenen Azubi übernimmt man nicht einfach');
+
+  // vom Super-Admin angelegt: ohne Ausbilder, alle sehen ihn, bis jemand übernimmt
+  const frei = koerper(await ruf(u, 'POST', '/api/konten', { cookies: sitzung(u, w.admin), body: { anmeldename: 'frei@firma.test', anzeigename: 'Frei', rolle: 'azubi' } })).konto.id as number;
+  for (const c of [c1, c2]) assert.equal((koerper(await ruf(u, 'GET', '/api/azubis', { cookies: c })).azubis as { id: number; betreuung: string }[]).find((a) => a.id === frei)?.betreuung, 'ohne');
+  assert.equal((await ruf(u, 'POST', `/api/azubis/${frei}/uebernehmen`, { cookies: c2 })).status, 200);
+  assert.equal((await ruf(u, 'GET', `/api/azubis/${frei}/profil`, { cookies: c1 })).status, 404, 'nach dem Übernehmen nur noch beim Zuständigen');
+  assert.equal(koerper(await ruf(u, 'GET', `/api/azubis/${frei}/profil`, { cookies: c2 })).ausbilder.id, a2.id);
+  for (const wer of [w.beauftragter, w.azubi, w.admin]) assert.equal((await ruf(u, 'POST', `/api/azubis/${frei}/uebernehmen`, { cookies: sitzung(u, wer) })).status, 403, wer.rolle);
+});
+
+test('Gesamtsicht: nur der Super-Admin schaltet sie, nur für Ausbilder; Rollenwechsel nimmt sie und die Zuständigkeit', async () => {
+  const u = await umgebung();
+  const w = alle(u);
+  const a2 = konto(u.db, 'ausbilder');
+  zustaendig(u.db, w.azubi, w.ausbilder);
+  const sa = sitzung(u, w.admin);
+  const c2 = sitzung(u, a2);
+  const schalte = (id: number, alleAzubis: unknown, cookies = sa) => ruf(u, 'PATCH', `/api/konten/${id}`, { cookies, body: { alleAzubis } });
+
+  assert.equal((await schalte(a2.id, true, sitzung(u, w.ausbilder))).status, 403, 'Ausbilder geben sich die Gesamtsicht nicht selbst');
+  assert.equal((await schalte(w.beauftragter.id, true)).status, 400);
+  assert.equal((await schalte(a2.id, 'ja')).status, 400);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/azubis', { cookies: c2 })).azubis.length, 0);
+  const an = await schalte(a2.id, true);
+  assert.equal(koerper(an).konto.alleAzubis, true);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies: c2 })).konto.alleAzubis, true);
+  assert.deepEqual(koerper(await ruf(u, 'GET', '/api/azubis', { cookies: c2 })).azubis.map((a: { betreuung: string }) => a.betreuung), ['gesamt']);
+  // mit Gesamtsicht lässt sich ein Azubi auch von einem anderen Ausbilder übernehmen
+  assert.equal((await ruf(u, 'POST', `/api/azubis/${w.azubi.id}/uebernehmen`, { cookies: c2 })).status, 200);
+  assert.equal(koerper(await schalte(a2.id, false)).konto.alleAzubis, false);
+  assert.equal((await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/profil`, { cookies: sitzung(u, w.ausbilder) })).status, 404);
+
+  // Rollenwechsel: Gesamtsicht und Zuständigkeit fallen weg, der Azubi ist wieder „ohne Ausbilder“
+  await schalte(a2.id, true);
+  assert.equal((await ruf(u, 'PATCH', `/api/konten/${a2.id}`, { cookies: sa, body: { rolle: 'beauftragter' } })).status, 200);
+  assert.equal((u.db.prepare('SELECT alle_azubis AS n FROM benutzer WHERE id = ?').get(a2.id) as { n: number }).n, 0);
+  assert.equal(koerper(await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/profil`, { cookies: sitzung(u, w.ausbilder) })).ausbilder, null);
+});
+
+test('Vertretung: Ausbilder mit Zuweisung zeichnet im Zeitraum ab, verwaltet aber nicht', async () => {
+  const u = await umgebung();
+  const w = alle(u);
+  const a2 = konto(u.db, 'ausbilder', 'Vertretung');
+  zustaendig(u.db, w.azubi, w.ausbilder);
+  const c1 = sitzung(u, w.ausbilder);
+  const c2 = sitzung(u, a2);
+  const setze = (zuweisungen: unknown, cookies = c1) => ruf(u, 'PUT', `/api/azubis/${w.azubi.id}/zuweisungen`, { cookies, body: { zuweisungen } });
+
+  const personen = koerper(await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/zuweisungen`, { cookies: c1 })).personen as { id: number }[];
+  assert.deepEqual(personen.map((p) => p.id).sort(), [a2.id, w.beauftragter.id].sort(), 'der Zuständige selbst steht nicht zur Wahl');
+  assert.equal((await setze([{ beauftragterId: w.ausbilder.id }])).status, 400);
+  assert.equal((await setze([{ beauftragterId: a2.id, von: '2026-11-02', bis: '2026-11-29' }])).status, 200);
+
+  const liste = koerper(await ruf(u, 'GET', '/api/azubis', { cookies: c2 })).azubis as { id: number; betreuung: string }[];
+  assert.deepEqual(liste.map((a) => [a.id, a.betreuung]), [[w.azubi.id, 'vertretung']]);
+  assert.equal(koerper(await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/profil`, { cookies: c2 })).bearbeitbar, false);
+  assert.equal(koerper(await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/zuweisungen`, { cookies: c2 })).zuweisungen.length, 1);
+  assert.equal(koerper(await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/zuweisungen`, { cookies: c2 })).personen, undefined);
+  assert.equal((await setze([], c2)).status, 404, 'die Vertretung ändert keine Zuweisungen');
+  assert.equal((await ruf(u, 'POST', `/api/azubis/${w.azubi.id}/uebernehmen`, { cookies: c2 })).status, 404);
+  const plan = koerper(await ruf(u, 'GET', `/api/azubis/${w.azubi.id}/plan`, { cookies: c2 }));
+  assert.deepEqual(plan.rechte, { arten: ['aufgabe', 'notiz'], zuweisen: false });
+  assert.deepEqual(plan.vorlagen, []);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/plan/sammel', { cookies: c2 })).azubis.length, 0, 'Sammelplanung nur für Azubis mit vollen Rechten');
+  assert.equal((await ruf(u, 'GET', '/api/konten', { cookies: c2 }).then((a) => koerper(a).konten as { id: number }[])).some((k) => k.id === w.azubi.id), false);
 });
 
 // ---------- Protokoll ----------

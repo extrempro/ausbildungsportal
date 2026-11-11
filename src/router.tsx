@@ -66,8 +66,9 @@ function wechsle(ziel: string): void {
   window.scrollTo(0, 0);
 }
 
-export function geheZu(ziel: string): void {
-  if (offen.size > 0 && ziel !== window.location.pathname) {
+/** `gespeichert`: Die Eingaben der Seite sind gerade gespeichert worden – nicht nach ungespeicherten fragen. */
+export function geheZu(ziel: string, gespeichert = false): void {
+  if (!gespeichert && offen.size > 0 && ziel !== window.location.pathname) {
     void fragVerlassen().then((ja) => ja && wechsle(ziel));
     return;
   }

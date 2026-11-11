@@ -8,7 +8,7 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
 import { ausbildungsjahrAm, gueltigesDatum, kalenderwoche, montagVon, plusTage } from './kalender';
 import { protokolliere } from './protokoll';
-import { darfAzubiVerwalten, darfPlanBearbeiten, darfPlanEintragAendern, sichtbareAzubis } from './rechte';
+import { darfAzubiVerwalten, darfPlanBearbeiten, darfPlanEintragAendern, hatGesamtsicht, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import type { BenutzerZeile } from './typen';
 
@@ -209,6 +209,7 @@ export function planDerWoche(db: DB, azubiId: number, montag: string): { art: Ar
 
 /** Legt für einen Einsatz die passende Zuweisung an, wenn noch keine den Zeitraum abdeckt. */
 function weiseZu(db: DB, jetzt: Date, wer: BenutzerZeile, azubi: BenutzerZeile, e: Eingabe): boolean {
+  // nur Ausbildungsbeauftragte; eine Vertretung durch einen anderen Ausbilder wird bewusst bei den Zuweisungen eingetragen
   if (e.art !== 'einsatz' || e.zustaendig?.rolle !== 'beauftragter') return false;
   const von = e.von;
   const bis = plusTage(e.bis, 6);
@@ -235,15 +236,16 @@ const SAMMEL_LISTE = 5;
  * Die letzten Läufe der Sammelplanung mit dem, was von ihnen noch im Plan steht.
  * „unveraendert“ sind Einträge, die seit dem Lauf niemand bearbeitet oder abgehakt hat – nur diese nimmt „Zurücknehmen“ weg.
  */
-function letzteLaeufe(db: DB) {
+function letzteLaeufe(db: DB, wer: BenutzerZeile) {
   const zeilen = db
     .prepare(
       `SELECT s.id, s.zeit, s.benutzer_name AS name, s.titel, s.azubis, s.eintraege,
               COUNT(p.id) AS vorhanden, COALESCE(SUM(p.geaendert = s.zeit), 0) AS unveraendert
          FROM sammelplanung s LEFT JOIN plan_eintrag p ON p.sammel_id = s.id
+        WHERE ? = 1 OR s.benutzer_id = ?
         GROUP BY s.id HAVING COUNT(p.id) > 0 ORDER BY s.id DESC LIMIT ?`,
     )
-    .all(SAMMEL_LISTE) as unknown as { id: number; zeit: string; name: string; titel: string; azubis: number; eintraege: number; vorhanden: number; unveraendert: number }[];
+    .all(hatGesamtsicht(db, wer) ? 1 : 0, wer.id, SAMMEL_LISTE) as unknown as { id: number; zeit: string; name: string; titel: string; azubis: number; eintraege: number; vorhanden: number; unveraendert: number }[];
   return zeilen.map((z) => ({ ...z }));
 }
 
@@ -262,7 +264,7 @@ function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boole
       )
       .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString(), lauf?.id ?? null);
     merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel, 1, lauf?.id ?? null);
-    if (zuweisen && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
+    if (zuweisen && darfAzubiVerwalten(db, c.b, azubi.id)) zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
     return Number(r.lastInsertRowid);
   });
   return { id, zugewiesen };
@@ -376,13 +378,13 @@ export const PLAN_ROUTEN: Route[] = [
           feiertage: erste && istBundesland(betriebLand) ? feiertageZwischen(betriebLand, erste, ende).filter((f) => !f.teilweise) : [],
           ferien: ferien ? ferienZwischen(ferien, erste!, ende) : [],
           ferienVorhanden: ferien?.vorhanden ?? false,
-          rechte: { arten: darfAlles ? ARTEN : darfAufgaben ? ['aufgabe', 'notiz'] : [], zuweisen: c.b.rolle === 'ausbilder' },
+          rechte: { arten: darfAlles ? ARTEN : darfAufgaben ? ['aufgabe', 'notiz'] : [], zuweisen: darfAzubiVerwalten(db, c.b, azubi.id) },
           // Auswahl für „zuständig“ und Vorlagen nur für die, die planen
           personen: darfAufgaben && c.b.rolle !== 'azubi'
             ? (db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown[])
             : [],
           vorlagen:
-            c.b.rolle === 'ausbilder'
+            darfAlles && c.b.rolle === 'ausbilder'
               ? (db.prepare('SELECT * FROM planvorlage ORDER BY titel COLLATE NOCASE').all() as unknown as VorlageZeile[]).map((v) => ({ id: v.id, titel: v.titel, berufId: v.beruf_id, passt: v.beruf_id === null || v.beruf_id === profil.berufId }))
               : [],
         },
@@ -435,7 +437,7 @@ export const PLAN_ROUTEN: Route[] = [
           jetzt.toISOString(),
           alt.id,
         );
-        if (roh.zuweisen === true && c.b.rolle === 'ausbilder') zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
+        if (roh.zuweisen === true && darfAzubiVerwalten(db, c.b, azubi.id)) zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
       });
       return { status: 200, body: { eintrag: ansicht(c, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(alt.id) as unknown as EintragZeile), zugewiesen } };
     },
@@ -506,7 +508,8 @@ export const PLAN_ROUTEN: Route[] = [
         status: 200,
         body: {
           heute: tag,
-          azubis: sichtbareAzubis(db, c.b, tag).map((id) => {
+          // nur Azubis mit vollen Rechten – bei einer Vertretung plant der zuständige Ausbilder
+          azubis: sichtbareAzubis(db, c.b, tag).filter((id) => darfAzubiVerwalten(db, c.b, id)).map((id) => {
             const b = holeBenutzer(db, id)!;
             const profil = leseProfil(db, id);
             const dauer = dauerVon(db, profil);
@@ -525,7 +528,7 @@ export const PLAN_ROUTEN: Route[] = [
           }),
           bausteine: (db.prepare('SELECT * FROM planvorlage ORDER BY titel COLLATE NOCASE').all() as unknown as VorlageZeile[]).map(vorlageAnsicht),
           personen: db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown[],
-          letzte: letzteLaeufe(db),
+          letzte: letzteLaeufe(db, c.b),
         },
       };
     },
@@ -577,7 +580,7 @@ export const PLAN_ROUTEN: Route[] = [
       // ein Lauf, der nichts angelegt hat, braucht kein „Zurücknehmen“
       if (eingetragen === 0) db.prepare('DELETE FROM sammelplanung WHERE id = ?').run(lauf.id);
       else db.prepare('UPDATE sammelplanung SET azubis = ?, eintraege = ? WHERE id = ?').run(eingetragen, ergebnis.reduce((n, x) => n + x.anzahl, 0), lauf.id);
-      return { status: 200, body: { ergebnis, eingetragen, laufId: eingetragen > 0 ? lauf.id : null, letzte: letzteLaeufe(db) } };
+      return { status: 200, body: { ergebnis, eingetragen, laufId: eingetragen > 0 ? lauf.id : null, letzte: letzteLaeufe(db, c.b) } };
     },
   },
   {
@@ -587,8 +590,9 @@ export const PLAN_ROUTEN: Route[] = [
     wer: ['ausbilder'],
     h: (c) => {
       const { db } = c.k;
-      const lauf = db.prepare('SELECT * FROM sammelplanung WHERE id = ?').get(idAus(c.p.id)) as { id: number; zeit: string; titel: string } | undefined;
-      if (!lauf) throw new Fehler(404, 'Diese Sammelplanung gibt es nicht mehr');
+      const lauf = db.prepare('SELECT * FROM sammelplanung WHERE id = ?').get(idAus(c.p.id)) as { id: number; zeit: string; titel: string; benutzer_id: number | null } | undefined;
+      // zurücknehmen darf, wer den Lauf gemacht hat – oder wer die Gesamtsicht hat
+      if (!lauf || (lauf.benutzer_id !== c.b.id && !hatGesamtsicht(db, c.b))) throw new Fehler(404, 'Diese Sammelplanung gibt es nicht mehr');
       const geblieben = db
         .prepare(
           `SELECT b.anzeigename, p.titel FROM plan_eintrag p JOIN benutzer b ON b.id = p.azubi_id
@@ -603,7 +607,7 @@ export const PLAN_ROUTEN: Route[] = [
         protokolliere(db, c.k.jetzt(), 'fach', 'sammelplanung_zurueckgenommen', c.b, null, `${lauf.titel}: ${n} Einträge entfernt${geblieben.length ? `, ${geblieben.length} geänderte bleiben` : ''}`);
         return n;
       });
-      return { status: 200, body: { entfernt, geblieben: geblieben.map((g) => ({ azubi: g.anzeigename, titel: g.titel })), letzte: letzteLaeufe(db) } };
+      return { status: 200, body: { entfernt, geblieben: geblieben.map((g) => ({ azubi: g.anzeigename, titel: g.titel })), letzte: letzteLaeufe(db, c.b) } };
     },
   },
 

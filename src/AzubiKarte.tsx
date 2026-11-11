@@ -37,6 +37,8 @@ export function AzubiKarte({ a }: { a: AzubiKurz }) {
           <strong>{a.anzeigename}</strong>
           <span className="leise klein">{a.beruf || 'Beruf noch nicht eingetragen'}</span>
         </div>
+        {a.betreuung === 'ohne' && <span className="pille gelb">ohne Ausbilder</span>}
+        {a.betreuung === 'vertretung' && <span className="pille blau">Vertretung</span>}
         {a.status === 'gesperrt' && <span className="pille grau">gesperrt</span>}
       </div>
 

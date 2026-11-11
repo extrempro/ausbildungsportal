@@ -61,6 +61,14 @@ export function sitzung(u: Umgebung, b: BenutzerZeile): Record<string, string> {
   return { [cookieName(u.cfg, 'sitzung')]: beginneSitzung(u.db, b.id, u.uhr.jetzt) };
 }
 
+/** Trägt im Profil des Azubis den zuständigen Ausbilder ein. */
+export function zustaendig(db: DB, azubi: BenutzerZeile, ausbilder: BenutzerZeile | null): void {
+  db.prepare(
+    `INSERT INTO azubi_profil (benutzer_id, ausbilder_id, geaendert) VALUES (?, ?, '2026-01-01T00:00:00.000Z')
+     ON CONFLICT(benutzer_id) DO UPDATE SET ausbilder_id = excluded.ausbilder_id`,
+  ).run(azubi.id, ausbilder?.id ?? null);
+}
+
 export function zuweisen(db: DB, azubi: BenutzerZeile, beauftragter: BenutzerZeile, von: string | null = null, bis: string | null = null): void {
   db.prepare('INSERT INTO zuweisung (azubi_id, beauftragter_id, von, bis) VALUES (?, ?, ?, ?)').run(azubi.id, beauftragter.id, von, bis);
 }
