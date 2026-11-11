@@ -215,6 +215,10 @@ test('Planvorlagen: anlegen, ändern, in einen Plan übernehmen (Wochen ab Ausbi
   for (const falsch of [{ titel: '', eintraege }, { titel: 'x', eintraege: [{ art: 'einsatz', abWoche: 0, titel: 'x' }] }, { titel: 'x', eintraege: [{ art: 'einsatz', abWoche: 1, wochen: 999, titel: 'x' }] }, { titel: 'x', berufId: 99, eintraege: [] }, { titel: 'x', eintraege: 'nein' }]) {
     assert.equal((await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: falsch })).status, 400, JSON.stringify(falsch).slice(0, 60));
   }
+  // ohne „abWoche“ beginnt der Eintrag in der Startwoche; der Baustein wird gleich wieder gelöscht
+  const ohne = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'Ohne Woche', eintraege: [{ art: 'einsatz', wochen: 4, titel: 'Einkauf' }] } })).vorlage;
+  assert.deepEqual([ohne.eintraege[0].abWoche, ohne.eintraege[0].wochen], [1, 4]);
+  assert.equal((await ruf(w.u, 'DELETE', `/api/planvorlagen/${ohne.id}`, { cookies })).status, 200);
   const v = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'FISI Standard', eintraege } })).vorlage;
   assert.equal(v.eintraege.length, 4);
   assert.equal(v.eintraege[3].wochen, 1);
@@ -242,33 +246,6 @@ test('Planvorlagen: anlegen, ändern, in einen Plan übernehmen (Wochen ab Ausbi
   assert.equal((await ruf(w.u, 'DELETE', `/api/planvorlagen/${v.id}`, { cookies })).status, 404);
   assert.equal((await plan(w, w.ausbilder)).eintraege.length, 3, 'übernommene Einträge bleiben');
   assert.ok(w.u.db.prepare("SELECT 1 FROM protokoll WHERE aktion = 'planvorlage_uebernommen'").get());
-});
-
-test('Übersicht: Schule, Einsatz und Urlaub je Woche; Beauftragte sehen nur ihre Azubis', async () => {
-  const w = await welt();
-  await lege(w, w.ausbilder, EINSATZ);
-  await lege(w, w.ausbilder, { art: 'schule', von: '2026-11-16', bis: '2026-11-23', titel: 'Block' });
-  await lege(w, w.ausbilder, { art: 'aufgabe', von: '2026-11-09', titel: 'zählt nicht' });
-  await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/berichte/2026-11-02`, { cookies: als(w, w.azubi), body: { inhalt: { betrieb: [{ text: 'x', stunden: 24 }], abwesenheit: [{ tag: '2026-11-05', grund: 'urlaub', stunden: 8 }, { tag: '2026-11-06', grund: 'urlaub', stunden: 8 }, { tag: '2026-11-04', grund: 'krank', stunden: 8 }] } } });
-
-  const r = koerper(await ruf(w.u, 'GET', '/api/uebersicht?von=2026-11-04&wochen=4', { cookies: als(w, w.ausbilder) }));
-  assert.deepEqual(r.wochen.map((x: any) => x.montag), ['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23']);
-  assert.deepEqual(r.azubis.map((x: any) => x.anzeigename), ['Anna Azubi', 'Ben Azubi']);
-  assert.equal(r.azubis[0].ausbildungsjahr, 2);
-  const anna = r.azubis[0].wochen;
-  assert.deepEqual(anna[0], { inAusbildung: true, schule: false, einsatz: [], urlaubstage: 2 });
-  assert.deepEqual(anna[1], { inAusbildung: true, schule: false, einsatz: ['IT-Support'], urlaubstage: 0 });
-  assert.deepEqual(anna[2], { inAusbildung: true, schule: true, einsatz: ['IT-Support'], urlaubstage: 0 });
-  assert.ok(!JSON.stringify(r).includes('krank'), 'Krankheit erscheint nicht in der Übersicht');
-
-  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: als(w, w.beauftragter) })).azubis, []);
-  zuweisen(w.u.db, w.ben, w.beauftragter);
-  const b = koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: als(w, w.beauftragter) }));
-  assert.deepEqual(b.azubis.map((x: any) => x.anzeigename), ['Ben Azubi']);
-  assert.equal(b.wochen.length, 26);
-  assert.equal(b.wochen[0].montag, '2026-11-09');
-  assert.equal((await ruf(w.u, 'GET', '/api/uebersicht?wochen=99', { cookies: als(w, w.ausbilder) })).status, 400);
-  assert.equal((await ruf(w.u, 'GET', '/api/uebersicht?von=gestern', { cookies: als(w, w.ausbilder) })).status, 400);
 });
 
 test('Bericht zeigt, was laut Plan in der Woche ansteht', async () => {
@@ -526,7 +503,7 @@ test('Termine hinterlassen bei anderen keine Spur: Glocke, Übersicht, Bericht-H
   const alsAusbilder = als(w, w.ausbilder);
   assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM aktivitaet').get() as { n: number }).n, 0, 'kein Eintrag für die Glocke');
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: alsAusbilder })).neu ?? 0, 0);
-  assert.equal(JSON.stringify(koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: alsAusbilder }))).includes('JAV'), false);
+  assert.equal(JSON.stringify(koerper(await ruf(w.u, 'GET', '/api/jahreskalender', { cookies: alsAusbilder }))).includes('JAV'), false);
 
   const eigen = await plan(w, w.azubi);
   const fremd = await plan(w, w.ausbilder);
@@ -572,6 +549,7 @@ test('Jahreskalender: ein Jahr mit Schule, Einsatz, Urlaub, Prüfung und Feierta
   assert.deepEqual([alle.eigenes, alle.einzeln, alle.azubis.map((x: { anzeigename: string }) => x.anzeigename).sort()], [false, false, ['Anna Azubi', 'Ben Azubi']]);
   const anna = alle.azubis.find((x: { id: number }) => x.id === w.azubi.id);
   assert.deepEqual([anna.termine, anna.urlaub, anna.eintraege.length], [[], ['2026-11-05'], 2]);
+  assert.ok(!JSON.stringify(alle).includes('krank'), 'Krankheit erscheint nicht im Jahreskalender');
   const einzeln = koerper(await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.ben.id}`, { cookies: c }));
   assert.deepEqual([einzeln.einzeln, einzeln.azubis.length, einzeln.azubis[0].anzeigename], [true, 1, 'Ben Azubi']);
 

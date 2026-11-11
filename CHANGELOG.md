@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.28.0] – 2026-11-11
+
+### Entfernt
+
+- **Die „Übersicht“ (26 Wochen) entfällt.** Der Jahreskalender zeigt dasselbe über das ganze Jahr. Weg sind der Menüpunkt, die Seite samt den Karten „Diese Woche“ und „Nächste Woche“, die Schnittstelle `GET /api/uebersicht` und das Handbuch-Kapitel dazu.
+
+### Geändert
+
+- Startseite der Ausbilder und Beauftragten: Die dritte Kachel führt zum Jahreskalender.
+- Führung: Der Schritt „Wer ist wann wo?“ zeigt den Jahreskalender.
+- Der Jahreskalender steht am Handy wieder in der Leiste unten („Jahr“).
+- Bausteine importieren: Die Angabe `abWoche` darf in der Datei fehlen – dann beginnt der Eintrag in der Startwoche (Woche 1), passend zum Formular, das „Beginnt in Woche“ nur bei Bedarf zeigt. Das Handbuch erklärt den Zusammenhang.
+
 ## [0.27.0] – 2026-11-11
 
 ### Neu

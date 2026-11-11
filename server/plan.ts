@@ -17,7 +17,7 @@ import type { BenutzerZeile } from './typen';
  * Arten: Schulblock, Einsatz (Abteilung/Einsatzort mit zuständiger Person), Aufgabe (mit Unteraufgaben), Notiz
  * und Termin – ein einzelner Tag mit freiwilliger Uhrzeit, den nur der Azubi selbst einträgt (z. B. JAV-Sitzung).
  * Termine sind privat: Nur der Azubi selbst sieht sie. Für alle anderen gibt es sie nicht – weder im Plan noch in
- * Übersicht, Glocke, Bericht-Hinweis oder Kalender-Abo. Jede Abfrage, die nicht vom Azubi selbst kommt, lässt sie aus.
+ * Jahreskalender, Glocke, Bericht-Hinweis oder Kalender-Abo. Jede Abfrage, die nicht vom Azubi selbst kommt, lässt sie aus.
  * Ausbilder planen alles; Beauftragte legen während ihrer Zuweisung Aufgaben und Notizen an;
  * Azubis legen eigene Aufgaben und Notizen an und haken ab.
  */
@@ -177,7 +177,8 @@ function vorlageEintraegeAus(x: unknown): VorlageEintrag[] {
     if (!PLANBAR.includes(art)) throw new Fehler(400, 'Termine gibt es in Bausteinen nicht');
     return {
       art,
-      abWoche: ganzzahl(e.abWoche, 1, 260, 'Woche'),
+      // fehlt die Angabe, beginnt der Eintrag gleich in der Startwoche – so wie das Formular es bei einfachen Bausteinen annimmt
+      abWoche: ganzzahl(e.abWoche ?? 1, 1, 260, 'Woche'),
       wochen: ganzzahl(e.wochen ?? 1, 1, MAX_WOCHEN, 'Dauer in Wochen'),
       titel: text(e.titel, 120, 'Titel'),
       text: freitext(e.text, 2000, 'Beschreibung'),
@@ -709,50 +710,4 @@ export const PLAN_ROUTEN: Route[] = [
     },
   },
 
-  // ---------- Übersicht über alle Azubis ----------
-  {
-    m: 'GET',
-    p: '/api/uebersicht',
-    wer: ['ausbilder', 'beauftragter'],
-    h: (c) => {
-      const { db } = c.k;
-      const tag = heute(c.k.jetzt());
-      const vonRoh = c.a.query.get('von') || tag;
-      if (!gueltigesDatum(vonRoh)) throw new Fehler(400, 'Beginn ist kein gültiges Datum');
-      const anzahl = ganzzahl(c.a.query.get('wochen') ?? '26', 1, 53, 'Anzahl der Wochen');
-      const start = montagVon(vonRoh);
-      const wochen = Array.from({ length: anzahl }, (_, i) => {
-        const montag = plusTage(start, 7 * i);
-        return { montag, ...kalenderwoche(montag) };
-      });
-      const letzte = wochen[wochen.length - 1].montag;
-      const azubis = sichtbareAzubis(db, c.b, tag).map((id) => {
-        const b = holeBenutzer(db, id)!;
-        const profil = leseProfil(db, id);
-        const dauer = dauerVon(db, profil);
-        const { beruf, stand } = standAus(db, profil, tag);
-        const eintraege = db.prepare("SELECT art, von, bis, titel FROM plan_eintrag WHERE azubi_id = ? AND art IN ('schule', 'einsatz') AND von <= ? AND bis >= ? ORDER BY von, id").all(id, letzte, start) as unknown as { art: Art; von: string; bis: string; titel: string }[];
-        // Urlaub steht nicht im Plan, sondern in den Berichten (Abwesenheit mit Grund „Urlaub“)
-        const urlaub = new Map<string, number>();
-        for (const z of db.prepare('SELECT montag, inhalt FROM bericht WHERE azubi_id = ? AND montag >= ? AND montag <= ?').all(id, start, letzte) as unknown as { montag: string; inhalt: string }[]) {
-          const tage = new Set(json<{ abwesenheit?: { tag: string; grund: string }[] }>(z.inhalt, {}).abwesenheit?.filter((a) => a.grund === 'urlaub').map((a) => a.tag) ?? []);
-          if (tage.size) urlaub.set(z.montag, tage.size);
-        }
-        return {
-          id,
-          anzeigename: b.anzeigename,
-          beruf: beruf?.bezeichnung ?? '',
-          // zum Gruppieren der Übersicht
-          ausbildungsjahr: stand.phase === 'laufend' ? stand.ausbildungsjahr : null,
-          wochen: wochen.map((w) => ({
-            inAusbildung: !!dauer && w.montag >= montagVon(dauer.beginn) && w.montag <= dauer.ende,
-            schule: eintraege.some((e) => e.art === 'schule' && e.von <= w.montag && e.bis >= w.montag),
-            einsatz: eintraege.filter((e) => e.art === 'einsatz' && e.von <= w.montag && e.bis >= w.montag).map((e) => e.titel),
-            urlaubstage: urlaub.get(w.montag) ?? 0,
-          })),
-        };
-      });
-      return { status: 200, body: { heute: tag, wochen, azubis } };
-    },
-  },
 ];

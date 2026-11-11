@@ -10,7 +10,6 @@ import { BerichteDruck, Berichtsheft } from './pages/Berichtsheft';
 import { Konten } from './pages/Konten';
 import { PlanSeite } from './pages/Plan';
 import { Sammelplanung } from './pages/Sammelplanung';
-import { UebersichtSeite } from './pages/Uebersicht';
 import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
@@ -270,7 +269,6 @@ export function App() {
   else if (plan && planAzubi !== null) seite = <PlanSeite key={planAzubi} azubiId={planAzubi} />;
   else if (pfad === '/jahreskalender' && (betreut || konto.rolle === 'azubi')) seite = <Jahreskalender />;
   else if (jahrAzubi && betreut) seite = <Jahreskalender key={jahrAzubi} azubiId={Number(jahrAzubi)} />;
-  else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite darfPlanen={konto.rolle === 'ausbilder'} />;
   else if (pfad === '/planung/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
   else if (pfad === '/planung/bausteine' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
@@ -317,8 +315,7 @@ export function App() {
             { zu: '/', text: 'Start', icon: 'start' },
             { zu: '/azubis', text: 'Azubis', icon: 'azubis', aktivAb: '/azubis' },
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
-            { zu: '/uebersicht', text: 'Übersicht', icon: 'uebersicht' },
-            { zu: '/jahreskalender', text: 'Jahreskalender', icon: 'plan', aktivAb: '/jahreskalender', mehr: true },
+            { zu: '/jahreskalender', text: 'Jahreskalender', kurz: 'Jahr', icon: 'uebersicht', aktivAb: '/jahreskalender' },
           ];
   const verwaltung: Punkt[] =
     konto.rolle === 'ausbilder'

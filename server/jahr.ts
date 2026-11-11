@@ -10,7 +10,7 @@ import { dauerVon, leseBetrieb, leseProfil, standAus } from './stammdaten';
 /**
  * Jahreskalender: ein Kalenderjahr auf einen Blick – für den Azubi der eigene Plan, für Ausbilder und Beauftragte
  * alle Azubis, die sie sehen dürfen. Nur lesen. Enthalten sind Berufsschule, Einsätze, Prüfungstermine und Urlaub
- * (aus den Berichten, wie in der Übersicht). Private Termine eines Azubis stehen nur in seinem eigenen Kalender.
+ * (aus den Berichten; Krankheit erscheint nicht). Private Termine eines Azubis stehen nur in seinem eigenen Kalender.
  */
 function kalenderVon(c: Ctx, azubiId: number, jahr: number, tag: string) {
   const { db } = c.k;
