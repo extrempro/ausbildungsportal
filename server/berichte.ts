@@ -1,3 +1,6 @@
+import { berichtsheftPdf } from './bericht-pdf';
+import type { BerichtFuerPdf } from './bericht-pdf';
+import { leseLogo } from './branding';
 import { merkeAktivitaet } from './aktivitaet';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper } from './api-basis';
 import type { Ctx, Route } from './api-basis';
@@ -277,6 +280,48 @@ export const BERICHT_ROUTEN: Route[] = [
       // schon geleistete Unterschriften auf Nachweisen bleiben als Kopie erhalten
       c.k.db.prepare('DELETE FROM unterschrift WHERE benutzer_id = ?').run(c.b.id);
       return { status: 200, body: { ok: true } };
+    },
+  },
+
+  {
+    // Berichtsheft als PDF: dieselben Berichte und Rechte wie die Liste mit „voll=1“, nur fertig als Datei
+    m: 'GET',
+    p: '/api/azubis/:id/berichtsheft.pdf',
+    wer: FACH,
+    h: (c) => {
+      const { db } = c.k;
+      const azubi = sichtbarerAzubi(c);
+      const q = c.a.query;
+      const woche = q.get('woche');
+      if (woche !== null && (!gueltigesDatum(woche) || montagVon(woche) !== woche)) throw new Fehler(400, 'Die Woche ist ungültig');
+      const jahrRoh = q.get('jahr');
+      if (jahrRoh !== null && !/^[1-9]$/.test(jahrRoh)) throw new Fehler(400, 'Das Ausbildungsjahr ist ungültig');
+      const jahr = jahrRoh === null ? null : Number(jahrRoh);
+      const nurAbgezeichnete = q.get('nur') === 'abgezeichnet';
+      const montage = (db.prepare('SELECT montag FROM bericht WHERE azubi_id = ? ORDER BY montag').all(azubi.id) as { montag: string }[]).map((z) => z.montag);
+      const berichte = montage
+        .filter((m) => woche === null || m === woche)
+        .map((m) => berichtAnsicht(c, azubi, m))
+        .filter((b) => (!nurAbgezeichnete || b.status === 'abgezeichnet') && (jahr === null || b.ausbildungsjahr === jahr));
+      if (berichte.length === 0) throw new Fehler(404, woche ? 'Für diese Woche gibt es keinen Bericht' : 'In dieser Auswahl gibt es keine Berichte');
+      if (berichte.length > 400) throw new Fehler(400, 'Zu viele Berichte für ein Dokument – bitte ein Ausbildungsjahr wählen');
+      // das Logo ist als Data-URL gespeichert; WebP kann das PDF nicht aufnehmen – dann entsteht es ohne Logo
+      const logoUrl = leseLogo(db, 'hell');
+      const logo = logoUrl ? Buffer.from(logoUrl.slice(logoUrl.indexOf(',') + 1), 'base64') : null;
+      const einzeln = woche !== null;
+      const inhalt = berichtsheftPdf({
+        azubi: azubi.anzeigename,
+        berichte: berichte as unknown as BerichtFuerPdf[],
+        deckblatt: !einzeln && q.get('deckblatt') !== '0',
+        ausbildungsjahr: jahr,
+        nurAbgezeichnete,
+        logo,
+        jetzt: c.k.jetzt(),
+      });
+      const erster = berichte[0];
+      const letzter = berichte[berichte.length - 1];
+      const dateiname = einzeln ? `Ausbildungsnachweis ${azubi.anzeigename} KW ${erster.kw}-${erster.jahr}.pdf` : `Berichtsheft ${azubi.anzeigename} ${erster.montag} bis ${letzter.sonntag}.pdf`;
+      return { status: 200, datei: { typ: 'application/pdf', inhalt, dateiname: dateiname.replace(/[\\/:*?"<>|]/g, '-') } };
     },
   },
 
