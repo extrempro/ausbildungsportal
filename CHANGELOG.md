@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.39.1] – 2026-11-11
+
+### Neu
+
+- **Regeln für die Mitarbeit:** `CONTRIBUTING.md` beschreibt Ablauf, Bedienung, Rechte, Datenschutz und Urheberrecht für alle, die am Portal mitarbeiten. `CLAUDE.md` enthält dieselben Regeln als Arbeitsanweisung für Claude Code. Am Portal selbst ändert sich nichts.
+
+### Behoben
+
+- `docs/iso-9241.md` nannte die Rückfrage bei der Zurück-Taste des Browsers noch als offen; sie gibt es seit 0.16.0.
+
 ## [0.39.0] – 2026-11-11
 
 ### Geändert
