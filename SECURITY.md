@@ -9,6 +9,69 @@ Das Ausbildungsportal speichert personenbezogene Daten von Beschäftigten. Bitte
 - Das Client-Geheimnis läuft ab – rechtzeitig erneuern.
 - `DEV_ANMELDUNG` nie auf einem erreichbaren Server einschalten (wird bei `NODE_ENV=production` ohnehin ignoriert).
 
+## Anmeldung des Super-Admins am Reverse Proxy schützen
+
+Der Super-Admin ist das einzige Konto mit Passwort. Die App schützt es selbst: mindestens 14 Zeichen, nach fünf falschen Versuchen 15 Minuten Wartezeit, dazu eine Begrenzung je IP-Adresse; jeder Fehlversuch steht mit IP im Protokoll. Wer mehr will, lässt die Passwort-Anmeldung **nur aus dem eigenen Netz** zu. Das geht bei jedem Reverse Proxy nach demselben Muster.
+
+### Was gesperrt werden muss
+
+| Pfad | Bedeutung |
+| --- | --- |
+| `POST /api/auth/lokal` | **Darauf kommt es an.** Nur hier wird ein Passwort geprüft. Ist dieser Pfad von außen nicht erreichbar, kann sich von außen niemand als Super-Admin anmelden. |
+| `/super` | Nur die Seite mit dem Anmeldeformular. Sie zu sperren ist ordentlich, schützt allein aber nichts – das Formular ist nicht der Zugang. |
+
+Alles andere bleibt offen, sonst funktioniert die Microsoft-Anmeldung der übrigen Rollen nicht mehr. Insbesondere `/api/auth/entra/…` und `/api/konten` (das nutzen auch Ausbilder) nicht sperren.
+
+### Wie
+
+1. Am Proxy eine Regel anlegen, die genau diese beiden Pfade abfängt und vor der allgemeinen Weiterleitung greift.
+2. Dort nur zulassen, wer aus dem Verwaltungsnetz kommt – also aus dem internen Netz oder dem VPN. Alle anderen bekommen `403` oder `404`.
+3. Von außen prüfen (zum Beispiel über Mobilfunk): `https://<Adresse>/super` und ein `POST` auf `/api/auth/lokal` müssen abgewiesen werden, die normale Anmeldeseite muss weiter gehen.
+
+Statt nach IP-Adresse lässt sich an derselben Stelle auch ein Client-Zertifikat (mTLS) oder eine vorgeschaltete Anmeldung des Proxys verlangen. Das Muster bleibt gleich: Die Hürde gilt nur für diese beiden Pfade.
+
+### Beispiele
+
+Die Netze sind Platzhalter – bitte durch die eigenen ersetzen. Die Beispiele zeigen das Muster und sind **nicht in jeder Proxy-Version getestet**; nach dem Einrichten immer Schritt 3 ausführen.
+
+nginx:
+
+```nginx
+location = /super            { allow 10.0.0.0/8; allow 100.64.0.0/10; deny all; proxy_pass http://127.0.0.1:3000; }
+location ^~ /api/auth/lokal  { allow 10.0.0.0/8; allow 100.64.0.0/10; deny all; proxy_pass http://127.0.0.1:3000; }
+# die übrigen proxy_set_header-Zeilen wie im allgemeinen location-Block
+```
+
+Caddy:
+
+```caddyfile
+ausbildung.example.de {
+    @superVonAussen {
+        path /super /api/auth/lokal*
+        not remote_ip 10.0.0.0/8 100.64.0.0/10
+    }
+    respond @superVonAussen 404
+    reverse_proxy 127.0.0.1:3000
+}
+```
+
+Traefik (Labels, Version 3; in Version 2 heißt die Middleware `ipWhiteList`):
+
+```yaml
+- traefik.http.routers.portal-super.rule=Host(`ausbildung.example.de`) && (Path(`/super`) || PathPrefix(`/api/auth/lokal`))
+- traefik.http.routers.portal-super.priority=100
+- traefik.http.routers.portal-super.middlewares=nur-intern
+- traefik.http.middlewares.nur-intern.ipallowlist.sourcerange=10.0.0.0/8,100.64.0.0/10
+```
+
+### Worauf achten
+
+- **Welche Adresse sieht der Proxy?** Steht davor noch etwas (zweiter Proxy, Load Balancer, CDN, NAT der Firewall), sieht der Proxy nur dessen Adresse. Dann würde die Regel alle durchlassen oder alle aussperren. In dem Fall die Regel am äußersten Proxy setzen oder die echte Client-Adresse sauber durchreichen und nur dem vorgeschalteten Gerät vertrauen.
+- **Kein Weg am Proxy vorbei.** Die App darf nur für den Proxy erreichbar sein (Standard: `127.0.0.1:3000`). Ist der Port direkt offen, nützt die Regel nichts.
+- **Die Sperre gilt für das Anmelden, nicht für die Sitzung.** Wer sich im Verwaltungsnetz angemeldet hat, bleibt mit demselben Browser auch außerhalb angemeldet, bis die Sitzung endet. Nach der Arbeit abmelden.
+- **Notfall:** Sperrt man sich aus, bleibt der Weg über den Server selbst (`npm run admin-reset` setzt ein neues Startpasswort; anmelden dann aus dem Verwaltungsnetz).
+- Das ersetzt nichts von oben: starkes Passwort, HTTPS, und am besten die ganze App nur im VPN.
+
 ## Was die App selbst tut
 
 - Rechte werden nur im Server geprüft, an einer Stelle (`behandle` in `server/api.ts`) und über zentrale Funktionen (`server/rechte.ts`). Tests rufen jede Route mit jeder Rolle auf.
