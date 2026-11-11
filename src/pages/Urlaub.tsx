@@ -101,9 +101,21 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
 
       {a.status === 'offen' && (
         <ol className="antrag-schritte" aria-label="Stand des Antrags">
-          {a.bestaetigungen.map((b) => (
-            <li key={b.name} className={b.zeit ? 'fertig' : undefined}>
-              {b.zeit ? `${b.name} hat am ${datum(b.zeit.slice(0, 10))} bestätigt` : `Bestätigung von ${b.name} steht aus`}
+          {a.bestaetigungen
+            .filter((b) => b.zeit || !b.gruppe)
+            .map((b) => (
+              <li key={b.name} className={b.zeit ? 'fertig' : undefined}>
+                {b.zeit ? `${b.name} hat am ${datum(b.zeit.slice(0, 10))} bestätigt${b.gruppe ? ` (${b.gruppe})` : ''}` : `Bestätigung von ${b.name} steht aus`}
+              </li>
+            ))}
+          {/* aus einer Abteilung genügt eine Bestätigung – deshalb eine Zeile je Abteilung */}
+          {[...new Set(a.bestaetigungen.filter((b) => !b.zeit && b.gruppe).map((b) => b.gruppe))].map((g) => (
+            <li key={`g-${g}`}>
+              Bestätigung aus der Abteilung {g} steht aus – von{' '}
+              {a.bestaetigungen
+                .filter((b) => !b.zeit && b.gruppe === g)
+                .map((b) => b.name)
+                .join(' oder ')}
             </li>
           ))}
           <li>{a.stufe === 'ausbilder' ? 'Jetzt entscheidet der Ausbilder' : 'Danach entscheidet der Ausbilder'}</li>

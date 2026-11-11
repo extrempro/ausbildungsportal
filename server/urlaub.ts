@@ -7,7 +7,7 @@ import { transaktion } from './db';
 import { heute } from './datum';
 import { feiertageZwischen, istBundesland } from './feiertage';
 import { gueltigesDatum, montagVon, plusTage } from './kalender';
-import { darfAzubiSehen, darfAzubiVerwalten, sichtbareAzubis } from './rechte';
+import { darfAzubiSehen, darfAzubiVerwalten, sichtbareAzubis, zustaendiger } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi } from './stammdaten';
 import { informierePersonal, mailHindernis, versende } from './urlaub-mail';
 
@@ -69,18 +69,34 @@ export function urlaubsZeitraeume(db: DB, azubiId: number, status: UrlaubStatus,
   }));
 }
 
-/** Wer bestätigen muss: alle aktiven Konten, denen der Azubi im Zeitraum (auch nur teilweise) zugewiesen ist. */
-function bestaetiger(db: DB, azubiId: number, von: string, bis: string): { id: number; name: string }[] {
-  return (
-    db
-      .prepare(
-        `SELECT DISTINCT b.id, b.anzeigename AS name FROM zuweisung z JOIN benutzer b ON b.id = z.beauftragter_id
-          WHERE z.azubi_id = ? AND b.status = 'aktiv' AND b.rolle IN ('beauftragter', 'ausbilder')
-            AND (z.von IS NULL OR z.von = '' OR z.von <= ?) AND (z.bis IS NULL OR z.bis = '' OR z.bis >= ?)
-          ORDER BY b.anzeigename COLLATE NOCASE`,
-      )
-      .all(azubiId, bis, von) as unknown as { id: number; name: string }[]
-  ).map((z) => ({ id: z.id, name: z.name }));
+/**
+ * Wer bestätigen muss: alle aktiven Konten, denen der Azubi im Zeitraum (auch nur teilweise) zugewiesen ist.
+ * - Zuweisung von Hand: Jede dieser Personen muss bestätigen (gruppe = '').
+ * - Zuweisung über eine Abteilung: Beauftragte und Stellvertretung bilden eine Gruppe (gruppe = Name der Abteilung) –
+ *   eine Bestätigung aus der Gruppe genügt.
+ * - Der zuständige Ausbilder bestätigt nicht: Er entscheidet ohnehin.
+ */
+function bestaetiger(db: DB, azubiId: number, von: string, bis: string): { id: number; name: string; gruppe: string }[] {
+  const zeilen = db
+    .prepare(
+      `SELECT b.id, b.anzeigename AS name, z.einsatz_id AS einsatz, COALESCE(a.name, '') AS abteilung
+         FROM zuweisung z JOIN benutzer b ON b.id = z.beauftragter_id
+         LEFT JOIN plan_eintrag e ON e.id = z.einsatz_id LEFT JOIN abteilung a ON a.id = e.abteilung_id
+        WHERE z.azubi_id = ? AND b.status = 'aktiv' AND b.rolle IN ('beauftragter', 'ausbilder')
+          AND (z.von IS NULL OR z.von = '' OR z.von <= ?) AND (z.bis IS NULL OR z.bis = '' OR z.bis >= ?)
+        ORDER BY b.anzeigename COLLATE NOCASE`,
+    )
+    .all(azubiId, bis, von) as unknown as { id: number; name: string; einsatz: number | null; abteilung: string }[];
+  const chef = zustaendiger(db, azubiId);
+  const m = new Map<number, { id: number; name: string; gruppe: string }>();
+  for (const z of zeilen) {
+    if (z.id === chef) continue;
+    const gruppe = z.einsatz === null ? '' : z.abteilung || 'Abteilung';
+    const alt = m.get(z.id);
+    // wer auch von Hand zugewiesen ist, bestätigt selbst
+    if (!alt || gruppe === '') m.set(z.id, { id: z.id, name: z.name, gruppe });
+  }
+  return [...m.values()];
 }
 
 /** Urlaubskonto eines Kalenderjahrs: Anspruch, genehmigte und beantragte Arbeitstage. */
@@ -115,6 +131,13 @@ function hinweise(db: DB, azubiId: number, von: string, bis: string, tage: strin
   return out;
 }
 
+/** Für die Anzeige vor dem Antrag: Einzelpersonen mit Namen, Abteilungen als „Bea Auft oder Bodo Zweit (IT-Betrieb)“. */
+function bestaetigerText(liste: { name: string; gruppe: string }[]): string[] {
+  const einzeln = liste.filter((b) => !b.gruppe).map((b) => b.name);
+  const gruppen = [...new Set(liste.filter((b) => b.gruppe).map((b) => b.gruppe))].map((g) => `${liste.filter((b) => b.gruppe === g).map((b) => b.name).join(' oder ')} (${g})`);
+  return [...einzeln, ...gruppen];
+}
+
 function hole(db: DB, id: number): AntragZeile | undefined {
   return Number.isInteger(id) ? (db.prepare('SELECT * FROM urlaub_antrag WHERE id = ?').get(id) as AntragZeile | undefined) : undefined;
 }
@@ -126,10 +149,12 @@ function ausstehend(db: DB, antragId: number): { benutzer_id: number; name: stri
 function ansicht(c: Ctx, z: AntragZeile) {
   const { db } = c.k;
   const azubi = holeBenutzer(db, z.azubi_id)!;
-  const bestaetigungen = (db.prepare('SELECT benutzer_id, name, zeit FROM urlaub_bestaetigung WHERE antrag_id = ? ORDER BY name COLLATE NOCASE').all(z.id) as unknown as { benutzer_id: number; name: string; zeit: string | null }[]).map((b) => ({
+  const bestaetigungen = (db.prepare('SELECT benutzer_id, name, zeit, gruppe FROM urlaub_bestaetigung WHERE antrag_id = ? ORDER BY gruppe, name COLLATE NOCASE').all(z.id) as unknown as { benutzer_id: number; name: string; zeit: string | null; gruppe: string }[]).map((b) => ({
     name: b.name,
     zeit: b.zeit,
     ich: b.benutzer_id === c.b.id,
+    /** Abteilung: Aus ihr genügt eine Bestätigung. Leer = diese Person muss selbst bestätigen. */
+    gruppe: b.gruppe,
   }));
   const offen = z.status === 'offen';
   const wartetAufMich = offen && bestaetigungen.some((b) => b.ich && b.zeit === null);
@@ -230,7 +255,7 @@ export const URLAUB_ROUTEN: Route[] = [
       const azubi = sichtbarerAzubi(c);
       const { von, bis } = zeitraumAus(c, c.a.query.get('von'), c.a.query.get('bis'));
       const tage = arbeitstage(c.k.db, von, bis);
-      return { status: 200, body: { tage: tage.length, hinweise: hinweise(c.k.db, azubi.id, von, bis, tage), bestaetiger: bestaetiger(c.k.db, azubi.id, von, bis).map((b) => b.name) } };
+      return { status: 200, body: { tage: tage.length, hinweise: hinweise(c.k.db, azubi.id, von, bis, tage), bestaetiger: bestaetigerText(bestaetiger(c.k.db, azubi.id, von, bis)) } };
     },
   },
 
@@ -257,7 +282,7 @@ export const URLAUB_ROUTEN: Route[] = [
       const id = transaktion(db, () => {
         const r = db.prepare('INSERT INTO urlaub_antrag (azubi_id, von, bis, tage, bemerkung, erstellt, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?)').run(azubi.id, von, bis, tage.length, bemerkung, jetzt, jetzt);
         const neu = Number(r.lastInsertRowid);
-        for (const b of bestaetiger(db, azubi.id, von, bis)) db.prepare('INSERT INTO urlaub_bestaetigung (antrag_id, benutzer_id, name) VALUES (?, ?, ?)').run(neu, b.id, b.name);
+        for (const b of bestaetiger(db, azubi.id, von, bis)) db.prepare('INSERT INTO urlaub_bestaetigung (antrag_id, benutzer_id, name, gruppe) VALUES (?, ?, ?, ?)').run(neu, b.id, b.name, b.gruppe);
         schreibeVerlauf(c, neu, 'beantragt');
         return neu;
       });
@@ -310,6 +335,9 @@ export const URLAUB_ROUTEN: Route[] = [
       if (z.status !== 'offen') throw new Fehler(409, 'Der Antrag ist nicht mehr offen');
       const r = c.k.db.prepare('UPDATE urlaub_bestaetigung SET zeit = ? WHERE antrag_id = ? AND benutzer_id = ? AND zeit IS NULL').run(c.k.jetzt().toISOString(), z.id, c.b.id);
       if (Number(r.changes) === 0) throw new Fehler(409, 'Für diesen Antrag steht von dir keine Bestätigung aus');
+      // aus einer Abteilung genügt eine Bestätigung: Die übrigen der Gruppe müssen nicht mehr
+      const gruppe = (c.k.db.prepare('SELECT gruppe FROM urlaub_bestaetigung WHERE antrag_id = ? AND benutzer_id = ?').get(z.id, c.b.id) as { gruppe: string }).gruppe;
+      if (gruppe) c.k.db.prepare('DELETE FROM urlaub_bestaetigung WHERE antrag_id = ? AND gruppe = ? AND zeit IS NULL').run(z.id, gruppe);
       schreibeVerlauf(c, z.id, 'bestaetigt');
       melde(c, z, 'urlaub_bestaetigt');
       return { status: 200, body: { antrag: ansicht(c, hole(c.k.db, z.id)!) } };

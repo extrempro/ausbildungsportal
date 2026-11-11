@@ -1,3 +1,4 @@
+import { AbteilungenBereich } from '../abteilungen';
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
@@ -274,6 +275,8 @@ export function Stammdaten() {
           </p>
         )}
       </section>
+
+      <AbteilungenBereich />
 
       <section className="karte">
         <h2>Ausbildungsberufe</h2>

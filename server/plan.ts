@@ -1,3 +1,4 @@
+import { abteilungAus, gleicheZuweisungenAb } from './abteilung';
 import { merkeAktivitaet } from './aktivitaet';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import type { Ctx, Route } from './api-basis';
@@ -40,6 +41,7 @@ interface EintragZeile {
   titel: string;
   text: string;
   zustaendig_id: number | null;
+  abteilung_id: number | null;
   erledigt: number;
   unteraufgaben: string;
   erstellt_von: number | null;
@@ -118,6 +120,8 @@ interface Eingabe {
   titel: string;
   text: string;
   zustaendig: BenutzerZeile | null;
+  /** nur Einsätze: die Abteilung, deren Beauftragte für die Dauer automatisch zugewiesen sind */
+  abteilung: { id: number; name: string } | null;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
   /** nur Termine */
@@ -140,7 +144,7 @@ function terminAus(roh: Record<string, unknown>): Eingabe {
   if (zeitBis && !zeitVon) throw new Fehler(400, 'Ein Ende braucht auch einen Beginn');
   if (zeitBis && zeitBis <= zeitVon) throw new Fehler(400, 'Das Ende liegt nicht nach dem Beginn');
   const montag = montagVon(roh.tag);
-  return { art: 'termin', von: montag, bis: montag, titel: text(roh.titel, 120, 'Titel'), text: freitext(roh.text, 2000, 'Ort oder Anmerkung'), zustaendig: null, erledigt: false, unteraufgaben: [], tag: roh.tag, zeitVon, zeitBis };
+  return { art: 'termin', von: montag, bis: montag, titel: text(roh.titel, 120, 'Titel'), text: freitext(roh.text, 2000, 'Ort oder Anmerkung'), zustaendig: null, abteilung: null, erledigt: false, unteraufgaben: [], tag: roh.tag, zeitVon, zeitBis };
 }
 
 function eingabeAus(db: DB, roh: Record<string, unknown>): Eingabe {
@@ -154,11 +158,14 @@ function eingabeAus(db: DB, roh: Record<string, unknown>): Eingabe {
   if (bis < von) throw new Fehler(400, 'Das Ende liegt vor dem Beginn');
   if (bis > plusTage(von, 7 * (MAX_WOCHEN - 1))) throw new Fehler(400, `Ein Eintrag darf höchstens ${MAX_WOCHEN} Wochen umfassen`);
   const unteraufgaben = unteraufgabenAus(roh.unteraufgaben, art);
+  const abteilung = art === 'einsatz' ? abteilungAus(db, roh.abteilungId) : null;
   return {
     art,
     von,
     bis,
-    titel: text(roh.titel, 120, 'Titel'),
+    // ein Einsatz in einer Abteilung darf ohne eigenen Titel kommen – dann heißt er wie die Abteilung
+    titel: abteilung && (roh.titel === undefined || roh.titel === null || String(roh.titel).trim() === '') ? abteilung.name : text(roh.titel, 120, 'Titel'),
+    abteilung,
     text: freitext(roh.text, 2000, 'Beschreibung'),
     zustaendig: zustaendigAus(db, roh.zustaendigId, art),
     erledigt: art === 'aufgabe' && roh.erledigt === true,
@@ -209,6 +216,8 @@ function ansicht(c: Ctx, z: EintragZeile) {
     text: z.text,
     zustaendigId: zustaendig?.id ?? null,
     zustaendig: zustaendig?.anzeigename ?? '',
+    abteilungId: z.abteilung_id,
+    abteilung: z.abteilung_id ? ((db.prepare('SELECT name FROM abteilung WHERE id = ?').get(z.abteilung_id) as { name: string } | undefined)?.name ?? '') : '',
     erledigt: z.erledigt === 1,
     unteraufgaben: json<Unteraufgabe[]>(z.unteraufgaben, []),
     tag: z.tag,
@@ -306,7 +315,13 @@ function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boole
     // Termine sind privat – sie erscheinen nicht in der Glocke der Betreuenden
     if (e.art !== 'termin') merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel, 1, lauf?.id ?? null);
     if (zuweisen && darfAzubiVerwalten(db, c.b, azubi.id)) zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
-    return Number(r.lastInsertRowid);
+    const neu = Number(r.lastInsertRowid);
+    // Abteilung: nur wer den Azubi verwaltet, löst damit Zuweisungen aus
+    if (e.abteilung && darfAzubiVerwalten(db, c.b, azubi.id)) {
+      db.prepare('UPDATE plan_eintrag SET abteilung_id = ? WHERE id = ?').run(e.abteilung.id, neu);
+      gleicheZuweisungenAb(db, { einsatzId: neu });
+    }
+    return neu;
   });
   return { id, zugewiesen };
 }
@@ -482,6 +497,10 @@ export const PLAN_ROUTEN: Route[] = [
           alt.id,
         );
         if (roh.zuweisen === true && darfAzubiVerwalten(db, c.b, azubi.id)) zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
+        // Abteilung ändern darf nur, wer den Azubi verwaltet; sonst bleibt sie, wie sie ist (außer der Eintrag ist kein Einsatz mehr)
+        if (darfAzubiVerwalten(db, c.b, azubi.id)) db.prepare('UPDATE plan_eintrag SET abteilung_id = ? WHERE id = ?').run(e.abteilung?.id ?? null, alt.id);
+        else if (e.art !== 'einsatz') db.prepare('UPDATE plan_eintrag SET abteilung_id = NULL WHERE id = ?').run(alt.id);
+        gleicheZuweisungenAb(db, { einsatzId: alt.id });
       });
       return { status: 200, body: { eintrag: ansicht(c, db.prepare('SELECT * FROM plan_eintrag WHERE id = ?').get(alt.id) as unknown as EintragZeile), zugewiesen } };
     },

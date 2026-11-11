@@ -5,6 +5,7 @@ import { Fehler, idAus, koerper, text } from './api-basis';
 import type { Ctx, Route } from './api-basis';
 import { lernpakete, portalLernDir, pruefeLernpaketeSofort } from './lernen';
 import { ladeInhalte } from './lernen/store';
+import { benachrichtige, teamsKarteEinreichung } from './meldungen';
 import { protokolliere } from './protokoll';
 import { leseZip, ZipFehler } from './zip';
 import type { ZipDatei } from './zip';
@@ -182,6 +183,8 @@ export const EINREICHUNG_ROUTEN: Route[] = [
         .run(kennung, pruefung.titel, c.b.id, c.b.anzeigename, notiz, c.a.body.length, JSON.stringify(pruefung), c.k.jetzt().toISOString(), c.a.body);
       protokolliere(c.k.db, c.k.jetzt(), 'fach', 'lerninhalte_eingereicht', c.b, null, `Paket ${kennung}`);
       c.k.log(`Lerninhalte eingereicht: Paket „${kennung}“ (${pruefung.themenfelder} Themenfelder)`);
+      // derselbe Teams-Kanal wie bei Fehlermeldungen – damit der Super-Admin von der Einreichung erfährt
+      if (c.k.cfg.fehlerWebhook) void benachrichtige(c.k, teamsKarteEinreichung(c.k, { kennung, titel: pruefung.titel, themenfelder: pruefung.themenfelder, unterthemen: pruefung.unterthemen }));
       return { status: 201, body: { einreichung: ansicht(c, hole({ ...c, p: { id: String(r.lastInsertRowid) } })) } };
     },
   },

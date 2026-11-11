@@ -412,6 +412,9 @@ export interface PlanEintrag {
   text: string;
   zustaendigId: number | null;
   zustaendig: string;
+  /** Abteilung eines Einsatzes (oder null) und ihr Name */
+  abteilungId: number | null;
+  abteilung: string;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
   /** nur Termine: Tag (JJJJ-MM-TT) und freiwillige Uhrzeit (HH:MM) */
@@ -508,7 +511,8 @@ export interface UrlaubAntrag {
   hinweise: string[];
   /** wo ein offener Antrag gerade liegt */
   stufe: 'beauftragte' | 'ausbilder' | null;
-  bestaetigungen: { name: string; zeit: string | null; ich: boolean }[];
+  /** gruppe = Abteilung: aus ihr genügt eine Bestätigung; leer = die Person bestätigt selbst */
+  bestaetigungen: { name: string; zeit: string | null; ich: boolean; gruppe: string }[];
   erstellt: string;
   verlauf: { zeit: string; aktion: string; name: string; rolle: Rolle; kommentar: string }[];
   rechte: { zurueckziehen: boolean; bestaetigen: boolean; ablehnen: boolean; genehmigen: boolean; stornieren: boolean; mailErneut: boolean };

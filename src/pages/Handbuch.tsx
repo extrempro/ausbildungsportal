@@ -428,7 +428,7 @@ const AZUBI: Kapitel[] = [
         </ol>
         <p>So geht es weiter:</p>
         <dl className="begriffe">
-          <Begriff wort="Wartet auf Bestätigung">Deine Ausbildungsbeauftragten müssen zustimmen. Sind es mehrere, dann alle.</Begriff>
+          <Begriff wort="Wartet auf Bestätigung">Deine Ausbildungsbeauftragten müssen zustimmen. Bist du in einer Abteilung eingesetzt, genügt die Zustimmung einer Person aus dieser Abteilung.</Begriff>
           <Begriff wort="Wartet auf Genehmigung">Jetzt entscheidet dein Ausbilder. Ist dir niemand zugewiesen, liegt der Antrag sofort bei ihm.</Begriff>
           <Begriff wort="Genehmigt">Der Urlaub steht fest. Er erscheint von selbst im Jahreskalender, im Bericht der Woche und im abonnierten Kalender. Die Personalstelle bekommt vom Portal eine Mail mit deinem Namen und dem Zeitraum – deine Bemerkung steht nicht darin.</Begriff>
           <Begriff wort="Abgelehnt">Der Grund steht am Antrag. Du kannst einen neuen Antrag für eine andere Zeit stellen.</Begriff>
@@ -748,7 +748,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         <p>Der Ablauf hat zwei Stufen:</p>
         <ol className="schritte">
           <li>
-            <strong>Bestätigen:</strong> Alle, denen der Azubi im Urlaubszeitraum zugewiesen ist, bestätigen den Antrag – Ausbildungsbeauftragte und Ausbilder als Vertretung. Sind es mehrere, müssen alle bestätigen.
+            <strong>Bestätigen:</strong> Alle, denen der Azubi im Urlaubszeitraum zugewiesen ist, bestätigen den Antrag – Ausbildungsbeauftragte und Ausbilder als Vertretung. Sind mehrere von Hand zugewiesen, müssen alle bestätigen. Ist der Azubi in einer Abteilung eingesetzt, genügt aus dieser Abteilung eine Bestätigung – von einem Beauftragten oder der Stellvertretung.
           </li>
           <li>
             <strong>Genehmigen:</strong> Danach entscheidet der zuständige Ausbilder endgültig. Ist im Zeitraum niemand zugewiesen, liegt der Antrag sofort bei ihm.
@@ -779,6 +779,54 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </li>
           <li>Die Bemerkung des Azubis ist freiwillig. Bitte keine Gründe verlangen – erst recht keine zur Gesundheit.</li>
           <li>Krankmeldungen laufen nicht über das Portal.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: 'abteilungen',
+    titel: 'Abteilungen und Einsätze',
+    inhalt: (
+      <>
+        <p>
+          Azubis durchlaufen Abteilungen. Im Portal ist eine Abteilung ein Name mit den Menschen, die dort für Azubis da sind: den <strong>Beauftragten</strong> und – freiwillig – einer <strong>Stellvertretung</strong>. Hinterlegen lassen sich Ausbildungsbeauftragte und Ausbilder.
+        </p>
+        {rolle === 'ausbilder' ? (
+          <>
+            <h3>Abteilung anlegen</h3>
+            <ol className="schritte">
+              <li>
+                Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei „Abteilungen“ auf „Abteilung anlegen“.
+              </li>
+              <li>Namen eintragen, Beauftragte ankreuzen, auf Wunsch eine Stellvertretung.</li>
+              <li>„Abteilung anlegen“.</li>
+            </ol>
+            <h3>Azubi einer Abteilung zuweisen</h3>
+            <ol className="schritte">
+              <li>Im Ausbildungsplan des Azubis einen Eintrag der Art „Einsatz“ anlegen (oder in der Sammelplanung für mehrere Azubis).</li>
+              <li>Im Feld „Abteilung“ die Abteilung wählen. Der Titel wird vorgeschlagen und lässt sich ändern.</li>
+              <li>Zeitraum eintragen und speichern.</li>
+            </ol>
+          </>
+        ) : (
+          <p>Abteilungen legen die Ausbilder in den Stammdaten an. Sie tragen auch die Einsätze in den Ausbildungsplan ein.</p>
+        )}
+        <h3>Was dann gilt</h3>
+        <ul className="punkte">
+          <li>
+            Für die Dauer des Einsatzes sind die Beauftragten und die Stellvertretung der Abteilung <strong>automatisch zuständig</strong>: Sie sehen den Azubi mit Plan und Berichtsheft, zeichnen die Berichte dieser Wochen ab und bestätigen Urlaub. Niemand muss sie eigens zuweisen.
+          </li>
+          <li>Die Stellvertretung ist immer mit zuständig – nicht erst, wenn jemand ausfällt.</li>
+          <li>Die Zuständigkeit reicht vom Montag der ersten bis zum Sonntag der letzten Woche des Einsatzes. Berichte aus dieser Zeit bleiben auch danach einsehbar.</li>
+          <li>Beim Urlaub genügt aus einer Abteilung eine Bestätigung – von einem Beauftragten oder der Stellvertretung.</li>
+          {rolle === 'ausbilder' && (
+            <>
+              <li>Änderst du den Zeitraum des Einsatzes, die Abteilung oder die Personen der Abteilung, ändern sich die Zuweisungen sofort mit. Löschst du den Einsatz, enden sie.</li>
+              <li>Im Profil des Azubis stehen diese Zuweisungen unter „Aus Einsätzen in Abteilungen (automatisch)“. Zuweisungen von Hand gibt es weiterhin – für alles, was nicht an einer Abteilung hängt.</li>
+              <li>Eine Abteilung lässt sich erst löschen, wenn kein Einsatz sie mehr verwendet.</li>
+              <li>Ein Einsatz ohne Abteilung bleibt möglich, zum Beispiel für einen Lehrgang.</li>
+            </>
+          )}
         </ul>
       </>
     ),
@@ -1239,6 +1287,7 @@ const ADMIN: Kapitel[] = [
           <Begriff wort="Lerninhalte hochladen …">Übernimmt das Paket ins Portal, auf Wunsch mit einem Kommentar. Gibt es schon ein Lernmodul mit dieser Kennung, wird es ersetzt und gilt sofort für alle Azubis, deren Beruf es nutzt. Ihr Lernstand bleibt erhalten.</Begriff>
         </dl>
         <ul className="punkte">
+          <li>Ist die Benachrichtigung in Teams eingerichtet (siehe „Fehlermeldungen“), erscheint dort ein Hinweis, sobald jemand Lerninhalte einreicht.</li>
           <li>Ein neues Lernmodul sehen Azubis erst, wenn ein Ausbilder es in den Stammdaten an einem Beruf einschaltet.</li>
           <li>Hochgeladene Pakete liegen im Datenordner des Portals unter <code>lerninhalte/</code> und sind damit in der Datensicherung. Sie gehen vor ein gleichnamiges Paket, das als Ordner auf dem Server eingebunden ist.</li>
           <li>Nach der Entscheidung löscht das Portal die eingereichte ZIP-Datei.</li>

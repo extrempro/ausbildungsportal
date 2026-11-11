@@ -136,3 +136,23 @@ test('Zurückziehen: nur wer eingereicht hat, nur solange offen', async () => {
   // danach ist die Kennung wieder frei
   assert.equal((await reiche(w, w.olaf, baueZip(paket()))).status, 201);
 });
+
+test('Einreichung benachrichtigt den Teams-Kanal – ohne Namen, mit Link zur Prüfung', async () => {
+  vergissLernpakete();
+  const karten: { url: string; body: unknown }[] = [];
+  const u = await umgebung({ DATA_DIR: mkdtempSync(join(tmpdir(), 'portal-daten-')), LERN_DIR: mkdtempSync(join(tmpdir(), 'lern-leer-')), FEHLER_WEBHOOK_URL: 'https://teams.example/webhook/geheim' }, null, async (url, body) => {
+    karten.push({ url, body });
+    return { ok: true, status: 202 };
+  });
+  const petra = konto(u.db, 'ausbilder', 'Petra Lang');
+  const r = await ruf(u, 'POST', '/api/lernpakete/einreichungen?kennung=buero', { cookies: sitzung(u, petra), body: baueZip(paket()) });
+  assert.equal(r.status, 201);
+  await new Promise((ok) => setImmediate(ok));
+  assert.equal(karten.length, 1);
+  const text = JSON.stringify(karten[0].body);
+  assert.ok(text.includes('Lerninhalte im Ausbildungsportal eingereicht') && text.includes('Kaufleute für Büromanagement (buero)') && text.includes('/verwaltung/lerninhalte'));
+  assert.ok(!text.includes('Petra'), 'kein Name im Kanal');
+  // ein kaputtes Paket löst nichts aus
+  await ruf(u, 'POST', '/api/lernpakete/einreichungen?kennung=x', { cookies: sitzung(u, petra), body: Buffer.from('kein zip') });
+  assert.equal(karten.length, 1);
+});

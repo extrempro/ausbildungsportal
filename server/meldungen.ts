@@ -66,8 +66,39 @@ export function teamsKarte(k: Kontext, m: { id: number; rolle: string; seite: st
   };
 }
 
+/** Karte für den Teams-Kanal: Ein Ausbilder hat Lerninhalte eingereicht. Ohne Namen – wer eingereicht hat, steht im Portal. */
+export function teamsKarteEinreichung(k: Kontext, e: { kennung: string; titel: string; themenfelder: number; unterthemen: number }) {
+  return {
+    type: 'message',
+    attachments: [
+      {
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        contentUrl: null,
+        content: {
+          $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+          type: 'AdaptiveCard',
+          version: '1.4',
+          body: [
+            { type: 'TextBlock', size: 'Medium', weight: 'Bolder', wrap: true, text: 'Lerninhalte im Ausbildungsportal eingereicht' },
+            {
+              type: 'FactSet',
+              facts: [
+                { title: 'Lernmodul', value: e.titel ? `${e.titel} (${e.kennung})` : e.kennung },
+                { title: 'Umfang', value: `${e.themenfelder} Themenfelder, ${e.unterthemen} Unterthemen` },
+                { title: 'Version', value: k.version },
+              ],
+            },
+            { type: 'TextBlock', wrap: true, text: 'Die Einreichung wartet auf die Prüfung durch den Super-Admin.' },
+          ],
+          actions: [{ type: 'Action.OpenUrl', title: 'Im Portal öffnen', url: `${k.cfg.appUrl}/verwaltung/lerninhalte` }],
+        },
+      },
+    ],
+  };
+}
+
 /** Schickt die Karte; ein Fehler steht im Log (ohne die Adresse – sie ist ein Geheimnis) und stört die Meldung nicht. */
-async function benachrichtige(k: Kontext, karte: unknown): Promise<string | null> {
+export async function benachrichtige(k: Kontext, karte: unknown): Promise<string | null> {
   if (!k.cfg.fehlerWebhook) return 'nicht eingerichtet';
   try {
     const r = await k.sende(k.cfg.fehlerWebhook, karte);
