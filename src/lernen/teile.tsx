@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
+import { Link } from '../router';
 import { AMPEL_FARBE, AMPEL_REIHE, AMPEL_TEXT, zusammenfassung } from './ampel';
 import type { LernStatus, Zaehlung } from './ampel';
 
@@ -29,6 +30,16 @@ export function Inline({ text }: { text: string }) {
   }
   if (ende < text.length) teile.push(text.slice(ende));
   return <>{teile}</>;
+}
+
+/** Bereiche des Lernmoduls – steht oben auf den Hauptseiten unter „Lernen“. */
+export function LernReiter() {
+  return (
+    <nav className="lern-reiter" aria-label="Bereiche im Lernmodul">
+      <Link zu="/lernen">Themenfelder</Link>
+      <Link zu="/lernen/kompendium">Kompendium</Link>
+    </nav>
+  );
 }
 
 export function StatusPille({ status }: { status: LernStatus }) {

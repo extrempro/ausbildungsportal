@@ -1,3 +1,5 @@
+import { sammleEintraege } from './lernen/kompendium';
+import type { Eintrag } from './lernen/kompendium';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fehler } from './api-basis';
@@ -186,6 +188,9 @@ function paketKopf(p: Paket) {
   return { id: p.id, titel: p.titel, stand: p.inhalte.meta.stand, quelle: p.quelle, lizenz: p.lizenz };
 }
 
+/** je geladenem Inhaltsstand einmal gesammelt; neu geladene Inhalte sind ein neues Objekt */
+const KOMPENDIUM = new WeakMap<Inhalte, Eintrag[]>();
+
 export const LERN_ROUTEN: Route[] = [
   {
     // Übersicht: alle Themenfelder mit dem eigenen Stand je Unterthema – ohne die Inhalte selbst
@@ -212,6 +217,19 @@ export const LERN_ROUTEN: Route[] = [
           })),
         },
       };
+    },
+  },
+
+  {
+    // Kompendium: alle Bausteine aus allen Cheatsheets zum Nachschlagen – nur Inhalte, kein Lernstand
+    m: 'GET',
+    p: '/api/lernen/kompendium',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      let eintraege = KOMPENDIUM.get(p.inhalte);
+      if (!eintraege) KOMPENDIUM.set(p.inhalte, (eintraege = sammleEintraege(p.inhalte.themenfelder)));
+      return { status: 200, body: { paket: paketKopf(p), themenfelder: p.inhalte.themenfelder.map((f) => ({ id: f.id, titel: f.titel })), eintraege } };
     },
   },
 
