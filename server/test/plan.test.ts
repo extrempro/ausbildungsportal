@@ -548,8 +548,13 @@ test('Jahreskalender: ein Jahr mit Schule, Einsatz, Urlaub, Prüfung und Feierta
   const alle = koerper(await ruf(w.u, 'GET', '/api/jahreskalender?jahr=2026', { cookies: c }));
   assert.deepEqual([alle.eigenes, alle.einzeln, alle.azubis.map((x: { anzeigename: string }) => x.anzeigename).sort()], [false, false, ['Anna Azubi', 'Ben Azubi']]);
   const anna = alle.azubis.find((x: { id: number }) => x.id === w.azubi.id);
-  assert.deepEqual([anna.termine, anna.urlaub, anna.eintraege.length], [[], ['2026-11-05'], 2]);
-  assert.ok(!JSON.stringify(alle).includes('krank'), 'Krankheit erscheint nicht im Jahreskalender');
+  // der Bericht mit dem Urlaub ist noch ein Entwurf: Den sieht nur Anna – die Ausbilderin erfährt den Urlaub erst mit dem Einreichen
+  assert.deepEqual([anna.termine, anna.urlaub, anna.eintraege.length], [[], [], 2]);
+  await ruf(w.u, 'PUT', '/api/ich/unterschrift', { cookies: als(w, w.azubi), body: { pfad: 'M10 10 L20 20 L30 10 L40 20 L50 10 L60 20' } });
+  assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/berichte/2026-11-02/einreichen`, { cookies: als(w, w.azubi) })).status, 200);
+  const danach = koerper(await ruf(w.u, 'GET', '/api/jahreskalender?jahr=2026', { cookies: c }));
+  assert.deepEqual(danach.azubis.find((x: { id: number }) => x.id === w.azubi.id).urlaub, ['2026-11-05']);
+  assert.ok(!JSON.stringify(danach).includes('krank'), 'Krankheit erscheint nicht im Jahreskalender');
   const einzeln = koerper(await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.ben.id}`, { cookies: c }));
   assert.deepEqual([einzeln.einzeln, einzeln.azubis.length, einzeln.azubis[0].anzeigename], [true, 1, 'Ben Azubi']);
 

@@ -6683,3 +6683,41 @@ td.aktion .pdf-fehler {
   display: block;
   margin-top: 6px;
 }
+
+/* Blatt eines nicht abgezeichneten Berichts: Vermerk quer über die Seite – am Bildschirm, im Ausdruck und (ebenso) im PDF */
+.blatt {
+  position: relative;
+}
+
+.blatt.offen::before {
+  content: attr(data-vermerk);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  color: var(--c-muted);
+  font-size: clamp(34px, 9vw, 84px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.13;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  pointer-events: none;
+}
+
+.blatt > * {
+  position: relative;
+}
+
+.blatt {
+  overflow: hidden;
+}
+
+@media print {
+  .blatt.offen::before {
+    color: #000;
+    font-size: 64pt;
+    opacity: 0.1;
+  }
+}

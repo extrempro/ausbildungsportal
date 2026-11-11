@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.30.0] – 2026-11-11
+
+### Geändert
+
+- **Entwürfe gehören dem Azubi allein.** Ausbilder und Ausbildungsbeauftragte sehen einen Bericht erst, wenn er eingereicht ist. Bis dahin steht die Woche bei ihnen als „fehlt“ – in der Liste, in der Einzelansicht, auf der Karte des Azubis, im Ausdruck und im PDF. Zieht der Azubi einen Bericht zurück, ist er wieder nur für ihn sichtbar. Zurückgegebene Berichte bleiben sichtbar. Bisher lieferte das Portal Entwürfe mit aus, obwohl das Handbuch den Azubis „den Entwurf siehst nur du“ zusagte.
+- Jahreskalender: Urlaub aus einem Bericht sehen Ausbilder und Beauftragte erst, wenn der Bericht eingereicht ist.
+- **Berichtsheft drucken und PDF: Vorgabe ist „Nur abgezeichnete“.** „Auch nicht abgezeichnete“ lässt sich bewusst dazuwählen. Die Abkürzung (Symbol) lädt nur abgezeichnete Berichte und ist gesperrt, solange es keinen gibt.
+- **Nicht abgezeichnete Berichte sind unübersehbar gekennzeichnet:** Quer über die Seite steht „Entwurf“ bzw. „Nicht abgezeichnet“ – am Bildschirm, im Ausdruck und im PDF (auch auf Fortsetzungsseiten). Das Deckblatt nennt abgezeichnete und nicht abgezeichnete Berichte getrennt.
+
 ## [0.29.4] – 2026-11-11
 
 ### Neu

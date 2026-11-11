@@ -157,7 +157,12 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
             {anzahl('alle') > anzahl('fehlt') && (
               <span className="heft-pdf rechts">
                 {/* Abkürzung: das ganze Heft sofort als PDF – ohne die Seite mit der Auswahl */}
-                <PdfKnopf symbol pfad={`/api/azubis/${azubiId}/berichtsheft.pdf`} text="Ganzes Berichtsheft sofort als PDF herunterladen" />
+                <PdfKnopf
+                  symbol
+                  pfad={`/api/azubis/${azubiId}/berichtsheft.pdf?nur=abgezeichnet`}
+                  text="Berichtsheft sofort als PDF herunterladen (alle abgezeichneten Berichte)"
+                  gesperrt={anzahl('abgezeichnet') === 0 ? 'Es ist noch kein Bericht abgezeichnet.' : undefined}
+                />
                 <Link zu={`${basis}/druck`} className="knopf">
                   <Icon name="heft" /> Berichtsheft drucken …
                 </Link>
@@ -248,7 +253,8 @@ function useLogo(): string | null {
 export function BerichteDruck({ azubiId }: { azubiId: number }) {
   const [daten, setDaten] = useState<BerichtListe | null>(null);
   const [fehler, setFehler] = useState('');
-  const [nur, setNur] = useState<'alle' | 'abgezeichnet'>('alle');
+  // Vorgabe: nur, was abgezeichnet ist – das ist das Heft, das man aus der Hand gibt
+  const [nur, setNur] = useState<'alle' | 'abgezeichnet'>('abgezeichnet');
   const [jahr, setJahr] = useState(0); // 0 = alle Ausbildungsjahre
   const [deckblatt, setDeckblatt] = useState(true);
   const logo = useLogo();
@@ -266,6 +272,7 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
   const letzter = berichte[berichte.length - 1];
   const zeitraum = erster ? `${datum(erster.montag)} bis ${datum(letzter.sonntag)}` : '';
   const abgezeichnet = berichte.filter((b) => b.status === 'abgezeichnet').length;
+  const keine = berichte.length === 0;
 
   /** Der Browser schlägt den Seitentitel als Dateinamen vor – deshalb heißt die Seite beim Drucken wie das Heft. */
   const drucke = () => {
@@ -287,11 +294,11 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         </p>
         <section className="karte heft-auswahl" aria-label="Auswahl für das Dokument">
           <div className="filter" role="group" aria-label="Welche Berichte">
-            <button type="button" className="knopf schlicht" aria-pressed={nur === 'alle'} onClick={() => setNur('alle')}>
-              Alle vorhandenen
-            </button>
             <button type="button" className="knopf schlicht" aria-pressed={nur === 'abgezeichnet'} onClick={() => setNur('abgezeichnet')}>
-              Nur abgezeichnete
+              Nur abgezeichnete ({alle.filter((b) => b.status === 'abgezeichnet').length})
+            </button>
+            <button type="button" className="knopf schlicht" aria-pressed={nur === 'alle'} onClick={() => setNur('alle')}>
+              Auch nicht abgezeichnete ({alle.length})
             </button>
           </div>
           {jahre.length > 1 && (
@@ -312,16 +319,18 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
           <p role="status" aria-live="polite">
             <strong>{berichte.length === 1 ? '1 Bericht' : `${berichte.length} Berichte`}</strong>
             {zeitraum && ` · ${zeitraum}`}
-            {berichte.length > 0 && ` · ${abgezeichnet} davon abgezeichnet`}
+            {berichte.length > abgezeichnet && ` · ${abgezeichnet} abgezeichnet, ${berichte.length - abgezeichnet} nicht abgezeichnet`}
           </p>
+          {nur === 'alle' && berichte.length > abgezeichnet && <p className="hinweis">Nicht abgezeichnete Berichte tragen quer über die Seite den Vermerk „Entwurf“ bzw. „Nicht abgezeichnet“ – so kann sie niemand für fertige Nachweise halten.</p>}
+          {keine && <p className="hinweis">{nur === 'abgezeichnet' && alle.length > 0 ? 'Es ist noch kein Bericht abgezeichnet. Zum Durchsehen kannst du oben „Auch nicht abgezeichnete“ wählen.' : 'In dieser Auswahl gibt es keine Berichte.'}</p>}
           <div className="aktionen links">
-            <button type="button" className="knopf" onClick={drucke} disabled={berichte.length === 0}>
+            <button type="button" className="knopf" onClick={drucke} disabled={keine}>
               Berichtsheft drucken
             </button>
             <PdfKnopf
               text="PDF herunterladen"
               pfad={`/api/azubis/${azubiId}/berichtsheft.pdf?${[nur === 'abgezeichnet' ? 'nur=abgezeichnet' : '', jahr ? `jahr=${jahr}` : '', deckblatt ? '' : 'deckblatt=0'].filter(Boolean).join('&')}`}
-              gesperrt={berichte.length === 0 ? 'In dieser Auswahl gibt es keine Berichte.' : undefined}
+              gesperrt={keine ? 'Keine Berichte in dieser Auswahl.' : undefined}
             />
           </div>
           <p className="leise klein">
@@ -365,8 +374,8 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
               <div>
                 <dt>Inhalt</dt>
                 <dd>
-                  {berichte.length === 1 ? '1 Wochenbericht' : `${berichte.length} Wochenberichte`}, {abgezeichnet} davon abgezeichnet
-                  {nur === 'alle' && abgezeichnet < berichte.length && ' – nicht abgezeichnete Berichte sind als solche zu erkennen'}
+                  {berichte.length === 1 ? '1 Wochenbericht' : `${berichte.length} Wochenberichte`}
+                  {abgezeichnet === berichte.length ? (berichte.length === 1 ? ', abgezeichnet' : ', alle abgezeichnet') : `: ${abgezeichnet} abgezeichnet, ${berichte.length - abgezeichnet} nicht abgezeichnet (als solche gekennzeichnet)`}
                 </dd>
               </div>
             </dl>
@@ -379,7 +388,7 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
           <BerichtBlatt b={b} />
         </section>
       ))}
-      {berichte.length === 0 && <p className="karte leise">Keine Berichte in dieser Auswahl.</p>}
+
     </>
   );
 }

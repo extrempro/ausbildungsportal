@@ -157,20 +157,20 @@ const DRUCKEN = (rolle: Rolle): Kapitel => ({
       <dl className="begriffe">
         <Begriff wort="Ein einzelner Bericht">Den Bericht öffnen und „Als PDF herunterladen“ wählen. Das Portal erzeugt die Datei und der Browser speichert sie bei deinen Downloads. „Bericht drucken“ öffnet stattdessen das Druckfenster.</Begriff>
         <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft drucken …“. Auf der Seite dahinter wählst du aus, was hinein soll, und druckst es oder lädst es als PDF herunter. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
-        <Begriff wort="Abkürzung">Die kleinen Knöpfe mit dem Pfeil nach unten laden sofort ein PDF, ohne weitere Fragen: oben neben „Berichtsheft drucken …“ das ganze Heft mit Deckblatt, in jeder Woche den Bericht dieser Woche.</Begriff>
+        <Begriff wort="Abkürzung">Die kleinen Knöpfe mit dem Pfeil nach unten laden sofort ein PDF, ohne weitere Fragen: oben neben „Berichtsheft drucken …“ das Heft mit Deckblatt und allen abgezeichneten Berichten, in jeder Woche den Bericht dieser Woche.</Begriff>
       </dl>
       <h3>Das ganze Berichtsheft drucken oder als PDF herunterladen</h3>
       <ol className="schritte">
         <li>Im Berichtsheft „Berichtsheft drucken …“ wählen.</li>
-        <li>Auswählen, was hinein soll: alle vorhandenen Berichte oder nur die abgezeichneten; alle Ausbildungsjahre oder eines; mit oder ohne Deckblatt. Darunter steht, wie viele Berichte es sind und welcher Zeitraum.</li>
+        <li>Auswählen, was hinein soll. Vorgegeben ist „Nur abgezeichnete“ – das ist das Heft, das du aus der Hand gibst. Mit „Auch nicht abgezeichnete“ kommen die übrigen dazu, zum Beispiel zum Durchsehen. Außerdem: alle Ausbildungsjahre oder eines; mit oder ohne Deckblatt. Darunter steht, wie viele Berichte es sind und welcher Zeitraum.</li>
         <li>„Berichtsheft drucken“ öffnet das Druckfenster. Oder „PDF herunterladen“: Die Datei heißt „Berichtsheft“, dein Name und der Zeitraum – du findest sie bei den Downloads deines Browsers.</li>
       </ol>
       <ul className="punkte">
         <li>Auf dem Deckblatt stehen Name, Beruf, Betrieb, Ausbilder, Zeitraum und die Zahl der Berichte – und das Logo des Betriebs, wenn eines hinterlegt ist.</li>
         <li>Im PDF stehen Kopf, Tätigkeiten, Stunden und die Unterschriften. Ist ein Logo hinterlegt, steht es blass hinter den Unterschriften. Unten steht auf jeder Seite „Seite … von …“.</li>
         <li>Ein langer Bericht läuft auf der nächsten Seite weiter; dort steht „Fortsetzung“.</li>
-        <li>Für die Kammer meist richtig: „Nur abgezeichnete“.</li>
-        <li>{rolle === 'azubi' ? 'Ein Entwurf lässt sich auch als PDF holen. Er trägt dann den Vermerk „Entwurf – noch nicht eingereicht und nicht unterschrieben“. Hast du gerade etwas geändert: erst speichern, dann herunterladen.' : 'Ein eingereichter, aber noch nicht abgezeichneter Bericht trägt im PDF den Vermerk „Eingereicht – noch nicht abgezeichnet“.'}</li>
+        <li>Für die Kammer zählen nur abgezeichnete Berichte – deshalb ist das die Vorgabe. Das Deckblatt nennt, wie viele Berichte abgezeichnet sind und wie viele nicht.</li>
+        <li>Nicht abgezeichnete Berichte sind unübersehbar gekennzeichnet: Quer über die Seite steht „Entwurf“ bzw. „Nicht abgezeichnet“ – am Bildschirm, im Ausdruck und im PDF. {rolle === 'azubi' ? 'Hast du gerade etwas geändert: erst speichern, dann herunterladen.' : 'Entwürfe der Azubis siehst du nicht und bekommst sie auch nicht ins PDF: Bis zum Einreichen steht die Woche bei dir als „fehlt“.'}</li>
         <li>Zeichen, die es in der Schrift des PDF nicht gibt (zum Beispiel Emojis), erscheinen als „?“.</li>
         <li>Lieber auf Papier? „Berichtsheft drucken“ bzw. „Bericht drucken“ öffnet das Druckfenster. Chrome und Edge lassen Datum, Titel und Adresse am Rand von selbst weg; in anderen Browsern schaltest du dort unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus.</li>
         {rolle === 'ausbilder' && <li>Bevor du das Konto eines Azubis löschst: das Berichtsheft als PDF herunterladen. Mit dem Konto werden die Berichte gelöscht.</li>}
@@ -619,7 +619,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         <dl className="begriffe">
           <Begriff wort="Obere Balken (violett)">Berufsschule.</Begriff>
           <Begriff wort="Mittlere Balken (grün)">Einsätze, mit Namen. Ist der Balken zu kurz für den Namen: mit der Maus darauf zeigen.</Begriff>
-          <Begriff wort="Schmale Balken unten (gelb)">Urlaub – laut Berichtsheft. Er erscheint erst, wenn der Azubi ihn im Bericht der Woche unter „Abwesenheit“ eingetragen hat. Krankheit erscheint im Jahreskalender nicht.</Begriff>
+          <Begriff wort="Schmale Balken unten (gelb)">Urlaub – laut Berichtsheft. Er erscheint erst, wenn der Azubi ihn im Bericht der Woche unter „Abwesenheit“ eingetragen und den Bericht eingereicht hat. Krankheit erscheint im Jahreskalender nicht.</Begriff>
           <Begriff wort="Rote Linie mit Raute">Prüfungstermin.</Begriff>
           <Begriff wort="Türkiser Strich ganz unten">Schulferien (nach dem Bundesland der Berufsschule).</Begriff>
           <Begriff wort="Schraffiert">Der Azubi ist in dieser Zeit nicht in der Ausbildung.</Begriff>
