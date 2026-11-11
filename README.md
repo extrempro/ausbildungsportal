@@ -145,7 +145,7 @@ Das Portal läuft im Browser auf PC, Tablet und Android-Handy; eine eigene App i
 - **Logo:** Der Super-Admin hinterlegt unter „Erscheinungsbild“ das Logo des Betriebs (PNG, JPEG oder WebP bis 150 KB) – je eines für die helle und die dunkle Darstellung; fehlt das dunkle, gilt das helle auch dort.
 - Alles ist mit der Tastatur bedienbar; Bedienflächen sind mindestens 40 × 40 px groß; hell und dunkel.
 
-Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchgesehen und vermessen. Befunde, Maßnahmen und offene Punkte stehen in [docs/iso-9241.md](docs/iso-9241.md). Das ist eine Durchsicht, keine Konformitätserklärung – Tests mit echten Nutzern gab es nicht.
+Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchgesehen und vermessen. Befunde, Maßnahmen und offene Punkte stehen in [docs/iso-9241.md](docs/iso-9241.md). Das ist eine Durchsicht, keine Konformitätserklärung – Tests mit echten Nutzern gab es nicht. Damit die Bedienung einheitlich bleibt, gelten für jede Änderung die [Bedienregeln](docs/bedienregeln.md).
 
 ## Sicherheit in Kürze
 
