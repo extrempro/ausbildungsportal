@@ -488,6 +488,33 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'abzeichen',
+    titel: 'Abzeichen sammeln',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/lernen">Lernen</Link> sammelst du Abzeichen: in jedem Themenfeld ein Schild, das mit deinem Lernstand wächst. Es gibt sechs Stufen. Drei davon kannst du jetzt schon erreichen:
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Holz">Bei einem Unterthema steht die Ampel auf Gelb oder Grün.</Begriff>
+          <Begriff wort="Stein">Bei der Hälfte der Unterthemen steht die Ampel auf Gelb oder Grün.</Begriff>
+          <Begriff wort="Bronze">Bei allen Unterthemen steht die Ampel auf Gelb oder Grün und du hast das Zusatzwissen des Themenfelds als gelesen abgehakt.</Begriff>
+          <Begriff wort="Silber, Gold, Meister">Diese Stufen gibt es für bestandene Übungen. Übungen hat das Lernmodul noch nicht – deshalb sind diese Schilde noch grau.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Unter jedem Schild steht, was bis zur nächsten Stufe fehlt.</li>
+          <li>Ein neues Abzeichen zeigt dir das Portal einmal groß an.</li>
+          <li>Ein Abzeichen bleibt. Stellst du eine Ampel später zurück auf Rot oder kommen neue Inhalte dazu, verlierst du es nicht.</li>
+          <li>
+            <strong>Dein Rang</strong> steht oben auf der Seite „Lernen“. Er ist die Stufe, die du in mindestens der Hälfte der Themenfelder erreicht hast.
+          </li>
+          <li>Abzeichen siehst nur du – wie deinen ganzen Lernstand. Ausbilder und Ausbildungsbeauftragte sehen sie nicht, und es gibt keine Rangliste.</li>
+          <li>Sei ehrlich mit der Ampel: Die Abzeichen sollen dir Spaß machen. Für die Prüfung zählt, was du wirklich kannst.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'kompendium',
     titel: 'Im Kompendium nachschlagen',
     inhalt: (

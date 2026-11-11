@@ -4,6 +4,8 @@ import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { AMPEL_REIHE, AMPEL_TEXT, ampelVon, prozent, summe, zaehle, zusammenfassung } from '../lernen/ampel';
 import type { LernStatus } from '../lernen/ampel';
+import { Schild, STUFEN, StufenLeiter } from '../lernen/abzeichen';
+import type { FeldAbzeichen, Rang } from '../lernen/abzeichen';
 import { LernReiter, StapelBalken, StatusPille } from '../lernen/teile';
 import { Link } from '../router';
 
@@ -20,6 +22,7 @@ interface Feld {
   titel: string;
   lernfelder: string[];
   pruefung: string[];
+  abzeichen: FeldAbzeichen;
   unterthemen: { id: string; titel: string; status: LernStatus; lernpunkt: boolean; inhaltAktualisiert: boolean }[];
 }
 
@@ -37,12 +40,12 @@ export function PaketFuss({ p }: { p: LernPaket }) {
 
 /** Lernen – Übersicht: alle Themenfelder mit der eigenen Ampel. */
 export function Lernen() {
-  const [daten, setDaten] = useState<{ paket: LernPaket; themenfelder: Feld[] } | null>(null);
+  const [daten, setDaten] = useState<{ paket: LernPaket; rang: Rang; themenfelder: Feld[] } | null>(null);
   const [fehler, setFehler] = useState('');
   const [filter, setFilter] = useState<LernStatus | 'alle'>('alle');
 
   useEffect(() => {
-    api<{ paket: LernPaket; themenfelder: Feld[] }>('GET', '/api/lernen').then(setDaten, (e: Error) => setFehler(e.message));
+    api<{ paket: LernPaket; rang: Rang; themenfelder: Feld[] }>('GET', '/api/lernen').then(setDaten, (e: Error) => setFehler(e.message));
   }, []);
 
   if (fehler) return <Ladefehler titel="Lernen" text={fehler} />;
@@ -53,6 +56,7 @@ export function Lernen() {
   const mitAmpel = felder.map((f) => ({ f, z: zaehle(f.unterthemen), ampel: ampelVon(zaehle(f.unterthemen)) }));
   const anzahl = (s: LernStatus) => mitAmpel.filter((x) => x.ampel === s).length;
   const gezeigt = mitAmpel.filter((x) => filter === 'alle' || x.ampel === filter);
+  const rang = daten.rang;
 
   return (
     <>
@@ -73,6 +77,23 @@ export function Lernen() {
           <p className="leise klein">
             {gesamt.n} Unterthemen: {zusammenfassung(gesamt)}
           </p>
+        </div>
+      </section>
+
+      <section className="karte abz-rang" aria-label="Meine Abzeichen">
+        <Schild stufe={rang.stufe} groesse={84} />
+        <div>
+          <h2>{rang.stufe ? `Dein Rang: ${rang.name}` : 'Noch kein Rang'}</h2>
+          <p className="leise">
+            {rang.naechste
+              ? `${STUFEN[rang.naechste.stufe - 1].name} gibt es, wenn ${rang.noetig === 1 ? 'ein Themenfeld' : `${rang.noetig} von ${rang.felder} Themenfeldern`} diese Stufe ${rang.noetig === 1 ? 'hat' : 'haben'}. Im Moment: ${rang.naechste.haben}.`
+              : 'Das ist der höchste Rang, den es im Moment gibt. Silber, Gold und Meister kommen mit den Übungen.'}{' '}
+            In jedem Themenfeld sammelst du ein eigenes Abzeichen. <strong>Abzeichen siehst nur du.</strong> <HandbuchLink kapitel="abzeichen">Abzeichen sammeln</HandbuchLink>
+          </p>
+          <details className="klapp">
+            <summary>Alle Stufen</summary>
+            <StufenLeiter erreicht={rang.stufe} />
+          </details>
         </div>
       </section>
 
@@ -119,6 +140,13 @@ export function Lernen() {
                   {z.n} Unterthemen
                   {punkte > 0 && ` · ${punkte} ${punkte === 1 ? 'Lernpunkt' : 'Lernpunkte'} notiert`}
                   {neu > 0 && ' · Inhalt aktualisiert'}
+                </span>
+                <span className="abz-zeile">
+                  <Schild stufe={f.abzeichen.stufe} groesse={40} />
+                  <span className="klein">
+                    <strong>{f.abzeichen.name ? `Abzeichen: ${f.abzeichen.name}` : 'Noch kein Abzeichen'}</strong>
+                    <span className="leise abz-fehlt">{f.abzeichen.fehlt}</span>
+                  </span>
                 </span>
               </Link>
             </li>

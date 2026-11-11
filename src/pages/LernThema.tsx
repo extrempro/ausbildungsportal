@@ -10,6 +10,8 @@ import type { Bild, Tabelle } from '../lernen/teile';
 import { ZusatzBereich } from '../lernen/zusatz';
 import type { Verweis, Zusatz } from '../lernen/zusatz';
 import { Link, useUngespeichert } from '../router';
+import { AbzeichenFeier, Schild } from '../lernen/abzeichen';
+import type { Erfolg, FeldAbzeichen } from '../lernen/abzeichen';
 import { PaketFuss } from './Lernen';
 import type { LernPaket } from './Lernen';
 
@@ -42,6 +44,7 @@ interface Thema {
   links: { titel: string; url: string; info: string }[];
   unterthemen: Unterthema[];
   zusatz: Zusatz[];
+  abzeichen: FeldAbzeichen;
 }
 
 type Aenderung = { status?: LernStatus; luecke?: string; notiz?: string; bestaetigen?: true };
@@ -53,9 +56,19 @@ export function LernThema({ id }: { id: string }) {
   // alle Themenfelder mit dem eigenen Stand – für die Navigation am Rand
   const [felder, setFelder] = useState<NavFeld[]>([]);
 
-  useEffect(() => {
-    api<{ themenfelder: NavFeld[] }>('GET', '/api/lernen').then((r) => setFelder(r.themenfelder), () => undefined);
-  }, []);
+  const ladeFelder = useCallback(() => api<{ themenfelder: NavFeld[] }>('GET', '/api/lernen').then((r) => setFelder(r.themenfelder), () => undefined), []);
+  useEffect(() => void ladeFelder(), [ladeFelder]);
+  // neu erreichtes Abzeichen oder neuer Rang – wird einmal groß gezeigt
+  const [erfolg, setErfolg] = useState<Erfolg | null>(null);
+  const schliesseErfolg = useCallback(() => setErfolg(null), []);
+  const nachSpeichern = useCallback(
+    (r: Erfolg) => {
+      if (r.abzeichen || r.rang) setErfolg({ abzeichen: r.abzeichen, rang: r.rang });
+      // der Weg zur nächsten Stufe hat sich geändert
+      void ladeFelder();
+    },
+    [ladeFelder],
+  );
 
   useEffect(() => {
     let aktuell = true;
@@ -71,23 +84,25 @@ export function LernThema({ id }: { id: string }) {
 
   const aendere = useCallback(
     async (unterthema: string, patch: Aenderung) => {
-      const r = await api<Pick<Unterthema, 'status' | 'luecke' | 'notiz' | 'geaendert' | 'inhaltAktualisiert'>>('PATCH', `/api/lernen/unterthema/${id}.${unterthema}`, patch);
+      const r = await api<Pick<Unterthema, 'status' | 'luecke' | 'notiz' | 'geaendert' | 'inhaltAktualisiert'> & Erfolg>('PATCH', `/api/lernen/unterthema/${id}.${unterthema}`, patch);
       // die Antwort nennt die volle Kennung (themenfeld.unterthema) – hier zählt nur der neue Stand
       const stand = { status: r.status, luecke: r.luecke, notiz: r.notiz, geaendert: r.geaendert, inhaltAktualisiert: r.inhaltAktualisiert };
       setDaten((d) => d && { ...d, thema: { ...d.thema, unterthemen: d.thema.unterthemen.map((u) => (u.id === unterthema ? { ...u, ...stand } : u)) } });
       setFelder((fs) => fs.map((f) => (f.id === id ? { ...f, unterthemen: f.unterthemen.map((u) => (u.id === unterthema ? { ...u, status: r.status } : u)) } : f)));
+      if (patch.status !== undefined) nachSpeichern(r);
     },
-    [id],
+    [id, nachSpeichern],
   );
 
   const setzeGelesen = useCallback(
     async (z: Zusatz, gelesen: boolean) => {
-      await api('PATCH', `/api/lernen/zusatz/${id}.${z.id}`, { gelesen });
+      const r = await api<Erfolg>('PATCH', `/api/lernen/zusatz/${id}.${z.id}`, { gelesen });
       setDaten((d) => d && { ...d, thema: { ...d.thema, zusatz: d.thema.zusatz.map((x) => (x.id === z.id ? { ...x, gelesen } : x)) } });
       setFelder((fs) => fs.map((f) => (f.id === id ? { ...f, zusatz: f.zusatz.map((x) => (x.id === z.id ? { ...x, gelesen } : x)) } : f)));
       melde(gelesen ? `„${z.titel}“ ist als gelesen abgehakt.` : `Haken bei „${z.titel}“ entfernt.`);
+      nachSpeichern(r);
     },
-    [id],
+    [id, nachSpeichern],
   );
 
   // Sprung aus dem Kompendium oder von einer Vertiefung (#u-… / #z-…): hinrollen und den Inhalt aufklappen – einmal, sobald die Seite steht
@@ -127,7 +142,8 @@ export function LernThema({ id }: { id: string }) {
             {navi}
           </details>
         )}
-        {geladen ? <ThemaInhalt t={geladen.thema} paket={geladen.paket} aendere={aendere} setzeGelesen={setzeGelesen} /> : <p className="leise">Lädt …</p>}
+        {geladen ? <ThemaInhalt t={geladen.thema} paket={geladen.paket} abzeichen={felder.find((f) => f.id === id)?.abzeichen ?? geladen.thema.abzeichen} aendere={aendere} setzeGelesen={setzeGelesen} /> : <p className="leise">Lädt …</p>}
+        {erfolg && <AbzeichenFeier erfolg={erfolg} onZu={schliesseErfolg} />}
       </div>
     </div>
   );
@@ -138,6 +154,7 @@ interface NavFeld {
   titel: string;
   unterthemen: { id: string; titel: string; status: LernStatus }[];
   zusatz: { id: string; titel: string; gelesen: boolean }[];
+  abzeichen: FeldAbzeichen;
 }
 
 /** Welches Unterthema oder Zusatzwissen steht gerade oben im Fenster (als Sprungmarke „u-…“ / „z-…“)? Für die Markierung in der Navigation. */
@@ -226,7 +243,7 @@ function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; akti
   );
 }
 
-function ThemaInhalt({ t, paket, aendere, setzeGelesen }: { t: Thema; paket: LernPaket; aendere: (unterthema: string, p: Aenderung) => Promise<void>; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
+function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema; paket: LernPaket; abzeichen: FeldAbzeichen; aendere: (unterthema: string, p: Aenderung) => Promise<void>; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
   const z = zaehle(t.unterthemen);
   return (
     <>
@@ -254,6 +271,18 @@ function ThemaInhalt({ t, paket, aendere, setzeGelesen }: { t: Thema; paket: Ler
           {z.n} Unterthemen: {zusammenfassung(z)}
         </span>
       </div>
+      <section className="karte abz-feld" aria-label="Abzeichen in diesem Themenfeld">
+        <Schild stufe={abzeichen.stufe} groesse={64} />
+        <div>
+          <strong>{abzeichen.name ? `Abzeichen: ${abzeichen.name}` : 'Noch kein Abzeichen'}</strong>
+          <div className="abz-balken" role="img" aria-label={`${abzeichen.fortschritt} Prozent des Wegs zur nächsten Stufe`}>
+            <i style={{ width: `${abzeichen.fortschritt}%` }} />
+          </div>
+          <span className="leise klein">
+            {abzeichen.fehlt} <HandbuchLink kapitel="abzeichen">Abzeichen sammeln</HandbuchLink>
+          </span>
+        </div>
+      </section>
 
       {t.worum && (
         <section className="karte">

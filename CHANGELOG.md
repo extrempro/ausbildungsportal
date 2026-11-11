@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.33.0] – 2026-11-11
+
+### Neu
+
+- **Abzeichen im Lernmodul.** In jedem Themenfeld sammeln Azubis ein Schild in sechs Stufen (Holz, Stein, Bronze, Silber, Gold, Meister) – eigene Zeichnung, jede Stufe mit eigenem Material und einem zusätzlichen Zeichen (Winkel, Lorbeer, Krone, Strahlen).
+- Jetzt erreichbar: **Holz** (bei einem Unterthema steht die Ampel auf Gelb oder Grün), **Stein** (bei der Hälfte), **Bronze** (bei allen, und das Zusatzwissen ist gelesen). Silber, Gold und Meister sind für bestandene Übungen vorgesehen und stehen grau da, bis das Lernmodul Übungen hat.
+- Unter jedem Schild steht, was bis zur nächsten Stufe fehlt. Ein neues Abzeichen zeigt das Portal einmal groß an.
+- **Rang** auf der Seite „Lernen“: die Stufe, die in mindestens der Hälfte der Themenfelder erreicht ist. „Alle Stufen“ erklärt die Leiter.
+- Ein erreichtes Abzeichen bleibt, auch wenn eine Ampel zurückgestellt wird oder Inhalte dazukommen. Wer schon vorher gelernt hat, bekommt seine Abzeichen beim Öffnen von „Lernen“ gutgeschrieben.
+- **Privat:** Abzeichen sieht nur der Azubi selbst – wie den ganzen Lernstand. Es gibt keine Rangliste und keinen Vergleich.
+- Handbuch (Azubi): Kapitel „Abzeichen sammeln“.
+
 ## [0.32.0] – 2026-11-11
 
 ### Neu
