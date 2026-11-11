@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.23.2] – 2026-11-11
+
+### Geändert
+
+- Stammdaten: Haben die Lerninhalte Fehler, zeigt die Seite sie jetzt im Klartext (die ersten fünf) statt nur ihre Zahl. Ist ein Paket leer, nennt sie die häufigste Ursache: Unterordner beim Kopieren vergessen, Inhalte eine Ebene zu tief (im Unterordner `content`) oder fehlende Leserechte.
+- Lassen sich Lerninhalte gar nicht lesen, zeigt das Portal das als Fehler des Pakets; die Stammdaten-Seite funktioniert trotzdem.
+
 ## [0.23.1] – 2026-11-11
 
 ### Geändert

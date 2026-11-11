@@ -131,7 +131,7 @@ export interface Stammdaten {
   bundeslaender: { kuerzel: string; name: string }[];
   ausbilder: { id: number; anzeigename: string }[];
   /** Inhaltspakete, die sich an einem Beruf als Lernmodul einschalten lassen */
-  lernpakete: { id: string; titel: string; stand: string; themenfelder: number; unterthemen: number; fehler: number }[];
+  lernpakete: { id: string; titel: string; stand: string; themenfelder: number; unterthemen: number; fehler: number; meldungen: string[] }[];
 }
 
 export interface Profil {
