@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.39.2] – 2026-11-11
+
+### Neu
+
+- **Vorlage für Pull Requests:** Wer eine Änderung einreicht, bekommt die Checkliste (Bedienregeln, Handbuch, Handy, Rechte, neue Daten über Personen) automatisch vorgelegt.
+- **Prüfung der Versionsnummer:** Ein Test stellt sicher, dass die Version in `package.json`, `README.md` und `docs/entra-einrichtung.md` gleich ist und oben in den Versionshinweisen steht. Am Portal selbst ändert sich nichts.
+
 ## [0.39.1] – 2026-11-11
 
 ### Neu

@@ -41,7 +41,7 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 ## Bei jeder Änderung
 
 1. **Branch + Pull Request.** Nie direkt nach `main`; der Nutzer mergt.
-2. **Versionsnummer** an drei Stellen gleich erhöhen: `package.json`, `README.md` („Stand: Version …“), `docs/entra-einrichtung.md` („passt zu Version …“).
+2. **Versionsnummer** an drei Stellen gleich erhöhen: `package.json`, `README.md` („Stand: Version …“), `docs/entra-einrichtung.md` („passt zu Version …“). `server/test/version.test.ts` prüft das.
 3. **`CHANGELOG.md`**: neuer Abschnitt oben, `### Neu` / `### Geändert` / `### Behoben`, in Worten für Nutzer.
 4. **`docs/bedienregeln.md` durchgehen** und im Abschlussbericht sagen, dass geprüft wurde und wo abgewichen wird.
 5. **Handbuch mitziehen** (`src/pages/Handbuch.tsx`) – für jede Rolle, die die Änderung sieht – und an der Stelle im Portal einen `<HandbuchLink kapitel="…">` setzen. Ohne Aufforderung.
@@ -78,5 +78,5 @@ Vollständig in `docs/bedienregeln.md`. Nimm vorhandene Bausteine, bevor du etwa
 ## Commits und Pull Requests
 
 - Commit-Nachricht und Pull-Request-Text deutsch.
-- Der Pull Request nennt: was sich ändert, was geprüft wurde, was nicht geprüft wurde, Abweichungen von den Bedienregeln, neue Daten über Personen.
+- Der Pull Request folgt der Vorlage `.github/pull_request_template.md` (Checkliste abhaken) und nennt: was sich ändert, was geprüft wurde, was nicht geprüft wurde, Abweichungen von den Bedienregeln, neue Daten über Personen.
 - Keine Links auf Claude-Sitzungen in Commits oder Pull Requests.

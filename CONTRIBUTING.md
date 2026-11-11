@@ -13,7 +13,7 @@ Wer mit Claude Code arbeitet: Dieselben Regeln stehen als Arbeitsanweisung in [C
 
 1. **Branch anlegen.** Nichts geht direkt nach `main`; der Branch ist geschützt.
 2. **Ändern** – mit den Regeln unten.
-3. **Versionsnummer erhöhen**, an drei Stellen gleich: `package.json`, `README.md` („Stand: Version …“) und `docs/entra-einrichtung.md` („passt zu Version …“). Neue Funktion: mittlere Stelle. Korrektur: letzte Stelle.
+3. **Versionsnummer erhöhen**, an drei Stellen gleich: `package.json`, `README.md` („Stand: Version …“) und `docs/entra-einrichtung.md` („passt zu Version …“). Ein Test prüft das. Neue Funktion: mittlere Stelle. Korrektur: letzte Stelle.
 4. **`CHANGELOG.md` ergänzen:** oben ein Abschnitt `## [x.y.z] – JJJJ-MM-TT` mit `### Neu`, `### Geändert` oder `### Behoben`. In Worten, die ein Nutzer versteht – das Portal zeigt den Text unter „Versionshinweise“.
 5. **Prüfen:**
    ```
@@ -22,7 +22,7 @@ Wer mit Claude Code arbeitet: Dieselben Regeln stehen als Arbeitsanweisung in [C
    npm run build
    ```
    Danach die Änderung **im Browser durchspielen**, am PC und in Handybreite (390 px), hell und dunkel. Tests allein genügen nicht.
-6. **Pull Request gegen `main`.** In die Beschreibung gehören: was sich ändert, was geprüft wurde, was **nicht** geprüft wurde, und ob neue Daten über Personen gespeichert werden.
+6. **Pull Request gegen `main`.** Die Vorlage mit der Checkliste erscheint von selbst. In die Beschreibung gehören: was sich ändert, was geprüft wurde, was **nicht** geprüft wurde, und ob neue Daten über Personen gespeichert werden.
 7. **Mergen** tut der Betreiber des Repositorys, wenn die Prüfungen `pruefen` und `docker` grün sind.
 
 ## Was jede Änderung einhalten muss
