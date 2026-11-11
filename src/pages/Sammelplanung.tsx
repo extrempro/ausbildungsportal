@@ -129,7 +129,7 @@ export function Sammelplanung() {
     setErgebnis(null);
     try {
       const azubiIds = [...gewaehlt];
-      const body = weise === 'eintrag' ? { azubiIds, eintrag: { ...eintrag, bis: bis || von, zustaendigId: mitPerson ? eintrag.zustaendigId : null, unteraufgaben: art === 'aufgabe' ? eintrag.unteraufgaben.filter((u) => u.text.trim()) : [] } } : { azubiIds, vorlageId: Number(baustein), ab };
+      const body = weise === 'eintrag' ? { azubiIds, eintrag: { ...eintrag, bis: bis || von, zustaendigId: mitPerson && !(art === 'einsatz' && eintrag.abteilungId) ? eintrag.zustaendigId : null, unteraufgaben: art === 'aufgabe' ? eintrag.unteraufgaben.filter((u) => u.text.trim()) : [] } } : { azubiIds, vorlageId: Number(baustein), ab };
       const r = await api<Ergebnis>('POST', '/api/plan/sammel', body);
       setErgebnis(r);
       if (r.eingetragen > 0) setEingetragen(auftrag);

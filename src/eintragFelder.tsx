@@ -47,7 +47,8 @@ export function EintragFelder({
   const abteilungen = useAbteilungen(arten.includes('einsatz'));
   const mitAbteilung = wert.art === 'einsatz' && abteilungen.length > 0;
   const abteilung = mitAbteilung ? abteilungen.find((a) => a.id === wert.abteilungId) : undefined;
-  const mitPerson = (wert.art === 'einsatz' || wert.art === 'aufgabe') && personen.length > 0;
+  // mit einer Abteilung stehen die Zuständigen fest – das Feld „Zuständig“ wäre dann nur verwirrend
+  const mitPerson = (wert.art === 'einsatz' || wert.art === 'aufgabe') && personen.length > 0 && !(wert.art === 'einsatz' && !!wert.abteilungId);
   return (
     <>
       <label>
@@ -68,7 +69,7 @@ export function EintragFelder({
             onChange={(ev) => {
               const neu = abteilungen.find((a) => a.id === Number(ev.target.value));
               // der Titel folgt der Abteilung, solange er leer ist oder noch der alten Abteilung entspricht
-              setze({ abteilungId: neu?.id ?? null, ...(neu && (wert.titel.trim() === '' || wert.titel === abteilung?.name) ? { titel: neu.name } : {}) });
+              setze({ abteilungId: neu?.id ?? null, ...(neu ? { zustaendigId: null } : {}), ...(neu && (wert.titel.trim() === '' || wert.titel === abteilung?.name) ? { titel: neu.name } : {}) });
             }}
           >
             <option value="">– ohne Abteilung –</option>
@@ -139,7 +140,7 @@ export function EintragFelder({
           </select>
         </label>
       )}
-      {nachZustaendig}
+      {mitPerson && nachZustaendig}
       <label className="ganz">
         {termin ? 'Ort oder Anmerkung (freiwillig)' : 'Beschreibung'}
         <textarea rows={termin ? 2 : 3} maxLength={2000} value={wert.text} onChange={(ev) => setze({ text: ev.target.value })} />

@@ -7566,3 +7566,201 @@ ul.antrag-hinweise {
 .abt-auto {
   margin-bottom: 16px;
 }
+
+/* ---------- Ausbildungsplan: Einsatz in einer Abteilung ---------- */
+.abt-wechsel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-bottom: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+  font-size: 14px;
+}
+
+.abt-marke {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.abt-personen {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 8px 0 4px;
+  padding: 0;
+}
+
+.abt-personen li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.abt-personen .avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+
+/* Stellvertretung: heller Kreis – der Unterschied steht zusätzlich als Text daneben */
+.abt-personen .stv .avatar {
+  background: transparent;
+  color: var(--c-accent);
+  box-shadow: inset 0 0 0 1.5px var(--c-accent);
+}
+
+.abt-stand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.abt-schritte {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.abt-schritte i {
+  width: 14px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-track);
+}
+
+.abt-schritte i.voll {
+  background: var(--c-gruen-fg);
+}
+
+.abt-schritte.lang {
+  width: 96px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-track);
+  overflow: hidden;
+}
+
+.abt-schritte.lang i {
+  height: 100%;
+}
+
+.eintrag.abt-kurz {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.jahresband .abteilung,
+.kompass-legende .abteilung,
+.abt-durchlauf i {
+  background: var(--c-gruen-fg);
+}
+
+.abt-durchlauf-titel {
+  display: block;
+  margin: 12px 0 4px;
+}
+
+.abt-durchlauf {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.abt-durchlauf button {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  width: 100%;
+  min-height: 40px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.abt-durchlauf button:hover {
+  background: var(--c-chip);
+}
+
+.abt-durchlauf button[aria-current] {
+  background: var(--c-accent-soft, var(--c-chip));
+}
+
+.abt-durchlauf button > span,
+.abt-durchlauf button > span > span {
+  display: block;
+  min-width: 0;
+}
+
+.abt-durchlauf strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.abt-durchlauf i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.abt-durchlauf .offen i {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--c-muted);
+}
+
+.abt-durchlauf .offen strong {
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+@media print {
+  .abt-wechsel {
+    border: 1px solid #999;
+    background: none;
+    color: #000;
+  }
+}
+
+/* Durchlauf der Abteilungen über den Wochen – nur wo die Seitenleiste fehlt (siehe .jahr-sprung) */
+details.abt-durchlauf-schmal {
+  display: none;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1000px) {
+  details.abt-durchlauf-schmal {
+    display: block;
+  }
+}
+
+/* die Zeile mit den Ansprechpersonen beginnt wie die übrigen Zeilen der Karte unter dem Titel */
+.abt-personen {
+  margin-left: calc(6.5rem + 10px);
+}
+
+.wochenkarte .abt-personen {
+  margin-left: 0;
+}
+
+@media (max-width: 640px) {
+  .abt-personen {
+    margin-left: 0;
+  }
+}

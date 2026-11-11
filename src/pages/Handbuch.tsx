@@ -326,6 +326,7 @@ const AZUBI: Kapitel[] = [
         <dl className="begriffe">
           <Begriff wort="Berufsschule">Du bist in der Schule. Die Woche hat links einen violetten Streifen.</Begriff>
           <Begriff wort="Einsatz">In dieser Abteilung oder an diesem Ort arbeitest du. Dabei steht oft, wer für dich zuständig ist.</Begriff>
+          <Begriff wort="Neue Abteilung">Beginnt ein Einsatz in einer Abteilung, steht darüber ein gelber Streifen. Die Karte zeigt deine Ansprechpersonen dort – die Stellvertretung hat einen hellen Kreis – und in welcher Woche des Einsatzes du bist. Links (am Handy unter „Abteilungen“) siehst du alle Abteilungen der Reihe nach.</Begriff>
           <Begriff wort="Aufgabe">Etwas, das du erledigen sollst. Wenn du fertig bist, setzt du den Haken.</Begriff>
           <Begriff wort="Notiz">Ein Hinweis ohne Haken.</Begriff>
           <Begriff wort="Termin">Ein einzelner Tag, den du selbst eingetragen hast – mit Datum und, wenn du willst, Uhrzeit.</Begriff>
@@ -804,13 +805,20 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <h3>Azubi einer Abteilung zuweisen</h3>
             <ol className="schritte">
               <li>Im Ausbildungsplan des Azubis einen Eintrag der Art „Einsatz“ anlegen (oder in der Sammelplanung für mehrere Azubis).</li>
-              <li>Im Feld „Abteilung“ die Abteilung wählen. Der Titel wird vorgeschlagen und lässt sich ändern.</li>
+              <li>Im Feld „Abteilung“ die Abteilung wählen. Der Titel wird vorgeschlagen und lässt sich ändern. Das Feld „Zuständig“ verschwindet – zuständig sind die Beauftragten der Abteilung, sie stehen unter dem Titel.</li>
               <li>Zeitraum eintragen und speichern.</li>
             </ol>
           </>
         ) : (
           <p>Abteilungen legen die Ausbilder in den Stammdaten an. Sie tragen auch die Einsätze in den Ausbildungsplan ein.</p>
         )}
+        <h3>So sieht es im Plan aus</h3>
+        <ul className="punkte">
+          <li>In der ersten Woche steht über dem Einsatz ein gelber Streifen „Neue Abteilung“ mit der Dauer. Die Karte darunter zeigt die Marke „Abteilung“, die Beauftragten und die Stellvertretung (heller Kreis) sowie den Fortschritt, zum Beispiel „Woche 1 von 4“.</li>
+          <li>In den folgenden Wochen steht der Einsatz nur noch als eine Zeile mit Fortschritt und den Beauftragten.</li>
+          <li>Links im Jahresband sind Wochen in einer Abteilung grün. Darunter steht beim aufgeklappten Ausbildungsjahr die Liste „Abteilungen“ in zeitlicher Reihenfolge; ein Klick springt zur ersten Woche. Wochen ab heute, in denen weder Abteilung noch Einsatz noch Berufsschule steht, erscheinen als „Noch nicht geplant“.</li>
+          <li>Am Handy und Tablet steht dieselbe Liste zum Aufklappen über den Wochen.</li>
+        </ul>
         <h3>Was dann gilt</h3>
         <ul className="punkte">
           <li>
