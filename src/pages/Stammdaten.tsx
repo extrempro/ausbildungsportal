@@ -239,7 +239,7 @@ export function Stammdaten() {
       <section className="karte">
         <h2>Ausbildungsberufe</h2>
         <p className="leise">
-          Mit dem Feld <strong>Lernmodul</strong> schaltest du für einen Beruf Lerninhalte ein. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“. Ihren Lernstand sehen nur sie selbst.
+          Mit dem Feld <strong>Lernmodul</strong> schaltest du für einen Beruf Lerninhalte ein. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“. Ihren Lernstand sehen nur sie selbst. Lerninhalte für weitere Berufe kannst du selbst schreiben; den fertigen Ordner gibst du dem Betreiber des Portals. <HandbuchLink kapitel="lerninhalte">Lerninhalte für einen Beruf erstellen</HandbuchLink>
         </p>
         {daten.lernpakete.length === 0 ? (
           <p className="hinweis">
