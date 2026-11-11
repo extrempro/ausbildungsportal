@@ -282,7 +282,7 @@ function Ablauf({ szenarien }: { szenarien: AblaufSzenario[] }) {
     (s.ziele?.length ? ` Kopien gehen an: ${s.ziele.map((j) => sz.geraete[j]?.name).join(', ')}.` : '');
 
   return (
-    <div className="ablauf">
+    <div className="lernablauf">
       {szenarien.length > 1 && (
         <div className="filter" role="group" aria-label="Ablauf wählen">
           {szenarien.map((x, k) => (
@@ -303,30 +303,30 @@ function Ablauf({ szenarien }: { szenarien: AblaufSzenario[] }) {
         </div>
       )}
 
-      <div className="ablauf-rahmen">
-        <div className="ablauf-buehne">
-          <div className="ablauf-geraete" role="img" aria-label={beschreibung}>
+      <div className="lernablauf-rahmen">
+        <div className="lernablauf-buehne">
+          <div className="lernablauf-geraete" role="img" aria-label={beschreibung}>
             {sz.geraete.map((g, j) => (
-              <div key={g.name} className="ablauf-glied">
-                {j > 0 && <span className={`ablauf-leitung ${aktiv(j) && aktiv(j - 1) ? 'an' : ''}`} />}
-                <div className={`ablauf-geraet ${aktiv(j) ? 'an' : ''}`}>
+              <div key={g.name} className="lernablauf-glied">
+                {j > 0 && <span className={`lernablauf-leitung ${aktiv(j) && aktiv(j - 1) ? 'an' : ''}`} />}
+                <div className={`lernablauf-geraet ${aktiv(j) ? 'an' : ''}`}>
                   <strong>{g.name}</strong>
                   <span>{g.sub}</span>
                 </div>
               </div>
             ))}
           </div>
-          <div className="ablauf-bahn" aria-hidden="true">
-            <span className="ablauf-linie" />
+          <div className="lernablauf-bahn" aria-hidden="true">
+            <span className="lernablauf-linie" />
             {sz.geraete.map((g, j) => (
-              <span key={g.name} className="ablauf-halt" style={{ left: links(j) }} />
+              <span key={g.name} className="lernablauf-halt" style={{ left: links(j) }} />
             ))}
             {(s.ziele ?? []).map((z, k) => (
-              <span key={`${i}-${k}`} className="ablauf-paket kopie" style={{ left: links(z) }}>
+              <span key={`${i}-${k}`} className="lernablauf-paket kopie" style={{ left: links(z) }}>
                 {s.paket}
               </span>
             ))}
-            <span className={`ablauf-paket ${s.blockiert ? 'blockiert' : ''}`} style={{ left: links(s.position) }}>
+            <span className={`lernablauf-paket ${s.blockiert ? 'blockiert' : ''}`} style={{ left: links(s.position) }}>
               {s.blockiert ? '✕ ' : ''}
               {s.paket}
             </span>
@@ -334,9 +334,9 @@ function Ablauf({ szenarien }: { szenarien: AblaufSzenario[] }) {
         </div>
       </div>
 
-      <div className="ablauf-erklaerung" aria-live="polite">
-        <div className="ablauf-schritt">
-          <span className="ablauf-zaehler">
+      <div className="lernablauf-erklaerung" aria-live="polite">
+        <div className="lernablauf-schritt">
+          <span className="lernablauf-zaehler">
             Schritt {i + 1} von {n}
           </span>
           <strong>{s.titel}</strong>
@@ -390,7 +390,7 @@ function Ablauf({ szenarien }: { szenarien: AblaufSzenario[] }) {
                 const greift = geprueft && j === s.regel;
                 const erlaubt = r[4] === 'erlauben';
                 return (
-                  <tr key={r[0]} className={greift ? (erlaubt ? 'ablauf-erlaubt' : 'ablauf-verboten') : undefined}>
+                  <tr key={r[0]} className={greift ? (erlaubt ? 'lernablauf-erlaubt' : 'lernablauf-verboten') : undefined}>
                     {r.map((zelle, k) => (
                       <td key={k}>{zelle}</td>
                     ))}
@@ -400,11 +400,11 @@ function Ablauf({ szenarien }: { szenarien: AblaufSzenario[] }) {
               })}
             </tbody>
           </table>
-          {s.hinweis && <p className="leise klein ablauf-hinweis">{s.hinweis}</p>}
+          {s.hinweis && <p className="leise klein lernablauf-hinweis">{s.hinweis}</p>}
         </div>
       )}
 
-      <div className="ablauf-steuerung">
+      <div className="lernablauf-steuerung">
         <div className="aktionen links">
           <button type="button" className="knopf schlicht" onClick={() => gehe(i - 1)} disabled={i === 0}>
             ← Schritt zurück
@@ -421,7 +421,7 @@ function Ablauf({ szenarien }: { szenarien: AblaufSzenario[] }) {
           >
             {spielt ? 'Ablauf anhalten' : 'Ablauf abspielen'}
           </button>
-          <label className="ablauf-tempo">
+          <label className="lernablauf-tempo">
             Tempo
             <select value={tempo} onChange={(e) => setTempo(e.target.value as Tempo)}>
               <option value="langsam">langsam</option>
@@ -478,7 +478,7 @@ function ZustandsTabelle({ t }: { t: AblaufTabelle }) {
           {t.zeilen.map((z, j) => {
             const neu = t.neu?.includes(j);
             return (
-              <tr key={j} className={neu ? 'ablauf-erlaubt' : undefined}>
+              <tr key={j} className={neu ? 'lernablauf-erlaubt' : undefined}>
                 {z.map((c, k) => (
                   <td key={k} className={k > 0 ? 'mono' : undefined}>
                     {c}
