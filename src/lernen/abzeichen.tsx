@@ -12,12 +12,16 @@ export interface FeldAbzeichen {
   erreicht: string | null;
   fehlt: string;
   fortschritt: number;
+  /** höchste Stufe, die in diesem Themenfeld erreichbar ist (ohne Quiz: Bronze) */
+  hoechste: number;
 }
 export interface Rang {
   stufe: number;
   name: string | null;
   noetig: number;
   felder: number;
+  /** höchster Rang, der mit diesem Lernmodul erreichbar ist */
+  hoechste: number;
   naechste: { stufe: number; name: string; haben: number } | null;
 }
 /** Antwort nach dem Speichern: ein neu erreichtes Abzeichen und, falls gestiegen, der neue Rang */
@@ -38,12 +42,10 @@ export const STUFEN: Stufe[] = [
   { name: 'Holz', a: '#c58a4f', b: '#8f5a2b', rand: '#5c3818', zeichen: '#fff4e2', wofuer: 'Bei einem Unterthema steht die Ampel auf Gelb oder Grün.' },
   { name: 'Stein', a: '#aab2bc', b: '#6f7884', rand: '#434b55', zeichen: '#f5f7f9', wofuer: 'Bei der Hälfte der Unterthemen steht die Ampel auf Gelb oder Grün.' },
   { name: 'Bronze', a: '#e0a066', b: '#a35f28', rand: '#6c3c16', zeichen: '#fff3e6', wofuer: 'Bei allen Unterthemen steht die Ampel auf Gelb oder Grün und das Zusatzwissen ist gelesen.' },
-  { name: 'Silber', a: '#eef2f6', b: '#a3aebb', rand: '#586371', zeichen: '#27303b', wofuer: 'Kommt mit den Übungen.' },
-  { name: 'Gold', a: '#fbd960', b: '#d99c12', rand: '#855e05', zeichen: '#4b3400', wofuer: 'Kommt mit den Übungen.' },
-  { name: 'Meister', a: '#22b8cf', b: '#7c3aed', rand: '#35267f', zeichen: '#ffffff', wofuer: 'Kommt mit den Übungen.' },
+  { name: 'Silber', a: '#eef2f6', b: '#a3aebb', rand: '#586371', zeichen: '#27303b', wofuer: 'Wie Bronze, dazu das Quiz zur Hälfte der Unterthemen bestanden.' },
+  { name: 'Gold', a: '#fbd960', b: '#d99c12', rand: '#855e05', zeichen: '#4b3400', wofuer: 'Wie Bronze, dazu das Quiz zu allen Unterthemen bestanden.' },
+  { name: 'Meister', a: '#22b8cf', b: '#7c3aed', rand: '#35267f', zeichen: '#ffffff', wofuer: 'Alle Quiz noch einmal fehlerfrei – frühestens eine Woche nach dem Bestehen.' },
 ];
-/** höchste Stufe, die sich im Moment erreichen lässt */
-export const HOECHSTE_STUFE = 3;
 
 const FORM = 'M60 8 L104 22 V68 C104 98 84 120 60 132 C36 120 16 98 16 68 V22 Z';
 
@@ -107,7 +109,7 @@ export function Schild({ stufe, groesse = 56, gesperrt = false, text }: { stufe:
 }
 
 /** Alle sechs Stufen mit dem, was man dafür tun muss – erreichte farbig, die übrigen grau. */
-export function StufenLeiter({ erreicht }: { erreicht: number }) {
+export function StufenLeiter({ erreicht, hoechste }: { erreicht: number; hoechste: number }) {
   return (
     <ol className="abz-leiter">
       {STUFEN.map((s, i) => {
@@ -117,7 +119,7 @@ export function StufenLeiter({ erreicht }: { erreicht: number }) {
             <Schild stufe={i + 1} groesse={64} gesperrt={!hat} />
             <span>
               <strong>{s.name}</strong>
-              <span className="leise klein"> · {hat ? 'erreicht' : i >= HOECHSTE_STUFE ? 'noch nicht verfügbar' : 'offen'}</span>
+              <span className="leise klein"> · {hat ? 'erreicht' : i >= hoechste ? 'in diesem Lernmodul nicht erreichbar (zu wenige Quiz)' : 'offen'}</span>
               <span className="abz-wofuer">{s.wofuer}</span>
             </span>
           </li>

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { vergissLernpakete } from '../lernen';
 import { frontmatter, parseThemaMarkdown } from '../lernen/parse';
+import { maskiere } from '../lernen/ueben';
 import { bereinigeSvg } from '../lernen/store';
 import type { BenutzerZeile } from '../typen';
 import { admin, koerper, konto, ohneWechsel, ruf, sitzung, umgebung, zuweisen } from './hilfe';
@@ -362,14 +363,14 @@ test('Abzeichen: Holz, Stein, Bronze je Themenfeld; einmal erreicht bleibt; Rang
 
   // am Anfang: nichts
   const start = await lies();
-  assert.deepEqual(start.rang, { stufe: 0, name: null, noetig: 1, felder: 2, naechste: { stufe: 1, name: 'Holz', haben: 0 } });
+  assert.deepEqual(start.rang, { stufe: 0, name: null, noetig: 1, felder: 2, hoechste: 3, naechste: { stufe: 1, name: 'Holz', haben: 0 } });
   assert.deepEqual([start.themenfelder[0].abzeichen.stufe, start.themenfelder[0].abzeichen.fortschritt, /Gelb oder Grün/.test(start.themenfelder[0].abzeichen.fehlt)], [0, 0, true]);
 
   // Rot zählt nicht; das erste Gelb bringt Holz – und weil ein Themenfeld von zweien reicht, auch den Rang
   assert.deepEqual([(await setze('netz.subnetting', 'rot')).abzeichen, (await feld('netz')).stufe], [null, 0]);
   const erstes = await setze('netz.subnetting', 'gelb');
   assert.deepEqual([erstes.abzeichen, erstes.rang], [{ feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 1, name: 'Holz' }, { stufe: 1, name: 'Holz' }]);
-  assert.deepEqual(await feld('netz'), { stufe: 1, name: 'Holz', erreicht: '2026-11-10', fehlt: 'Noch 1 Unterthema bis Stein.', fortschritt: 50 });
+  assert.deepEqual(await feld('netz'), { stufe: 1, name: 'Holz', erreicht: '2026-11-10', fehlt: 'Noch 1 Unterthema bis Stein.', fortschritt: 50, hoechste: 3 });
   // dasselbe noch einmal speichern: kein neues Abzeichen
   assert.deepEqual([(await setze('netz.subnetting', 'gruen')).abzeichen, (await setze('netz.subnetting', 'gelb')).rang], [null, null]);
 
@@ -383,7 +384,7 @@ test('Abzeichen: Holz, Stein, Bronze je Themenfeld; einmal erreicht bleibt; Rang
   const gelesen = koerper(await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } }));
   assert.deepEqual([gelesen.abzeichen, gelesen.rang], [{ feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 3, name: 'Bronze' }, { stufe: 3, name: 'Bronze' }]);
   const bronze = await feld('netz');
-  assert.deepEqual([bronze.stufe, bronze.fortschritt, /Silber, Gold und Meister kommen mit den Übungen/.test(bronze.fehlt)], [3, 100, true]);
+  assert.deepEqual([bronze.stufe, bronze.fortschritt, /hier gibt es kein Quiz/.test(bronze.fehlt)], [3, 100, true]);
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).thema.abzeichen.name, 'Bronze');
 
   // einmal erreicht bleibt: Ampel zurück auf Rot, Haken weg – das Abzeichen steht weiter da
@@ -395,7 +396,7 @@ test('Abzeichen: Holz, Stein, Bronze je Themenfeld; einmal erreicht bleibt; Rang
 
   // zweites Themenfeld mit nur einem Unterthema und ohne Zusatzwissen: sofort Bronze
   assert.equal((await setze('wiso.vertrag', 'gruen')).abzeichen.name, 'Bronze');
-  assert.equal((await lies()).rang.naechste, null, 'mehr als Bronze gibt es noch nicht');
+  assert.equal((await lies()).rang.naechste, null, 'ohne Quiz ist Bronze der höchste Rang');
 
   // privat: Ben hat nichts; Ausbilder, Beauftragte und Super-Admin kommen nicht heran
   const ben = koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.ben) }));
@@ -448,4 +449,98 @@ test('Leseansicht: Ausbilder und Beauftragte sehen alle Lernmodule mit Inhalt �
   // Azubis und Super-Admin haben die Leseansicht nicht
   for (const wer of [w.anna, w.maler, admin(w.u.db)]) for (const pfad of ['/api/lerninhalte', '/api/lerninhalte/fisi', '/api/lerninhalte/fisi/thema/netz', '/api/lerninhalte/fisi/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) })).status, 403, `${wer.rolle} ${pfad}`);
   assert.equal((await ruf(w.u, 'GET', '/api/lerninhalte')).status, 401);
+});
+
+// Paket mit Quiz: zwei Unterthemen mit je vier Begriffen, eins mit nur einem (kein Quiz)
+const begriffe = (namen: string[]) => namen.map((n) => `- **${n}:** Erklärung zu ${n.toLowerCase()} mit genug Text, damit die Frage trägt.`).join('\n');
+const QUIZ_NETZ = `---\ntitel: Netzwerke\n---\n\nNetze.\n\n## Adressen {#adressen}\n\n### Kernbegriffe\n${begriffe(['Netzadresse', 'Broadcast', 'Gateway', 'Subnetzmaske'])}\n\n### Prüfungsfrage\nTeile ein Netz.\n\n1. Bits leihen\n\n## Geräte {#geraete}\n\n### Kernbegriffe\n${begriffe(['Switch', 'Router', 'Hub', 'Repeater'])}\n\n## Kabel {#kabel}\n\n### Kernbegriffe\n${begriffe(['Patchkabel'])}\n`;
+
+test('Üben: Karteikarten wandern durch die Fächer und kommen später wieder', async () => {
+  const w = await welt(inhalte(QUIZ_NETZ));
+  let c = als(w, w.anna);
+  const ue = koerper(await ruf(w.u, 'GET', '/api/lernen/ueben', { cookies: c }));
+  const netz = ue.themenfelder[0];
+  // 9 Begriffe + 1 Prüfungsfrage; alle noch nie gesehen, also heute dran
+  assert.deepEqual([netz.karten, netz.faellig, netz.sicher, netz.quiz.length, netz.ohneQuiz], [10, 10, 0, 2, 1]);
+  const runde = koerper(await ruf(w.u, 'GET', '/api/lernen/karten?feld=netz&runde=1', { cookies: c }));
+  assert.deepEqual([runde.feldTitel, runde.gesamt, runde.faellig, runde.karten.length], ['Netzwerke', 10, 10, 10]);
+  const frage = runde.karten.find((k: { art: string }) => k.art === 'frage');
+  assert.deepEqual([frage.vorne, frage.hinten, frage.fach], ['Teile ein Netz.', ['Bits leihen'], 0]);
+  const karte = runde.karten.find((k: { vorne: string }) => k.vorne === 'Switch');
+  const merke = async (gewusst: unknown, id = karte.id) => ruf(w.u, 'PATCH', '/api/lernen/karte', { cookies: c, body: { id, gewusst } });
+  // gewusst: Fach 1 und morgen wieder dran; noch einmal: Fach 2 in drei Tagen
+  assert.deepEqual(koerper(await merke(true)), { id: karte.id, fach: 1, faellig: '2026-11-11' });
+  assert.deepEqual(koerper(await merke(true)), { id: karte.id, fach: 2, faellig: '2026-11-13' });
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/karten?feld=netz', { cookies: c })).faellig, 9, 'die gewusste Karte ist heute nicht mehr dran');
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/karten?feld=netz&alle=1', { cookies: c })).karten.length, 10);
+  // nicht gewusst: zurück in Fach 1, sofort wieder dran
+  assert.deepEqual(koerper(await merke(false)), { id: karte.id, fach: 1, faellig: '2026-11-10' });
+  w.u.uhr.jetzt = new Date('2026-11-14T09:00:00Z');
+  c = als(w, w.anna); // die alte Sitzung ist inzwischen abgelaufen
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/karten', { cookies: c })).feldTitel, 'Alle Themenfelder');
+  assert.equal((await merke('ja')).status, 400);
+  assert.equal((await merke(true, 'b:netz.adressen:gibtsnicht')).status, 404);
+  assert.equal((await ruf(w.u, 'GET', '/api/lernen/karten?feld=gibtsnicht', { cookies: c })).status, 404);
+  // privat: Ben hat nichts gelernt; Betreuer und Super-Admin kommen nicht heran
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/ueben', { cookies: als(w, w.ben) })).themenfelder[0].faellig, 10);
+  for (const wer of [w.ausbilder, w.bea]) for (const pfad of ['/api/lernen/ueben', '/api/lernen/karten', '/api/lernen/quiz/netz.adressen']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) })).status, 403, pfad);
+});
+
+test('Üben: Quiz wird vom Server gewertet und schaltet Silber, Gold und Meister frei', async () => {
+  const w = await welt(inhalte(QUIZ_NETZ));
+  let c = als(w, w.anna);
+  const hole = async (id: string) => koerper(await ruf(w.u, 'GET', `/api/lernen/quiz/${id}`, { cookies: c }));
+  const loese = async (id: string, fehler = 0) => {
+    const q = await hole(id);
+    const antworten = Object.fromEntries(q.fragen.map((f: { id: string; richtig: string; optionen: string[] }, i: number) => [f.id, i < fehler ? f.optionen.find((o) => o !== f.richtig) : f.richtig]));
+    return koerper(await ruf(w.u, 'POST', `/api/lernen/quiz/${id}`, { cookies: c, body: { antworten } }));
+  };
+  const feld = async () => koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c })).themenfelder[0].abzeichen;
+
+  const q = await hole('netz.adressen');
+  assert.deepEqual([q.titel, q.feldTitel, q.fragen.length, q.bestehenAb, q.stand], ['Adressen', 'Netzwerke', 4, 4, 'offen']);
+  for (const f of q.fragen) {
+    assert.equal(f.optionen.length, 4);
+    assert.equal(new Set(f.optionen).size, 4);
+    assert.ok(f.optionen.includes(f.richtig) && !f.text.toLowerCase().includes(f.richtig.toLowerCase()), 'die Frage verrät den Begriff nicht');
+  }
+  assert.equal((await ruf(w.u, 'GET', '/api/lernen/quiz/netz.kabel', { cookies: c })).status, 404, 'zu wenige Begriffe: kein Quiz');
+  assert.equal((await ruf(w.u, 'POST', '/api/lernen/quiz/netz.adressen', { cookies: c, body: { antworten: { [q.fragen[0].id]: q.fragen[0].richtig } } })).status, 400, 'unvollständige Runde zählt nicht');
+
+  // Voraussetzung für die oberen Stufen ist Bronze: alle Ampeln mindestens gelb (Zusatzwissen gibt es hier nicht)
+  for (const id of ['netz.adressen', 'netz.geraete', 'netz.kabel']) await ruf(w.u, 'PATCH', `/api/lernen/unterthema/${id}`, { cookies: c, body: { status: 'gelb' } });
+  assert.deepEqual([(await feld()).name, (await feld()).hoechste, (await feld()).fehlt], ['Bronze', 6, 'Noch 1 Quiz bestehen bis Silber.']);
+
+  // ein Fehler bei vier Fragen = 75 %: nicht bestanden
+  const knapp = await loese('netz.adressen', 1);
+  assert.deepEqual([knapp.richtig, knapp.gesamt, knapp.bestanden, knapp.falsch.length, knapp.stand, knapp.abzeichen], [3, 4, false, 1, 'offen', null]);
+  // bestanden: das eine von zwei Quiz reicht für Silber
+  const gut = await loese('netz.adressen');
+  assert.deepEqual([gut.bestanden, gut.neuBestanden, gut.stand, gut.meisterAb, gut.meisterMoeglich, gut.abzeichen?.name], [true, true, 'bestanden', '2026-11-17', false, 'Silber']);
+  assert.equal((await feld()).fehlt, 'Noch 1 Quiz bestehen bis Gold.');
+  assert.equal((await loese('netz.geraete')).abzeichen.name, 'Gold');
+  // fehlerfrei am selben Tag zählt noch nicht für Meister
+  assert.deepEqual([(await loese('netz.adressen')).neuMeister, (await feld()).name], [false, 'Gold']);
+  assert.match((await feld()).fehlt, /Noch 2 Quiz fehlerfrei wiederholen bis Meister/);
+
+  // eine Woche später: fehlerfrei zählt – mit einem Fehler nicht
+  w.u.uhr.jetzt = new Date('2026-11-17T09:00:00Z');
+  c = als(w, w.anna); // die alte Sitzung ist inzwischen abgelaufen
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/ueben', { cookies: c })).themenfelder[0].quiz[0].meisterMoeglich, true);
+  const patzer = await loese('netz.adressen', 1);
+  assert.deepEqual([patzer.neuMeister, patzer.stand], [false, 'bestanden'], 'bestanden bleibt bestanden');
+  assert.deepEqual([(await loese('netz.adressen')).stand, (await feld()).name], ['meister', 'Gold']);
+  const meister = await loese('netz.geraete');
+  assert.deepEqual([meister.neuMeister, meister.abzeichen?.name, meister.rang?.name], [true, 'Meister', 'Meister']);
+  assert.deepEqual([(await feld()).fehlt, (await feld()).fortschritt], ['Höchste Stufe erreicht.', 100]);
+  // mit dem Konto verschwindet alles
+  w.u.db.prepare('DELETE FROM benutzer WHERE id = ?').run(w.anna.id);
+  assert.equal((w.u.db.prepare('SELECT (SELECT COUNT(*) FROM lern_quiz) + (SELECT COUNT(*) FROM lern_karte) AS n').get() as { n: number }).n, 0);
+});
+
+test('Quiz: Der gesuchte Begriff wird ausgeblendet – aber nur als ganzes Wort', () => {
+  assert.equal(maskiere('Flüchtiger Speicher für laufende Programme; RAM-Riegel gibt es als DDR4.', 'Arbeitsspeicher (RAM)'), 'Flüchtiger Speicher für laufende Programme; …-Riegel gibt es als DDR4.');
+  assert.equal(maskiere('Der Arbeitsspeicher ist flüchtig, die Größe des Arbeitsspeichers zählt.', 'Arbeitsspeicher (RAM)'), 'Der … ist flüchtig, die Größe des …s zählt.');
+  assert.equal(maskiere('Ein Hub verteilt an alle; Schubfächer gibt es nicht.', 'Hub'), 'Ein … verteilt an alle; Schubfächer gibt es nicht.');
+  assert.equal(maskiere('C++ (und C) sind Sprachen.', 'C++'), '… (und C) sind Sprachen.');
 });

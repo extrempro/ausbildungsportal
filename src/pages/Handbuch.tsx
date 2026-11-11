@@ -512,21 +512,61 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'ueben',
+    titel: 'Üben mit Karteikarten und Quiz',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/lernen/ueben">Lernen → Üben</Link> wiederholst du den Stoff. Die Karten und Fragen entstehen aus den Kernbegriffen und Prüfungsfragen der Cheatsheets.
+        </p>
+        <h3>Karteikarten</h3>
+        <ol className="schritte">
+          <li>Wähl ein Themenfeld oder „Karteikarten aus allen Themenfeldern“. Eine Runde hat höchstens 20 Karten.</li>
+          <li>Lies die Vorderseite und überleg dir die Antwort.</li>
+          <li>Tipp auf „Karte umdrehen“ und vergleiche.</li>
+          <li>Sag ehrlich „Gewusst“ oder „Nicht gewusst“.</li>
+        </ol>
+        <ul className="punkte">
+          <li>Das Portal arbeitet wie ein Karteikasten mit fünf Fächern. Eine gewusste Karte wandert ein Fach weiter und kommt später wieder: nach 1, 3, 7, 14 und 30 Tagen. Eine nicht gewusste Karte geht zurück in Fach 1 und ist sofort wieder dran.</li>
+          <li>„Heute dran“ sind neue Karten und alle, deren Pause vorbei ist. Ist keine dran, kannst du mit „Trotzdem üben“ weitermachen.</li>
+          <li>Karteikarten zählen nicht für die Abzeichen. Sie sind zum Lernen da.</li>
+        </ul>
+        <h3>Quiz</h3>
+        <ul className="punkte">
+          <li>Zu jedem Unterthema mit mindestens drei Kernbegriffen gibt es ein Quiz. Du liest eine Erklärung und wählst den passenden Begriff aus vier Vorschlägen.</li>
+          <li>Nach jeder Antwort siehst du, ob sie stimmt. Am Ende wertet das Portal aus.</li>
+          <li>
+            <strong>Bestanden</strong> hast du ab 80 Prozent richtigen Antworten. Du kannst ein Quiz so oft wiederholen, wie du willst; bestanden bleibt bestanden.
+          </li>
+          <li>
+            <strong>Meister:</strong> Frühestens eine Woche nach dem Bestehen zählt eine fehlerfreie Runde. Am Quiz steht, ab wann.
+          </li>
+          <li>Bestandene Quiz bringen dir die Abzeichen Silber, Gold und Meister – mehr im Kapitel „Abzeichen sammeln“.</li>
+          <li>Verlässt du ein Quiz mittendrin, zählt die Runde nicht.</li>
+          <li>Deine Ergebnisse siehst nur du.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'abzeichen',
     titel: 'Abzeichen sammeln',
     inhalt: (
       <>
         <p>
-          Unter <Link zu="/lernen">Lernen</Link> sammelst du Abzeichen: in jedem Themenfeld ein Schild, das mit deinem Lernstand wächst. Es gibt sechs Stufen. Drei davon kannst du jetzt schon erreichen:
+          Unter <Link zu="/lernen">Lernen</Link> sammelst du Abzeichen: in jedem Themenfeld ein Schild, das mit deinem Lernstand wächst. Es gibt sechs Stufen. Die ersten drei hängen an Ampel und Zusatzwissen, die oberen drei am Quiz unter „Üben“:
         </p>
         <dl className="begriffe">
           <Begriff wort="Holz">Bei einem Unterthema steht die Ampel auf Gelb oder Grün.</Begriff>
           <Begriff wort="Stein">Bei der Hälfte der Unterthemen steht die Ampel auf Gelb oder Grün.</Begriff>
           <Begriff wort="Bronze">Bei allen Unterthemen steht die Ampel auf Gelb oder Grün und du hast das Zusatzwissen des Themenfelds als gelesen abgehakt.</Begriff>
-          <Begriff wort="Silber, Gold, Meister">Diese Stufen gibt es für bestandene Übungen. Übungen hat das Lernmodul noch nicht – deshalb sind diese Schilde noch grau.</Begriff>
+          <Begriff wort="Silber">Wie Bronze – und du hast das Quiz zur Hälfte der Unterthemen bestanden.</Begriff>
+          <Begriff wort="Gold">Du hast das Quiz zu allen Unterthemen bestanden.</Begriff>
+          <Begriff wort="Meister">Du hast alle Quiz noch einmal ohne Fehler geschafft – frühestens eine Woche nach dem Bestehen. So zeigt sich, was wirklich sitzt.</Begriff>
         </dl>
         <ul className="punkte">
           <li>Unter jedem Schild steht, was bis zur nächsten Stufe fehlt.</li>
+          <li>Gezählt werden nur Unterthemen, für die es ein Quiz gibt. Hat ein Themenfeld gar kein Quiz, ist dort Bronze die höchste Stufe.</li>
           <li>Ein neues Abzeichen zeigt dir das Portal einmal groß an.</li>
           <li>Ein Abzeichen bleibt. Stellst du eine Ampel später zurück auf Rot oder kommen neue Inhalte dazu, verlierst du es nicht.</li>
           <li>

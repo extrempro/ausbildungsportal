@@ -6,7 +6,8 @@ import { Fehler } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { transaktion } from './db';
-import { naechste, rangVon, STUFEN, stufeVon } from './lernen/abzeichen';
+import { hoechsteVon, HOECHSTE_STUFE, naechste, OHNE_QUIZ, rangVon, STUFEN, stufeVon } from './lernen/abzeichen';
+import { FAECHER, kartenVon, MEISTER_TAGE, naechstesFach, optionenFuer, QUIZ_BESTANDEN, quizFragen, zufall } from './lernen/ueben';
 import type { FeldStand } from './lernen/abzeichen';
 import { ladeInhalte, unterthemaIndex, zusatzIds } from './lernen/store';
 import type { Inhalte } from './lernen/store';
@@ -236,8 +237,8 @@ function unterthemaVerweis(inhalte: Inhalte, ref: string): Verweis | null {
 
 interface AbzeichenStand {
   /** je Themenfeld: erreichte Stufe (0 = keine), wann, und was bis zur nächsten fehlt */
-  felder: Map<string, { stufe: number; name: string | null; erreicht: string | null; fehlt: string; fortschritt: number }>;
-  rang: { stufe: number; name: string | null; noetig: number; felder: number; naechste: { stufe: number; name: string; haben: number } | null };
+  felder: Map<string, { stufe: number; name: string | null; erreicht: string | null; fehlt: string; fortschritt: number; hoechste: number }>;
+  rang: { stufe: number; name: string | null; noetig: number; felder: number; hoechste: number; naechste: { stufe: number; name: string; haben: number } | null };
   /** in diesem Aufruf neu erreichte Stufen */
   neu: { feld: string; feldTitel: string; stufe: number; name: string }[];
 }
@@ -252,6 +253,9 @@ function abzeichenVon(c: Ctx, p: Paket): AbzeichenStand {
   const gelesen = gelesenVon(db, c.b.id, p.id);
   const alt = new Map((db.prepare('SELECT feld_id, stufe, erreicht FROM lern_abzeichen WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { feld_id: string; stufe: number; erreicht: string }[]).map((z) => [z.feld_id, { stufe: z.stufe, erreicht: z.erreicht }]));
   const heute = c.k.jetzt().toISOString().slice(0, 10);
+  const quiz = quizFragen(p.inhalte);
+  const quizStand = new Map((db.prepare('SELECT unterthema_id, bestanden_am, meister_am FROM lern_quiz WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { unterthema_id: string; bestanden_am: string | null; meister_am: string | null }[]).map((z) => [z.unterthema_id, z]));
+  let mitQuiz = 0;
   const felder: AbzeichenStand['felder'] = new Map();
   const neu: AbzeichenStand['neu'] = [];
   for (const f of p.inhalte.themenfelder) {
@@ -260,7 +264,11 @@ function abzeichenVon(c: Ctx, p: Paket): AbzeichenStand {
       bearbeitet: f.unterthemen.filter((u) => (stand.get(`${f.id}.${u.id}`)?.status ?? 'rot') !== 'rot').length,
       zusatz: f.zusatz.length,
       zusatzGelesen: f.zusatz.filter((z) => gelesen.has(`${f.id}.${z.id}`)).length,
+      quiz: f.unterthemen.filter((u) => quiz.has(`${f.id}.${u.id}`)).length,
+      quizBestanden: f.unterthemen.filter((u) => quiz.has(`${f.id}.${u.id}`) && quizStand.get(`${f.id}.${u.id}`)?.bestanden_am).length,
+      quizMeister: f.unterthemen.filter((u) => quiz.has(`${f.id}.${u.id}`) && quizStand.get(`${f.id}.${u.id}`)?.meister_am).length,
     };
+    if (s.quiz > 0) mitQuiz++;
     let hat = alt.get(f.id) ?? { stufe: 0, erreicht: null as string | null };
     const jetzt = stufeVon(s);
     if (jetzt > hat.stufe) {
@@ -268,10 +276,13 @@ function abzeichenVon(c: Ctx, p: Paket): AbzeichenStand {
       hat = { stufe: jetzt, erreicht: heute };
       neu.push({ feld: f.id, feldTitel: f.titel, stufe: jetzt, name: STUFEN[jetzt - 1] });
     }
-    felder.set(f.id, { stufe: hat.stufe, name: hat.stufe ? STUFEN[hat.stufe - 1] : null, erreicht: hat.erreicht, ...naechste(hat.stufe, s) });
+    felder.set(f.id, { stufe: hat.stufe, name: hat.stufe ? STUFEN[hat.stufe - 1] : null, erreicht: hat.erreicht, ...naechste(hat.stufe, s), hoechste: hoechsteVon(s) });
   }
-  const r = rangVon([...felder.values()].map((x) => x.stufe));
-  return { felder, neu, rang: { stufe: r.stufe, name: r.stufe ? STUFEN[r.stufe - 1] : null, noetig: r.noetig, felder: felder.size, naechste: r.naechste && { ...r.naechste, name: STUFEN[r.naechste.stufe - 1] } } };
+  // der Rang kann nur so hoch steigen, wie genug Themenfelder ein Quiz haben
+  const noetig = Math.max(1, Math.ceil(felder.size / 2));
+  const hoechste = mitQuiz >= noetig ? HOECHSTE_STUFE : OHNE_QUIZ;
+  const r = rangVon([...felder.values()].map((x) => x.stufe), hoechste);
+  return { felder, neu, rang: { stufe: r.stufe, name: r.stufe ? STUFEN[r.stufe - 1] : null, noetig: r.noetig, felder: felder.size, hoechste, naechste: r.naechste && { ...r.naechste, name: STUFEN[r.naechste.stufe - 1] } } };
 }
 
 /** Für die Antwort nach dem Speichern: ein neu erreichtes Abzeichen und, falls er gestiegen ist, der neue Rang. */
@@ -301,7 +312,7 @@ const KOMPENDIUM = new WeakMap<Inhalte, Eintrag[]>();
 
 type Themenfeld = Inhalte['themenfelder'][number];
 type FeldAbzeichen = AbzeichenStand['felder'] extends Map<string, infer T> ? T : never;
-const OHNE_ABZEICHEN: FeldAbzeichen = { stufe: 0, name: null, erreicht: null, fehlt: '', fortschritt: 0 };
+const OHNE_ABZEICHEN: FeldAbzeichen = { stufe: 0, name: null, erreicht: null, fehlt: '', fortschritt: 0, hoechste: 0 };
 
 /** Übersicht eines Pakets: Themenfelder mit Unterthemen und Zusatzwissen – mit dem Stand eines Azubis oder (Leseansicht) ohne. */
 function uebersicht(p: Paket, stand: Map<string, StatusZeile>, gelesen: Set<string>, abz: AbzeichenStand['felder'] | null) {
@@ -345,6 +356,40 @@ function themaAnsicht(p: Paket, f: Themenfeld, stand: Map<string, StatusZeile>, 
       return { ...inhalt, vertiefung: vertieft.get(`${f.id}.${u.id}`) ?? [], status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash) };
     }),
   };
+}
+
+interface QuizZeile {
+  unterthema_id: string;
+  versuche: number;
+  letzte_richtig: number;
+  letzte_gesamt: number;
+  zuletzt: string;
+  bestanden_am: string | null;
+  meister_am: string | null;
+}
+
+/** Stand eines Quiz für die Anzeige: offen → bestanden → Meister; dazu, ab wann die Meister-Runde zählt. */
+function quizAnsicht(id: string, titel: string, fragen: number, z: QuizZeile | undefined, heute: string) {
+  const meisterAb = z?.bestanden_am ? new Date(new Date(`${z.bestanden_am}T00:00:00Z`).getTime() + MEISTER_TAGE * 86_400_000).toISOString().slice(0, 10) : null;
+  return {
+    id,
+    titel,
+    fragen,
+    stand: z?.meister_am ? 'meister' : z?.bestanden_am ? 'bestanden' : 'offen',
+    versuche: z?.versuche ?? 0,
+    zuletzt: z ? { richtig: z.letzte_richtig, gesamt: z.letzte_gesamt, am: z.zuletzt } : null,
+    /** ab diesem Tag zählt eine fehlerfreie Runde für „Meister“ */
+    meisterAb,
+    meisterMoeglich: !!meisterAb && !z?.meister_am && meisterAb <= heute,
+  };
+}
+
+function quizVon(p: Paket, id: string) {
+  const fragen = UNTERTHEMA_ID.test(id) ? quizFragen(p.inhalte).get(id) : undefined;
+  if (!fragen) throw new Fehler(404, 'Zu diesem Unterthema gibt es kein Quiz');
+  const [feld, unterthema] = id.split('.');
+  const f = p.inhalte.themenfelder.find((x) => x.id === feld)!;
+  return { fragen, feld, unterthema, feldTitel: f.titel, titel: f.unterthemen.find((u) => u.id === unterthema)!.titel };
 }
 
 function kompendium(p: Paket) {
@@ -463,6 +508,143 @@ export const LERN_ROUTEN: Route[] = [
       if (gelesen) c.k.db.prepare('INSERT INTO lern_zusatz (azubi_id, paket, zusatz_id, geaendert) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING').run(c.b.id, p.id, id, c.k.jetzt().toISOString().slice(0, 10));
       else c.k.db.prepare('DELETE FROM lern_zusatz WHERE azubi_id = ? AND paket = ? AND zusatz_id = ?').run(c.b.id, p.id, id);
       return { status: 200, body: { id, gelesen, ...nachSpeichern(c, p, rangVorher) } };
+    },
+  },
+
+  // ---------- Üben: Karteikarten und Quiz – privat wie der übrige Lernstand ----------
+  {
+    // Übersicht: je Themenfeld die Zahl der Karten (und wie viele heute dran sind) und die Quiz mit ihrem Stand
+    m: 'GET',
+    p: '/api/lernen/ueben',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const heute = c.k.jetzt().toISOString().slice(0, 10);
+      const karten = kartenVon(p.inhalte);
+      const stand = new Map((c.k.db.prepare('SELECT karte_id, fach, faellig FROM lern_karte WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { karte_id: string; fach: number; faellig: string }[]).map((z) => [z.karte_id, z]));
+      const quiz = quizFragen(p.inhalte);
+      const qs = new Map((c.k.db.prepare('SELECT * FROM lern_quiz WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as QuizZeile[]).map((z) => [z.unterthema_id, z]));
+      return {
+        status: 200,
+        body: {
+          paket: paketKopf(p),
+          faecher: FAECHER,
+          themenfelder: p.inhalte.themenfelder.map((f) => {
+            const ks = karten.filter((k) => k.feld === f.id);
+            return {
+              id: f.id,
+              titel: f.titel,
+              karten: ks.length,
+              faellig: ks.filter((k) => (stand.get(k.id)?.faellig ?? '') <= heute).length,
+              sicher: ks.filter((k) => (stand.get(k.id)?.fach ?? 0) >= 4).length,
+              quiz: f.unterthemen
+                .filter((u) => quiz.has(`${f.id}.${u.id}`))
+                .map((u) => quizAnsicht(`${f.id}.${u.id}`, u.titel, quiz.get(`${f.id}.${u.id}`)!.length, qs.get(`${f.id}.${u.id}`), heute)),
+              ohneQuiz: f.unterthemen.filter((u) => !quiz.has(`${f.id}.${u.id}`)).length,
+            };
+          }),
+        },
+      };
+    },
+  },
+  {
+    // Eine Runde Karteikarten: zuerst die fälligen (nie gesehene zählen dazu), niedrige Fächer vorn; „alle=1“ übt auch nicht fällige
+    m: 'GET',
+    p: '/api/lernen/karten',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const feld = c.a.query.get('feld') ?? '';
+      if (feld && !p.inhalte.themenfelder.some((f) => f.id === feld)) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
+      const heute = c.k.jetzt().toISOString().slice(0, 10);
+      const stand = new Map((c.k.db.prepare('SELECT karte_id, fach, faellig FROM lern_karte WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { karte_id: string; fach: number; faellig: string }[]).map((z) => [z.karte_id, z]));
+      const alle = kartenVon(p.inhalte).filter((k) => !feld || k.feld === feld);
+      const dran = alle.filter((k) => c.a.query.get('alle') === '1' || (stand.get(k.id)?.faellig ?? '') <= heute);
+      const r = zufall(Number(c.a.query.get('runde')) || c.k.jetzt().getTime());
+      const runde = dran
+        .map((k) => ({ k, fach: stand.get(k.id)?.fach ?? 0, z: r() }))
+        .sort((a, b) => a.fach - b.fach || a.z - b.z)
+        .slice(0, 20);
+      return { status: 200, body: { feldTitel: feld ? p.inhalte.themenfelder.find((f) => f.id === feld)!.titel : 'Alle Themenfelder', gesamt: alle.length, faellig: dran.length, karten: runde.map(({ k, fach }) => ({ ...k, fach })) } };
+    },
+  },
+  {
+    m: 'PATCH',
+    p: '/api/lernen/karte',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const body = c.a.body && typeof c.a.body === 'object' ? (c.a.body as Record<string, unknown>) : {};
+      if (typeof body.id !== 'string' || !kartenVon(p.inhalte).some((k) => k.id === body.id)) throw new Fehler(404, 'Diese Karte gibt es nicht');
+      if (typeof body.gewusst !== 'boolean') throw new Fehler(400, 'gewusst muss wahr oder falsch sein');
+      const alt = (c.k.db.prepare('SELECT fach FROM lern_karte WHERE azubi_id = ? AND paket = ? AND karte_id = ?').get(c.b.id, p.id, body.id) as { fach: number } | undefined)?.fach ?? 0;
+      const neu = naechstesFach(alt, body.gewusst);
+      const jetzt = c.k.jetzt();
+      const faellig = new Date(jetzt.getTime() + neu.tage * 86_400_000).toISOString().slice(0, 10);
+      c.k.db
+        .prepare('INSERT INTO lern_karte (azubi_id, paket, karte_id, fach, faellig, zuletzt) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(azubi_id, paket, karte_id) DO UPDATE SET fach = excluded.fach, faellig = excluded.faellig, zuletzt = excluded.zuletzt')
+        .run(c.b.id, p.id, body.id, neu.fach, faellig, jetzt.toISOString().slice(0, 10));
+      return { status: 200, body: { id: body.id, fach: neu.fach, faellig } };
+    },
+  },
+  {
+    // Quiz zu einem Unterthema: zu jeder Erklärung den passenden Begriff aus vier Möglichkeiten wählen
+    m: 'GET',
+    p: '/api/lernen/quiz/:id',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const q = quizVon(p, c.p.id);
+      const r = zufall(c.k.jetzt().getTime());
+      const zeile = c.k.db.prepare('SELECT * FROM lern_quiz WHERE azubi_id = ? AND paket = ? AND unterthema_id = ?').get(c.b.id, p.id, c.p.id) as QuizZeile | undefined;
+      return {
+        status: 200,
+        body: {
+          ...quizAnsicht(c.p.id, q.titel, q.fragen.length, zeile, c.k.jetzt().toISOString().slice(0, 10)),
+          feld: q.feld,
+          feldTitel: q.feldTitel,
+          bestehenAb: Math.ceil(q.fragen.length * QUIZ_BESTANDEN),
+          // Reihenfolge und Antwortmöglichkeiten wechseln von Runde zu Runde
+          fragen: q.fragen
+            .map((f) => ({ f, z: r() }))
+            .sort((a, b) => a.z - b.z)
+            .map(({ f }) => ({ id: f.id, text: f.text, optionen: optionenFuer(p.inhalte, q.feld, q.unterthema, f, r), richtig: f.begriff })),
+        },
+      };
+    },
+  },
+  {
+    // Ergebnis einer Runde: Der Server zählt selbst nach – gewertet wird nur eine vollständige Runde
+    m: 'POST',
+    p: '/api/lernen/quiz/:id',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const q = quizVon(p, c.p.id);
+      const antworten = (c.a.body as { antworten?: unknown } | null)?.antworten;
+      if (!antworten || typeof antworten !== 'object') throw new Fehler(400, 'Die Antworten fehlen');
+      const a = antworten as Record<string, unknown>;
+      if (q.fragen.some((f) => typeof a[f.id] !== 'string')) throw new Fehler(400, 'Die Runde ist nicht vollständig – jede Frage braucht eine Antwort');
+      const falsch = q.fragen.filter((f) => a[f.id] !== f.begriff).map((f) => f.id);
+      const gesamt = q.fragen.length;
+      const richtig = gesamt - falsch.length;
+      const bestanden = richtig >= Math.ceil(gesamt * QUIZ_BESTANDEN);
+      const jetzt = c.k.jetzt();
+      const heute = jetzt.toISOString().slice(0, 10);
+      const alt = c.k.db.prepare('SELECT * FROM lern_quiz WHERE azubi_id = ? AND paket = ? AND unterthema_id = ?').get(c.b.id, p.id, c.p.id) as QuizZeile | undefined;
+      const bestandenAm = alt?.bestanden_am ?? (bestanden ? heute : null);
+      // Meister: fehlerfrei, und das Bestehen liegt mindestens eine Woche zurück
+      const reif = !!alt?.bestanden_am && alt.bestanden_am <= new Date(jetzt.getTime() - MEISTER_TAGE * 86_400_000).toISOString().slice(0, 10);
+      const meisterAm = alt?.meister_am ?? (reif && falsch.length === 0 ? heute : null);
+      const rangVorher = rangJetzt(c, p);
+      c.k.db
+        .prepare(
+          `INSERT INTO lern_quiz (azubi_id, paket, unterthema_id, versuche, letzte_richtig, letzte_gesamt, zuletzt, bestanden_am, meister_am) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)
+           ON CONFLICT(azubi_id, paket, unterthema_id) DO UPDATE SET versuche = versuche + 1, letzte_richtig = excluded.letzte_richtig, letzte_gesamt = excluded.letzte_gesamt, zuletzt = excluded.zuletzt, bestanden_am = excluded.bestanden_am, meister_am = excluded.meister_am`,
+        )
+        .run(c.b.id, p.id, c.p.id, richtig, gesamt, heute, bestandenAm, meisterAm);
+      const neu = c.k.db.prepare('SELECT * FROM lern_quiz WHERE azubi_id = ? AND paket = ? AND unterthema_id = ?').get(c.b.id, p.id, c.p.id) as unknown as QuizZeile;
+      return { status: 200, body: { richtig, gesamt, bestanden, falsch, neuBestanden: bestanden && !alt?.bestanden_am, neuMeister: !!meisterAm && !alt?.meister_am, ...quizAnsicht(c.p.id, q.titel, gesamt, neu, heute), ...nachSpeichern(c, p, rangVorher) } };
     },
   },
 
