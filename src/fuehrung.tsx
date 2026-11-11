@@ -34,13 +34,14 @@ const AZUBI: Schritt[] = [
   { titel: 'Das Berichtsheft', text: 'Für jede Woche schreibst du einen Bericht: Was hast du gemacht, und wie viele Stunden? Hier geht es dorthin.', pfad: '/', ziel: ['.haupt-nav a[href="/berichtsheft"]', '.tabs a[href="/berichtsheft"]'] },
   { titel: 'Einen Bericht schreiben', text: 'Bei jeder Woche steht ein Knopf. „Schreiben“ öffnet die Woche. Dort trägst du ein, speicherst als Entwurf oder reichst ein.', pfad: '/berichtsheft', ziel: ['table.stapel tbody tr td.aktion a', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Unterschreibe hier einmal mit Finger, Stift oder Maus. Die Unterschrift kommt unter jeden Bericht, den du einreichst.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
+  { titel: 'Urlaub beantragen', text: 'Hier beantragst du deinen Urlaub und siehst, wie viele Tage noch frei sind. Erst bestätigen deine Ausbildungsbeauftragten, dann genehmigt dein Ausbilder.', pfad: '/urlaub', ziel: ['.urlaub-neu', 'main h1'] },
   GLOCKE('Die Glocke zeigt, wenn jemand etwas in deinen Plan eingetragen hat oder ein Bericht abgezeichnet oder zurückgegeben wurde. Die Zahl sagt, wie viel neu ist.'),
   ENDE,
 ];
 
 const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
   { titel: 'Willkommen im Ausbildungsportal', text: 'Eine kurze Führung durch deine Bereiche – etwa eine Minute. Du kannst jederzeit abbrechen.', pfad: '/' },
-  { titel: 'Was ist zu tun?', text: 'Die Kacheln zeigen, wie viele Berichte auf deine Unterschrift warten, und führen direkt dorthin.', pfad: '/', ziel: ['.kacheln'] },
+  { titel: 'Was ist zu tun?', text: 'Die Kacheln zeigen, wie viele Berichte auf deine Unterschrift und wie viele Urlaubsanträge auf dich warten, und führen direkt dorthin.', pfad: '/', ziel: ['.kacheln'] },
   {
     titel: rolle === 'ausbilder' ? 'Deine Azubis' : 'Die dir zugewiesenen Azubis',
     text: 'Jede Karte zeigt den Stand der Ausbildung und der Berichte. Darunter geht es zu Profil, Ausbildungsplan und Berichtsheft.',

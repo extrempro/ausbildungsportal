@@ -1,5 +1,26 @@
 # Änderungen
 
+## [0.31.0] – 2026-11-11
+
+### Neu
+
+- **Urlaub beantragen.** Azubis stellen ihren Urlaubsantrag im Portal (Menüpunkt „Urlaub“, Knopf im Ausbildungsplan). Ablauf in zwei Stufen: Alle, denen der Azubi im Zeitraum zugewiesen ist (Ausbildungsbeauftragte, Ausbilder als Vertretung), **bestätigen** – danach **genehmigt** der zuständige Ausbilder. Ist niemand zugewiesen, liegt der Antrag sofort beim Ausbilder. Steht eine Bestätigung aus, kann der Ausbilder nach einer Rückfrage trotzdem entscheiden; das steht dann im Verlauf.
+- Ablehnen (beide Stufen) und Stornieren (Ausbilder, nach der Genehmigung) nur mit Begründung, die der Azubi liest. Der Azubi kann einen offenen Antrag zurückziehen. Jeder Schritt steht mit Name und Zeit im Verlauf des Antrags.
+- **Urlaubskonto je Kalenderjahr:** Anspruch, genehmigt, beantragt, noch frei. Den Anspruch trägt der Ausbilder im Profil unter „Urlaubstage im Jahr“ ein. Gezählt werden Arbeitstage: Montag bis Freitag ohne die Feiertage des Bundeslands aus den Stammdaten.
+- **Hinweise statt Sperren:** Liegt im Zeitraum Berufsschule oder eine Prüfung oder reichen die freien Tage nicht, warnt das Portal – beim Beantragen und beim Entscheiden. Beantragen und genehmigen lässt sich trotzdem.
+- Genehmigter Urlaub steht von selbst im **Jahreskalender**, als Abwesenheit im **Bericht der Woche** und im **Kalender-Abo** des Azubis. Beantragter Urlaub steht im Jahreskalender gestreift („Urlaub?“).
+- Für Ausbilder und Beauftragte: Seite „Urlaubsanträge“ (zuerst, was auf sie wartet), Zahl am Menüpunkt, Kachel auf der Startseite, Urlaubskonto und Anträge je Azubi. Die Glocke meldet Anträge, Bestätigungen und Entscheidungen.
+- Handbuch: Kapitel „Urlaub beantragen“ (Azubi) und „Urlaubsanträge“ (Ausbilder, Beauftragte); Jahreskalender, Profil und Glocke ergänzt.
+
+### Geändert
+
+- Jahreskalender: Urlaub kommt jetzt aus genehmigten Anträgen und – wie bisher – aus eingereichten Berichten. Damit sehen Ausbilder geplanten Urlaub schon vorher.
+
+### Noch offen
+
+- Die **Mail an die Personalstelle** nach Genehmigung und Storno folgt in der nächsten Version (Versand über SMTP). Der Server kennt die Adresse schon, in den Stammdaten erscheint das Feld mit dem Versand.
+- Bewusst nicht enthalten: halbe Tage, Resturlaub aus dem Vorjahr, andere Abwesenheiten (Krankheit, Sonderurlaub).
+
 ## [0.30.1] – 2026-11-11
 
 ### Geändert

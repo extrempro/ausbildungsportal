@@ -223,11 +223,13 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
             <Begriff wort="Neuer Eintrag im Ausbildungsplan">Dein Ausbilder oder ein Ausbildungsbeauftragter hat etwas in deinen Plan eingetragen.</Begriff>
             <Begriff wort="Bericht abgezeichnet">Der Bericht ist unterschrieben und damit fertig.</Begriff>
             <Begriff wort="Bericht zurückgegeben">Du sollst etwas ändern. Ein Tipp auf die Zeile öffnet den Bericht, dort steht der Grund.</Begriff>
+            <Begriff wort="Urlaub bestätigt, genehmigt, abgelehnt, storniert">Es hat sich etwas an deinem Urlaubsantrag getan. Die Zeile führt zu „Urlaub“.</Begriff>
           </>
         ) : (
           <>
             <Begriff wort="Bericht wartet auf Abzeichnung">Ein Azubi hat einen Bericht eingereicht. Die Zeile führt zu „Abzeichnen“.</Begriff>
             <Begriff wort="Neuer Eintrag im Ausbildungsplan">Ein Azubi hat eine eigene Aufgabe oder Notiz eingetragen – oder eine andere betreuende Person hat etwas geplant.</Begriff>
+            <Begriff wort="Urlaub beantragt, bestätigt, zurückgezogen">Ein Azubi hat Urlaub beantragt oder an einem Antrag hat sich etwas getan. Die Zeile führt zu „Urlaub“.</Begriff>
           </>
         )}
       </dl>
@@ -387,6 +389,40 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'urlaub',
+    titel: 'Urlaub beantragen',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/urlaub">Urlaub</Link> beantragst du deinen Urlaub. Du kommst auch aus dem Ausbildungsplan über „Urlaub beantragen“ dorthin.
+        </p>
+        <ol className="schritte">
+          <li>Trag den ersten und den letzten Urlaubstag ein. Für einen einzelnen Tag ist beides derselbe Tag.</li>
+          <li>Das Portal zählt die Arbeitstage: Montag bis Freitag, ohne Feiertage. Es sagt dir auch, wer zustimmen muss.</li>
+          <li>Lies die Hinweise, falls welche erscheinen – zum Beispiel, wenn in der Zeit Berufsschule ist. Du kannst den Antrag trotzdem stellen, klär das aber vorher.</li>
+          <li>Tipp auf „Urlaub beantragen“.</li>
+        </ol>
+        <p>So geht es weiter:</p>
+        <dl className="begriffe">
+          <Begriff wort="Wartet auf Bestätigung">Deine Ausbildungsbeauftragten müssen zustimmen. Sind es mehrere, dann alle.</Begriff>
+          <Begriff wort="Wartet auf Genehmigung">Jetzt entscheidet dein Ausbilder. Ist dir niemand zugewiesen, liegt der Antrag sofort bei ihm.</Begriff>
+          <Begriff wort="Genehmigt">Der Urlaub steht fest. Er erscheint von selbst im Jahreskalender, im Bericht der Woche und im abonnierten Kalender.</Begriff>
+          <Begriff wort="Abgelehnt">Der Grund steht am Antrag. Du kannst einen neuen Antrag für eine andere Zeit stellen.</Begriff>
+          <Begriff wort="Storniert">Dein Ausbilder hat einen genehmigten Urlaub wieder aufgehoben. Der Grund steht am Antrag.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Was sich an deinem Antrag tut, siehst du auch in der Glocke.</li>
+          <li>Solange noch nicht entschieden ist, kannst du den Antrag zurückziehen. Danach nicht mehr – sprich dann mit deinem Ausbilder.</li>
+          <li>Ändern lässt sich ein Antrag nicht. Zieh ihn zurück und stell einen neuen.</li>
+          <li>Das Urlaubskonto oben zeigt Anspruch, genehmigte und beantragte Tage und was noch frei ist. Resturlaub aus dem Vorjahr kennt das Portal nicht – frag im Zweifel nach.</li>
+          <li>Halbe Tage gibt es im Portal nicht.</li>
+          <li>Die Bemerkung ist freiwillig. Schreib nichts zu Gesundheit oder Privatem hinein.</li>
+          <li>Krank melden kannst du dich hier nicht – das läuft wie bisher im Betrieb.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'jahreskalender',
     titel: 'Den Jahreskalender lesen',
     inhalt: (
@@ -397,7 +433,8 @@ const AZUBI: Kapitel[] = [
         <dl className="begriffe">
           <Begriff wort="Violett">Berufsschule.</Begriff>
           <Begriff wort="Grün">Einsatz in einer Abteilung. Der Name steht am ersten Tag und an jedem Montag.</Begriff>
-          <Begriff wort="Gelb">Urlaub – so, wie du ihn im Berichtsheft als Abwesenheit eingetragen hast.</Begriff>
+          <Begriff wort="Gelb">Urlaub – genehmigter Urlaub und Urlaub, den du im Berichtsheft als Abwesenheit eingetragen hast.</Begriff>
+          <Begriff wort="Gelb gestreift, „Urlaub?“">Beantragter Urlaub, über den noch nicht entschieden ist.</Begriff>
           <Begriff wort="Rot">Prüfung.</Begriff>
           <Begriff wort="Blau">Feiertag. Ein blauer Punkt mit Text ist ein eigener Termin von dir – den siehst nur du.</Begriff>
           <Begriff wort="Türkiser Strich unten">Schulferien.</Begriff>
@@ -408,7 +445,7 @@ const AZUBI: Kapitel[] = [
           <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor. „Dieses Jahr“ bringt dich zurück.</li>
           <li>Fahr mit der Maus über einen Tag (oder tipp ihn lange an): Dann steht dort alles zu diesem Tag.</li>
           <li>Am Handy ist der Kalender breiter als der Bildschirm – wisch nach links und rechts. Die Spalte mit den Tagen bleibt stehen.</li>
-          <li>Ändern kannst du hier nichts. Einträge machst du im Ausbildungsplan, Urlaub im Berichtsheft.</li>
+          <li>Ändern kannst du hier nichts. Einträge machst du im Ausbildungsplan, Urlaub beantragst du unter „Urlaub“.</li>
         </ul>
       </>
     ),
@@ -512,7 +549,7 @@ const AZUBI: Kapitel[] = [
       <dl className="begriffe breit">
         <Begriff wort="Ich habe Wochen vergessen. Was jetzt?">Schreib sie nach – die fehlenden Wochen stehen im Berichtsheft unter „Fehlt“. Je früher, desto leichter erinnerst du dich.</Begriff>
         <Begriff wort="Ich habe einen Fehler eingereicht.">Öffne den Bericht und wähle „Zurückziehen“. Das geht, solange er nicht abgezeichnet ist. Danach bitte deinen Ausbilder, die Abzeichnung aufzuheben.</Begriff>
-        <Begriff wort="Ich war die ganze Woche krank oder im Urlaub.">Schreib trotzdem einen Bericht: Trag die Tage unter „Abwesenheit“ ein und reiche ihn ein.</Begriff>
+        <Begriff wort="Ich war die ganze Woche krank oder im Urlaub.">Schreib trotzdem einen Bericht: Trag die Tage unter „Abwesenheit“ ein und reiche ihn ein. Genehmigter Urlaub steht dort schon.</Begriff>
         <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
         <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
         <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
@@ -603,8 +640,48 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </ul>
         )}
         <p>
-          Der <Link zu="/jahreskalender">Jahreskalender</Link> zeigt {rolle === 'ausbilder' ? 'deine' : 'alle dir zugewiesenen'} Azubis untereinander über ein ganzes Jahr: Schule, Einsätze und Urlaub laut Bericht.
+          Der <Link zu="/jahreskalender">Jahreskalender</Link> zeigt {rolle === 'ausbilder' ? 'deine' : 'alle dir zugewiesenen'} Azubis untereinander über ein ganzes Jahr: Schule, Einsätze und Urlaub.
         </p>
+      </>
+    ),
+  },
+  {
+    id: 'urlaub',
+    titel: 'Urlaubsanträge',
+    inhalt: (
+      <>
+        <p>
+          Azubis beantragen ihren Urlaub im Portal. Unter <Link zu="/urlaub">Urlaub</Link> (am Handy unter „Mehr“) stehen alle Anträge {rolle === 'ausbilder' ? 'deiner' : 'der dir zugewiesenen'} Azubis. Eine Zahl am Menüpunkt und eine Kachel auf der Startseite zeigen, wie viele auf dich warten.
+        </p>
+        <p>Der Ablauf hat zwei Stufen:</p>
+        <ol className="schritte">
+          <li>
+            <strong>Bestätigen:</strong> Alle, denen der Azubi im Urlaubszeitraum zugewiesen ist, bestätigen den Antrag – Ausbildungsbeauftragte und Ausbilder als Vertretung. Sind es mehrere, müssen alle bestätigen.
+          </li>
+          <li>
+            <strong>Genehmigen:</strong> Danach entscheidet der zuständige Ausbilder endgültig. Ist im Zeitraum niemand zugewiesen, liegt der Antrag sofort bei ihm.
+          </li>
+        </ol>
+        <dl className="begriffe">
+          <Begriff wort="Urlaub bestätigen">{rolle === 'ausbilder' ? 'Nur, wenn du dem Azubi als Vertretung zugewiesen bist.' : 'Deine Zustimmung.'} Sie lässt sich nicht zurücknehmen.</Begriff>
+          {rolle === 'ausbilder' && (
+            <Begriff wort="Urlaub genehmigen">
+              Die endgültige Entscheidung. Steht noch eine Bestätigung aus, fragt das Portal nach, ob du trotzdem genehmigen willst – so bleibt kein Antrag liegen, wenn jemand fehlt. Im Verlauf steht dann, dass ohne diese Bestätigung entschieden wurde.
+            </Begriff>
+          )}
+          <Begriff wort="Antrag ablehnen …">Geht in beiden Stufen, immer mit Begründung. Der Azubi liest sie.</Begriff>
+          {rolle === 'ausbilder' && <Begriff wort="Urlaub stornieren …">Hebt einen genehmigten Urlaub wieder auf, mit Begründung. Der Zeitraum ist danach wieder frei.</Begriff>}
+          <Begriff wort="Hinweise am Antrag">Das Portal warnt, wenn im Zeitraum Berufsschule oder eine Prüfung liegt oder die Tage laut Urlaubskonto nicht reichen. Es sperrt nichts – die Entscheidung liegt bei euch.</Begriff>
+          <Begriff wort="Verlauf">Wer wann was getan hat, klappt an jedem Antrag auf.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Gezählt werden Arbeitstage: Montag bis Freitag ohne die Feiertage des Bundeslands aus den Stammdaten. Halbe Tage gibt es nicht.</li>
+          <li>Ein Klick auf den Namen zeigt das Urlaubskonto des Azubis: Anspruch, genehmigt, beantragt, frei.{rolle === 'ausbilder' ? ' Den Anspruch trägst du im Profil des Azubis unter „Urlaubstage im Jahr“ ein.' : ' Den Anspruch trägt der Ausbilder im Profil ein.'} Resturlaub aus dem Vorjahr kennt das Portal nicht.</li>
+          <li>Genehmigter Urlaub steht von selbst im Jahreskalender, im Bericht der Woche (als Abwesenheit) und im abonnierten Kalender des Azubis. Beantragter Urlaub steht im Jahreskalender gestreift.</li>
+          <li>In der Glocke steht, wenn ein Antrag gestellt, bestätigt oder zurückgezogen wurde.</li>
+          <li>Die Bemerkung des Azubis ist freiwillig. Bitte keine Gründe verlangen – erst recht keine zur Gesundheit.</li>
+          <li>Krankmeldungen laufen nicht über das Portal.</li>
+        </ul>
       </>
     ),
   },
@@ -619,7 +696,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         <dl className="begriffe">
           <Begriff wort="Obere Balken (violett)">Berufsschule.</Begriff>
           <Begriff wort="Mittlere Balken (grün)">Einsätze, mit Namen. Ist der Balken zu kurz für den Namen: mit der Maus darauf zeigen.</Begriff>
-          <Begriff wort="Schmale Balken unten (gelb)">Urlaub – laut Berichtsheft. Er erscheint erst, wenn der Azubi ihn im Bericht der Woche unter „Abwesenheit“ eingetragen und den Bericht eingereicht hat. Krankheit erscheint im Jahreskalender nicht.</Begriff>
+          <Begriff wort="Schmale Balken unten (gelb)">Urlaub: genehmigte Urlaubsanträge und Urlaub, den der Azubi in einem eingereichten Bericht unter „Abwesenheit“ eingetragen hat. Gestreift mit gestricheltem Rand ist beantragter Urlaub, über den noch nicht entschieden ist. Krankheit erscheint im Jahreskalender nicht.</Begriff>
           <Begriff wort="Rote Linie mit Raute">Prüfungstermin.</Begriff>
           <Begriff wort="Türkiser Strich ganz unten">Schulferien (nach dem Bundesland der Berufsschule).</Begriff>
           <Begriff wort="Schraffiert">Der Azubi ist in dieser Zeit nicht in der Ausbildung.</Begriff>
@@ -789,6 +866,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Vertragsende">Nur eintragen, wenn es vom berechneten Ende abweicht.</Begriff>
                 <Begriff wort="Verkürzung">Monate und Art: „Ausbildung endet früher“ oder „am Anfang angerechnet“ (Start in einem höheren Ausbildungsjahr). Das Portal rechnet nur mit den Monaten – ob eine Verkürzung zulässig ist, entscheidet die Kammer.</Begriff>
                 <Begriff wort="Wochenstunden">Daran misst der Bericht, ob die eingetragenen Stunden zur Woche passen.</Begriff>
+                <Begriff wort="Urlaubstage im Jahr">Der Urlaubsanspruch in Arbeitstagen je Kalenderjahr. Daraus rechnet das Urlaubskonto, was noch frei ist. Bleibt das Feld leer, lässt sich Urlaub trotzdem beantragen – nur ohne Rechnung.</Begriff>
                 <Begriff wort="Prüfungstermine">Bis zu acht, mit freier Bezeichnung. Sie erscheinen im Plan des Azubis, in der Kachel „Wochen bis zur Prüfung“ und im abonnierten Kalender.</Begriff>
               </dl>
               <p className="leise klein">Der Azubi sieht diese Angaben unter „Konto“ bei „Meine Ausbildung“, kann sie aber nicht ändern.</p>

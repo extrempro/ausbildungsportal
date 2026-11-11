@@ -6952,3 +6952,204 @@ td.aktion .pdf-fehler {
     margin-bottom: 2px;
   }
 }
+
+/* ---------- Urlaub ---------- */
+.antrag-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+details.karte > .antrag-liste {
+  margin-top: 16px;
+}
+
+details.karte > .antrag-liste > .antrag:last-child {
+  margin-bottom: 0;
+}
+
+.antrag-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.antrag-kopf h2,
+.antrag-kopf h3 {
+  margin: 0;
+}
+
+.antrag-kopf h3 {
+  font-size: 18px;
+  padding-top: 0;
+  border-top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+}
+
+.antrag-kopf .filter {
+  margin: 0;
+}
+
+.antrag-zeit {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.antrag-zeile,
+.antrag-bemerkung {
+  margin: 0 0 8px;
+}
+
+.antrag-bemerkung {
+  overflow-wrap: anywhere;
+}
+
+.antrag-schritte {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.antrag-schritte li {
+  position: relative;
+  padding-left: 28px;
+}
+
+.antrag-schritte li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--c-border);
+}
+
+.antrag-schritte li.fertig::before {
+  border-color: var(--c-gruen-fg);
+  background: var(--c-gruen-fg);
+}
+
+.antrag-schritte li.fertig::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--c-card);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+ul.antrag-hinweise {
+  list-style: none;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.antrag-grund textarea {
+  width: 100%;
+}
+
+.antrag .aktionen,
+.urlaub-neu .aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.antrag > details.klapp {
+  margin-top: 12px;
+}
+
+.antrag-verlauf {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.antrag-kommentar {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.urlaub-konto {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.urlaub-konto > div {
+  padding: 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.urlaub-konto dt {
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.urlaub-konto dd {
+  margin: 2px 0 0;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.urlaub-konto .minus dd {
+  color: var(--c-rot-fg);
+}
+
+.urlaub-neu form > label {
+  display: block;
+}
+
+.urlaub-ergebnis {
+  margin: 12px 0;
+}
+
+@media (max-width: 480px) {
+  .urlaub-konto {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Jahreskalender: beantragter Urlaub – schraffiert, damit er sich nicht nur durch die Farbe unterscheidet */
+.jk-farbe.beantragt,
+.jk-zelle.beantragt,
+.jk-balken.urlaub.beantragt {
+  background: repeating-linear-gradient(135deg, var(--c-warn-bg) 0 4px, transparent 4px 8px);
+  color: var(--c-warn-fg);
+}
+
+.jk-farbe.beantragt {
+  border: 1px dashed var(--c-warn-fg);
+}
+
+.jk-balken.urlaub.beantragt {
+  border-style: dashed;
+}
+
+.jk-marke.beantragt {
+  background: transparent;
+  color: var(--c-warn-fg);
+  border: 1px dashed var(--c-warn-fg);
+}

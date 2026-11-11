@@ -1,3 +1,4 @@
+import { genehmigteTage, urlaubsZeitraeume } from './urlaub';
 import { Fehler, holeBenutzer, idAus } from './api-basis';
 import type { Ctx, Route } from './api-basis';
 import { heute } from './datum';
@@ -48,7 +49,9 @@ function kalenderVon(c: Ctx, azubiId: number, jahr: number, tag: string) {
     beginn: dauer?.beginn ?? null,
     ende: dauer?.ende ?? null,
     eintraege,
-    urlaub: [...urlaub].sort(),
+    urlaub: [...new Set([...urlaub, ...genehmigteTage(db, azubiId, von, bis)])].sort(),
+    // offene Urlaubsanträge: noch nicht entschieden, aber niemand soll in den Zeitraum hineinplanen
+    beantragt: urlaubsZeitraeume(db, azubiId, 'offen', von, bis).map((u) => ({ von: u.von, bis: u.bis })),
     pruefungen: profil.pruefungen.filter((p) => p.datum >= von && p.datum <= bis).map((p) => ({ tag: p.datum, bezeichnung: p.bezeichnung })),
     termine,
     ferien,

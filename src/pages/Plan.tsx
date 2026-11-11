@@ -687,6 +687,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
         <Link zu={d.eigenes ? '/jahreskalender' : `/jahreskalender/${azubiId}`} className="knopf schlicht">
           Jahreskalender anzeigen
         </Link>
+        <Link zu={d.eigenes ? '/urlaub' : `/azubis/${azubiId}/urlaub`} className="knopf schlicht">
+          {d.eigenes ? 'Urlaub beantragen' : 'Urlaub ansehen'}
+        </Link>
       </p>
 
       {d.beginnFehlt && (

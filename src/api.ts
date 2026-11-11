@@ -175,6 +175,8 @@ export interface Profil {
   verkuerzungGrund: string;
   vorzeitigeZulassung: boolean;
   wochenstunden: number;
+  /** Urlaubsanspruch in Arbeitstagen je Kalenderjahr – null, solange nichts eingetragen ist */
+  urlaubstage: number | null;
   pruefungen: Pruefung[];
 }
 
@@ -461,4 +463,40 @@ export interface Logos {
 /** Was in der hellen bzw. dunklen Darstellung gezeigt wird (null = Standard-Symbol). */
 export function logoFuer(l: Logos, dunkel: boolean): string | null {
   return dunkel ? (l.logoDunkel ?? l.logo) : l.logo;
+}
+
+// ---------- Urlaub ----------
+
+export type UrlaubStatus = 'offen' | 'genehmigt' | 'abgelehnt' | 'zurueckgezogen' | 'storniert';
+
+export interface UrlaubAntrag {
+  id: number;
+  azubi: { id: number; anzeigename: string };
+  von: string;
+  bis: string;
+  /** Arbeitstage: Montag bis Freitag ohne Feiertage */
+  tage: number;
+  bemerkung: string;
+  status: UrlaubStatus;
+  hinweise: string[];
+  /** wo ein offener Antrag gerade liegt */
+  stufe: 'beauftragte' | 'ausbilder' | null;
+  bestaetigungen: { name: string; zeit: string | null; ich: boolean }[];
+  erstellt: string;
+  verlauf: { zeit: string; aktion: string; name: string; rolle: Rolle; kommentar: string }[];
+  rechte: { zurueckziehen: boolean; bestaetigen: boolean; ablehnen: boolean; genehmigen: boolean; stornieren: boolean };
+  bestaetigungFehlt: string[];
+}
+
+export interface UrlaubKonto {
+  jahr: number;
+  anspruch: number | null;
+  genehmigt: number;
+  beantragt: number;
+  frei: number | null;
+}
+
+/** „07.12.–11.12.2026“ oder ein einzelner Tag */
+export function zeitraum(von: string, bis: string): string {
+  return von === bis ? datum(von) : `${von.slice(8, 10)}.${von.slice(5, 7)}.${von.slice(0, 4) === bis.slice(0, 4) ? '' : von.slice(0, 4)}–${datum(bis)}`;
 }

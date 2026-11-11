@@ -1,3 +1,4 @@
+import { urlaubsZeitraeume } from './urlaub';
 import { randomBytes } from 'node:crypto';
 import { Fehler } from './api-basis';
 import type { Ctx, Route } from './api-basis';
@@ -134,6 +135,10 @@ function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string
         .all(azubi.id) as unknown as { id: number; tag: string; zeit_von: string; zeit_bis: string; titel: string; geaendert: string }[];
   for (const z of eigene) {
     termine.push({ uid: `plan-${z.id}@${host}`, von: z.tag, bis: z.tag, zeitVon: z.zeit_von || undefined, zeitBis: z.zeit_bis || undefined, titel: vorn + z.titel, art: 'Termin', geaendert: z.geaendert, beschreibung: 'Termin' });
+  }
+  // genehmigter Urlaub – als ganztägiger Termin über den ganzen Zeitraum
+  for (const u of urlaubsZeitraeume(db, azubi.id, 'genehmigt', '2000-01-01', '2100-12-31')) {
+    termine.push({ uid: `urlaub-${u.id}@${host}`, von: u.von, bis: u.bis, titel: `${vorn}Urlaub`, art: 'Urlaub', geaendert: u.geaendert, beschreibung: 'Genehmigter Urlaub' });
   }
   const profil = leseProfil(db, azubi.id);
   const profilZeit = (db.prepare('SELECT geaendert FROM azubi_profil WHERE benutzer_id = ?').get(azubi.id) as { geaendert: string } | undefined)?.geaendert ?? '';

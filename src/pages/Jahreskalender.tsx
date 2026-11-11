@@ -20,6 +20,8 @@ interface JkAzubi {
   ende: string | null;
   eintraege: Eintrag[];
   urlaub: string[];
+  /** beantragter, noch nicht entschiedener Urlaub */
+  beantragt: { von: string; bis: string }[];
   pruefungen: { tag: string; bezeichnung: string }[];
   termine: { tag: string; zeitVon: string; titel: string }[];
   ferien: { name: string; von: string; bis: string }[];
@@ -126,7 +128,10 @@ function Legende({ einzeln, eigenes }: { einzeln: boolean; eigenes: boolean }) {
         <span className="jk-farbe einsatz" /> Einsatz
       </li>
       <li>
-        <span className="jk-farbe urlaub" /> Urlaub (laut Berichtsheft)
+        <span className="jk-farbe urlaub" /> Urlaub (genehmigt oder laut Berichtsheft)
+      </li>
+      <li>
+        <span className="jk-farbe beantragt" /> Urlaub beantragt
       </li>
       <li>
         <span className="jk-farbe pruefung" /> Prüfung
@@ -152,7 +157,7 @@ function Legende({ einzeln, eigenes }: { einzeln: boolean; eigenes: boolean }) {
 }
 
 interface TagInfo {
-  art: 'pruefung' | 'feiertag' | 'urlaub' | 'schule' | 'einsatz' | null;
+  art: 'pruefung' | 'feiertag' | 'urlaub' | 'beantragt' | 'schule' | 'einsatz' | null;
   /** sichtbare Beschriftung – nur am Anfang eines Blocks, damit die Spalte ruhig bleibt */
   text: string;
   /** vollständige Auskunft für Tooltip und Vorleseprogramme */
@@ -179,6 +184,8 @@ function tagInfo(d: Daten, a: JkAzubi, tag: string, feiertage: Map<string, strin
   if (feiertag) return { ...basis, art: 'feiertag', text: feiertag, voll: `Feiertag: ${feiertag}`, frei: true };
   if (a.urlaub.includes(tag)) return { ...basis, art: 'urlaub', text: 'Urlaub', voll: 'Urlaub' };
   if (wochenende) return { ...basis, art: null, text: '', voll: '' };
+  const beantragt = a.beantragt.find((u) => u.von <= tag && u.bis >= tag);
+  if (beantragt) return { ...basis, art: 'beantragt', text: tag === beantragt.von || wt === 1 ? 'Urlaub?' : '', voll: 'Urlaub beantragt, noch nicht entschieden' };
   // Beschriftung am ersten Tag des Blocks, am Monatsersten und an jedem Montag
   const zeige = (e: Eintrag) => tag === e.von || wt === 1 || tag.endsWith('-01');
   const schule = a.eintraege.find((e) => e.art === 'schule' && e.von <= tag && e.bis >= tag);
@@ -351,6 +358,9 @@ function JahrAlle({ d }: { d: Daten }) {
                       {urlaub.map((u) => (
                         <b key={u.von} className="jk-balken urlaub" style={lage(u.von, u.bis)} title={`Urlaub: ${zeit(u.von, u.bis)}`} />
                       ))}
+                      {a.beantragt.map((u) => (
+                        <b key={`b${u.von}`} className="jk-balken urlaub beantragt" style={lage(u.von < anfang ? anfang : u.von, u.bis > ende ? ende : u.bis)} title={`Urlaub beantragt: ${zeit(u.von, u.bis)}`} />
+                      ))}
                       {a.pruefungen.map((p, i) => (
                         <b key={`p${i}`} className="jk-pruefung" style={{ left: lage(p.tag, p.tag).left }} title={`Prüfung: ${p.bezeichnung}, ${datum(p.tag)}`} />
                       ))}
@@ -372,6 +382,9 @@ function JahrAlle({ d }: { d: Daten }) {
                       {urlaub.map((u) => (
                         <li key={u.von}>Urlaub: {zeit(u.von, u.bis)}</li>
                       ))}
+                      {a.beantragt.map((u) => (
+                        <li key={`b${u.von}`}>Urlaub beantragt: {zeit(u.von, u.bis)}</li>
+                      ))}
                       {a.pruefungen.map((p, i) => (
                         <li key={`p${i}`}>
                           Prüfung {p.bezeichnung}: {datum(p.tag)}
@@ -392,12 +405,12 @@ function JahrAlle({ d }: { d: Daten }) {
 }
 
 interface Zeile {
-  art: 'schule' | 'einsatz' | 'urlaub' | 'pruefung';
+  art: 'schule' | 'einsatz' | 'urlaub' | 'beantragt' | 'pruefung';
   von: string;
   bis: string;
   titel: string;
 }
-const ART_NAME: Record<Zeile['art'], string> = { schule: 'Schule', einsatz: 'Einsatz', urlaub: 'Urlaub', pruefung: 'Prüfung' };
+const ART_NAME: Record<Zeile['art'], string> = { schule: 'Schule', einsatz: 'Einsatz', urlaub: 'Urlaub', beantragt: 'Urlaub?', pruefung: 'Prüfung' };
 const kurz = (tag: string) => `${tag.slice(8, 10)}.${tag.slice(5, 7)}.`;
 
 /** Alles, was bei einem Azubi im Jahr ansteht, der Reihe nach. */
@@ -405,6 +418,7 @@ function zeilenVon(a: JkAzubi): Zeile[] {
   return [
     ...a.eintraege.map((e) => ({ art: e.art, von: e.von, bis: e.bis, titel: e.titel })),
     ...bloecke(a.urlaub).map((u) => ({ art: 'urlaub' as const, von: u.von, bis: u.bis, titel: '' })),
+    ...a.beantragt.map((u) => ({ art: 'beantragt' as const, von: u.von, bis: u.bis, titel: 'beantragt, noch nicht entschieden' })),
     ...a.pruefungen.map((p) => ({ art: 'pruefung' as const, von: p.tag, bis: p.tag, titel: p.bezeichnung })),
   ].sort((x, y) => x.von.localeCompare(y.von) || x.bis.localeCompare(y.bis));
 }
@@ -467,7 +481,7 @@ function JahrKarten({ d, lage, monate }: { d: Daten; lage: (von: string, bis: st
                     {alle
                       .filter((z) => z.art !== 'pruefung')
                       .map((z, i) => (
-                        <b key={i} className={`jk-balken ${z.art}`} style={lage(z.von, z.bis)} />
+                        <b key={i} className={`jk-balken ${z.art === 'beantragt' ? 'urlaub beantragt' : z.art}`} style={lage(z.von, z.bis)} />
                       ))}
                     {a.pruefungen.map((p, i) => (
                       <b key={`p${i}`} className="jk-pruefung" style={{ left: lage(p.tag, p.tag).left }} />

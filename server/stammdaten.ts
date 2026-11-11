@@ -36,6 +36,8 @@ export interface Betrieb {
   name: string;
   anschrift: string;
   bundesland: string;
+  /** Mail-Adresse der Personalstelle – dorthin geht die Nachricht über genehmigten Urlaub */
+  personalMail: string;
 }
 
 interface ProfilZeile {
@@ -51,6 +53,7 @@ interface ProfilZeile {
   vorzeitige_zulassung: number;
   wochenstunden: number;
   pruefungen: string;
+  urlaubstage: number | null;
 }
 
 export interface Pruefung {
@@ -70,6 +73,8 @@ export interface Profil {
   vorzeitigeZulassung: boolean;
   wochenstunden: number;
   pruefungen: Pruefung[];
+  /** Urlaubsanspruch je Kalenderjahr in Arbeitstagen; null = nicht eingetragen */
+  urlaubstage: number | null;
 }
 
 const STANDARD_REGELDAUER = 36;
@@ -85,6 +90,7 @@ const LEERES_PROFIL: Profil = {
   vorzeitigeZulassung: false,
   wochenstunden: 40,
   pruefungen: [],
+  urlaubstage: null,
 };
 
 // ---------- Lesen ----------
@@ -92,7 +98,7 @@ const LEERES_PROFIL: Profil = {
 export function leseBetrieb(db: DB): Betrieb {
   const zeilen = db.prepare("SELECT schluessel, wert FROM einstellungen WHERE schluessel LIKE 'betrieb_%'").all() as unknown as { schluessel: string; wert: string }[];
   const m = new Map(zeilen.map((z) => [z.schluessel, z.wert]));
-  return { name: m.get('betrieb_name') ?? '', anschrift: m.get('betrieb_anschrift') ?? '', bundesland: m.get('betrieb_bundesland') ?? '' };
+  return { name: m.get('betrieb_name') ?? '', anschrift: m.get('betrieb_anschrift') ?? '', bundesland: m.get('betrieb_bundesland') ?? '', personalMail: m.get('betrieb_personal_mail') ?? '' };
 }
 
 function alleBerufe(db: DB): Beruf[] {
@@ -123,6 +129,7 @@ export function leseProfil(db: DB, azubiId: number): Profil {
     verkuerzungGrund: z.verkuerzung_grund,
     vorzeitigeZulassung: z.vorzeitige_zulassung === 1,
     wochenstunden: z.wochenstunden,
+    urlaubstage: z.urlaubstage ?? null,
     pruefungen,
   };
 }
@@ -253,7 +260,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
     h: (c) => ({
       status: 200,
       body: {
-        betrieb: leseBetrieb(c.k.db),
+        // die Adresse der Personalstelle brauchen nur Ausbilder
+        betrieb: c.b.rolle === 'ausbilder' ? leseBetrieb(c.k.db) : { ...leseBetrieb(c.k.db), personalMail: '' },
         berufe: alleBerufe(c.k.db),
         berufsschulen: alleSchulen(c.k.db),
         bundeslaender: Object.entries(BUNDESLAENDER).map(([kuerzel, name]) => ({ kuerzel, name })),
@@ -278,11 +286,15 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         name: text(body.name, 150, 'Name des Betriebs', false),
         anschrift: text(String(body.anschrift ?? '').replace(/\r?\n/g, ', '), 300, 'Anschrift', false),
         bundesland: bundesland(body.bundesland, false),
+        personalMail: text(body.personalMail, 200, 'Mail-Adresse der Personalstelle', false),
       };
+      // eine einzelne Adresse – keine Liste, keine Zeilenumbrüche (die kämen sonst in den Kopf der Mail)
+      if (neu.personalMail && !/^[^\s@<>,;"]+@[^\s@<>,;"]+\.[^\s@<>,;"]{2,}$/.test(neu.personalMail)) throw new Fehler(400, 'Die Mail-Adresse der Personalstelle ist ungültig – bitte genau eine Adresse eintragen');
       const setze = c.k.db.prepare('INSERT INTO einstellungen (schluessel, wert) VALUES (?, ?) ON CONFLICT(schluessel) DO UPDATE SET wert = excluded.wert');
       setze.run('betrieb_name', neu.name);
       setze.run('betrieb_anschrift', neu.anschrift);
       setze.run('betrieb_bundesland', neu.bundesland);
+      setze.run('betrieb_personal_mail', neu.personalMail);
       protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, 'Betrieb');
       return { status: 200, body: { betrieb: neu } };
     },
@@ -436,6 +448,9 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       const stunden = Number(body.wochenstunden ?? 40);
       if (!Number.isFinite(stunden) || stunden < 1 || stunden > 60) throw new Fehler(400, 'Wochenstunden müssen zwischen 1 und 60 liegen');
 
+      const urlaubRoh = body.urlaubstage;
+      const urlaubstage = urlaubRoh === null || urlaubRoh === undefined || urlaubRoh === '' ? null : ganzzahl(urlaubRoh, 0, 60, 'Urlaubstage im Jahr');
+
       const roh = body.pruefungen ?? [];
       if (!Array.isArray(roh) || roh.length > 8) throw new Fehler(400, 'Höchstens acht Prüfungstermine');
       const pruefungen: Pruefung[] = roh
@@ -451,15 +466,16 @@ export const STAMMDATEN_ROUTEN: Route[] = [
 
       db.prepare(
         `INSERT INTO azubi_profil (benutzer_id, beruf_id, berufsschule_id, ausbilder_id, ausbildungsbeginn, vertragsende, verkuerzung_monate,
-                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(benutzer_id) DO UPDATE SET
            beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id,
            ausbildungsbeginn = excluded.ausbildungsbeginn, vertragsende = excluded.vertragsende,
            verkuerzung_monate = excluded.verkuerzung_monate, verkuerzung_art = excluded.verkuerzung_art,
            verkuerzung_grund = excluded.verkuerzung_grund, vorzeitige_zulassung = excluded.vorzeitige_zulassung,
-           wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von`,
-      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id);
+           wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von,
+           urlaubstage = excluded.urlaubstage`,
+      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage);
       protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi);
       const profil = leseProfil(db, id);
       return { status: 200, body: { profil, stand: standAus(db, profil, heute(c.k.jetzt())).stand } };
