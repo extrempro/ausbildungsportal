@@ -299,3 +299,88 @@ test('Löschen eines Azubi-Kontos entfernt Berichte, Unterschriften und Verlauf'
   }
   assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM unterschrift WHERE benutzer_id = ?').get(w.azubi.id) as { n: number }).n, 0);
 });
+
+test('Berichtsheft als PDF: Deckblatt, Auswahl, einzelne Woche, lange Berichte; dieselben Rechte wie beim Lesen', async () => {
+  const { writeFileSync } = await import('node:fs');
+  const { inflateSync } = await import('node:zlib');
+  const w = await welt();
+  const lang = { ...INHALT, abwesenheit: [], betrieb: Array.from({ length: 30 }, (_, i) => ({ text: `Tätigkeit ${i + 1}: Arbeitsplatz „Büro ${i + 1}“ eingerichtet – Monitor, Dockingstation und Drucker angeschlossen, Übergabe an die Fachabteilung mit Einweisung`, stunden: 0.5 })) };
+  for (const r of [await schreibe(w, w.azubi, '2026-10-19', lang), await schreibe(w, w.azubi, '2026-10-26', { ...INHALT, abwesenheit: [] }), await schreibe(w)]) assert.equal(r.status, 200, JSON.stringify(r.body));
+  await reicheEin(w);
+  assert.equal((await zeichneAb(w, w.ausbilder, [{ azubiId: w.azubi.id, montag: WOCHE }])).status, 200);
+  // ein kleines Logo: 8×4 Pixel, PNG mit Durchsichtigkeit (blau, zur Hälfte durchsichtig) – hier selbst zusammengesetzt
+  const { deflateSync } = await import('node:zlib');
+  const stueck = (typ: string, daten: Buffer) => {
+    const kopf = Buffer.alloc(8);
+    kopf.writeUInt32BE(daten.length, 0);
+    kopf.write(typ, 4, 'latin1');
+    return Buffer.concat([kopf, daten, Buffer.alloc(4)]); // Prüfsumme: wird beim Lesen nicht verlangt
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(8, 0);
+  ihdr.writeUInt32BE(4, 4);
+  ihdr.set([8, 6, 0, 0, 0], 8);
+  const zeilePng = Buffer.concat([Buffer.from([0]), Buffer.concat(Array.from({ length: 8 }, (_, x) => Buffer.from([29, 78, 216, x < 4 ? 255 : 0])))]);
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), stueck('IHDR', ihdr), stueck('IDAT', deflateSync(Buffer.concat([zeilePng, zeilePng, zeilePng, zeilePng]))), stueck('IEND', Buffer.alloc(0))]).toString('base64');
+  assert.equal((await ruf(w.u, 'PUT', '/api/branding/logo', { cookies: als(w, w.admin), body: { daten: `data:image/png;base64,${png}` } })).status, 200);
+
+  const hole = (frage = '', wer = w.azubi, a = w.azubi) => ruf(w.u, 'GET', `/api/azubis/${a.id}/berichtsheft.pdf${frage}`, { cookies: als(w, wer) });
+  /** Zahl der Seiten und der gesamte Text (aus den Seiteninhalten zurückgelesen) */
+  const lies = (pdf: Buffer) => {
+    const roh = pdf.toString('latin1');
+    assert.ok(roh.startsWith('%PDF-1.4') && roh.trimEnd().endsWith('%%EOF'), 'beginnt und endet wie ein PDF');
+    // die Tafel am Ende nennt für jedes Objekt die richtige Stelle
+    const tafel = roh.slice(roh.lastIndexOf('xref'));
+    const stellen = [...tafel.matchAll(/(\d{10}) 00000 n /g)].map((m) => Number(m[1]));
+    stellen.forEach((s, i) => assert.ok(roh.startsWith(`${i + 1} 0 obj`, s), `Objekt ${i + 1} steht an seiner Stelle`));
+    assert.equal(Number(/startxref\n(\d+)/.exec(roh)![1]), roh.lastIndexOf('xref\n0 '));
+    let text = '';
+    for (const m of roh.matchAll(/\/Filter \/FlateDecode \/Length (\d+) >>\nstream\n/g)) {
+      const start = m.index! + m[0].length;
+      const inhalt = pdf.subarray(start, start + Number(m[1]));
+      if (roh.slice(m.index! - 60, m.index!).includes('/Image') || roh.slice(roh.lastIndexOf('obj', m.index!), m.index!).includes('/Subtype /Image')) continue;
+      const befehle = inflateSync(inhalt).toString('latin1');
+      for (const t of befehle.matchAll(/<([0-9a-f]+)> Tj/g)) text += `${Buffer.from(t[1], 'hex').toString('latin1')}\n`;
+    }
+    return { seiten: (roh.match(/\/Type \/Page /g) ?? []).length, text, roh };
+  };
+
+  const alle = await hole();
+  assert.equal(alle.status, 200);
+  assert.deepEqual([alle.datei!.typ, alle.datei!.dateiname], ['application/pdf', 'Berichtsheft Anna Azubi 2026-10-19 bis 2026-11-08.pdf']);
+  if (process.env.PDF_AUS) writeFileSync(`${process.env.PDF_AUS}/berichtsheft.pdf`, alle.datei!.inhalt);
+  const a = lies(alle.datei!.inhalt);
+  // Deckblatt + langer Bericht (2 Seiten) + 2 Berichte
+  assert.equal(a.seiten, 5);
+  for (const erwartet of ['Berichtsheft', 'Anna Azubi', 'Muster GmbH', '19.10.2026 bis 08.11.2026', '3 Wochenberichte, 1 davon abgezeichnet', 'Woche 43/2026', 'Fortsetzung', 'Tätigkeit 30:', 'Switch konfiguriert', 'VLANs eingerichtet', '06.11.2026 · Urlaub'.replace('·', '\xb7'), 'Summe: 41,5 Stunden', 'Entwurf \x96 noch nicht eingereicht und nicht unterschrieben', 'Seite 5 von 5']) {
+    assert.ok(a.text.includes(erwartet), `im PDF steht: ${erwartet}`);
+  }
+  assert.ok(a.text.includes('\x84B\xfcro 1\x93'), 'Umlaute und deutsche Anführungszeichen stimmen');
+  assert.equal((a.roh.match(/\/Subtype \/Image/g) ?? []).length, 2, 'Logo mit Durchsichtigkeit: Bild und Maske');
+  assert.ok(a.roh.includes('/ca 0.14'), 'das Logo steht blass hinter den Unterschriften');
+  // beide Unterschriften des abgezeichneten Berichts sind als Strichzug gezeichnet (je 1 Ansatz, 5 Linien)
+  const striche = [...a.roh.matchAll(/\/Filter \/FlateDecode \/Length (\d+) >>\nstream\n/g)].map((m) => { try { return inflateSync(alle.datei!.inhalt.subarray(m.index! + m[0].length, m.index! + m[0].length + Number(m[1]))).toString('latin1'); } catch { return ''; } }).join('\n').match(/1 J 1 j (?:[\d.]+ [\d.]+ [ml] ?)+S/g) ?? [];
+  assert.deepEqual(striche.map((s) => (s.match(/ l/g) ?? []).length), [5, 5]);
+
+  const nur = lies((await hole('?nur=abgezeichnet&deckblatt=0')).datei!.inhalt);
+  assert.equal(nur.seiten, 1);
+  assert.ok(!nur.text.includes('Entwurf') && nur.text.includes('Woche 45/2026'));
+  const woche = await hole('?woche=2026-10-26');
+  assert.equal(woche.datei!.dateiname, 'Ausbildungsnachweis Anna Azubi KW 44-2026.pdf');
+  assert.equal(lies(woche.datei!.inhalt).seiten, 1, 'eine einzelne Woche hat kein Deckblatt');
+  assert.equal(lies((await hole('?jahr=2')).datei!.inhalt).seiten, 5);
+
+  assert.equal((await hole('?jahr=1')).status, 404);
+  assert.equal((await hole('?woche=2026-09-07')).status, 404);
+  for (const falsch of ['?woche=2026-10-27', '?woche=x', '?jahr=0', '?jahr=zwei']) assert.equal((await hole(falsch)).status, 400, falsch);
+  // Rechte: die Ausbilderin ja; ein anderer Azubi, ein nicht zugewiesener Beauftragter und der Super-Admin nicht
+  assert.equal((await hole('', w.ausbilder)).status, 200);
+  assert.equal((await hole('', w.ben)).status, 404);
+  assert.equal((await hole('', w.beauftragter)).status, 404);
+  assert.equal((await hole('', w.admin)).status, 403);
+  assert.equal((await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichtsheft.pdf`)).status, 401);
+  // ohne Logo und mit einem Logo, das das PDF nicht aufnehmen kann (WebP), entsteht das Dokument trotzdem
+  w.u.db.prepare("UPDATE einstellungen SET wert = 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==' WHERE schluessel = 'branding_logo'").run();
+  const ohne = lies((await hole()).datei!.inhalt);
+  assert.equal([ohne.seiten, (ohne.roh.match(/\/Subtype \/Image/g) ?? []).length].join(), '5,0');
+});

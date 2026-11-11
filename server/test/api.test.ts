@@ -92,6 +92,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/ich/unterschrift': 'ausbilder,beauftragter,azubi',
     'PUT /api/ich/unterschrift': 'ausbilder,beauftragter,azubi',
     'DELETE /api/ich/unterschrift': 'ausbilder,beauftragter,azubi',
+    'GET /api/azubis/:id/berichtsheft.pdf': 'ausbilder,beauftragter,azubi',
     'GET /api/azubis/:id/berichte': 'ausbilder,beauftragter,azubi',
     'GET /api/azubis/:id/berichte/:montag': 'ausbilder,beauftragter,azubi',
     'PUT /api/azubis/:id/berichte/:montag': 'azubi',

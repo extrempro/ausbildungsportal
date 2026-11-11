@@ -5,7 +5,7 @@ import { api, berichtsheftPfad, datum, h, STATUS_FARBE, STATUS_TEXT, wocheText }
 import type { BerichtListe, BerichtStatus, Logos } from '../api';
 import { Icon } from '../icons';
 import { Link } from '../router';
-import { BerichtBlatt } from './Bericht';
+import { BerichtBlatt, PdfKnopf } from './Bericht';
 import { HandbuchLink } from '../handbuchLink';
 
 /**
@@ -156,7 +156,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
             ))}
             {anzahl('alle') > anzahl('fehlt') && (
               <Link zu={`${basis}/druck`} className="knopf schlicht rechts">
-                Berichtsheft als PDF oder drucken
+                Berichtsheft als PDF
               </Link>
             )}
           </div>
@@ -276,9 +276,9 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         <p className="klein">
           <Link zu={berichtsheftPfad(azubiId, daten.eigenes)}>← Berichtsheft</Link>
         </p>
-        <h1>Berichtsheft als PDF speichern oder drucken</h1>
+        <h1>Berichtsheft als PDF herunterladen oder drucken</h1>
         <p className="leise">
-          {daten.azubi.anzeigename} · Aus den gewählten Berichten wird ein Dokument: {deckblatt ? 'ein Deckblatt, dann ' : ''}jede Woche auf einer eigenen Seite. Einen einzelnen Bericht druckst du im Berichtsheft über „Drucken“ an der jeweiligen Woche.
+          {daten.azubi.anzeigename} · Aus den gewählten Berichten wird ein Dokument: {deckblatt ? 'ein Deckblatt, dann ' : ''}jede Woche auf einer eigenen Seite. Einen einzelnen Bericht bekommst du auf der Seite des Berichts über „Als PDF herunterladen“.
         </p>
         <section className="karte heft-auswahl" aria-label="Auswahl für das Dokument">
           <div className="filter" role="group" aria-label="Welche Berichte">
@@ -310,12 +310,18 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
             {berichte.length > 0 && ` · ${abgezeichnet} davon abgezeichnet`}
           </p>
           <div className="aktionen links">
-            <button type="button" className="knopf" onClick={drucke} disabled={berichte.length === 0}>
-              Als PDF speichern oder drucken
+            <PdfKnopf
+              klasse="knopf"
+              text="PDF herunterladen"
+              pfad={`/api/azubis/${azubiId}/berichtsheft.pdf?${[nur === 'abgezeichnet' ? 'nur=abgezeichnet' : '', jahr ? `jahr=${jahr}` : '', deckblatt ? '' : 'deckblatt=0'].filter(Boolean).join('&')}`}
+              gesperrt={berichte.length === 0 ? 'In dieser Auswahl gibt es keine Berichte.' : undefined}
+            />
+            <button type="button" className="knopf schlicht" onClick={drucke} disabled={berichte.length === 0}>
+              Berichtsheft drucken
             </button>
           </div>
           <p className="leise klein">
-            Es öffnet sich das Druckfenster. Für eine Datei dort als Drucker <strong>„Als PDF speichern“</strong> wählen. <HandbuchLink kapitel="drucken">Berichtsheft als PDF speichern oder drucken</HandbuchLink>
+            „PDF herunterladen“ erzeugt die Datei direkt – ohne Druckfenster. Die Vorschau darunter zeigt, was hineinkommt. <HandbuchLink kapitel="drucken">Berichtsheft als PDF herunterladen oder drucken</HandbuchLink>
           </p>
         </section>
       </div>

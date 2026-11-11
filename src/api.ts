@@ -100,6 +100,36 @@ export async function api<T>(methode: string, pfad: string, body?: unknown): Pro
   return daten as T;
 }
 
+/**
+ * Lädt eine Datei vom Server (z. B. das Berichtsheft als PDF) und übergibt sie dem Browser zum Speichern.
+ * Den Dateinamen nennt der Server. Fehler kommen wie bei `api` als ApiFehler.
+ */
+export async function ladeDatei(pfad: string): Promise<void> {
+  let r: Response;
+  try {
+    r = await fetch(pfad, { credentials: 'same-origin' });
+  } catch {
+    throw new ApiFehler(0, 'Der Server ist nicht erreichbar');
+  }
+  if (!r.ok) {
+    const daten = (await r.json().catch(() => ({}))) as { fehler?: string; code?: string };
+    if (r.status === 401 && daten.code === 'anmeldung') beiAbmeldung();
+    throw new ApiFehler(r.status, daten.fehler ?? `Fehler ${r.status}`, daten.code);
+  }
+  const angabe = r.headers.get('Content-Disposition') ?? '';
+  const voll = /filename\*=UTF-8''([^;]+)/i.exec(angabe)?.[1];
+  const name = voll ? decodeURIComponent(voll) : (/filename="([^"]+)"/i.exec(angabe)?.[1] ?? 'download');
+  const url = URL.createObjectURL(await r.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  // der Browser braucht die Adresse noch einen Augenblick, um die Datei abzuholen
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export function zeit(iso: string | null): string {
   if (!iso) return '–';
   return new Date(iso).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });

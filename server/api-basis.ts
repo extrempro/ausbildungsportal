@@ -25,6 +25,8 @@ export interface Antwort {
   redirect?: string;
   /** statt JSON: Text mit eigenem Inhaltstyp (Kalender-Abo) */
   text?: { typ: string; inhalt: string; dateiname?: string };
+  /** statt JSON: eine Datei zum Herunterladen (Berichtsheft als PDF) */
+  datei?: { typ: string; inhalt: Buffer; dateiname: string };
 }
 
 export interface Kontext {

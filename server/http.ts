@@ -75,7 +75,7 @@ async function leseBody(req: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(teile).toString('utf8'));
 }
 
-function sende(res: ServerResponse, status: number, header: Record<string, string | string[]>, body?: string): void {
+function sende(res: ServerResponse, status: number, header: Record<string, string | string[]>, body?: string | Buffer): void {
   res.writeHead(status, header);
   res.end(body);
 }
@@ -107,6 +107,16 @@ async function api(k: Kontext, req: IncomingMessage, res: ServerResponse, url: U
   if (a.redirect) return sende(res, a.status, { ...basis, 'Cache-Control': 'no-store', Location: a.redirect, ...extra });
   if (a.text) {
     return sende(res, a.status, { ...basis, 'Cache-Control': 'private, no-store', 'Content-Type': a.text.typ, ...(a.text.dateiname ? { 'Content-Disposition': `inline; filename="${a.text.dateiname}"` } : {}) }, a.text.inhalt);
+  }
+  if (a.datei) {
+    // Dateiname: einmal nur mit einfachen Zeichen (für alte Browser), einmal vollständig nach RFC 5987
+    const einfach = a.datei.dateiname.normalize('NFD').replace(/[^\x20-\x7e]/g, '').replace(/["\\]/g, '');
+    return sende(
+      res,
+      a.status,
+      { ...basis, 'Cache-Control': 'private, no-store', 'Content-Type': a.datei.typ, 'Content-Length': String(a.datei.inhalt.length), 'Content-Disposition': `attachment; filename="${einfach}"; filename*=UTF-8''${encodeURIComponent(a.datei.dateiname)}`, ...extra },
+      a.datei.inhalt,
+    );
   }
   sende(res, a.status, { ...kopf, ...extra }, JSON.stringify(a.body ?? {}));
 }

@@ -1,6 +1,6 @@
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
+import { api, ApiFehler, ladeDatei, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund, Logos } from '../api';
 import { HandbuchLink } from '../handbuchLink';
 import { geheZu, Link, useUngespeichert } from '../router';
@@ -50,11 +50,45 @@ function summeVon(i: BerichtInhalt): number {
   return s(i.betrieb) + s(i.unterweisung) + s(i.schule) + s(i.abwesenheit);
 }
 
+/**
+ * Knopf, der ein PDF vom Server holt und speichert. Solange das PDF entsteht, ist er gesperrt;
+ * ein Fehler steht direkt darunter. `gesperrt` nennt den Grund, warum es gerade nicht geht.
+ */
+export function PdfKnopf({ pfad, text, klasse = 'knopf schlicht', gesperrt }: { pfad: string; text: string; klasse?: string; gesperrt?: string }) {
+  const [laeuft, setLaeuft] = useState(false);
+  const [fehler, setFehler] = useState('');
+  return (
+    <>
+      <button
+        type="button"
+        className={klasse}
+        disabled={laeuft || !!gesperrt}
+        onClick={() => {
+          setLaeuft(true);
+          setFehler('');
+          ladeDatei(pfad)
+            .then(() => melde('PDF erstellt – es liegt bei deinen Downloads.'))
+            .catch((e: unknown) => setFehler(e instanceof Error ? e.message : 'Das PDF ließ sich nicht erstellen.'))
+            .finally(() => setLaeuft(false));
+        }}
+      >
+        {laeuft ? 'PDF wird erstellt …' : text}
+      </button>
+      {gesperrt && <span className="leise klein pdf-grund">{gesperrt}</span>}
+      {fehler && (
+        <span className="hinweis fehler pdf-fehler" role="alert">
+          {fehler}
+        </span>
+      )}
+    </>
+  );
+}
+
 /** Hinweis neben jedem Druck-Knopf: PDF und die Kopf- und Fußzeilen des Browsers. */
 export function DruckHinweis() {
   return (
     <p className="leise klein nicht-drucken druck-hinweis">
-      Im Druckfenster kannst du auch „Als PDF speichern“ wählen. <HandbuchLink kapitel="drucken">Drucken und als PDF speichern</HandbuchLink>
+      „Als PDF herunterladen“ erzeugt die Datei direkt. „Bericht drucken“ öffnet das Druckfenster. <HandbuchLink kapitel="drucken">PDF herunterladen und drucken</HandbuchLink>
     </p>
   );
 }
@@ -307,6 +341,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   }, [b]);
   const pfad = `/api/azubis/${azubiId}/berichte/${montag}`;
   const zurListe = berichtsheftPfad(azubiId, eigenes);
+  const pdfPfad = `/api/azubis/${azubiId}/berichtsheft.pdf?woche=${montag}`;
 
   const uebernimm = useCallback((neu: Bericht) => {
     setB(neu);
@@ -408,6 +443,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
       <button type="button" className={`knopf schlicht${kurz ? ' klein' : ''}`} aria-label={speicherText} onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
         {kurz ? 'Speichern' : speicherText}
       </button>
+      {!kurz && b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" gesperrt={geaendert ? 'Erst speichern – das PDF zeigt den gespeicherten Stand.' : undefined} />}
       {!kurz && ist > 0 && (
         <button type="button" className="knopf schlicht" onClick={() => window.print()}>
           Bericht drucken
@@ -536,6 +572,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           </aside>
 
           <p className="bericht-ende">
+            {b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" gesperrt={geaendert ? 'Erst speichern – das PDF zeigt den gespeicherten Stand.' : undefined} />}
             {ist > 0 && (
               <button type="button" className="knopf schlicht" onClick={() => window.print()}>
                 Bericht drucken
@@ -588,6 +625,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
               Zurückziehen und bearbeiten
             </button>
           )}
+          {b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" />}
           {b.status !== 'fehlt' && (
             <button type="button" className="knopf schlicht" onClick={() => window.print()}>
               Bericht drucken

@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.28.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.29.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -117,7 +117,7 @@ Ein Ausbildungsnachweis je Kalenderwoche, von der ersten bis zur laufenden Woche
 - **Schreiben:** Nur der Azubi selbst. Abschnitte: betriebliche Tätigkeiten, Unterweisungen und Schulungen, Berufsschule, Abwesenheit (Urlaub, Krankheit, Feiertag …), jeweils mit Stunden. Landesweite Feiertage des Betriebs-Bundeslands sind in einer neuen Woche vorbelegt.
 - **Ablauf:** Entwurf → eingereicht → abgezeichnet. Ausbilder und zuständige Beauftragte können mit Kommentar zurückgeben. Ein abgezeichneter Nachweis ist gesperrt; nur ein Ausbilder kann die Abzeichnung mit Begründung aufheben. Jeder Schritt steht im Verlauf des Nachweises.
 - **Unterschrift:** Jede Person hinterlegt unter „Konto“ einmal ihre Unterschrift (mit Finger, Stift oder Maus gezeichnet). Beim Einreichen und Abzeichnen wird eine Kopie mit Name und Zeitpunkt am Nachweis gespeichert. Das ist ein Unterschriftsbild, **keine qualifizierte elektronische Signatur**. Ob die zuständige Kammer diese Form des Nachweises anerkennt, bitte dort klären.
-- **Drucken:** Einzelne oder alle Nachweise über den Druckdialog des Browsers, dort auch „Als PDF speichern“.
+- **PDF und Drucken:** Das Portal erzeugt das Berichtsheft (mit Deckblatt, Auswahl nach Status und Ausbildungsjahr) oder einen einzelnen Nachweis direkt als PDF zum Herunterladen – ohne zusätzliche Software auf dem Server. Drucken über den Druckdialog des Browsers gibt es weiterhin.
 
 ## Ausbildungsplan
 

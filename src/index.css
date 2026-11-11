@@ -6629,3 +6629,13 @@ html.dark {
     padding-right: 12px;
   }
 }
+
+/* PDF herunterladen: Grund fürs Sperren und Fehler stehen beim Knopf */
+.pdf-grund {
+  align-self: center;
+}
+
+.pdf-fehler {
+  flex-basis: 100%;
+  margin: 0;
+}

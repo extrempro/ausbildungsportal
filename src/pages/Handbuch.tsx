@@ -105,31 +105,28 @@ const FEHLER: Kapitel = {
 
 const DRUCKEN = (rolle: Rolle): Kapitel => ({
   id: 'drucken',
-  titel: 'Berichte und Berichtsheft drucken oder als PDF speichern',
+  titel: 'Berichte und Berichtsheft: PDF herunterladen oder drucken',
   inhalt: (
     <>
       <dl className="begriffe">
-        <Begriff wort="Ein einzelner Bericht">Im Berichtsheft steht an jeder Woche mit Bericht „Drucken“. Auf der Seite des Berichts heißt der Knopf „Bericht drucken“.</Begriff>
-        <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft als PDF oder drucken“. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
-        <Begriff wort="Als PDF">Im Druckfenster als Drucker „Als PDF speichern“ wählen. So entsteht eine Datei, zum Beispiel für die Kammer.</Begriff>
+        <Begriff wort="Ein einzelner Bericht">Den Bericht öffnen und „Als PDF herunterladen“ wählen. Das Portal erzeugt die Datei und der Browser speichert sie bei deinen Downloads. „Bericht drucken“ öffnet stattdessen das Druckfenster.</Begriff>
+        <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft als PDF“. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
       </dl>
       <h3>Das ganze Berichtsheft als PDF</h3>
       <ol className="schritte">
-        <li>Im Berichtsheft „Berichtsheft als PDF oder drucken“ wählen.</li>
+        <li>Im Berichtsheft „Berichtsheft als PDF“ wählen.</li>
         <li>Auswählen, was hinein soll: alle vorhandenen Berichte oder nur die abgezeichneten; alle Ausbildungsjahre oder eines; mit oder ohne Deckblatt. Darunter steht, wie viele Berichte es sind und welcher Zeitraum.</li>
-        <li>„Als PDF speichern oder drucken“. Im Druckfenster als Drucker „Als PDF speichern“ wählen und speichern.</li>
+        <li>„PDF herunterladen“. Die Datei heißt „Berichtsheft“, dein Name und der Zeitraum – du findest sie bei den Downloads deines Browsers.</li>
       </ol>
       <ul className="punkte">
         <li>Auf dem Deckblatt stehen Name, Beruf, Betrieb, Ausbilder, Zeitraum und die Zahl der Berichte – und das Logo des Betriebs, wenn eines hinterlegt ist.</li>
-        <li>Der Browser schlägt als Dateinamen „Berichtsheft“, den Namen und den Zeitraum vor.</li>
+        <li>Im PDF stehen Kopf, Tätigkeiten, Stunden und die Unterschriften. Ist ein Logo hinterlegt, steht es blass hinter den Unterschriften. Unten steht auf jeder Seite „Seite … von …“.</li>
+        <li>Ein langer Bericht läuft auf der nächsten Seite weiter; dort steht „Fortsetzung“.</li>
         <li>Für die Kammer meist richtig: „Nur abgezeichnete“.</li>
-        <li>Im Ausdruck steht das Logo des Betriebs blass hinter den Unterschriften, wenn eines hinterlegt ist. Am Bildschirm ist es nicht zu sehen.</li>
-      </ul>
-      <ul className="punkte">
-        <li>Auf dem Ausdruck stehen Kopf, Tätigkeiten, Stunden und die Unterschriften. Menüs und Knöpfe werden nicht gedruckt.</li>
-        <li>Chrome und Edge lassen Datum, Titel und Adresse am Rand von selbst weg. In anderen Browsern schaltest du im Druckfenster unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus – der Browser merkt sich das.</li>
-        <li>{rolle === 'azubi' ? 'Ein Entwurf lässt sich auch drucken. Er trägt dann den Vermerk „Entwurf – noch nicht eingereicht und nicht unterschrieben“.' : 'Entwürfe der Azubis siehst du nicht; drucken lassen sich eingereichte und abgezeichnete Berichte.'}</li>
-        {rolle === 'ausbilder' && <li>Bevor du das Konto eines Azubis löschst: alle Berichte drucken oder als PDF speichern. Mit dem Konto werden die Berichte gelöscht.</li>}
+        <li>{rolle === 'azubi' ? 'Ein Entwurf lässt sich auch als PDF holen. Er trägt dann den Vermerk „Entwurf – noch nicht eingereicht und nicht unterschrieben“. Hast du gerade etwas geändert: erst speichern, dann herunterladen.' : 'Ein eingereichter, aber noch nicht abgezeichneter Bericht trägt im PDF den Vermerk „Eingereicht – noch nicht abgezeichnet“.'}</li>
+        <li>Zeichen, die es in der Schrift des PDF nicht gibt (zum Beispiel Emojis), erscheinen als „?“.</li>
+        <li>Lieber auf Papier? „Berichtsheft drucken“ bzw. „Bericht drucken“ öffnet das Druckfenster. Chrome und Edge lassen Datum, Titel und Adresse am Rand von selbst weg; in anderen Browsern schaltest du dort unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus.</li>
+        {rolle === 'ausbilder' && <li>Bevor du das Konto eines Azubis löschst: das Berichtsheft als PDF herunterladen. Mit dem Konto werden die Berichte gelöscht.</li>}
       </ul>
     </>
   ),
@@ -330,7 +327,7 @@ const AZUBI: Kapitel[] = [
           </li>
         </ol>
         <p>
-          <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte und Berichtsheft drucken oder als PDF speichern“.
+          <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte und Berichtsheft: PDF herunterladen oder drucken“.
         </p>
         <h3>So schreibst du gute Einträge</h3>
         <p>Schreib kurz und genau: Was hast du gemacht, womit und wozu?</p>
@@ -472,7 +469,7 @@ const AZUBI: Kapitel[] = [
         <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
         <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
         <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
-        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft als PDF oder drucken“ wählen. Im Druckfenster kannst du auch „Als PDF speichern“ nehmen.</Begriff>
+        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft als PDF“ wählen: Dort lädst du es als PDF herunter oder druckst es.</Begriff>
         <Begriff wort="Ich komme nicht weiter.">Frag deinen Ausbilder oder deine Ausbildungsbeauftragten. Wenn die Anmeldung nicht klappt, hilft die IT deines Betriebs.</Begriff>
       </dl>
     ),
@@ -803,7 +800,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <ul className="punkte">
               <li>Du legst Konten für Azubis und Ausbildungsbeauftragte an, sperrst oder löschst sie. Von den Azubi-Konten siehst du nur die deiner Azubis (und die ohne Ausbilder). Konten von Ausbildern verwaltet der Super-Admin.</li>
               <li>
-                <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf alle Berichte drucken oder als PDF speichern.
+                <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf das Berichtsheft als PDF herunterladen.
               </li>
               <li>„Verknüpfung lösen“ brauchst du nur, wenn die IT das Microsoft-Konto einer Person neu angelegt hat. Es gehen keine Daten verloren.</li>
               <li>Auf der Seite selbst erklärt „Was bewirkt was?“ jede Rolle und jede Funktion mit ihren Folgen.</li>

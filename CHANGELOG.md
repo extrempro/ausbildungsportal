@@ -1,5 +1,24 @@
 # Änderungen
 
+## [0.29.0] – 2026-11-11
+
+### Neu
+
+- **Berichtsheft als PDF – direkt vom Server.** „PDF herunterladen“ erzeugt die Datei im Portal und der Browser speichert sie, ohne Druckfenster. Im Berichtsheft für das ganze Heft (Deckblatt, Auswahl „alle / nur abgezeichnete“, Ausbildungsjahr), am einzelnen Bericht über „Als PDF herunterladen“.
+- Das PDF enthält Kopf, Tätigkeiten, Stunden, Abwesenheit, Summe und die Unterschriften; das Logo des Betriebs steht auf dem Deckblatt und blass hinter den Unterschriften. Lange Berichte laufen auf der nächsten Seite weiter („Fortsetzung“), unten steht „Seite … von …“. Nicht abgezeichnete Berichte tragen einen Vermerk.
+- Schnittstelle `GET /api/azubis/:id/berichtsheft.pdf` (`nur=abgezeichnet`, `jahr=`, `deckblatt=0`, `woche=`) – dieselben Rechte wie beim Lesen der Berichte.
+- Ohne neue Abhängigkeit: Ein kleiner eigener PDF-Schreiber (`server/pdf.ts`) setzt Text, Linien, Unterschriften und Bilder (PNG, JPEG).
+
+### Geändert
+
+- Das Drucken über das Druckfenster bleibt als zweiter Knopf („Berichtsheft drucken“, „Bericht drucken“).
+- Handbuch: Kapitel „Berichte und Berichtsheft: PDF herunterladen oder drucken“ neu gefasst.
+
+### Bekannte Grenzen
+
+- Schrift im PDF ist Helvetica mit dem Zeichensatz Windows-1252: Alle deutschen Zeichen stimmen; Zeichen außerhalb davon (z. B. Emojis) erscheinen als „?“. Die Schrift ist nicht eingebettet – das PDF ist damit kein PDF/A.
+- Ein Logo im Format WebP kann das PDF nicht aufnehmen; es entsteht dann ohne Logo. PNG und JPEG gehen.
+
 ## [0.28.0] – 2026-11-11
 
 ### Entfernt
