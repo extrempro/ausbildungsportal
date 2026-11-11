@@ -6639,3 +6639,47 @@ html.dark {
   flex-basis: 100%;
   margin: 0;
 }
+
+/* Berichtsheft: PDF-Knöpfe. Der Knopf zur Auswahl ist gefüllt und hebt sich von den Filtern ab; daneben die Abkürzung als Symbol. */
+.heft-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heft-pdf .knopf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.knopf.pdf-symbol {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 44px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.knopf.pdf-symbol svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pdf-kuerzel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.knopf.pdf-symbol[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+td.aktion .pdf-fehler {
+  display: block;
+  margin-top: 6px;
+}

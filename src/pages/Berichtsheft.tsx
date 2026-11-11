@@ -155,9 +155,13 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
               </button>
             ))}
             {anzahl('alle') > anzahl('fehlt') && (
-              <Link zu={`${basis}/druck`} className="knopf schlicht rechts">
-                Berichtsheft als PDF
-              </Link>
+              <span className="heft-pdf rechts">
+                {/* Abkürzung: das ganze Heft sofort als PDF – ohne die Seite mit der Auswahl */}
+                <PdfKnopf symbol pfad={`/api/azubis/${azubiId}/berichtsheft.pdf`} text="Ganzes Berichtsheft sofort als PDF herunterladen" />
+                <Link zu={`${basis}/druck`} className="knopf">
+                  <Icon name="heft" /> Berichtsheft als PDF …
+                </Link>
+              </span>
             )}
           </div>
           <div className="karte tabelle-rahmen">
@@ -200,6 +204,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                           , KW {w.kw}/{w.jahr}
                         </span>
                       </Link>
+                      {w.status !== 'fehlt' && <PdfKnopf symbol klasse="knopf schlicht klein" pfad={`/api/azubis/${azubiId}/berichtsheft.pdf?woche=${w.montag}`} text={`Bericht KW ${w.kw}/${w.jahr} als PDF herunterladen`} />}
                       {w.status !== 'fehlt' && (
                         <Link zu={`${basis}/${w.montag}?drucken`} className="knopf schlicht klein">
                           Drucken
