@@ -29,6 +29,15 @@ services:
       - ../fisi-lernkompass/content:/app/lerninhalte/fisi:ro
 ```
 
+Oder den Ordner `content` einfach hierher kopieren – **mit Unterordnern** (`cp -r` bzw. `scp -r`):
+
+```bash
+scp -r benutzer@server:/pfad/fisi-lernkompass/content/. lerninhalte/fisi/
+chmod -R a+rX lerninhalte/fisi      # das Portal läuft im Container nicht als root
+```
+
+Zeigt die Stammdaten-Seite „0 Themenfelder“ mit Fehlern, fehlen meist die Unterordner `themen/` und `bilder/`, sie liegen eine Ebene zu tief (in `lerninhalte/fisi/content/`) oder die Leserechte fehlen. `CHANGELOG.md` und `LICENSE` aus `content/` dürfen mit im Ordner liegen; das Portal liest sie nicht.
+
 Danach schaltet ein Ausbilder das Paket unter **Verwaltung → Stammdaten** am Ausbildungsberuf ein („Lernmodul“). Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“.
 
 Inhalte aktualisieren: Dateien ändern (z. B. `git pull` im Lernkompass) und `meta.json` mit neuem Stand speichern – das Portal liest das Paket innerhalb weniger Sekunden neu ein, ohne Neustart. Fehler in den Dateien stehen im Log des Portals; eine fehlerhafte Datei ersetzt die zuletzt gültige Fassung nicht.

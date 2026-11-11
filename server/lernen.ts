@@ -71,7 +71,14 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
     const m = marke(pfad);
     const alt = lager.pakete.get(e.name);
     if (alt && alt.marke === m) continue;
-    const inhalte = ladeInhalte(pfad, alt?.inhalte);
+    let inhalte: Inhalte;
+    try {
+      inhalte = ladeInhalte(pfad, alt?.inhalte);
+    } catch (f) {
+      // z. B. Datei ohne Leserecht: als Fehler des Pakets zeigen statt die ganze Seite scheitern zu lassen
+      inhalte = alt?.inhalte ?? { themenfelder: [], meta: { stand: '' }, umbenennungen: {}, meldungen: [] };
+      inhalte = { ...inhalte, meldungen: [{ level: 'fehler', datei: e.name, text: `Inhalte nicht lesbar: ${(f as Error).message}` }] };
+    }
     let info: { titel?: unknown; quelle?: unknown; lizenz?: unknown } = {};
     try {
       if (existsSync(join(pfad, 'paket.json'))) info = JSON.parse(readFileSync(join(pfad, 'paket.json'), 'utf8')) as typeof info;
@@ -114,6 +121,22 @@ function uebernimmAenderungen(db: DB, p: Paket): void {
   });
 }
 
+/**
+ * Häufigste Ursache für ein leeres Paket in einem Satz: Unterordner fehlen (ohne -r kopiert) oder sind nicht lesbar.
+ */
+function diagnose(k: Kontext, p: Paket): string | null {
+  if (p.inhalte.themenfelder.length > 0) return null;
+  const themen = join(k.cfg.lernDir, p.id, 'themen');
+  if (!existsSync(themen) && existsSync(join(k.cfg.lernDir, p.id, 'content', 'themen'))) return `Die Inhalte liegen eine Ebene zu tief: im Unterordner „content“. Sie gehören direkt in lerninhalte/${p.id} (dort: cp -a content/. . und danach rm -r content).`;
+  if (!existsSync(themen)) return 'Der Unterordner „themen“ fehlt oder ist für das Portal nicht lesbar. Wurde der Ordner mit seinen Unterordnern kopiert (cp -r bzw. scp -r)? Stimmen die Leserechte (chmod -R a+rX)?';
+  try {
+    if (readdirSync(themen).filter((f) => f.endsWith('.md')).length === 0) return 'Der Unterordner „themen“ ist leer – dort gehört je Themenfeld eine Datei .md hinein.';
+  } catch {
+    return 'Der Unterordner „themen“ lässt sich nicht lesen – bitte die Leserechte prüfen (chmod -R a+rX).';
+  }
+  return null;
+}
+
 /** Kurzangaben aller Pakete – für die Auswahl am Beruf (Stammdaten). */
 export function paketListe(k: Kontext) {
   return [...lernpakete(k).values()]
@@ -124,6 +147,8 @@ export function paketListe(k: Kontext) {
       themenfelder: p.inhalte.themenfelder.length,
       unterthemen: p.inhalte.themenfelder.reduce((n, f) => n + f.unterthemen.length, 0),
       fehler: p.inhalte.meldungen.filter((m) => m.level === 'fehler').length,
+      // die ersten Fehler im Klartext – damit man nicht erst ins Log sehen muss
+      meldungen: [...(diagnose(k, p) ? [diagnose(k, p)!] : []), ...p.inhalte.meldungen.filter((m) => m.level === 'fehler').slice(0, 5).map((m) => `${m.datei}${m.zeile ? `:${m.zeile}` : ''} – ${m.text}`)],
     }))
     .sort((a, b) => a.titel.localeCompare(b.titel, 'de'));
 }

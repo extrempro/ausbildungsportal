@@ -133,7 +133,7 @@ test('Lernmodul ist je Beruf schaltbar; /api/ich sagt, ob es das Menü gibt', as
 
   // Auswahl in den Stammdaten: nur gültige Pakete, nur für Ausbilder sichtbar
   const sd = koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.ausbilder) }));
-  assert.deepEqual(sd.lernpakete, [{ id: 'fisi', titel: 'Fachinformatiker Systemintegration', stand: '2026-11-01', themenfelder: 2, unterthemen: 3, fehler: 0 }]);
+  assert.deepEqual(sd.lernpakete, [{ id: 'fisi', titel: 'Fachinformatiker Systemintegration', stand: '2026-11-01', themenfelder: 2, unterthemen: 3, fehler: 0, meldungen: [] }]);
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.bea) })).lernpakete, []);
   const aendere = (body: object) => ruf(w.u, 'PATCH', `/api/stammdaten/berufe/${w.malerBeruf}`, { cookies: als(w, w.ausbilder), body: { bezeichnung: 'Maler', fachrichtung: '', regeldauerMonate: 36, ...body } });
   assert.equal((await aendere({ lernpaket: 'gibt-es-nicht' })).status, 400);
@@ -251,4 +251,29 @@ test('Ohne Ordner oder mit kaputtem Paket startet das Portal trotzdem', async ()
   assert.equal(sd[0].fehler, 1, 'Fehler im Paket werden gezählt');
   assert.ok(w.u.logs.some((l) => l.includes('✖ themen/netz.md')), 'und stehen im Log');
   assert.equal((await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.anna) })).status, 200);
+});
+
+test('Unterordner beim Kopieren vergessen: 0 Themenfelder, und die Seite sagt, woran es liegt', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'lern-'));
+  mkdirSync(join(dir, 'fisi'));
+  // nur die Dateien der obersten Ebene – wie nach cp/scp ohne -r
+  writeFileSync(join(dir, 'fisi', 'meta.json'), JSON.stringify({ stand: '2026-11-01' }));
+  writeFileSync(join(dir, 'fisi', 'themenfelder.json'), JSON.stringify([{ id: 'netz' }, { id: 'wiso' }]));
+  vergissLernpakete();
+  const u = await umgebung({ LERN_DIR: dir });
+  const p = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
+  assert.deepEqual([p.themenfelder, p.fehler], [0, 2]);
+  assert.match(p.meldungen[0], /Unterordner „themen“ fehlt.*cp -r/);
+  assert.equal(p.meldungen[1], 'themen/netz.md – Markdown-Datei zum Katalogeintrag fehlt');
+
+  // ganzer Ordner „content“ hineinkopiert: eine Ebene zu tief
+  mkdirSync(join(dir, 'fisi', 'content', 'themen'), { recursive: true });
+  vergissLernpakete();
+  const tief = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
+  assert.match(tief.meldungen[0], /eine Ebene zu tief/);
+
+  mkdirSync(join(dir, 'fisi', 'themen'));
+  vergissLernpakete();
+  const leer = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
+  assert.match(leer.meldungen[0], /ist leer/);
 });

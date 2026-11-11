@@ -65,7 +65,7 @@ function BerufFormular({ beruf, pakete, onFertig }: { beruf?: Beruf; pakete: Dat
           <option value="">{pakete.length === 0 && !beruf?.lernpaket ? '– nicht verfügbar –' : '– aus –'}</option>
           {pakete.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.titel} ({p.themenfelder} Themenfelder{p.fehler > 0 ? `, ${p.fehler} Fehler in den Inhalten` : ''})
+              {p.titel} ({p.themenfelder} Themenfelder{p.fehler > 0 ? `, ${p.fehler} Fehler` : ''})
             </option>
           ))}
           {beruf?.lernpaket && !pakete.some((p) => p.id === beruf.lernpaket) && <option value={beruf.lernpaket}>{beruf.lernpaket} (Inhalte fehlen auf dem Server)</option>}
@@ -247,10 +247,30 @@ export function Stammdaten() {
             sie hier von selbst.
           </p>
         ) : (
-          <p className="leise klein">
-            Vorhandene Lerninhalte:{' '}
-            {daten.lernpakete.map((p) => `${p.titel} (${p.themenfelder} Themenfelder, ${p.unterthemen} Unterthemen, Stand ${datum(p.stand)}${p.fehler > 0 ? `, ${p.fehler} Fehler – siehe Log des Portals` : ''})`).join(' · ')}
-          </p>
+          <>
+            <p className="leise klein">
+              Vorhandene Lerninhalte: {daten.lernpakete.map((p) => `${p.titel} (${p.themenfelder} Themenfelder, ${p.unterthemen} Unterthemen${p.stand ? `, Stand ${datum(p.stand)}` : ''})`).join(' · ')}
+            </p>
+            {daten.lernpakete
+              .filter((p) => p.fehler > 0)
+              .map((p) => (
+                <div key={p.id} className="hinweis fehler" role="alert">
+                  <p>
+                    <strong>
+                      „{p.titel}“: {p.fehler} {p.fehler === 1 ? 'Fehler' : 'Fehler'} in den Lerninhalten
+                      {p.themenfelder === 0 && ' – so lässt sich das Lernmodul nicht nutzen'}
+                    </strong>
+                  </p>
+                  <ul className="punkte">
+                    {p.meldungen.map((m, i) => (
+                      <li key={i}>{m}</li>
+                    ))}
+                    {p.fehler > 5 && <li>… und weitere. Alle Fehler stehen im Log des Portals.</li>}
+                  </ul>
+                  <p className="klein">Die Inhalte liegen auf dem Server im Ordner lerninhalte/{p.id}. Nach dem Beheben liest das Portal sie innerhalb weniger Sekunden neu ein – diese Seite dann neu laden.</p>
+                </div>
+              ))}
+          </>
         )}
         {daten.berufe.length === 0 && <p className="leise">Noch kein Beruf angelegt.</p>}
         {daten.berufe.map((b) => (
