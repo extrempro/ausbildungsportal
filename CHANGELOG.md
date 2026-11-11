@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.37.0] – 2026-11-11
+
+### Neu
+
+- **Üben im Lernmodul** (neuer Reiter unter „Lernen“): Karteikarten und Quiz. Beides entsteht aus den Kernbegriffen und Prüfungsfragen der Cheatsheets – für jedes Lernmodul, ohne zusätzliche Inhalte.
+- **Karteikarten** als Lernkartei mit fünf Fächern: Gewusste Karten kommen nach 1, 3, 7, 14 und 30 Tagen wieder, nicht gewusste sofort. Je Themenfeld oder aus allen; eine Runde hat höchstens 20 Karten.
+- **Quiz je Unterthema** (ab drei Kernbegriffen): zu einer Erklärung den passenden Begriff aus vier Vorschlägen wählen, mit Rückmeldung nach jeder Antwort. Bestanden ab 80 Prozent; der Server wertet die vollständige Runde.
+- **Abzeichen Silber, Gold und Meister sind jetzt erreichbar:** Silber = Quiz zur Hälfte der Unterthemen bestanden, Gold = alle, Meister = alle noch einmal fehlerfrei, frühestens eine Woche nach dem Bestehen. Bronze (Ampel und Zusatzwissen) bleibt Voraussetzung.
+- Gezählt werden nur Unterthemen mit Quiz. Hat ein Themenfeld kein Quiz, ist dort Bronze die höchste Stufe und das steht am Schild.
+- Handbuch (Azubi): Kapitel „Üben mit Karteikarten und Quiz“; „Abzeichen sammeln“ ergänzt.
+- Übungsergebnisse sind privat wie der übrige Lernstand.
+
 ## [0.36.0] – 2026-11-11
 
 ### Neu

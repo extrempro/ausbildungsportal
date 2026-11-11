@@ -35,11 +35,16 @@ export function Inline({ text }: { text: string }) {
 
 /** Bereiche des Lernmoduls – steht oben auf den Hauptseiten unter „Lernen“. */
 export function LernReiter() {
-  const { basis } = useLern();
+  const { basis, lesen } = useLern();
   return (
     <nav className="lern-reiter" aria-label="Bereiche im Lernmodul">
       <Link zu={basis}>Themenfelder</Link>
       <Link zu={`${basis}/kompendium`}>Kompendium</Link>
+      {!lesen && (
+        <Link zu={`${basis}/ueben`} aktivAb={`${basis}/ueben`}>
+          Üben
+        </Link>
+      )}
     </nav>
   );
 }

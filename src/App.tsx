@@ -20,6 +20,7 @@ import { LernEinreichungen } from './pages/LernEinreichungen';
 import { Leseansicht } from './lernen/basis';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
+import { LernKarten, LernQuiz, LernUeben } from './pages/LernUeben';
 import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
@@ -280,7 +281,9 @@ export function App() {
   const urlaubAzubi = /^\/azubis\/(\d{1,12})\/urlaub$/.exec(pfad)?.[1];
   // Leseansicht der Lerninhalte für Ausbilder und Beauftragte: /lerninhalte/<paket>[/kompendium|/<themenfeld>]
   const lesePfad = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})(?:\/([a-z0-9-]{1,40}))?$/.exec(pfad);
-  const lernThema = /^\/lernen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
+  const lernThema = /^\/lernen\/(?!ueben$)([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
+  const lernKarten = /^\/lernen\/ueben\/karten\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
+  const lernQuiz = /^\/lernen\/ueben\/quiz\/([a-z0-9-]{1,40}\.[a-z0-9-]{1,60})$/.exec(pfad)?.[1];
 
   let seite;
   if (pfad === '/' && konto.rolle === 'azubi') seite = <PlanSeite key={konto.id} azubiId={konto.id} />;
@@ -312,6 +315,9 @@ export function App() {
     seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
+  else if (pfad === '/lernen/ueben' && lernen) seite = <LernUeben />;
+  else if (lernKarten && lernen) seite = <LernKarten key={lernKarten} feld={lernKarten} />;
+  else if (lernQuiz && lernen) seite = <LernQuiz key={lernQuiz} id={lernQuiz} />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} profilbild={profilbild} onGeaendert={lade} />;
   else

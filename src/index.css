@@ -7356,3 +7356,135 @@ ul.antrag-hinweise {
   font-size: 13px;
   font-weight: 400;
 }
+
+/* ---------- Lernmodul: Üben (Karteikarten, Quiz) ---------- */
+.ueben-alle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.ueben-alle h2,
+.ueben-alle p {
+  margin: 0;
+}
+
+.ueben-felder,
+.ueben-quiz {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ueben-quiz li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.ueben-quiz-titel {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: grid;
+}
+
+.ueben-karte {
+  max-width: 760px;
+}
+
+.ueben-kopfzeile {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+}
+
+.ueben-art {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.ueben-vorne {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.ueben-hinten {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  overflow-wrap: anywhere;
+}
+
+.ueben-hinten p,
+.ueben-hinten ol {
+  margin: 0;
+}
+
+.ueben-hinten ol {
+  padding-left: 22px;
+}
+
+.ueben-karte .aktionen,
+.ueben-ergebnis .aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.ueben-optionen {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.knopf.ueben-option {
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  min-height: 48px;
+  height: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.knopf.ueben-option:disabled {
+  opacity: 1;
+}
+
+.knopf.ueben-option.richtig {
+  border-color: var(--c-gruen-fg);
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+  font-weight: 600;
+}
+
+.knopf.ueben-option.falsch {
+  border-color: var(--c-rot-fg);
+  background: var(--c-rot-bg);
+  color: var(--c-rot-fg);
+}
+
+.ueben-marke {
+  font-weight: 400;
+}
+
+/* der Zusatz steht in einem Flex-Knopf – der Abstand kommt deshalb aus dem Rand, nicht aus einem Leerzeichen */
+.ueben-marke {
+  margin-left: 0.35em;
+}

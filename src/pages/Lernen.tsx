@@ -87,12 +87,14 @@ export function Lernen() {
           <p className="leise">
             {rang.naechste
               ? `${STUFEN[rang.naechste.stufe - 1].name} gibt es, wenn ${rang.noetig === 1 ? 'ein Themenfeld' : `${rang.noetig} von ${rang.felder} Themenfeldern`} diese Stufe ${rang.noetig === 1 ? 'hat' : 'haben'}. Im Moment: ${rang.naechste.haben}.`
-              : 'Das ist der höchste Rang, den es im Moment gibt. Silber, Gold und Meister kommen mit den Übungen.'}{' '}
+              : rang.hoechste >= 6
+                ? 'Du hast den höchsten Rang erreicht.'
+                : 'Das ist der höchste Rang in diesem Lernmodul – für Silber, Gold und Meister gibt es hier zu wenige Quiz.'}{' '}
             In jedem Themenfeld sammelst du ein eigenes Abzeichen. <strong>Abzeichen siehst nur du.</strong> <HandbuchLink kapitel="abzeichen">Abzeichen sammeln</HandbuchLink>
           </p>
           <details className="klapp">
             <summary>Alle Stufen</summary>
-            <StufenLeiter erreicht={rang.stufe} />
+            <StufenLeiter erreicht={rang.stufe} hoechste={rang.hoechste} />
           </details>
         </div>
       </section>
