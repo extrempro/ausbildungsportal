@@ -8,7 +8,7 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
 
 - [ ] **Rückfragen** laufen über `rueckfrage()` aus `src/dialoge.tsx`, nie über `window.confirm`. Erster Absatz: die Frage. Weitere Absätze: die Folgen. Der Knopf nennt die Handlung (`ja: 'Konto löschen'`); bei Endgültigem `gefahr: true`.
 - [ ] **Bestätigungen** nach einer gelungenen Aktion über `melde()`. **Fehler** stehen an der betroffenen Stelle (`.hinweis.fehler` mit `role="alert"`) und bleiben, bis sie behoben sind.
-- [ ] **Ungespeicherte Eingaben:** Jedes Formular meldet sie über `useUngespeichert()` oder `useEingaben()` aus `src/router.tsx`. Fenster fragen vor dem Schließen nach, wenn schon etwas eingegeben ist.
+- [ ] **Ungespeicherte Eingaben:** Jedes Formular meldet sie über `useUngespeichert()` oder `useEingaben()` aus `src/router.tsx`. Fenster fragen vor dem Schließen nach, wenn schon etwas eingegeben ist. Der Router fragt dann bei Links, Menü und der Zurück-Taste des Browsers nach – Seitenwechsel deshalb nur über `geheZu` oder `<Link>`, nie direkt über `history`.
 - [ ] **Doppeltes Auslösen** ist ausgeschlossen: Knöpfe, die etwas anlegen oder versenden, sind währenddessen und danach gesperrt, bis sich die Eingabe ändert.
 - [ ] **Ladefehler** zeigen `<Ladefehler titel="…">` – die Überschrift bleibt stehen.
 - [ ] **Jede Seite** hat genau eine `h1` und darunter einen Satz, wozu sie dient. Abläufe mit mehreren Schritten bekommen die nummerierten Schritte (`ol.ablauf-liste`).

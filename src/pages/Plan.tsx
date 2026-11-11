@@ -5,7 +5,7 @@ import type React from 'react';
 import type { FormEvent } from 'react';
 import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, STATUS_FARBE, STATUS_TEXT } from '../api';
 import type { BerichtListe, BerichtStatus, PlanAntwort, PlanArt, PlanEintrag, PlanWoche, Unteraufgabe } from '../api';
-import { Link } from '../router';
+import { Link, useUngespeichert } from '../router';
 
 interface Entwurf {
   id: number | null;
@@ -37,6 +37,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
   const vorher = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const geaendert = useRef(false);
   geaendert.current = JSON.stringify(e) !== JSON.stringify(start);
+  useUngespeichert(geaendert.current);
   const schliesse = useCallback(() => {
     if (!geaendert.current) onAbbruch();
     else void rueckfrage('Eingaben verwerfen?\n\nWas du in diesem Fenster eingetragen hast, ist noch nicht gespeichert.', { ja: 'Verwerfen', gefahr: true }).then((ja) => ja && onAbbruch());

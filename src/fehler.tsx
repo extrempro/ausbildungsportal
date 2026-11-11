@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClipboardEvent, FormEvent } from 'react';
 import { api } from './api';
 import { rueckfrage } from './dialoge';
+import { useUngespeichert } from './router';
 
 /**
  * „Fehler melden“: kurzer Text vom Menschen, dazu automatisch ein paar technische Angaben,
@@ -95,6 +96,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
   // Schließen fragt nach, sobald Text oder Bild da sind – ein versehentliches Escape kostet sonst die ganze Beschreibung
   const hatEingabe = useRef(false);
   hatEingabe.current = !fertig && (text.trim() !== '' || bild !== null);
+  useUngespeichert(hatEingabe.current);
   const schliesse = useCallback(() => {
     if (!hatEingabe.current) onZu();
     else void rueckfrage('Meldung verwerfen?\n\nDein Text und das Bild sind noch nicht gesendet.', { ja: 'Verwerfen', gefahr: true }).then((ja) => ja && onZu());
