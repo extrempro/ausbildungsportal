@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.22.2] – 2026-11-11
+
+### Geändert
+
+- Eingeklappte Bereiche sehen jetzt überall so aus wie „Was bewirkt was?“ ursprünglich: eine leicht blau getönte Fläche mit Titel und „Anzeigen“ rechts; der ganze Kopf reagiert beim Überfahren. Aufgeklappt wird daraus eine weiße Karte mit größerem Titel und einer Linie unter dem Kopf. Der umrandete Knopf aus 0.22.1 entfällt wieder.
+
 ## [0.22.1] – 2026-11-11
 
 ### Geändert
