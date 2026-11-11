@@ -26,7 +26,7 @@ function standVon(a: UrlaubAntrag): { text: string; farbe: string } {
   return a.stufe === 'beauftragte' ? { text: 'Wartet auf Bestätigung', farbe: 'gelb' } : { text: 'Wartet auf Genehmigung', farbe: 'gelb' };
 }
 
-const AKTION_TEXT: Record<string, string> = { beantragt: 'Beantragt', bestaetigt: 'Bestätigt', genehmigt: 'Genehmigt', abgelehnt: 'Abgelehnt', zurueckgezogen: 'Zurückgezogen', storniert: 'Storniert' };
+const AKTION_TEXT: Record<string, string> = { beantragt: 'Beantragt', bestaetigt: 'Bestätigt', genehmigt: 'Genehmigt', abgelehnt: 'Abgelehnt', zurueckgezogen: 'Zurückgezogen', storniert: 'Storniert', mail: 'Mail' };
 
 function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: boolean; onGeaendert: () => Promise<void> | void }) {
   const [fehler, setFehler] = useState('');
@@ -39,14 +39,15 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
   const wer = mitName ? `Urlaub von ${a.azubi.anzeigename}` : 'Urlaub';
   const wann = `${zeitraum(a.von, a.bis)} (${tageText(a.tage)})`;
 
-  const sende = async (aktion: string, body: unknown, fertig: string) => {
+  const mitMail = (text: string) => (x: UrlaubAntrag) => `${text} ${x.mail?.stand === 'gesendet' ? 'Die Personalstelle ist informiert.' : 'Die Mail an die Personalstelle ging nicht raus – der Grund steht am Antrag.'}`;
+  const sende = async (aktion: string, body: unknown, fertig: string | ((x: UrlaubAntrag) => string)) => {
     setLaeuft(true);
     setFehler('');
     try {
-      await api('POST', `/api/urlaub/${a.id}/${aktion}`, body);
+      const r = await api<{ antrag: UrlaubAntrag }>('POST', `/api/urlaub/${a.id}/${aktion}`, body);
       setGrundFuer(null);
       setGrund('');
-      melde(fertig);
+      melde(typeof fertig === 'string' ? fertig : fertig(r.antrag));
       await onGeaendert();
     } catch (err) {
       setFehler(err instanceof Error ? err.message : 'Fehler');
@@ -61,9 +62,9 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
   const genehmige = async () => {
     const fehlt = a.bestaetigungFehlt;
     const frage = fehlt.length
-      ? `${wer} genehmigen, obwohl die Bestätigung von ${fehlt.join(', ')} noch aussteht?\n\n${wann}. Der Urlaub steht danach im Jahreskalender und im Berichtsheft. Im Verlauf steht, dass ohne diese Bestätigung entschieden wurde.`
-      : `${wer} genehmigen?\n\n${wann}. Der Urlaub steht danach im Jahreskalender und im Berichtsheft.`;
-    if (await rueckfrage(frage, { ja: fehlt.length ? 'Trotzdem genehmigen' : 'Urlaub genehmigen' })) await sende('genehmigen', { ohneBestaetigung: fehlt.length > 0 }, 'Urlaub genehmigt.');
+      ? `${wer} genehmigen, obwohl die Bestätigung von ${fehlt.join(', ')} noch aussteht?\n\n${wann}. Der Urlaub steht danach im Jahreskalender und im Berichtsheft, die Personalstelle bekommt eine Mail. Im Verlauf steht, dass ohne diese Bestätigung entschieden wurde.`
+      : `${wer} genehmigen?\n\n${wann}. Der Urlaub steht danach im Jahreskalender und im Berichtsheft, die Personalstelle bekommt eine Mail.`;
+    if (await rueckfrage(frage, { ja: fehlt.length ? 'Trotzdem genehmigen' : 'Urlaub genehmigen' })) await sende('genehmigen', { ohneBestaetigung: fehlt.length > 0 }, mitMail('Urlaub genehmigt.'));
   };
   const zieheZurueck = async () => {
     if (await rueckfrage(`Antrag für ${wann} zurückziehen?\n\nDer Antrag ist dann erledigt. Du kannst jederzeit einen neuen stellen.`, { ja: 'Antrag zurückziehen', gefahr: true })) await sende('zurueckziehen', {}, 'Antrag zurückgezogen.');
@@ -71,7 +72,7 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
   const sendeGrund = (e: FormEvent) => {
     e.preventDefault();
     if (grundFuer === 'ablehnen') void sende('ablehnen', { kommentar: grund }, 'Antrag abgelehnt.');
-    if (grundFuer === 'stornieren') void sende('stornieren', { kommentar: grund }, 'Urlaub storniert.');
+    if (grundFuer === 'stornieren') void sende('stornieren', { kommentar: grund }, mitMail('Urlaub storniert.'));
   };
 
   const entscheidung = a.status === 'abgelehnt' || a.status === 'storniert' ? a.verlauf.at(-1) : undefined;
@@ -124,6 +125,24 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
         </ul>
       )}
 
+      {a.mail &&
+        (a.mail.stand === 'gesendet' ? (
+          <p className="antrag-zeile leise">Die Personalstelle ist per Mail informiert.</p>
+        ) : (
+          <div className="hinweis" role="note">
+            <p>
+              <strong>Die Personalstelle ist noch nicht informiert.</strong> {a.mail.fehler || 'Für diesen Antrag wurde noch keine Mail verschickt.'}
+            </p>
+            {r.mailErneut && (
+              <p className="aktionen links">
+                <button type="button" className="knopf schlicht klein" disabled={laeuft} onClick={() => void sende('mail', {}, (x) => (x.mail?.stand === 'gesendet' ? 'Mail an die Personalstelle gesendet.' : 'Die Mail ging wieder nicht raus – der Grund steht am Antrag.'))}>
+                  Mail an die Personalstelle senden
+                </button>
+              </p>
+            )}
+          </div>
+        ))}
+
       {fehler && (
         <p className="hinweis fehler" role="alert">
           {fehler}
@@ -136,7 +155,9 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
             {grundFuer === 'ablehnen' ? 'Warum lehnst du den Antrag ab?' : 'Warum wird der Urlaub storniert?'}
             <textarea value={grund} onChange={(e) => setGrund(e.target.value)} maxLength={500} rows={3} required autoFocus />
           </label>
-          <p className="leise klein">{a.azubi.anzeigename} liest diese Begründung.</p>
+          <p className="leise klein">
+            {a.azubi.anzeigename} liest diese Begründung.{grundFuer === 'stornieren' ? ' Die Personalstelle bekommt eine Mail über die Stornierung, ohne die Begründung.' : ''}
+          </p>
           <p className="aktionen links">
             <button className="knopf gefahr" disabled={laeuft || grund.trim() === ''}>
               {grundFuer === 'ablehnen' ? 'Antrag ablehnen' : 'Urlaub stornieren'}

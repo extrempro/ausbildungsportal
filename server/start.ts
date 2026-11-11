@@ -7,6 +7,7 @@ import type { DB } from './db';
 import { entraAussteller, erzeugeEntra } from './entra';
 import type { Entra } from './entra';
 import { hashePasswort, zufallsPasswort } from './passwort';
+import { MailFehler, sendeMail } from './smtp';
 
 export const REDIRECT_PFAD = '/api/auth/entra/callback';
 
@@ -19,7 +20,7 @@ export function appVersion(): string {
 export async function erzeugeKontext(
   db: DB,
   cfg: Config,
-  optionen: { log?: (t: string) => void; jetzt?: () => Date; entra?: Entra | null; sende?: Kontext['sende'] } = {},
+  optionen: { log?: (t: string) => void; jetzt?: () => Date; entra?: Entra | null; sende?: Kontext['sende']; mail?: Kontext['mail'] } = {},
 ): Promise<Kontext> {
   const jetzt = optionen.jetzt ?? (() => new Date());
   const entra =
@@ -44,6 +45,7 @@ export async function erzeugeKontext(
     dummyHash: await hashePasswort(zufallsPasswort()),
     versuche: new Map(),
     gemeldeteHerkunft: new Set(),
+    mail: optionen.mail ?? ((m) => (cfg.smtp ? sendeMail(cfg.smtp, m, jetzt()) : Promise.reject(new MailFehler('Der Mailversand ist nicht eingerichtet')))),
     sende:
       optionen.sende ??
       (async (url, body) => {

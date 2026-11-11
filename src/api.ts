@@ -155,7 +155,9 @@ export interface Berufsschule {
 }
 
 export interface Stammdaten {
-  betrieb: { name: string; anschrift: string; bundesland: string };
+  betrieb: { name: string; anschrift: string; bundesland: string; personalMail: string };
+  /** ist im Portal ein Mailserver eingerichtet? */
+  mailversand: boolean;
   berufe: Beruf[];
   berufsschulen: Berufsschule[];
   bundeslaender: { kuerzel: string; name: string }[];
@@ -484,7 +486,9 @@ export interface UrlaubAntrag {
   bestaetigungen: { name: string; zeit: string | null; ich: boolean }[];
   erstellt: string;
   verlauf: { zeit: string; aktion: string; name: string; rolle: Rolle; kommentar: string }[];
-  rechte: { zurueckziehen: boolean; bestaetigen: boolean; ablehnen: boolean; genehmigen: boolean; stornieren: boolean };
+  rechte: { zurueckziehen: boolean; bestaetigen: boolean; ablehnen: boolean; genehmigen: boolean; stornieren: boolean; mailErneut: boolean };
+  /** Mail an die Personalstelle – nur für den zuständigen Ausbilder, nur nach Genehmigung oder Storno */
+  mail: { stand: 'offen' | 'gesendet' | 'fehler' | 'ohne'; fehler: string } | null;
   bestaetigungFehlt: string[];
 }
 

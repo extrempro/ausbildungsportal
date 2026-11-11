@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import type { Kontext } from '../api-basis';
+import { MailFehler } from '../smtp';
+import type { Mail } from '../smtp';
 import type { BenutzerZeile } from '../typen';
 import { admin, koerper, konto, ohneWechsel, ruf, sitzung, umgebung, zuweisen } from './hilfe';
 import type { Umgebung } from './hilfe';
@@ -17,8 +20,8 @@ interface Welt {
 }
 
 /** Anna (Ausbilderin Petra, Beauftragte Bea) mit 30 Tagen Urlaub im Jahr; Ben gehört einem anderen Ausbilder. Betrieb in Hamburg. */
-async function welt(): Promise<Welt> {
-  const u = await umgebung();
+async function welt(env: Record<string, string> = {}, mail?: Kontext['mail']): Promise<Welt> {
+  const u = await umgebung(env, null, undefined, mail);
   ohneWechsel(u.db, admin(u.db).id);
   const w: Welt = { u, admin: admin(u.db), ausbilder: konto(u.db, 'ausbilder', 'Petra Lang'), fremd: konto(u.db, 'ausbilder', 'Olaf Berg'), bea: konto(u.db, 'beauftragter', 'Bea Auft'), bodo: konto(u.db, 'beauftragter', 'Bodo Zweit'), anna: konto(u.db, 'azubi', 'Anna Azubi'), ben: konto(u.db, 'azubi', 'Ben Bauer') };
   const c = sitzung(u, w.ausbilder);
@@ -168,4 +171,94 @@ test('Urlaubsanträge sind vertraulich: nur Azubi, zugewiesene Beauftragte und z
   // mit dem Konto verschwinden die Anträge
   w.u.db.prepare('DELETE FROM benutzer WHERE id = ?').run(w.anna.id);
   assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM urlaub_antrag').get() as { n: number }).n + (w.u.db.prepare('SELECT COUNT(*) AS n FROM urlaub_verlauf').get() as { n: number }).n, 0);
+});
+
+const SMTP = { SMTP_HOST: 'mail.firma.test', SMTP_ABSENDER: 'portal@firma.test' };
+
+test('Mail an die Personalstelle: nach Genehmigung und Storno, knapp und ohne Bemerkung oder Begründung', async () => {
+  const post: Mail[] = [];
+  const w = await welt(SMTP, async (m) => void post.push(m));
+  const antrag = koerper(await beantrage(w, '2026-12-21', '2027-01-03', w.anna, 'Familienbesuch')).antrag;
+  await tue(w, w.bea, antrag.id, 'bestaetigen');
+  assert.equal(post.length, 0, 'vor der Genehmigung geht nichts raus');
+  const genehmigt = koerper(await tue(w, w.ausbilder, antrag.id, 'genehmigen')).antrag;
+  assert.deepEqual([genehmigt.mail, genehmigt.rechte.mailErneut], [{ stand: 'gesendet', fehler: '' }, false]);
+  assert.equal(post.length, 1);
+  assert.deepEqual([post[0].an, post[0].betreff], ['personal@firma.test', 'Urlaub genehmigt: Anna Azubi, 21.12.2026–03.01.2027']);
+  for (const teil of ['für Anna Azubi (Auszubildende/r) wurde Urlaub genehmigt', 'Zeitraum: 21.12.2026 bis 03.01.2027', 'Arbeitstage: 8', 'Beantragt am: 10.11.2026', 'Bestätigt von: Bea Auft', 'Genehmigt von: Petra Lang am 10.11.2026', '(Muster GmbH)']) assert.ok(post[0].text.includes(teil), teil);
+  assert.ok(!post[0].text.includes('Familienbesuch'), 'die Bemerkung des Azubis geht nicht mit');
+  // den Stand der Mail sieht nur, wer genehmigt
+  for (const wer of [w.anna, w.bea]) assert.equal((await liste(w, wer)).antraege[0].mail, null, wer.anzeigename);
+  assert.equal((await tue(w, w.ausbilder, antrag.id, 'mail')).status, 409, 'schon gesendet');
+
+  const storniert = koerper(await tue(w, w.ausbilder, antrag.id, 'stornieren', { kommentar: 'Projekt geht vor' })).antrag;
+  assert.equal(storniert.mail.stand, 'gesendet');
+  assert.equal(post.length, 2);
+  assert.equal(post[1].betreff, 'Urlaub storniert: Anna Azubi, 21.12.2026–03.01.2027');
+  assert.ok(post[1].text.includes('wurde storniert. Der Urlaub findet nicht statt.') && post[1].text.includes('Storniert von: Petra Lang am 10.11.2026'));
+  assert.ok(!post[1].text.includes('Projekt geht vor'), 'die Begründung der Stornierung geht nicht mit');
+  // Ablehnen und Zurückziehen lösen keine Mail aus
+  const a2 = koerper(await beantrage(w, '2027-02-01', '2027-02-05')).antrag;
+  await tue(w, w.bea, a2.id, 'ablehnen', { kommentar: 'Inventur' });
+  const a3 = koerper(await beantrage(w, '2027-02-01', '2027-02-05')).antrag;
+  await tue(w, w.anna, a3.id, 'zurueckziehen');
+  assert.equal(post.length, 2);
+  assert.equal((await tue(w, w.ausbilder, a2.id, 'mail')).status, 409);
+});
+
+test('Mail an die Personalstelle: Die Genehmigung gilt auch ohne Mail; Stand und Grund stehen am Antrag, erneut senden geht', async () => {
+  // 1. der Mailserver lehnt ab
+  let kaputt = true;
+  const post: Mail[] = [];
+  const w = await welt(SMTP, async (m) => {
+    if (kaputt) throw new MailFehler('Der Mailserver lehnt die Anmeldung ab (Benutzer oder Passwort): 535 5.7.8');
+    post.push(m);
+  });
+  const antrag = koerper(await beantrage(w, '2026-12-07', '2026-12-08', w.ben)).antrag;
+  const r = await tue(w, w.fremd, antrag.id, 'genehmigen');
+  assert.equal(r.status, 200);
+  assert.deepEqual([koerper(r).antrag.status, koerper(r).antrag.mail.stand, koerper(r).antrag.rechte.mailErneut], ['genehmigt', 'fehler', true]);
+  assert.match(koerper(r).antrag.mail.fehler, /lehnt die Anmeldung ab/);
+  assert.ok(w.u.logs.some((l) => l.startsWith('Mailversand fehlgeschlagen: Der Mailserver lehnt die Anmeldung ab')));
+  // erneut senden: nur der zuständige Ausbilder
+  assert.equal((await tue(w, w.ausbilder, antrag.id, 'mail')).status, 404);
+  assert.equal((await tue(w, w.bea, antrag.id, 'mail')).status, 403);
+  kaputt = false;
+  const erneut = koerper(await tue(w, w.fremd, antrag.id, 'mail')).antrag;
+  assert.deepEqual([erneut.mail, post.length, erneut.verlauf.at(-1).kommentar], [{ stand: 'gesendet', fehler: '' }, 1, 'Mail an die Personalstelle gesendet']);
+
+  // 2. kein Mailserver eingerichtet
+  const ohne = await welt();
+  const a = koerper(await beantrage(ohne, '2026-12-07', '2026-12-08', ohne.ben)).antrag;
+  const g = koerper(await tue(ohne, ohne.fremd, a.id, 'genehmigen')).antrag;
+  assert.deepEqual([g.status, g.mail.stand], ['genehmigt', 'ohne']);
+  assert.match(g.mail.fehler, /Mailversand ist im Portal nicht eingerichtet/);
+  assert.equal(koerper(await ruf(ohne.u, 'GET', '/api/stammdaten', { cookies: als(ohne, ohne.ausbilder) })).mailversand, false);
+  const t = await ruf(ohne.u, 'POST', '/api/urlaub/mail-test', { cookies: als(ohne, ohne.ausbilder) });
+  assert.deepEqual([t.status, /nicht eingerichtet/.test(koerper(t).fehler)], [409, true]);
+
+  // 3. Mailserver da, aber die Adresse der Personalstelle fehlt
+  const leer = await welt(SMTP, async (m) => void post.push(m));
+  await ruf(leer.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(leer, leer.ausbilder), body: { name: 'Muster GmbH', bundesland: 'HH', personalMail: '' } });
+  const b = koerper(await beantrage(leer, '2026-12-07', '2026-12-08', leer.ben)).antrag;
+  const h = koerper(await tue(leer, leer.fremd, b.id, 'genehmigen')).antrag;
+  assert.deepEqual([h.mail.stand, /fehlt die Mail-Adresse der Personalstelle/.test(h.mail.fehler)], ['ohne', true]);
+  assert.equal((await ruf(leer.u, 'POST', '/api/urlaub/mail-test', { cookies: als(leer, leer.ausbilder) })).status, 409);
+});
+
+test('Testmail an die Personalstelle: nur Ausbilder; Erfolg und Fehler werden gemeldet', async () => {
+  const post: Mail[] = [];
+  let kaputt = false;
+  const w = await welt(SMTP, async (m) => {
+    if (kaputt) throw new MailFehler('Der Mailserver ist nicht erreichbar');
+    post.push(m);
+  });
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.ausbilder) })).mailversand, true);
+  const ok = await ruf(w.u, 'POST', '/api/urlaub/mail-test', { cookies: als(w, w.ausbilder) });
+  assert.deepEqual([ok.status, koerper(ok).an, post[0].an, post[0].betreff], [200, 'personal@firma.test', 'personal@firma.test', 'Test: Mails aus dem Ausbildungsportal']);
+  assert.ok(post[0].text.includes('ausgelöst von Petra Lang'));
+  kaputt = true;
+  const fehl = await ruf(w.u, 'POST', '/api/urlaub/mail-test', { cookies: als(w, w.ausbilder) });
+  assert.deepEqual([fehl.status, koerper(fehl).fehler], [502, 'Die Testmail wurde nicht gesendet: Der Mailserver ist nicht erreichbar']);
+  for (const wer of [w.bea, w.anna, w.admin]) assert.equal((await ruf(w.u, 'POST', '/api/urlaub/mail-test', { cookies: als(w, wer) })).status, 403, wer.rolle);
 });

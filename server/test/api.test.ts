@@ -136,6 +136,8 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'POST /api/urlaub/:id/ablehnen': 'ausbilder,beauftragter',
     'POST /api/urlaub/:id/genehmigen': 'ausbilder',
     'POST /api/urlaub/:id/stornieren': 'ausbilder',
+    'POST /api/urlaub/:id/mail': 'ausbilder',
+    'POST /api/urlaub/mail-test': 'ausbilder',
   });
 });
 
