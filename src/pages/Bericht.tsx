@@ -2,15 +2,23 @@ import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
-import { geheZu, Link, setzeUngespeichert } from '../router';
+import { geheZu, Link, useUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
 const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
-const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: string; hilfe: string; beispiel: string }[] = [
-  { schluessel: 'betrieb', titel: 'Betriebliche Tätigkeiten', hilfe: 'Was hast du im Betrieb gemacht? Schreib je Tätigkeit eine Zeile und trag die Stunden dazu ein.', beispiel: 'z. B. Wareneingang geprüft und 40 Artikel eingelagert' },
-  { schluessel: 'unterweisung', titel: 'Unterweisungen und Schulungen', hilfe: 'Wurde dir etwas erklärt oder warst du auf einem Lehrgang? Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Unterweisung Arbeitssicherheit' },
-  { schluessel: 'schule', titel: 'Berufsschule', hilfe: 'Warst du in der Berufsschule? Schreib die Themen aus dem Unterricht auf. Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Mathe: Prozentrechnung' },
+const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: string; frage: string; hilfe: string; beispiel: string }[] = [
+  { schluessel: 'betrieb', titel: 'Betriebliche Tätigkeiten', frage: '', hilfe: 'Was hast du im Betrieb gemacht? Schreib je Tätigkeit eine Zeile und trag die Stunden dazu ein.', beispiel: 'z. B. Wareneingang geprüft und 40 Artikel eingelagert' },
+  { schluessel: 'unterweisung', titel: 'Unterweisungen und Schulungen', frage: 'Wurde dir etwas erklärt oder warst du auf einem Lehrgang?', hilfe: 'Wurde dir etwas erklärt oder warst du auf einem Lehrgang? Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Unterweisung Arbeitssicherheit' },
+  { schluessel: 'schule', titel: 'Berufsschule', frage: 'Warst du in dieser Woche in der Berufsschule?', hilfe: 'Warst du in der Berufsschule? Schreib die Themen aus dem Unterricht auf. Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Mathe: Prozentrechnung' },
 ];
+
+const ANTEILE: { schluessel: keyof BerichtInhalt; kurz: string }[] = [
+  { schluessel: 'betrieb', kurz: 'Betrieb' },
+  { schluessel: 'unterweisung', kurz: 'Unterweisung' },
+  { schluessel: 'schule', kurz: 'Berufsschule' },
+  { schluessel: 'abwesenheit', kurz: 'Abwesenheit' },
+];
+const teilSumme = (i: BerichtInhalt, k: keyof BerichtInhalt) => (i[k] as { stunden: number }[]).reduce((n, e) => n + (Number(e.stunden) || 0), 0);
 
 /** Was der Stand für den Azubi bedeutet und was als Nächstes zu tun ist. */
 const STATUS_HILFE: Record<string, string> = {
@@ -122,46 +130,87 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
   );
 }
 
-function EintragListe({ titel, hilfe, beispiel, liste, onAendern }: { titel: string; hilfe: string; beispiel: string; liste: BerichtEintrag[]; onAendern: (l: BerichtEintrag[]) => void }) {
+const std = (n: number) => `${h(n)} Std.`;
+
+/** Kopf eines Teils: Nummer, Titel und rechts die Stunden dieses Teils. */
+function TeilKopf({ nr, titel, stunden }: { nr: number; titel: string; stunden: number }) {
+  return (
+    <legend>
+      <span className="ablauf-nr" aria-hidden="true">
+        {nr}
+      </span>
+      <span className="teil-titel">{titel}</span>
+      <span className={`pille ${stunden > 0 ? 'blau' : 'grau'}`}>{std(stunden)}</span>
+    </legend>
+  );
+}
+
+/** Ein Teil, in dem diese Woche nichts steht: eine Zeile statt eines leeren Formulars. */
+function TeilZu({ nr, titel, frage, knopf, onAuf }: { nr: number; titel: string; frage: string; knopf: string; onAuf: () => void }) {
+  return (
+    <section className="karte teil zu" aria-label={titel}>
+      <span className="ablauf-nr" aria-hidden="true">
+        {nr}
+      </span>
+      <span className="teil-zu-text">
+        <strong>{titel}</strong>
+        <span className="leise klein">{frage}</span>
+      </span>
+      <button type="button" className="knopf schlicht klein" onClick={onAuf}>
+        {knopf}
+      </button>
+    </section>
+  );
+}
+
+function EintragListe({ nr, art, titel, hilfe, beispiel, liste, onAendern }: { nr: number; art: string; titel: string; hilfe: string; beispiel: string; liste: BerichtEintrag[]; onAendern: (l: BerichtEintrag[]) => void }) {
   const setze = (i: number, teil: Partial<BerichtEintrag>) => onAendern(liste.map((e, j) => (j === i ? { ...e, ...teil } : e)));
   return (
-    <fieldset className="abschnitt">
-      <legend>{titel}</legend>
+    <fieldset className={`abschnitt karte teil ${art}`}>
+      <TeilKopf nr={nr} titel={titel} stunden={liste.reduce((n, e) => n + (Number(e.stunden) || 0), 0)} />
       <p className="leise klein abschnitt-hilfe">{hilfe}</p>
       {liste.map((e, i) => (
-        <div className="zeile" key={i}>
-          <label className="breit">
+        <div className="bericht-zeile" key={i}>
+          <span className="bericht-zeile-nr" aria-hidden="true">
+            {i + 1}.
+          </span>
+          <label className="bericht-text">
             <span className="klein">
               Was hast du gemacht? <span className="nur-vorleser">({titel}, Zeile {i + 1})</span>
             </span>
             <textarea rows={2} value={e.text} maxLength={2000} placeholder={beispiel} onChange={(ev) => setze(i, { text: ev.target.value })} />
           </label>
-          <label>
+          <label className="bericht-stunden">
             <span className="klein">Stunden</span>
-            <input type="number" min={0} max={60} step={0.25} value={e.stunden} aria-label={`Stunden, ${titel}, Zeile ${i + 1}`} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
+            <input type="number" inputMode="decimal" min={0} max={60} step={0.25} value={e.stunden} aria-label={`Stunden, ${titel}, Zeile ${i + 1}`} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
           </label>
-          <button type="button" className="knopf schlicht" aria-label={`Zeile ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
+          <button type="button" className="knopf schlicht klein bericht-weg" aria-label={`${titel}, Zeile ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
             Entfernen
           </button>
         </div>
       ))}
-      <button type="button" className="knopf schlicht" onClick={() => onAendern([...liste, { text: '', stunden: 0 }])}>
+      <button type="button" className="knopf schlicht klein" onClick={() => onAendern([...liste, { text: '', stunden: 0 }])}>
         {liste.length ? 'Weitere Zeile' : 'Zeile hinzufügen'}
       </button>
     </fieldset>
   );
 }
 
-function AbwesenheitListe({ montag, tagSoll, liste, onAendern }: { montag: string; tagSoll: number; liste: BerichtAbwesenheit[]; onAendern: (l: BerichtAbwesenheit[]) => void }) {
+function AbwesenheitListe({ nr, montag, tagSoll, liste, onAendern }: { nr: number; montag: string; tagSoll: number; liste: BerichtAbwesenheit[]; onAendern: (l: BerichtAbwesenheit[]) => void }) {
   const setze = (i: number, teil: Partial<BerichtAbwesenheit>) => onAendern(liste.map((e, j) => (j === i ? { ...e, ...teil } : e)));
+  // der nächste freie Tag der Woche als Vorschlag – wer drei Tage krank war, klickt dreimal
+  const naechsterTag = () => TAGE.map((_, t) => plusTage(montag, t)).find((tag) => !liste.some((a) => a.tag === tag)) ?? montag;
   return (
-    <fieldset className="abschnitt">
-      <legend>Abwesenheit</legend>
-      <p className="leise klein abschnitt-hilfe">Hattest du Urlaub, warst du krank oder war ein Feiertag? Trag jeden Tag einzeln ein. Die Stunden für einen ganzen Tag stehen schon drin.</p>
+    <fieldset className="abschnitt karte teil abwesenheit">
+      <TeilKopf nr={nr} titel="Abwesenheit" stunden={liste.reduce((n, a) => n + (Number(a.stunden) || 0), 0)} />
+      <p className="leise klein abschnitt-hilfe">Urlaub, krank oder Feiertag? Trag jeden Tag einzeln ein. Die Stunden für einen ganzen Tag ({std(tagSoll)}) stehen schon drin.</p>
       {liste.map((a, i) => (
-        <div className="zeile vier" key={i}>
+        <div className="bericht-zeile abwesend" key={i}>
+          <span className="bericht-zeile-nr" aria-hidden="true">
+            {i + 1}.
+          </span>
           <label>
-            Tag
+            <span className="klein">Tag</span>
             <select value={a.tag} onChange={(ev) => setze(i, { tag: ev.target.value })}>
               {TAGE.map((name, t) => (
                 <option key={t} value={plusTage(montag, t)}>
@@ -171,7 +220,7 @@ function AbwesenheitListe({ montag, tagSoll, liste, onAendern }: { montag: strin
             </select>
           </label>
           <label>
-            Grund
+            <span className="klein">Grund</span>
             <select value={a.grund} onChange={(ev) => setze(i, { grund: ev.target.value as Grund })}>
               {(Object.keys(GRUND_TEXT) as Grund[]).map((g) => (
                 <option key={g} value={g}>
@@ -180,21 +229,21 @@ function AbwesenheitListe({ montag, tagSoll, liste, onAendern }: { montag: strin
               ))}
             </select>
           </label>
-          <label>
-            Stunden
-            <input type="number" min={0} max={24} step={0.25} value={a.stunden} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
+          <label className="bericht-stunden">
+            <span className="klein">Stunden</span>
+            <input type="number" inputMode="decimal" min={0} max={24} step={0.25} value={a.stunden} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
           </label>
-          <label>
-            Hinweis (freiwillig)
+          <label className="bericht-hinweis">
+            <span className="klein">Hinweis (freiwillig)</span>
             <input value={a.text} maxLength={200} onChange={(ev) => setze(i, { text: ev.target.value })} />
           </label>
-          <button type="button" className="knopf schlicht" aria-label={`Abwesenheit ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
+          <button type="button" className="knopf schlicht klein bericht-weg" aria-label={`Abwesenheit ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
             Entfernen
           </button>
         </div>
       ))}
-      <button type="button" className="knopf schlicht" onClick={() => onAendern([...liste, { tag: montag, grund: 'urlaub', stunden: tagSoll, text: '' }])}>
-        Abwesenheit hinzufügen
+      <button type="button" className="knopf schlicht klein" disabled={liste.length >= 7} onClick={() => onAendern([...liste, { tag: naechsterTag(), grund: 'urlaub', stunden: tagSoll, text: '' }])}>
+        {liste.length ? 'Weiteren Tag eintragen' : 'Tag eintragen'}
       </button>
     </fieldset>
   );
@@ -208,6 +257,9 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const [nichtGefunden, setNichtGefunden] = useState(false);
   const [grund, setGrund] = useState<'zurueckgeben' | 'oeffnen' | null>(null);
   const [kommentar, setKommentar] = useState('');
+  // Teile, die der Azubi von Hand aufgeklappt hat (leere Teile sind sonst nur eine Zeile)
+  const [auf, setAuf] = useState<Set<string>>(new Set());
+  useUngespeichert(geaendert);
   const pfad = `/api/azubis/${azubiId}/berichte/${montag}`;
   const zurListe = berichtsheftPfad(azubiId, eigenes);
 
@@ -221,19 +273,6 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   useEffect(() => {
     api<Bericht>('GET', pfad).then(uebernimm, () => setNichtGefunden(true));
   }, [pfad, uebernimm]);
-
-  // Warnung des Browsers, wenn ungespeicherte Änderungen verloren gingen
-  useEffect(() => {
-    if (!geaendert) return;
-    const warne = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener('beforeunload', warne);
-    // auch beim Wechsel innerhalb der App nachfragen
-    setzeUngespeichert(true);
-    return () => {
-      window.removeEventListener('beforeunload', warne);
-      setzeUngespeichert(false);
-    };
-  }, [geaendert]);
 
   if (nichtGefunden) {
     return (
@@ -303,6 +342,34 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   };
 
   const ist = summeVon(inhalt);
+  const tagSoll = Math.round((b.soll / 5) * 4) / 4;
+  const inSchule = b.plan.some((p) => p.art === 'schule');
+  const stand = ist <= 0 ? 'leer' : Math.abs(ist - b.soll) <= 0.01 ? 'genau' : ist > b.soll ? 'mehr' : 'weniger';
+  const standText =
+    stand === 'leer'
+      ? `Deine Wochenstunden: ${h(b.soll)} – das sind ${h(tagSoll)} je Tag.`
+      : stand === 'genau'
+        ? 'Passt genau zu deinen Wochenstunden.'
+        : stand === 'mehr'
+          ? `${h(ist - b.soll)} Stunden mehr als deine Wochenstunden.`
+          : `Es fehlen noch ${h(b.soll - ist)} Stunden.`;
+  // dieselben Knöpfe in der Randspalte (PC) und in der Leiste unten (Handy, Tablet – dort mit kurzer Beschriftung)
+  const speicherText = b.status === 'fehlt' || b.status === 'entwurf' ? 'Als Entwurf speichern' : 'Bericht speichern';
+  const aktionen = (kurz: boolean) => (
+    <div className="aktionen links">
+      <button type="button" className={`knopf${kurz ? ' klein' : ''}`} onClick={() => void reicheEin()}>
+        Einreichen
+      </button>
+      <button type="button" className={`knopf schlicht${kurz ? ' klein' : ''}`} aria-label={speicherText} onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
+        {kurz ? 'Speichern' : speicherText}
+      </button>
+      {!kurz && b.rechte.loeschen && (
+        <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
+          Entwurf löschen
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -346,47 +413,104 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
         </p>
       )}
 
-      {b.rechte.schreiben && b.plan.length > 0 && (
-        <p className="leise klein nicht-drucken">
-          Laut Ausbildungsplan in dieser Woche: {b.plan.map((p) => `${ART_TEXT[p.art]} „${p.titel}“`).join(', ')}
-        </p>
-      )}
-
       {b.rechte.schreiben ? (
-        <section className="karte nicht-drucken">
-          {ABSCHNITTE.map((a) => (
-            <EintragListe key={a.schluessel} titel={a.titel} hilfe={a.hilfe} beispiel={a.beispiel} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />
-          ))}
-          <AbwesenheitListe montag={b.montag} tagSoll={Math.round((b.soll / 5) * 4) / 4} liste={inhalt.abwesenheit} onAendern={(l) => aendere({ abwesenheit: l })} />
-          <p className="blatt-summe" aria-live="polite">
-            <strong>
-              Summe: {h(ist)} von {h(b.soll)} Stunden
-            </strong>
-            {Math.abs(ist - b.soll) > 0.01 && ist > 0 && <span className="leise"> · {ist > b.soll ? `${h(ist - b.soll)} Stunden mehr als deine Wochenstunden` : `es fehlen noch ${h(b.soll - ist)} Stunden`}</span>}
-            {Math.abs(ist - b.soll) <= 0.01 && <span className="leise"> · passt genau</span>}
-          </p>
-          <div className="aktionen links">
-            <button type="button" className="knopf schlicht" onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
-              {b.status === 'fehlt' || b.status === 'entwurf' ? 'Als Entwurf speichern' : 'Bericht speichern'}
-            </button>
-            <button type="button" className="knopf" onClick={() => void reicheEin()}>
-              Einreichen
-            </button>
-            {b.rechte.loeschen && (
+        <div className="bericht-eingabe nicht-drucken">
+          <div className="bericht-teile">
+            {b.plan.length > 0 && (
+              <p className="bericht-plan">
+                <strong>Laut Ausbildungsplan in dieser Woche:</strong>{' '}
+                {b.plan.map((p, i) => (
+                  <span key={i} className={`legende-art ${p.art}`}>
+                    {ART_TEXT[p.art]} „{p.titel}“
+                  </span>
+                ))}
+              </p>
+            )}
+            {ABSCHNITTE.map((a, i) =>
+              a.schluessel === 'betrieb' || inhalt[a.schluessel].length > 0 || auf.has(a.schluessel) || (a.schluessel === 'schule' && inSchule) ? (
+                <EintragListe key={a.schluessel} nr={i + 1} art={a.schluessel} titel={a.titel} hilfe={a.hilfe} beispiel={a.beispiel} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />
+              ) : (
+                <TeilZu
+                  key={a.schluessel}
+                  nr={i + 1}
+                  titel={a.titel}
+                  frage={a.frage}
+                  knopf="Eintragen"
+                  onAuf={() => {
+                    setAuf(new Set(auf).add(a.schluessel));
+                    aendere({ [a.schluessel]: [{ text: '', stunden: 0 }] });
+                  }}
+                />
+              ),
+            )}
+            {inhalt.abwesenheit.length > 0 || auf.has('abwesenheit') ? (
+              <AbwesenheitListe nr={4} montag={b.montag} tagSoll={tagSoll} liste={inhalt.abwesenheit} onAendern={(l) => aendere({ abwesenheit: l })} />
+            ) : (
+              <TeilZu
+                nr={4}
+                titel="Abwesenheit"
+                frage="Urlaub, krank oder Feiertag in dieser Woche?"
+                knopf="Eintragen"
+                onAuf={() => {
+                  setAuf(new Set(auf).add('abwesenheit'));
+                  aendere({ abwesenheit: [{ tag: b.montag, grund: 'urlaub', stunden: tagSoll, text: '' }] });
+                }}
+              />
+            )}
+          </div>
+
+          <aside className="karte bericht-rand" aria-label="Zusammenfassung der Woche">
+            <h2>Deine Woche</h2>
+            <p className="bericht-summe" aria-live="polite">
+              <strong>{h(ist)}</strong> von {h(b.soll)} Stunden
+            </p>
+            <div className={`bericht-balken ${stand}`} aria-hidden="true">
+              <i style={{ width: `${Math.min(100, b.soll > 0 ? (ist / b.soll) * 100 : 0)}%` }} />
+            </div>
+            <p className={`bericht-stand ${stand}`}>{standText}</p>
+            <dl className="bericht-anteile">
+              {ANTEILE.map((t) => (
+                <div key={t.schluessel}>
+                  <dt>{t.kurz}</dt>
+                  <dd>{std(teilSumme(inhalt, t.schluessel))}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className={`bericht-sicher klein ${geaendert ? 'offen' : 'leise'}`} role="status">
+              {geaendert ? 'Noch nicht gespeichert' : b.status === 'fehlt' ? 'Noch nichts gespeichert' : 'Alles gespeichert'}
+            </p>
+            {aktionen(false)}
+            <details className="bericht-erklaerung">
+              <summary>Entwurf oder einreichen?</summary>
+              <p className="leise klein">
+                <strong>Als Entwurf speichern:</strong> Du bist noch nicht fertig und schreibst später weiter. Nur du siehst den Entwurf.
+              </p>
+              <p className="leise klein">
+                <strong>Einreichen:</strong> Du bist fertig. Du unterschreibst den Bericht und gibst ihn an deinen Ausbilder. Bis er unterschrieben hat, kannst du ihn noch zurückholen.
+              </p>
+            </details>
+          </aside>
+
+          {b.rechte.loeschen && (
+            <p className="bericht-ende">
               <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
                 Entwurf löschen
               </button>
-            )}
+            </p>
+          )}
+          {/* Handy und Tablet: Summe und Knöpfe bleiben beim Schreiben am unteren Rand erreichbar */}
+          <div className="bericht-leiste" role="group" aria-label="Stunden und Speichern">
+            <span className="bericht-leiste-summe">
+              <span>
+                <strong>{h(ist)}</strong> von {h(b.soll)} Std.
+              </span>
+              <span className={`bericht-balken ${stand}`} aria-hidden="true">
+                <i style={{ width: `${Math.min(100, b.soll > 0 ? (ist / b.soll) * 100 : 0)}%` }} />
+              </span>
+            </span>
+            {aktionen(true)}
           </div>
-          <ul className="punkte leise klein">
-            <li>
-              <strong>Als Entwurf speichern:</strong> Du bist noch nicht fertig und schreibst später weiter. Nur du siehst den Entwurf.
-            </li>
-            <li>
-              <strong>Einreichen:</strong> Du bist fertig. Du unterschreibst den Bericht und gibst ihn an deinen Ausbilder. Bis er unterschrieben hat, kannst du ihn noch zurückholen.
-            </li>
-          </ul>
-        </section>
+        </div>
       ) : (
         <section className="karte">
           <BerichtBlatt b={b} />

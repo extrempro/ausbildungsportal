@@ -4157,3 +4157,355 @@ details.karte[open] > summary::after,
 .sammel-eintrag {
   margin-top: 16px;
 }
+
+/* ---------- Bericht schreiben: Teile links, „Deine Woche“ rechts (Handy: Leiste unten) ---------- */
+.bericht-eingabe {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 24px;
+}
+
+.bericht-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+fieldset.abschnitt.teil,
+.teil.zu {
+  margin: 0 0 16px;
+  padding: 16px 20px 18px;
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--teil, var(--c-muted));
+}
+
+.teil.betrieb {
+  --teil: var(--c-gruen-fg);
+}
+
+.teil.unterweisung {
+  --teil: var(--c-warn-fg);
+}
+
+.teil.schule {
+  --teil: var(--c-schule);
+}
+
+fieldset.abschnitt.teil legend {
+  display: flex;
+  float: left;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+  font-size: 18px;
+}
+
+fieldset.abschnitt.teil legend + * {
+  clear: both;
+}
+
+.teil .ablauf-nr {
+  flex: none;
+  background: var(--c-chip);
+  color: var(--c-text);
+}
+
+.teil-titel {
+  flex: 1;
+  min-width: 0;
+}
+
+.teil legend .pille {
+  flex: none;
+  margin-left: 0;
+  font-size: 13px;
+}
+
+.teil .abschnitt-hilfe {
+  margin: 0 0 12px;
+}
+
+/* leerer Teil: eine Zeile mit Frage und Knopf */
+.teil.zu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  box-shadow: none;
+  background: var(--c-bg);
+}
+
+.teil-zu-text {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bericht-zeile {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 104px auto;
+  align-items: end;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--c-border);
+}
+
+.bericht-zeile.abwesend {
+  grid-template-columns: 24px minmax(0, 1.2fr) minmax(0, 1fr) 104px auto;
+}
+
+.bericht-zeile .bericht-hinweis {
+  grid-column: 2 / 5;
+}
+
+.bericht-zeile-nr {
+  align-self: start;
+  padding-top: 30px;
+  color: var(--c-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.bericht-zeile label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bericht-zeile textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.bericht-rand {
+  position: sticky;
+  top: calc(var(--kopf, 60px) + 16px);
+  margin: 0;
+}
+
+.bericht-rand h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.bericht-summe {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.bericht-summe strong {
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.bericht-balken {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--c-chip);
+}
+
+.bericht-balken i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--c-accent);
+}
+
+.bericht-balken.genau i {
+  background: #16a34a;
+}
+
+.bericht-balken.mehr i {
+  background: #d97706;
+}
+
+.bericht-stand {
+  margin: 8px 0 12px;
+  font-size: 14px;
+}
+
+.bericht-stand.genau {
+  color: var(--c-gruen-fg);
+  font-weight: 600;
+}
+
+.bericht-anteile {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border);
+  font-size: 14px;
+}
+
+.bericht-anteile > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bericht-anteile dt {
+  color: var(--c-muted);
+}
+
+.bericht-anteile dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.bericht-sicher {
+  margin: 0 0 12px;
+}
+
+.bericht-sicher.offen {
+  color: var(--c-warn-fg);
+  font-weight: 600;
+}
+
+.bericht-rand .aktionen {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.bericht-rand .aktionen .knopf {
+  justify-content: center;
+  text-align: center;
+}
+
+.bericht-erklaerung {
+  margin-top: 12px;
+}
+
+.bericht-erklaerung summary {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bericht-erklaerung p {
+  margin: 0 0 8px;
+}
+
+.bericht-leiste {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .bericht-eingabe {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .bericht-rand {
+    position: static;
+    margin-bottom: 16px;
+  }
+
+  /* die Knöpfe stehen auf kleinen Bildschirmen in der Leiste unten */
+  .bericht-rand .aktionen {
+    display: none;
+  }
+
+  .bericht-leiste {
+    position: sticky;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    background: var(--c-card);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  }
+
+  .bericht-leiste-summe {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .bericht-leiste .aktionen {
+    flex-wrap: nowrap;
+  }
+
+  .bericht-leiste-summe strong {
+    font-size: 18px;
+  }
+
+  .bericht-leiste .aktionen {
+    flex: 0 1 auto;
+    margin: 0;
+  }
+
+  /* Knopf „Nach oben“ und Bestätigungen weichen der Leiste aus */
+  body:has(.bericht-leiste) .nach-oben {
+    bottom: calc(156px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.bericht-leiste) .meldungen {
+    bottom: calc(156px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 699px) {
+  fieldset.abschnitt.teil,
+  .teil.zu {
+    padding: 14px 14px 16px;
+  }
+
+  .bericht-zeile,
+  .bericht-zeile.abwesend {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+  }
+
+  .bericht-zeile .bericht-text,
+  .bericht-zeile.abwesend label {
+    grid-column: 2 / -1;
+  }
+
+  .bericht-zeile .bericht-stunden {
+    grid-column: 2 / 3;
+    max-width: 140px;
+  }
+
+  .bericht-zeile .bericht-weg {
+    grid-column: 3 / 4;
+  }
+}
+
+.bericht-ende {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .bericht-ende {
+    display: block;
+    margin: 0 0 16px;
+  }
+}
+
+/* Hinweise auf die Glocke nur für Rollen, die eine haben (der Super-Admin hat keine) */
+body:not(:has(.glocke-knopf)) .nur-mit-glocke {
+  display: none;
+}
