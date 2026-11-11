@@ -12,6 +12,8 @@ export interface Config {
   dataDir: string;
   /** Ordner mit gepflegten Inhalten, z. B. Schulferien je Bundesland */
   contentDir: string;
+  /** Ordner mit Lerninhalten: ein Unterordner je Inhaltspaket (Format des FISI-Lernkompass) */
+  lernDir: string;
   production: boolean;
   /** Adresse, unter der die Nutzer die App im Browser sehen (ohne Schrägstrich am Ende) */
   appUrl: string;
@@ -71,6 +73,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     host: env.HOST || '0.0.0.0',
     dataDir: resolve(env.DATA_DIR || './data'),
     contentDir: resolve(env.CONTENT_DIR || './content'),
+    lernDir: resolve(env.LERN_DIR || './lerninhalte'),
     production,
     appUrl,
     sicher: url.protocol === 'https:',

@@ -5,3 +5,7 @@ data/
 .env
 .DS_Store
 docker-compose.override.yml
+
+# Lerninhalte kommen von außen (eigene Repositories), nur die Anleitung liegt hier
+lerninhalte/*
+!lerninhalte/README.md

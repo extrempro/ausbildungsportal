@@ -17,14 +17,14 @@ function Zeile({ m }: { m: Meldung }) {
   );
 }
 
-function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: string) => Promise<void> }) {
+function BerufFormular({ beruf, pakete, onFertig }: { beruf?: Beruf; pakete: Daten['lernpakete']; onFertig: (text: string) => Promise<void> }) {
   const eingaben = useEingaben();
   const [fehler, setFehler] = useState('');
   const sende = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const f = new FormData(form);
-    const body = { bezeichnung: f.get('bezeichnung'), fachrichtung: f.get('fachrichtung'), regeldauerMonate: f.get('regeldauer') };
+    const body = { bezeichnung: f.get('bezeichnung'), fachrichtung: f.get('fachrichtung'), regeldauerMonate: f.get('regeldauer'), lernpaket: f.get('lernpaket') || null };
     try {
       if (beruf) await api('PATCH', `/api/stammdaten/berufe/${beruf.id}`, body);
       else await api('POST', '/api/stammdaten/berufe', body);
@@ -59,6 +59,20 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
         Regeldauer in Monaten
         <input name="regeldauer" type="number" min={12} max={60} step={1} defaultValue={beruf?.regeldauer_monate ?? 36} list="regeldauern" required />
       </label>
+      {(pakete.length > 0 || beruf?.lernpaket) && (
+        <label>
+          Lernmodul
+          <select name="lernpaket" defaultValue={beruf?.lernpaket ?? ''}>
+            <option value="">– aus –</option>
+            {pakete.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.titel} ({p.themenfelder} Themenfelder{p.fehler > 0 ? `, ${p.fehler} Fehler in den Inhalten` : ''})
+              </option>
+            ))}
+            {beruf?.lernpaket && !pakete.some((p) => p.id === beruf.lernpaket) && <option value={beruf.lernpaket}>{beruf.lernpaket} (Inhalte fehlen auf dem Server)</option>}
+          </select>
+        </label>
+      )}
       <div className="aktionen links">
         <button className={beruf ? 'knopf schlicht' : 'knopf'}>{beruf ? 'Beruf speichern' : 'Beruf anlegen'}</button>
         {beruf && (
@@ -228,10 +242,10 @@ export function Stammdaten() {
         <h2>Ausbildungsberufe</h2>
         {daten.berufe.length === 0 && <p className="leise">Noch kein Beruf angelegt.</p>}
         {daten.berufe.map((b) => (
-          <BerufFormular key={`${b.id}-${b.bezeichnung}-${b.fachrichtung}-${b.regeldauer_monate}`} beruf={b} onFertig={fertig} />
+          <BerufFormular key={`${b.id}-${b.bezeichnung}-${b.fachrichtung}-${b.regeldauer_monate}-${b.lernpaket}`} beruf={b} pakete={daten.lernpakete} onFertig={fertig} />
         ))}
         <h3>Neuer Beruf</h3>
-        <BerufFormular onFertig={fertig} />
+        <BerufFormular pakete={daten.lernpakete} onFertig={fertig} />
       </section>
 
       <section className="karte">

@@ -29,9 +29,12 @@ services:
       HOST: 0.0.0.0
       DATA_DIR: /app/data
       CONTENT_DIR: /app/content
+      LERN_DIR: /app/lerninhalte
       NODE_ENV: production
     volumes:
       # Datenbank und Sicherungen – bleiben bei Updates erhalten. Gehört nie ins Git oder ins Image.
       - ./data:/app/data
       # Gepflegte Inhalte (Schulferien je Bundesland) nur lesend – Änderungen kommen ohne Neustart an
       - ./content:/app/content:ro
+      # Lerninhalte (Lernmodul): ein Unterordner je Inhaltspaket, nur lesend – siehe lerninhalte/README.md
+      - ./lerninhalte:/app/lerninhalte:ro

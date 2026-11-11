@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { datumOderNull, Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import { ABO_ROUTEN } from './abo';
 import type { Anfrage, Antwort, Ctx, Kontext, Route } from './api-basis';
+import { LERN_ROUTEN, paketVon } from './lernen';
 import type { Config } from './config';
 import type { DB } from './db';
 import { transaktion } from './db';
@@ -284,7 +285,7 @@ export const ROUTEN: Route[] = [
     },
   },
 
-  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version } }) },
+  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null } }) },
 
   {
     m: 'PUT',
@@ -604,6 +605,7 @@ export const ROUTEN: Route[] = [
   ...AKTIVITAET_ROUTEN,
   ...MELDUNG_ROUTEN,
   ...ABO_ROUTEN,
+  ...LERN_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

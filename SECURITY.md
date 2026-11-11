@@ -81,6 +81,11 @@ Der Kalender-Link (`/api/abo/<Geheimnis>.ics`) ist der einzige Weg, ohne Anmeldu
 - Ein Link, der in falsche Hände geraten ist, wird unter „Konto“ erneuert. Sperrt man das Konto, liefert der Link sofort nichts mehr.
 - Das Geheimnis liegt im Klartext in der Datenbank, damit das Portal den Link erneut anzeigen kann. Wer die Datenbank lesen kann, sieht die Pläne ohnehin.
 
+## Lernmodul
+
+- Die Lerninhalte (`LERN_DIR`) sind Dateien, die der Betreiber einbindet. Das Portal behandelt sie als vertrauenswürdig, bereinigt die Grafiken aber trotzdem: `<script>`, `<foreignObject>`, Ereignis-Attribute, `javascript:` und Verweise nach außen werden aus den SVGs entfernt, bevor sie in die Seite eingebettet werden. Texte werden nie als HTML ausgegeben. Nur Inhalte aus Quellen einbinden, denen man vertraut.
+- Der Lernstand (Ampel, Lernpunkt, Notiz) ist privat: Es gibt ausschließlich Routen für den Azubi selbst. Wer den Server betreibt, kann ihn wie alles in der Datenbank lesen.
+
 ## Was die App selbst tut
 
 - Rechte werden nur im Server geprüft, an einer Stelle (`behandle` in `server/api.ts`) und über zentrale Funktionen (`server/rechte.ts`). Tests rufen jede Route mit jeder Rolle auf.
