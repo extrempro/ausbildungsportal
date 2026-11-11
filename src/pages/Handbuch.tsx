@@ -719,6 +719,31 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     ),
   },
   {
+    id: 'lernansicht',
+    titel: 'Lerninhalte ansehen',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/lerninhalte">Lerninhalte</Link> ({rolle === 'ausbilder' ? 'im Menü „Planung“' : 'am Handy unter „Mehr“'}) liest du, was die Azubis im Lernmodul lernen. Du siehst alle Lernmodule, die auf dem Server liegen – auch solche, die noch für keinen Beruf eingeschaltet sind.
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Themenfelder">Die Gliederung des Stoffs. Ein Klick öffnet das Themenfeld mit seinen Unterthemen.</Begriff>
+          <Begriff wort="Cheatsheet">Klappt an jedem Unterthema auf: Begriffe, Tabellen, Befehle, Merksatz, Prüfungsfrage.</Begriff>
+          <Begriff wort="Zusatzwissen">Vertiefungen am Ende eines Themenfelds.</Begriff>
+          <Begriff wort="Kompendium">Alle Bausteine aus allen Cheatsheets zum Suchen und Nachschlagen.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Die Ansicht ist nur zum Lesen. Ampel, Notizen und Abzeichen gibt es nur bei den Azubis.</li>
+          <li>
+            <strong>Den Lernstand einzelner Azubis siehst du nicht</strong> – auch nicht, welche Abzeichen jemand hat. Er gehört den Azubis allein; so ist es ihnen im Portal zugesagt.
+          </li>
+          <li>Fällt dir ein Fehler im Stoff auf: Die Inhalte liegen als Dateien beim Betreiber des Portals und werden dort geändert.{rolle === 'ausbilder' ? ' Wie die Dateien aufgebaut sind, steht im Kapitel „Lerninhalte für einen Beruf erstellen“.' : ''}</li>
+          {rolle === 'ausbilder' && <li>Für welchen Beruf ein Lernmodul gilt, stellst du in den Stammdaten am Beruf ein.</li>}
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'jahreskalender',
     titel: 'Den Jahreskalender lesen',
     inhalt: (

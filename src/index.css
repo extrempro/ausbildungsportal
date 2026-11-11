@@ -7284,3 +7284,28 @@ ul.antrag-hinweise {
     opacity: 0;
   }
 }
+
+/* Leseansicht der Lerninhalte (Ausbilder, Beauftragte): was zum Lernstand gehört, ist ausgeblendet */
+.abz-feld[hidden],
+.zusatz-gelesen[hidden],
+.lern-unterthema > details[hidden] {
+  display: none;
+}
+
+.lern-pakete {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.lern-pakete .karte {
+  display: grid;
+  gap: 8px;
+  height: 100%;
+  margin: 0;
+  color: inherit;
+  text-decoration: none;
+}

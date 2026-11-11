@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.34.0] – 2026-11-11
+
+### Neu
+
+- **Lerninhalte ansehen (Ausbilder und Ausbildungsbeauftragte).** Unter „Lerninhalte“ lesen sie, was die Azubis im Lernmodul lernen: Themenfelder, Cheatsheets, Zusatzwissen und Kompendium – für alle Lernmodule auf dem Server, auch solche, die noch für keinen Beruf eingeschaltet sind. An jedem Lernmodul steht, für welche Berufe es gilt.
+- Die Ansicht ist nur zum Lesen: keine Ampel, keine Notizen, keine Abzeichen. **Den Lernstand einzelner Azubis zeigt sie nicht** – der bleibt privat.
+- Ausbilder finden den Punkt im Menü „Planung“, Beauftragte in der Hauptleiste (am Handy unter „Mehr“).
+- Handbuch (Ausbilder, Beauftragte): Kapitel „Lerninhalte ansehen“.
+
 ## [0.33.0] – 2026-11-11
 
 ### Neu

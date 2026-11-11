@@ -4,6 +4,7 @@ import { api } from '../api';
 import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { Icon } from '../icons';
+import { useLern } from '../lernen/basis';
 import { Inline, LernReiter, TabelleAnsicht } from '../lernen/teile';
 import type { Tabelle } from '../lernen/teile';
 import { Link } from '../router';
@@ -82,9 +83,10 @@ export function LernKompendium() {
   const { suche, typ, feld } = filter;
   const setze = (neu: Partial<typeof gemerkt>) => setFilter((f) => (gemerkt = { ...f, ...neu }));
 
+  const { basis, api: quelle, lesen } = useLern();
   useEffect(() => {
-    api<Daten>('GET', '/api/lernen/kompendium').then(setDaten, (e: Error) => setFehler(e.message));
-  }, []);
+    api<Daten>('GET', `${quelle}/kompendium`).then(setDaten, (e: Error) => setFehler(e.message));
+  }, [quelle]);
 
   const alle = useMemo(() => {
     if (!daten) return [];
@@ -115,7 +117,7 @@ export function LernKompendium() {
       <h1>Kompendium</h1>
       <LernReiter />
       <p className="leise">
-        Zum Nachschlagen: {alle.length} Einträge aus allen Cheatsheets – Begriffe, Befehle, Tabellen, Merksätze, Prüfungsfragen und Zusatzwissen. <HandbuchLink kapitel="kompendium">Im Kompendium nachschlagen</HandbuchLink>
+        Zum Nachschlagen: {alle.length} Einträge aus allen Cheatsheets – Begriffe, Befehle, Tabellen, Merksätze, Prüfungsfragen und Zusatzwissen. {lesen ? <HandbuchLink kapitel="lernansicht">Lerninhalte ansehen</HandbuchLink> : <HandbuchLink kapitel="kompendium">Im Kompendium nachschlagen</HandbuchLink>}
       </p>
 
       <section className="karte komp-filter" aria-label="Suche und Filter">
@@ -220,7 +222,7 @@ export function LernKompendium() {
                   </p>
                 )}
                 <p className="klein komp-weg">
-                  <Link zu={`/lernen/${e.feld}#${e.typ === 'zusatz' ? 'z' : 'u'}-${e.sub}`}>
+                  <Link zu={`${basis}/${e.feld}#${e.typ === 'zusatz' ? 'z' : 'u'}-${e.sub}`}>
                     {e.typ === 'zusatz' ? 'Zum Zusatzwissen' : 'Zum Cheatsheet'}: {e.feldTitel} › {e.typ === 'zusatz' ? e.titel : e.subTitel}
                   </Link>
                 </p>

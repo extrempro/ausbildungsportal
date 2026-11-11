@@ -15,6 +15,8 @@ import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Jahreskalender } from './pages/Jahreskalender';
 import { Lernen } from './pages/Lernen';
+import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
+import { Leseansicht } from './lernen/basis';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
 import { Protokoll } from './pages/Protokoll';
@@ -268,6 +270,8 @@ export function App() {
 
   const jahrAzubi = /^\/jahreskalender\/(\d{1,12})$/.exec(pfad)?.[1];
   const urlaubAzubi = /^\/azubis\/(\d{1,12})\/urlaub$/.exec(pfad)?.[1];
+  // Leseansicht der Lerninhalte für Ausbilder und Beauftragte: /lerninhalte/<paket>[/kompendium|/<themenfeld>]
+  const lesePfad = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})(?:\/([a-z0-9-]{1,40}))?$/.exec(pfad);
   const lernThema = /^\/lernen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
 
   let seite;
@@ -294,6 +298,9 @@ export function App() {
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
+  else if (pfad === '/lerninhalte' && betreut) seite = <LerninhalteListe />;
+  else if (lesePfad && betreut)
+    seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
@@ -331,6 +338,8 @@ export function App() {
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
             { zu: '/jahreskalender', text: 'Jahreskalender', kurz: 'Jahr', icon: 'uebersicht', aktivAb: '/jahreskalender' },
             { zu: '/urlaub', text: 'Urlaub', icon: 'urlaub', mehr: true, zahl: urlaubZuTun },
+            // Ausbilder finden die Lerninhalte unter „Planung“ – ihre Hauptleiste ist sonst zu voll
+            ...(konto.rolle === 'beauftragter' ? [{ zu: '/lerninhalte', text: 'Lerninhalte', icon: 'lernen', aktivAb: '/lerninhalte', mehr: true } as Punkt] : []),
           ];
   const verwaltung: Punkt[] =
     konto.rolle === 'ausbilder'
@@ -350,13 +359,14 @@ export function App() {
       ? [
           { zu: '/planung/sammelplanung', text: 'Sammelplanung', icon: 'sammel' },
           { zu: '/planung/bausteine', text: 'Planbausteine', icon: 'baustein' },
+          { zu: '/lerninhalte', text: 'Lerninhalte', icon: 'lernen', aktivAb: '/lerninhalte' },
         ]
       : [];
   const gruppen: { id: 'planung' | 'verwaltung'; text: string; punkte: Punkt[] }[] = [
     { id: 'planung' as const, text: 'Planung', punkte: planung },
     { id: 'verwaltung' as const, text: 'Verwaltung', punkte: verwaltung },
   ].filter((g) => g.punkte.length > 0);
-  const inGruppe = (g: { punkte: Punkt[] }) => g.punkte.some((p) => p.zu === pfad);
+  const inGruppe = (g: { punkte: Punkt[] }) => g.punkte.some((p) => p.zu === pfad || (!!p.aktivAb && pfad.startsWith(`${p.aktivAb}/`)));
   const hauptMehr = haupt.filter((p) => p.mehr);
   const inMehr = gruppen.some(inGruppe) || persoenlich.some((p) => p.zu === pfad) || hauptMehr.some((p) => p.zu === pfad || (!!p.aktivAb && pfad.startsWith(`${p.aktivAb}/`)));
   const initialen = konto.anzeigename

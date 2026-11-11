@@ -414,3 +414,38 @@ test('Abzeichen: Wer schon vorher gelernt hat, bekommt sie beim Öffnen von „L
   const d = koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c }));
   assert.deepEqual([d.themenfelder[0].abzeichen.name, d.themenfelder[0].abzeichen.erreicht, d.rang.name], ['Stein', '2026-11-10', 'Stein']);
 });
+
+test('Leseansicht: Ausbilder und Beauftragte sehen alle Lernmodule mit Inhalt – aber keinen Lernstand', async () => {
+  const w = await welt();
+  // Anna hat gelernt, eine Notiz geschrieben und Zusatzwissen abgehakt
+  const ca = als(w, w.anna);
+  await ruf(w.u, 'PATCH', '/api/lernen/unterthema/netz.subnetting', { cookies: ca, body: { status: 'gruen', luecke: 'geheim-lernpunkt', notiz: 'geheim-notiz' } });
+  await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: ca, body: { gelesen: true } });
+
+  for (const wer of [w.ausbilder, w.bea]) {
+    const c = als(w, wer);
+    // alle Pakete auf dem Server, mit den Berufen, für die sie eingeschaltet sind
+    const liste = koerper(await ruf(w.u, 'GET', '/api/lerninhalte', { cookies: c })).pakete;
+    assert.deepEqual(liste.map((p: { id: string; titel: string; themenfelder: number; unterthemen: number; berufe: string[] }) => [p.id, p.titel, p.themenfelder, p.unterthemen, p.berufe]), [['fisi', 'Fachinformatiker Systemintegration', 2, 3, ['Fachinformatiker']]]);
+    // Übersicht: Themenfelder ohne Stand
+    const ue = koerper(await ruf(w.u, 'GET', '/api/lerninhalte/fisi', { cookies: c }));
+    assert.deepEqual(ue.themenfelder.map((f: { id: string }) => f.id), ['netz', 'wiso']);
+    assert.equal(ue.rang, undefined);
+    assert.deepEqual([ue.themenfelder[0].unterthemen[0].status, ue.themenfelder[0].zusatz[0].gelesen, ue.themenfelder[0].abzeichen.stufe], ['rot', false, 0]);
+    // Themenfeld: der volle Inhalt, aber nichts von Anna
+    const t = await ruf(w.u, 'GET', '/api/lerninhalte/fisi/thema/netz', { cookies: c });
+    const thema = koerper(t).thema;
+    assert.equal(thema.unterthemen[0].begriffe[0].begriff, 'Netzadresse');
+    assert.deepEqual([thema.unterthemen[0].status, thema.unterthemen[0].luecke, thema.unterthemen[0].notiz, thema.zusatz[0].gelesen, thema.abzeichen.stufe], ['rot', '', '', false, 0]);
+    assert.ok(!JSON.stringify(koerper(t)).includes('geheim'), 'weder Lernpunkt noch Notiz');
+    assert.ok(koerper(await ruf(w.u, 'GET', '/api/lerninhalte/fisi/kompendium', { cookies: c })).eintraege.length > 3);
+    // unbekanntes Paket, unbekanntes Themenfeld, krumme Namen
+    for (const pfad of ['/api/lerninhalte/gibtsnicht', '/api/lerninhalte/fisi/thema/gibtsnicht', '/api/lerninhalte/..%2Ffisi', '/api/lerninhalte/FISI/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: c })).status, 404, pfad);
+    // die Seiten der Azubis bleiben ihnen verschlossen – und schreiben können sie nichts
+    assert.equal((await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).status, 403);
+    assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/unterthema/netz.subnetting', { cookies: c, body: { status: 'gelb' } })).status, 403);
+  }
+  // Azubis und Super-Admin haben die Leseansicht nicht
+  for (const wer of [w.anna, w.maler, admin(w.u.db)]) for (const pfad of ['/api/lerninhalte', '/api/lerninhalte/fisi', '/api/lerninhalte/fisi/thema/netz', '/api/lerninhalte/fisi/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) })).status, 403, `${wer.rolle} ${pfad}`);
+  assert.equal((await ruf(w.u, 'GET', '/api/lerninhalte')).status, 401);
+});
