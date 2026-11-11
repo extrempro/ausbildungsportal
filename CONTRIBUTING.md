@@ -53,7 +53,7 @@ Jede neue Funktion und jede Änderung wird im Handbuch beschrieben – für jede
 
 - **Keine neuen Abhängigkeiten** ohne vorherige Abstimmung. Kein UI-Framework, keine CSS-Bibliothek.
 - **Datenbank:** Änderungen nur als neue, fortlaufend nummerierte Datei in `server/migrations/`. Vorhandene Migrationen werden nie geändert.
-- **Gestaltung:** ein Stylesheet (`src/index.css`), Farben nur über die vorhandenen Variablen (`--c-…`), damit hell und dunkel stimmen.
+- **Gestaltung:** ein Stylesheet (`src/index.css`), Farben nur über die vorhandenen Variablen (`--c-…`), damit hell und dunkel stimmen. Welche Farben und Bausteine es gibt, zeigt [docs/gestaltung.md](docs/gestaltung.md) – erst dort nachsehen, dann neu bauen.
 - **Sprache:** Oberfläche, Kommentare und Bezeichner sind deutsch.
 
 ## Datenschutz und Recht
