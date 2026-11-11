@@ -537,3 +537,51 @@ test('Termine hinterlassen bei anderen keine Spur: Glocke, Übersicht, Bericht-H
   assert.deepEqual((await bericht(w.azubi)).plan, [{ art: 'termin', titel: 'JAV-Sitzung' }], 'dem Azubi hilft der Termin beim Schreiben');
   assert.deepEqual((await bericht(w.ausbilder)).plan, []);
 });
+
+test('Jahreskalender: ein Jahr mit Schule, Einsatz, Urlaub, Prüfung und Feiertagen; Termine und fremde Azubis bleiben privat', async () => {
+  const w = await welt();
+  const c = als(w, w.ausbilder);
+  await lege(w, w.ausbilder, EINSATZ); // 09.11.–06.12.2026 (ganze Wochen)
+  await lege(w, w.ausbilder, { art: 'schule', von: '2026-12-28', bis: '2027-01-04', titel: 'Blockunterricht' }); // über den Jahreswechsel
+  await lege(w, w.azubi, { art: 'termin', titel: 'JAV-Sitzung', tag: '2026-11-18', zeitVon: '14:00' });
+  await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/berichte/2026-11-02`, { cookies: als(w, w.azubi), body: { inhalt: { betrieb: [{ text: 'x', stunden: 24 }], abwesenheit: [{ tag: '2026-11-05', grund: 'urlaub', stunden: 8 }, { tag: '2026-11-04', grund: 'krank', stunden: 8 }] } } });
+  const profil = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/profil`, { cookies: c })).profil;
+  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/profil`, { cookies: c, body: { ...profil, pruefungen: [{ bezeichnung: 'AP Teil 1', datum: '2027-03-09' }] } })).status, 200);
+
+  // Azubi: der eigene Kalender, ohne Angabe das laufende Jahr
+  const eigen = koerper(await ruf(w.u, 'GET', '/api/jahreskalender', { cookies: als(w, w.azubi) }));
+  assert.deepEqual([eigen.jahr, eigen.heute, eigen.eigenes, eigen.einzeln, eigen.azubis.length], [2026, '2026-11-10', true, true, 1]);
+  const a = eigen.azubis[0];
+  assert.deepEqual([a.id, a.anzeigename, a.beginn, a.ende, a.ausbildungsjahr], [w.azubi.id, 'Anna Azubi', '2025-08-01', '2028-07-31', 2]);
+  assert.deepEqual(a.eintraege, [{ art: 'einsatz', von: '2026-11-09', bis: '2026-12-06', titel: 'IT-Support' }, { art: 'schule', von: '2026-12-28', bis: '2027-01-10', titel: 'Blockunterricht' }]);
+  assert.deepEqual(a.urlaub, ['2026-11-05']);
+  assert.deepEqual(a.termine, [{ tag: '2026-11-18', zeitVon: '14:00', titel: 'JAV-Sitzung' }]);
+  assert.deepEqual(a.pruefungen, []);
+  assert.ok(eigen.feiertage.some((f: { tag: string; name: string }) => f.tag === '2026-10-31' && f.name === 'Reformationstag'));
+  assert.ok(a.ferien.length > 0);
+  // Folgejahr: der Schulblock reicht hinein, die Prüfung steht darin
+  const naechstes = koerper(await ruf(w.u, 'GET', '/api/jahreskalender?jahr=2027', { cookies: als(w, w.azubi) })).azubis[0];
+  assert.deepEqual(naechstes.eintraege.map((e: { titel: string }) => e.titel), ['Blockunterricht']);
+  assert.deepEqual(naechstes.pruefungen, [{ tag: '2027-03-09', bezeichnung: 'AP Teil 1' }]);
+  // ein Azubi kommt nicht an einen anderen Kalender
+  assert.equal((await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.ben.id}`, { cookies: als(w, w.azubi) })).status, 404);
+  assert.equal((await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.azubi.id}`, { cookies: als(w, w.azubi) })).status, 200);
+
+  // Ausbilderin: alle ihre Azubis – ohne die privaten Termine
+  const alle = koerper(await ruf(w.u, 'GET', '/api/jahreskalender?jahr=2026', { cookies: c }));
+  assert.deepEqual([alle.eigenes, alle.einzeln, alle.azubis.map((x: { anzeigename: string }) => x.anzeigename).sort()], [false, false, ['Anna Azubi', 'Ben Azubi']]);
+  const anna = alle.azubis.find((x: { id: number }) => x.id === w.azubi.id);
+  assert.deepEqual([anna.termine, anna.urlaub, anna.eintraege.length], [[], ['2026-11-05'], 2]);
+  const einzeln = koerper(await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.ben.id}`, { cookies: c }));
+  assert.deepEqual([einzeln.einzeln, einzeln.azubis.length, einzeln.azubis[0].anzeigename], [true, 1, 'Ben Azubi']);
+
+  // Beauftragter: nur zugewiesene Azubis; fremde gibt es für ihn nicht
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/jahreskalender', { cookies: als(w, w.beauftragter) })).azubis, []);
+  assert.equal((await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.azubi.id}`, { cookies: als(w, w.beauftragter) })).status, 404);
+  zuweisen(w.u.db, w.azubi, w.beauftragter);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/jahreskalender', { cookies: als(w, w.beauftragter) })).azubis.length, 1);
+
+  for (const jahr of ['abc', '1999', '20260']) assert.equal((await ruf(w.u, 'GET', `/api/jahreskalender?jahr=${jahr}`, { cookies: c })).status, 400);
+  assert.equal((await ruf(w.u, 'GET', '/api/jahreskalender', { cookies: als(w, w.admin) })).status, 403);
+  assert.equal((await ruf(w.u, 'GET', '/api/jahreskalender')).status, 401);
+});

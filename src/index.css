@@ -6471,3 +6471,417 @@ html.dark {
     border-bottom-color: #999;
   }
 }
+
+/* ---------- Jahreskalender ---------- */
+.jk-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.jk-legende li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jk-farbe {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+}
+
+.jk-farbe.schule,
+.jk-zelle.schule,
+.jk-balken.schule {
+  background: var(--c-schule-soft);
+  color: var(--c-schule);
+}
+
+.jk-farbe.einsatz,
+.jk-zelle.einsatz,
+.jk-balken.einsatz {
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+}
+
+.jk-farbe.urlaub,
+.jk-zelle.urlaub,
+.jk-balken.urlaub {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+}
+
+.jk-farbe.pruefung,
+.jk-zelle.pruefung {
+  background: var(--c-rot-bg);
+  color: var(--c-rot-fg);
+}
+
+.jk-farbe.feiertag,
+.jk-zelle.feiertag {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.jk-farbe.ferien {
+  background: none;
+  border: 0;
+  border-bottom: 4px solid var(--c-ferien);
+  border-radius: 0;
+}
+
+.jk-farbe.termin {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+.jk-farbe.aus {
+  background: var(--c-chip);
+}
+
+.jk-rahmen {
+  /* eigener Bezugsrahmen: sonst ragen die versteckten Texte für Vorleseprogramme aus dem Rollbereich */
+  position: relative;
+  padding: 0;
+  overflow-x: auto;
+}
+
+/* Tag für Tag: Monate als Spalten */
+.jk-tabelle {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.jk-tabelle th,
+.jk-tabelle td {
+  height: 26px;
+  padding: 2px 4px;
+  border: 1px solid var(--c-border);
+  overflow: hidden;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jk-tabelle thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 4px;
+  background: var(--c-card);
+  font-size: 13px;
+  text-align: center;
+}
+
+.jk-tabelle thead th.jetzt {
+  color: var(--c-accent);
+  box-shadow: inset 0 -3px 0 var(--c-accent);
+}
+
+.jk-monat-kurz {
+  display: none;
+}
+
+.jk-tabelle .jk-tag {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 34px;
+  background: var(--c-card);
+  color: var(--c-muted);
+  font-weight: 600;
+  text-align: right;
+}
+
+.jk-tabelle thead .jk-tag {
+  z-index: 3;
+}
+
+.jk-leer {
+  background: repeating-linear-gradient(135deg, transparent 0 5px, var(--c-chip) 5px 6px);
+}
+
+.jk-zelle.frei,
+.jk-zelle.ausserhalb {
+  background: var(--c-chip);
+  color: var(--c-muted);
+}
+
+.jk-zelle.ferien {
+  box-shadow: inset 0 -3px 0 var(--c-ferien);
+}
+
+.jk-zelle.heute {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+  font-weight: 700;
+}
+
+.jk-wt {
+  display: inline-block;
+  width: 20px;
+  opacity: 0.75;
+}
+
+.jk-text {
+  font-weight: 600;
+}
+
+.jk-termin {
+  margin-left: 4px;
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.jk-termin::before {
+  content: '● ';
+  font-size: 9px;
+}
+
+/* Alle Azubis: je Azubi eine Zeile mit Balken */
+.jk-alle {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+.jk-alle th,
+.jk-alle td {
+  padding: 0;
+  border-bottom: 1px solid var(--c-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.jk-alle .jk-name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 190px;
+  min-width: 190px;
+  padding: 8px 12px;
+  border-right: 1px solid var(--c-border);
+  background: var(--c-card);
+}
+
+.jk-alle .jk-name a {
+  display: block;
+  font-weight: 600;
+}
+
+.jk-alle .jk-name span {
+  display: block;
+  overflow: hidden;
+  font-weight: 400;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 166px;
+}
+
+.jk-alle thead th {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.jk-monate {
+  position: relative;
+  height: 20px;
+}
+
+.jk-monate span {
+  position: absolute;
+  top: 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.jk-monate span.jetzt {
+  color: var(--c-accent);
+}
+
+.jk-gruppe th {
+  padding: 6px 12px;
+  background: var(--c-chip);
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.jk-bahn {
+  position: relative;
+  height: 68px;
+}
+
+.jk-bahn > * {
+  position: absolute;
+}
+
+.jk-strich {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--c-border);
+}
+
+.jk-aus {
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, transparent 0 5px, var(--c-track) 5px 6px);
+}
+
+.jk-ferien {
+  bottom: 0;
+  height: 4px;
+  background: var(--c-ferien);
+  opacity: 0.7;
+}
+
+.jk-balken {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  min-width: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.jk-balken span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jk-balken.schule {
+  top: 5px;
+  border: 1px solid var(--c-schule);
+}
+
+.jk-balken.einsatz {
+  top: 29px;
+  border: 1px solid var(--c-gruen-fg);
+}
+
+.jk-balken.urlaub {
+  top: 53px;
+  height: 8px;
+  padding: 0;
+  border: 1px solid var(--c-warn-fg);
+  border-radius: 3px;
+}
+
+.jk-pruefung {
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px solid var(--c-rot-fg);
+}
+
+.jk-pruefung::after {
+  content: '';
+  position: absolute;
+  top: 46px;
+  left: -7px;
+  width: 10px;
+  height: 10px;
+  background: var(--c-rot-fg);
+  transform: rotate(45deg);
+}
+
+.jk-heute {
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--c-accent);
+  opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+  .jk-tabelle {
+    min-width: 860px;
+    font-size: 11px;
+  }
+
+  .jk-monat-lang {
+    display: none;
+  }
+
+  .jk-monat-kurz {
+    display: inline;
+  }
+
+  .jk-alle .jk-name {
+    width: 120px;
+    min-width: 120px;
+    padding: 8px;
+  }
+
+  .jk-alle .jk-name span {
+    max-width: 104px;
+  }
+}
+
+@media print {
+  .jk-rahmen {
+    overflow: visible;
+  }
+
+  .jk-tabelle,
+  .jk-alle {
+    min-width: 0;
+  }
+}
+
+/* PC: Die Kopfzeile ist nie breiter als der Inhalt (1200 px). Damit auch sieben Menüpunkte neben Marke, Glocke und
+   Konto passen, rücken sie zusammen; in schmalen Fenstern steht statt des Schriftzugs nur das Zeichen bzw. Logo. */
+@media (min-width: 1024px) {
+  .haupt-nav {
+    gap: 0;
+  }
+
+  .haupt-nav > a,
+  .haupt-nav .menue-knopf {
+    padding: 0 9px;
+  }
+
+  .marke-klein {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1231px) {
+  .marke-name {
+    display: none;
+  }
+
+  /* ein breites Logo und der Name am Konto-Knopf machen in schmalen Fenstern Platz (der Knopf ist per aria-label benannt) */
+  .marke .logo {
+    max-width: 120px;
+  }
+
+  .ich-name {
+    display: none;
+  }
+
+  .marke {
+    padding-right: 12px;
+  }
+}

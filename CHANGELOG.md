@@ -1,5 +1,21 @@
 # Änderungen
 
+## [0.27.0] – 2026-11-11
+
+### Neu
+
+- **Jahreskalender** für Azubis, Ausbilder und Ausbildungsbeauftragte – ein Kalenderjahr auf einer Seite, nur zum Lesen, mit Blättern zwischen den Jahren.
+  - **Azubi:** im Ausbildungsplan über „Jahreskalender anzeigen“. Monate als Spalten, Tage 1–31 als Zeilen: Berufsschule, Einsätze, Prüfungen, Urlaub (laut Berichtsheft), Feiertage, Schulferien und die eigenen Termine.
+  - **Ausbilder und Beauftragte:** eigener Menüpunkt „Jahreskalender“ (am Handy unter „Mehr“). Monate als Spalten, je Azubi eine Zeile mit Balken für Berufsschule, Einsätze und Urlaub, Markierung für Prüfungen, Schulferien und „heute“; nach Ausbildungsjahr geordnet. Ein Klick auf den Namen zeigt den Kalender dieses Azubis Tag für Tag.
+  - Es gelten dieselben Rechte wie überall: Ausbilder sehen ihre Azubis, Beauftragte die zugewiesenen. Private Termine eines Azubis stehen nur in seinem eigenen Kalender.
+- Schnittstelle `GET /api/jahreskalender?jahr=&azubi=`.
+- Handbuch: Kapitel „Den Jahreskalender lesen“ für Azubis sowie für Ausbilder und Beauftragte.
+
+### Geändert
+
+- Kopfzeile am PC: Die Menüpunkte stehen etwas enger, damit auch sieben Punkte passen. Neben einem Logo des Betriebs entfällt der Schriftzug „Ausbildungsportal“; in schmalen Fenstern (unter 1232 px) stehen nur Zeichen bzw. Logo und am Konto-Knopf nur die Initialen.
+- Handy: Menüpunkte, die nicht in die Leiste unten passen, stehen unter „Mehr“ → „Weitere Bereiche“.
+
 ## [0.26.0] – 2026-11-11
 
 ### Neu

@@ -14,6 +14,7 @@ import { UebersichtSeite } from './pages/Uebersicht';
 import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
+import { Jahreskalender } from './pages/Jahreskalender';
 import { Lernen } from './pages/Lernen';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
@@ -38,6 +39,8 @@ interface Punkt {
   kurz?: string;
   icon: IconName;
   aktivAb?: string;
+  /** auf dem Handy nicht in der Leiste unten, sondern unter „Mehr“ – die Leiste fasst nur fünf Punkte */
+  mehr?: boolean;
   /** Zahl am Menüpunkt, z. B. offene Fehlermeldungen */
   zahl?: number;
 }
@@ -255,6 +258,7 @@ export function App() {
     return null;
   }
 
+  const jahrAzubi = /^\/jahreskalender\/(\d{1,12})$/.exec(pfad)?.[1];
   const lernThema = /^\/lernen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
 
   let seite;
@@ -264,6 +268,8 @@ export function App() {
   else if (heft && heftAzubi !== null && heft[2]) seite = <BerichtSeite key={`${heftAzubi}-${heft[2]}`} azubiId={heftAzubi} montag={heft[2]} eigenes={!heft[1]} />;
   else if (heft && heftAzubi !== null) seite = <Berichtsheft key={heftAzubi} azubiId={heftAzubi} />;
   else if (plan && planAzubi !== null) seite = <PlanSeite key={planAzubi} azubiId={planAzubi} />;
+  else if (pfad === '/jahreskalender' && (betreut || konto.rolle === 'azubi')) seite = <Jahreskalender />;
+  else if (jahrAzubi && betreut) seite = <Jahreskalender key={jahrAzubi} azubiId={Number(jahrAzubi)} />;
   else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite darfPlanen={konto.rolle === 'ausbilder'} />;
   else if (pfad === '/planung/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
   else if (pfad === '/planung/bausteine' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
@@ -312,6 +318,7 @@ export function App() {
             { zu: '/azubis', text: 'Azubis', icon: 'azubis', aktivAb: '/azubis' },
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
             { zu: '/uebersicht', text: 'Übersicht', icon: 'uebersicht' },
+            { zu: '/jahreskalender', text: 'Jahreskalender', icon: 'plan', aktivAb: '/jahreskalender', mehr: true },
           ];
   const verwaltung: Punkt[] =
     konto.rolle === 'ausbilder'
@@ -338,7 +345,8 @@ export function App() {
     { id: 'verwaltung' as const, text: 'Verwaltung', punkte: verwaltung },
   ].filter((g) => g.punkte.length > 0);
   const inGruppe = (g: { punkte: Punkt[] }) => g.punkte.some((p) => p.zu === pfad);
-  const inMehr = gruppen.some(inGruppe) || persoenlich.some((p) => p.zu === pfad);
+  const hauptMehr = haupt.filter((p) => p.mehr);
+  const inMehr = gruppen.some(inGruppe) || persoenlich.some((p) => p.zu === pfad) || hauptMehr.some((p) => p.zu === pfad || (!!p.aktivAb && pfad.startsWith(`${p.aktivAb}/`)));
   const initialen = konto.anzeigename
     .split(/\s+/)
     .map((t) => t[0])
@@ -423,7 +431,7 @@ export function App() {
             ) : (
               <>
                 <img src="/favicon.svg" alt="" width="28" height="28" />
-                Ausbildungsportal
+                <span className="marke-name">Ausbildungsportal</span>
               </>
             )}
           </Link>
@@ -522,7 +530,9 @@ export function App() {
 
       {/* Handy und Tablet: Leiste unten, die wichtigsten Bereiche mit dem Daumen erreichbar */}
       <nav aria-label="Hauptnavigation" className="tabs">
-        {haupt.map((p) => (
+        {haupt
+          .filter((p) => !p.mehr)
+          .map((p) => (
           <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb}>
             <Icon name={p.icon} groesse={22} />
             <span>{p.kurz ?? p.text}</span>
@@ -553,6 +563,12 @@ export function App() {
                 <Icon name="zu" />
               </button>
             </div>
+            {hauptMehr.length > 0 && (
+              <div>
+                <span className="ueberschrift-klein">Weitere Bereiche</span>
+                <ul className="bogen-liste">{liste(hauptMehr)}</ul>
+              </div>
+            )}
             {gruppen.map((g) => (
               <div key={g.id}>
                 <span className="ueberschrift-klein">{g.text}</span>

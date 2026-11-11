@@ -343,6 +343,33 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'jahreskalender',
+    titel: 'Den Jahreskalender lesen',
+    inhalt: (
+      <>
+        <p>
+          Der <Link zu="/jahreskalender">Jahreskalender</Link> zeigt dein ganzes Jahr auf einer Seite. Du findest ihn im Ausbildungsplan über „Jahreskalender anzeigen“. Die Monate stehen nebeneinander, die Tage 1 bis 31 untereinander – wie bei einem Wandkalender.
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Violett">Berufsschule.</Begriff>
+          <Begriff wort="Grün">Einsatz in einer Abteilung. Der Name steht am ersten Tag und an jedem Montag.</Begriff>
+          <Begriff wort="Gelb">Urlaub – so, wie du ihn im Berichtsheft als Abwesenheit eingetragen hast.</Begriff>
+          <Begriff wort="Rot">Prüfung.</Begriff>
+          <Begriff wort="Blau">Feiertag. Ein blauer Punkt mit Text ist ein eigener Termin von dir – den siehst nur du.</Begriff>
+          <Begriff wort="Türkiser Strich unten">Schulferien.</Begriff>
+          <Begriff wort="Grau">Wochenende oder Tage vor Beginn und nach Ende deiner Ausbildung.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Der heutige Tag ist blau umrandet.</li>
+          <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor. „Dieses Jahr“ bringt dich zurück.</li>
+          <li>Fahr mit der Maus über einen Tag (oder tipp ihn lange an): Dann steht dort alles zu diesem Tag.</li>
+          <li>Am Handy ist der Kalender breiter als der Bildschirm – wisch nach links und rechts. Die Spalte mit den Tagen bleibt stehen.</li>
+          <li>Ändern kannst du hier nichts. Einträge machst du im Ausbildungsplan, Urlaub im Berichtsheft.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'lernen',
     titel: 'Lernen mit Cheatsheets und Ampel',
     inhalt: (
@@ -534,6 +561,34 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         <p>
           Die <Link zu="/uebersicht">Übersicht</Link> zeigt {rolle === 'ausbilder' ? 'deine' : 'alle dir zugewiesenen'} Azubis nebeneinander über 26 Wochen: Schule, Einsätze und Urlaub laut Bericht.
         </p>
+      </>
+    ),
+  },
+  {
+    id: 'jahreskalender',
+    titel: 'Den Jahreskalender lesen',
+    inhalt: (
+      <>
+        <p>
+          Der <Link zu="/jahreskalender">Jahreskalender</Link> (eigener Menüpunkt, am Handy unter „Mehr“) zeigt ein ganzes Kalenderjahr für alle {rolle === 'ausbilder' ? 'deine' : 'dir zugewiesenen'} Azubis: Die Monate stehen nebeneinander, jeder Azubi hat eine Zeile. Die Übersicht zeigt dagegen die nächsten 26 Wochen genauer.
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Obere Balken (violett)">Berufsschule.</Begriff>
+          <Begriff wort="Mittlere Balken (grün)">Einsätze, mit Namen. Ist der Balken zu kurz für den Namen: mit der Maus darauf zeigen.</Begriff>
+          <Begriff wort="Schmale Balken unten (gelb)">Urlaub – laut Berichtsheft des Azubis, wie in der Übersicht.</Begriff>
+          <Begriff wort="Rote Linie mit Raute">Prüfungstermin.</Begriff>
+          <Begriff wort="Türkiser Strich ganz unten">Schulferien (nach dem Bundesland der Berufsschule).</Begriff>
+          <Begriff wort="Schraffiert">Der Azubi ist in dieser Zeit nicht in der Ausbildung.</Begriff>
+          <Begriff wort="Blaue senkrechte Linie">Heute.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Die Azubis sind nach Ausbildungsjahr geordnet.</li>
+          <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
+          <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor.</li>
+          <li>Private Termine der Azubis stehen nicht im Kalender.</li>
+          <li>Der Kalender ist nur zum Lesen. Geplant wird im Ausbildungsplan{rolle === 'ausbilder' ? ' oder in der Sammelplanung' : ''}.</li>
+          <li>Am Handy seitlich wischen; die Spalte mit den Namen bleibt stehen.</li>
+        </ul>
       </>
     ),
   },
