@@ -110,11 +110,12 @@ const DRUCKEN = (rolle: Rolle): Kapitel => ({
     <>
       <dl className="begriffe">
         <Begriff wort="Ein einzelner Bericht">Den Bericht öffnen und „Als PDF herunterladen“ wählen. Das Portal erzeugt die Datei und der Browser speichert sie bei deinen Downloads. „Bericht drucken“ öffnet stattdessen das Druckfenster.</Begriff>
-        <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft als PDF“. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
+        <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft als PDF …“. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
+        <Begriff wort="Abkürzung">Die kleinen Knöpfe mit dem Pfeil nach unten laden sofort ein PDF, ohne weitere Fragen: oben neben „Berichtsheft als PDF …“ das ganze Heft mit Deckblatt, in jeder Woche den Bericht dieser Woche.</Begriff>
       </dl>
       <h3>Das ganze Berichtsheft als PDF</h3>
       <ol className="schritte">
-        <li>Im Berichtsheft „Berichtsheft als PDF“ wählen.</li>
+        <li>Im Berichtsheft „Berichtsheft als PDF …“ wählen.</li>
         <li>Auswählen, was hinein soll: alle vorhandenen Berichte oder nur die abgezeichneten; alle Ausbildungsjahre oder eines; mit oder ohne Deckblatt. Darunter steht, wie viele Berichte es sind und welcher Zeitraum.</li>
         <li>„PDF herunterladen“. Die Datei heißt „Berichtsheft“, dein Name und der Zeitraum – du findest sie bei den Downloads deines Browsers.</li>
       </ol>
@@ -469,7 +470,7 @@ const AZUBI: Kapitel[] = [
         <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
         <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
         <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
-        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft als PDF“ wählen: Dort lädst du es als PDF herunter oder druckst es.</Begriff>
+        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft als PDF …“ wählen: Dort lädst du es als PDF herunter oder druckst es.</Begriff>
         <Begriff wort="Ich komme nicht weiter.">Frag deinen Ausbilder oder deine Ausbildungsbeauftragten. Wenn die Anmeldung nicht klappt, hilft die IT deines Betriebs.</Begriff>
       </dl>
     ),

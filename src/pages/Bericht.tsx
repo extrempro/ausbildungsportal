@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiFehler, ladeDatei, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund, Logos } from '../api';
 import { HandbuchLink } from '../handbuchLink';
+import { Icon } from '../icons';
 import { geheZu, Link, useUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
@@ -54,14 +55,17 @@ function summeVon(i: BerichtInhalt): number {
  * Knopf, der ein PDF vom Server holt und speichert. Solange das PDF entsteht, ist er gesperrt;
  * ein Fehler steht direkt darunter. `gesperrt` nennt den Grund, warum es gerade nicht geht.
  */
-export function PdfKnopf({ pfad, text, klasse = 'knopf schlicht', gesperrt }: { pfad: string; text: string; klasse?: string; gesperrt?: string }) {
+export function PdfKnopf({ pfad, text, klasse = 'knopf schlicht', gesperrt, symbol }: { pfad: string; text: string; klasse?: string; gesperrt?: string; /** nur das Symbol zeigen; der Text steht dann im Tooltip und für Vorleseprogramme */ symbol?: boolean }) {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
   return (
     <>
       <button
         type="button"
-        className={klasse}
+        className={symbol ? `${klasse} symbol pdf-symbol` : klasse}
+        title={symbol ? (laeuft ? 'PDF wird erstellt …' : text) : undefined}
+        aria-label={symbol ? text : undefined}
+        aria-busy={laeuft || undefined}
         disabled={laeuft || !!gesperrt}
         onClick={() => {
           setLaeuft(true);
@@ -72,9 +76,20 @@ export function PdfKnopf({ pfad, text, klasse = 'knopf schlicht', gesperrt }: { 
             .finally(() => setLaeuft(false));
         }}
       >
-        {laeuft ? 'PDF wird erstellt …' : text}
+        {symbol ? (
+          <>
+            <Icon name="pdf" />
+            <span className="pdf-kuerzel" aria-hidden="true">
+              PDF
+            </span>
+          </>
+        ) : laeuft ? (
+          'PDF wird erstellt …'
+        ) : (
+          text
+        )}
       </button>
-      {gesperrt && <span className="leise klein pdf-grund">{gesperrt}</span>}
+      {gesperrt && !symbol && <span className="leise klein pdf-grund">{gesperrt}</span>}
       {fehler && (
         <span className="hinweis fehler pdf-fehler" role="alert">
           {fehler}

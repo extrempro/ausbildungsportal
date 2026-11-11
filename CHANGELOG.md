@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.29.1] – 2026-11-11
+
+### Geändert
+
+- Berichtsheft: Der Knopf „Berichtsheft als PDF …“ ist jetzt gefüllt und trägt ein Symbol – er hebt sich von den Filtern daneben ab. Die drei Punkte zeigen: Es folgt die Seite mit der Auswahl.
+- **Abkürzungen als Symbol:** Links daneben lädt ein Symbol-Knopf das ganze Berichtsheft sofort als PDF (alle Berichte, mit Deckblatt). In jeder Woche mit Bericht lädt ein Symbol-Knopf den Bericht dieser Woche als PDF. Was der Knopf tut, steht im Tooltip und für Vorleseprogramme.
+
 ## [0.29.0] – 2026-11-11
 
 ### Neu
