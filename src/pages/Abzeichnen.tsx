@@ -54,7 +54,7 @@ function Zeile({ o, gewaehlt, hatUnterschrift, onWahl, onErledigt, onFehler }: {
           <span className="leise klein">eingereicht {zeit(o.eingereichtAm)}</span>
         </div>
         <button type="button" className="knopf schlicht klein" aria-expanded={offen} aria-controls={`abz-${schluessel(o)}`} onClick={schalte}>
-          {offen ? 'Zuklappen' : 'Lesen'}
+          {offen ? 'Einklappen' : 'Lesen'}
         </button>
       </div>
       {offen && (

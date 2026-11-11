@@ -112,7 +112,6 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
             <span className="anleitung-titel">So funktioniert das Berichtsheft</span>
             <span className="anleitung-schalter">
               {anleitungOffen ? 'Einklappen' : 'Anzeigen'}
-              <Icon name="unten" groesse={18} />
             </span>
           </button>
           {anleitungOffen && (

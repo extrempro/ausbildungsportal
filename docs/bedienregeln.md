@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 11.11.2026 · gilt ab Version 0.16.0
+Stand: 11.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.21.1
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md).
 
@@ -14,7 +14,8 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
 - [ ] **Jede Seite** hat genau eine `h1` und darunter einen Satz, wozu sie dient. Abläufe mit mehreren Schritten bekommen die nummerierten Schritte (`ol.ablauf-liste`).
 - [ ] **Knöpfe:** Tätigkeit und Gegenstand („Eintrag speichern“, „Beruf löschen“). „Entfernen“ für noch nicht Gespeichertes, „Löschen“ für Endgültiges. Der Hauptknopf (`.knopf`) steht zuerst, Nebenknöpfe sind `.knopf.schlicht`, Endgültiges zusätzlich `.gefahr`. Knopfzeilen sind `.aktionen.links`.
 - [ ] **Gleiche Felder, gleiche Bausteine:** Plan-Einträge immer über `EintragFelder`. Bevor ein Formular ein zweites Mal entsteht, wird das vorhandene wiederverwendet.
-- [ ] **Aufklappen** mit `details.karte` oder dem Kopf `.anleitung` – kein drittes Muster.
+- [ ] **Aufklappen** sieht überall gleich aus: links der Titel, rechts „Anzeigen“ bzw. „Einklappen“ mit Pfeil (in `index.css` unter „Einklappen: ein Aussehen für alles“). Drei Bauformen: `details.karte` (eine ganze Karte), `details.klapp` (Kasten innerhalb einer Karte oder eines Fensters; `frei` ohne Rahmen, `schmal` nur mit Pfeil für schmale Spalten) und `.anleitung` (Karte, die sich ihren Zustand merkt). Hilfetexte bekommen vorn `<Icon name="hilfe" />`. Das Wort heißt immer „Einklappen“, nie „Zuklappen“ oder „Schließen“. 
+- [ ] **Erklärungen in Fenstern und Formularen:** höchstens der eine Satz, den man zum Entscheiden braucht (z. B. „Termine siehst nur du.“). Alles Weitere steht im Handbuch und wird mit `<HandbuchLink kapitel="…">` verlinkt (`src/handbuchLink.tsx`; öffnet in neuem Fenster, damit Eingaben stehen bleiben). Jedes Kapitel hat dafür die Sprungmarke `#kapitel-<id>`. Ausnahmen: Was vor dem Absenden gewusst werden muss, steht an Ort und Stelle (z. B. „Das wird automatisch mitgeschickt“ beim Fehler-Melden); Seiten mit vielen Folgen behalten ihre Anleitung als Karte (Berichtsheft, Konten).
 - [ ] **Navigation:** Neue Seiten gehören in eine vorhandene Gruppe (Hauptleiste, „Planung“, „Verwaltung“, Menü am Namen). Zurück-Links nur auf echten Unterseiten (Azubi → Plan, Berichtsheft → Bericht).
 - [ ] **Begriffe:** Bericht (nicht Nachweis), Azubi, Ausbildungsbeauftragte, Planbaustein, Sammelplanung; gegenüber Azubis „Betreiber des Portals“, als Rolle „Super-Admin“. Anrede durchgehend „du“. Kurze Sätze, erklärte Fachwörter – die Leser sind zwischen 16 und 30 Jahre alt.
 - [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px, Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.

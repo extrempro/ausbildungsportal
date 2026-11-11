@@ -2,6 +2,7 @@ import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
+import { HandbuchLink } from '../handbuchLink';
 import { geheZu, Link, useUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
@@ -505,15 +506,9 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
               {geaendert ? 'Noch nicht gespeichert' : b.status === 'fehlt' ? 'Noch nichts gespeichert' : 'Alles gespeichert'}
             </p>
             {aktionen(false)}
-            <details className="bericht-erklaerung">
-              <summary>Entwurf oder einreichen?</summary>
-              <p className="leise klein">
-                <strong>Als Entwurf speichern:</strong> Du bist noch nicht fertig und schreibst später weiter. Nur du siehst den Entwurf.
-              </p>
-              <p className="leise klein">
-                <strong>Einreichen:</strong> Du bist fertig. Du unterschreibst den Bericht und gibst ihn an deinen Ausbilder. Bis er unterschrieben hat, kannst du ihn noch zurückholen.
-              </p>
-            </details>
+            <p className="hilfe-zeile klein">
+              <HandbuchLink kapitel="bericht">Entwurf oder einreichen?</HandbuchLink>
+            </p>
           </aside>
 
           <p className="bericht-ende">

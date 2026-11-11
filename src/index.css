@@ -4625,10 +4625,191 @@ td.aktion .knopf + .knopf {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.85rem;
 }
-details.abo-hilfe {
-  margin: 0.75rem 0;
-  box-shadow: none;
-}
 #kalender-abo .aktionen {
   margin: 10px 0;
+}
+
+/* ---------- Einklappen: ein Aussehen für alles ----------
+   Drei Bauformen, ein Kopf:
+   - details.karte  – eine ganze Karte klappt auf (Bausteine, ältere Versionen)
+   - details.klapp  – ein Kasten innerhalb einer Karte oder eines Fensters (Hilfetexte, technische Angaben)
+   - .anleitung     – Karte, die sich merkt, ob sie offen war (Berichtsheft, Konten)
+   Links steht der Titel (Hilfetexte mit dem Fragezeichen-Symbol), rechts „Anzeigen“ bzw. „Einklappen“ mit Pfeil. */
+:root {
+  --klapp-zu: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9.5l6 6 6-6'/%3E%3C/svg%3E");
+  --klapp-auf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14.5l6-6 6 6'/%3E%3C/svg%3E");
+}
+
+html.dark {
+  --klapp-zu: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9.5l6 6 6-6'/%3E%3C/svg%3E");
+  --klapp-auf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14.5l6-6 6 6'/%3E%3C/svg%3E");
+}
+
+/* der Kopf */
+details.karte > summary,
+details.klapp > summary,
+.anleitung-kopf {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  list-style: none;
+  cursor: pointer;
+}
+
+details.karte > summary::-webkit-details-marker,
+details.klapp > summary::-webkit-details-marker {
+  display: none;
+}
+
+.anleitung-kopf:hover {
+  background: none;
+}
+
+details.karte > summary > svg,
+details.klapp > summary > svg,
+.anleitung-kopf > svg {
+  flex: none;
+  color: var(--c-accent);
+}
+
+.anleitung-titel,
+.anleitung.zu .anleitung-titel,
+.vorlage-titel {
+  font-size: 16px;
+}
+
+/* rechts: „Anzeigen“ / „Einklappen“ mit Pfeil */
+details.karte > summary::after,
+details.klapp > summary::after,
+.anleitung-schalter {
+  display: block;
+  flex: none;
+  margin-left: auto;
+  padding: 0 22px 0 16px;
+  background: var(--klapp-zu) no-repeat right center / 18px;
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+details.karte > summary::after,
+details.klapp > summary::after {
+  content: 'Anzeigen';
+}
+
+details.karte[open] > summary::after,
+details.klapp[open] > summary::after {
+  content: 'Einklappen';
+}
+
+details.karte[open] > summary::after,
+details.klapp[open] > summary::after,
+.anleitung:not(.zu) .anleitung-schalter {
+  background-image: var(--klapp-auf);
+}
+
+/* Abstand zwischen Kopf und Inhalt */
+details.karte[open] > summary,
+details.klapp[open] > summary {
+  margin-bottom: 12px;
+}
+
+/* die Karte, die sich ihren Zustand merkt, sieht aus wie jede andere Karte */
+.anleitung,
+.anleitung.zu {
+  padding: 24px;
+  overflow: visible;
+  background: var(--c-card);
+  box-shadow: var(--c-schatten);
+}
+
+#anleitung-inhalt,
+.anleitung > .konten-hilfe {
+  margin-top: 12px;
+  padding: 0;
+  border-top: 0;
+}
+
+/* der Kasten innerhalb einer Karte */
+details.klapp {
+  margin: 12px 0;
+  padding: 0 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+}
+
+details.klapp[open] {
+  padding-bottom: 12px;
+}
+
+details.klapp > p:last-child,
+details.klapp > ul:last-child,
+details.klapp > dl:last-child {
+  margin-bottom: 0;
+}
+
+/* Gruppe aus Karten (z. B. „Erledigt“): derselbe Kopf, aber kein Rahmen um die Karten */
+details.klapp.frei {
+  padding: 0;
+  border: 0;
+}
+
+@media (max-width: 700px) {
+  .anleitung,
+  .anleitung.zu {
+    padding: 16px;
+  }
+}
+
+/* in schmalen Spalten (Randleiste des Berichts) bleibt rechts nur der Pfeil – sonst bricht der Titel dreimal um */
+details.klapp.schmal > summary::after,
+details.klapp.schmal[open] > summary::after {
+  content: '';
+  padding-left: 0;
+  min-height: 18px;
+}
+
+/* ---------- Verweis ins Handbuch aus Fenstern und Formularen ---------- */
+.handbuch-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  color: var(--c-accent);
+  font-weight: 600;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.handbuch-link:hover span {
+  text-decoration: underline;
+}
+
+.handbuch-link svg {
+  flex: none;
+}
+
+.hilfe-zeile {
+  margin: 0;
+}
+
+.kapitel {
+  scroll-margin-top: calc(var(--kopf, 60px) + 16px);
+}
+
+.kapitel.ziel {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 2px var(--c-accent-soft);
 }

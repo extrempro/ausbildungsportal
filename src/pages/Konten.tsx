@@ -137,7 +137,6 @@ export function Konten({ ich }: { ich: Konto }) {
           <span className="anleitung-titel">Was bewirkt was?</span>
           <span className="anleitung-schalter">
             {hilfe ? 'Einklappen' : 'Anzeigen'}
-            <Icon name="unten" groesse={16} />
           </span>
         </button>
         {hilfe && (

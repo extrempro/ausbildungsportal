@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.21.1] – 2026-11-11
+
+### Geändert
+
+- Alles, was sich ein- und ausklappen lässt, sieht jetzt gleich aus: links der Titel, rechts „Anzeigen“ oder „Einklappen“ mit einem Pfeil. Hilfetexte tragen vorn ein Fragezeichen-Symbol. Das betrifft die Anleitung im Berichtsheft, „Was bewirkt was?“ bei den Konten, Planbausteine, ältere Versionen, die technischen Angaben beim Fehler-Melden und erledigte Fehlermeldungen.
+- Erklärungen in Fenstern und Formularen sind jetzt kurz und verweisen einheitlich aufs Handbuch („Im Handbuch: …“, öffnet in neuem Fenster beim passenden Kapitel): im Termin-Fenster, beim Kalender-Abo und beim Bericht („Entwurf oder einreichen?“).
+- Handbuch: Das Kapitel zum Kalender heißt jetzt „Kalender abonnieren (Kalender-Abo)“ und enthält die Schritte für iPhone, Outlook und Google Kalender. Für Azubis gibt es ein eigenes Kapitel „Eigene Termine eintragen“.
+- Beim Abzeichnen heißt der Knopf zum Schließen eines Berichts jetzt „Einklappen“ statt „Zuklappen“.
+
 ## [0.21.0] – 2026-11-11
 
 ### Neu

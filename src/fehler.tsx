@@ -245,7 +245,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
                 </>
               )}
             </fieldset>
-            <details className="melden-technik">
+            <details className="klapp melden-technik">
               <summary>Das wird automatisch mitgeschickt</summary>
               <dl>
                 <dt>Dein Name und deine Rolle</dt>
