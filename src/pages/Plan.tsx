@@ -662,7 +662,8 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
             ? 'Die Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Jeder Eintrag lässt sich über „Bearbeiten“ ändern.'
             : plant
               ? 'Du kannst Aufgaben und Notizen anlegen; Schulblöcke und Einsätze plant der Ausbilder.'
-              : 'Nur zur Ansicht.'}
+              : 'Nur zur Ansicht.'}{' '}
+        Schule, Einsätze und Prüfungen lassen sich unter <Link zu="/konto">Konto</Link> als Kalender abonnieren.
       </p>
 
       {d.beginnFehlt && (

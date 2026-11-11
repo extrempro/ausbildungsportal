@@ -72,6 +72,15 @@ Traefik (Labels, Version 3; in Version 2 heißt die Middleware `ipWhiteList`):
 - **Notfall:** Sperrt man sich aus, bleibt der Weg über den Server selbst (`npm run admin-reset` setzt ein neues Startpasswort; anmelden dann aus dem Verwaltungsnetz).
 - Das ersetzt nichts von oben: starkes Passwort, HTTPS, und am besten die ganze App nur im VPN.
 
+## Kalender-Abo
+
+Der Kalender-Link (`/api/abo/<Geheimnis>.ics`) ist der einzige Weg, ohne Anmeldung Daten zu lesen. Er enthält ein zufälliges Geheimnis mit 256 Bit, gibt nur Lesezugriff auf Schulblöcke, Einsätze und Prüfungstermine und prüft bei jedem Abruf die Rechte des Kontos.
+
+- **Das Geheimnis steht in der Adresse – und damit in den Zugriffs-Logs des Reverse Proxys.** Die Logs genauso schützen wie die Datenbank, oder den Pfad `/api/abo/` vom Logging ausnehmen bzw. kürzen.
+- Wer den Link in Outlook (neu/Web) oder Google Kalender einträgt, gibt ihn und die Termine an Microsoft bzw. Google weiter; deren Server rufen ihn ab.
+- Ein Link, der in falsche Hände geraten ist, wird unter „Konto“ erneuert. Sperrt man das Konto, liefert der Link sofort nichts mehr.
+- Das Geheimnis liegt im Klartext in der Datenbank, damit das Portal den Link erneut anzeigen kann. Wer die Datenbank lesen kann, sieht die Pläne ohnehin.
+
 ## Was die App selbst tut
 
 - Rechte werden nur im Server geprüft, an einer Stelle (`behandle` in `server/api.ts`) und über zentrale Funktionen (`server/rechte.ts`). Tests rufen jede Route mit jeder Rolle auf.

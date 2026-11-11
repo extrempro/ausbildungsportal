@@ -39,6 +39,32 @@ const BEDIENUNG: Kapitel = {
   ),
 };
 
+const KALENDER = (rolle: Rolle): Kapitel => ({
+  id: 'kalender',
+  titel: 'Den Plan im eigenen Kalender sehen',
+  inhalt: (
+    <>
+      <p>
+        {rolle === 'azubi' ? 'Du kannst deinen Ausbildungsplan' : 'Du kannst die Pläne deiner Azubis'} in dein Kalenderprogramm holen – zum Beispiel auf dem Handy oder in Outlook. Das nennt man <strong>abonnieren</strong>: Der Kalender holt sich die Termine von selbst immer wieder neu.
+      </p>
+      <ol className="schritte">
+        <li>
+          Unter <Link zu="/konto">Konto</Link> bei „Kalender abonnieren“ auf „Kalender-Link erstellen“ gehen.
+        </li>
+        <li>Den Link kopieren und im Kalenderprogramm als Kalender-Abo eintragen. Wie das je Programm geht, steht dort unter „So trägst du den Link ein“.</li>
+      </ol>
+      <ul className="punkte">
+        <li>Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine. Aufgaben, Notizen und Berichte stehen dort nicht.</li>
+        {rolle !== 'azubi' && <li>Vor jedem Termin steht der Name des Azubis. Du kannst den Link auch auf einen einzelnen Azubi beschränken. Du siehst nur Azubis, die du auch im Portal siehst.</li>}
+        <li>Änderungen kommen mit Verzögerung an – je nach Programm nach einigen Stunden oder am nächsten Tag. Verbindlich ist der Plan im Portal.</li>
+        <li>
+          <strong>Der Link ist wie ein Passwort:</strong> Wer ihn kennt, kann die Termine lesen. Gib ihn nicht weiter. Mit „Link erneuern“ wird der alte ungültig, mit „Abo beenden“ schaltest du es ganz ab.
+        </li>
+      </ul>
+    </>
+  ),
+});
+
 const GLOCKE = (rolle: Rolle): Kapitel => ({
   id: 'glocke',
   titel: 'Die Glocke: Was gibt es Neues?',
@@ -220,6 +246,7 @@ const AZUBI: Kapitel[] = [
       </dl>
     ),
   },
+  KALENDER('azubi'),
   GLOCKE('azubi'),
   APP,
   BEDIENUNG,
@@ -404,6 +431,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
       <p>Azubis sehen nur ihre eigenen Daten. Ihre Startseite ist der Ausbildungsplan; im Berichtsheft schreiben und reichen sie ein. Was genau sie lesen, steht im Handbuch für Azubis{rolle === 'ausbilder' || rolle === 'beauftragter' ? ' (Reiter oben)' : ''}.</p>
     ),
   },
+  KALENDER(rolle),
   GLOCKE(rolle),
   APP,
   BEDIENUNG,

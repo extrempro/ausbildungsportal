@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Konto, ProfilAntwort, Theme } from '../api';
+import { KalenderAbo } from '../kalenderAbo';
 import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 
@@ -147,7 +148,7 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
   return (
     <>
       <h1>Konto</h1>
-      <p className="leise">Deine Angaben, deine Unterschrift und die Darstellung des Portals. Was du hier änderst, gilt nur für dich.</p>
+      <p className="leise">Deine Angaben, dein Kalender-Abo, deine Unterschrift und die Darstellung des Portals. Was du hier änderst, gilt nur für dich.</p>
       <section className="karte">
         <dl className="daten">
           <dt>Name</dt>
@@ -181,6 +182,13 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
           </select>
         </label>
       </section>
+
+      {konto.rolle !== 'admin' && (
+        <section className="karte" id="kalender-abo">
+          <h2>Kalender abonnieren</h2>
+          <KalenderAbo konto={konto} />
+        </section>
+      )}
 
       {konto.rolle !== 'admin' && (
         <section className="karte">

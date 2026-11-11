@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.20.0] – 2026-11-11
+
+### Neu
+
+- **Kalender abonnieren:** Azubis, Ausbildungsbeauftragte und Ausbilder können den Ausbildungsplan in ihr Kalenderprogramm holen (Outlook, iPhone, Google Kalender und andere). Unter „Konto“ erstellt jeder einen persönlichen Link und trägt ihn dort als Kalender-Abo ein.
+- Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine, Wochen von Montag bis Sonntag. Aufgaben, Notizen, Freitexte und Berichte stehen nicht darin.
+- Ausbilder und Ausbildungsbeauftragte sehen alle ihre Azubis in einem Kalender (mit Namen im Termin) oder beschränken den Link auf einen Azubi. Es gelten bei jedem Abruf dieselben Rechte wie im Portal.
+- Der Link ist wie ein Passwort und nur zum Lesen. Er lässt sich erneuern oder abschalten; das Portal zeigt, wann er zuletzt abgerufen wurde. Erstellen, Erneuern und Beenden stehen im Protokoll.
+- Änderungen am Plan kommen im Kalender mit Verzögerung an – wie oft abgerufen wird, bestimmt das Kalenderprogramm.
+
 ## [0.19.0] – 2026-11-11
 
 ### Geändert

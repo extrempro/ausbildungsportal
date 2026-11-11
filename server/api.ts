@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { datumOderNull, Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
+import { ABO_ROUTEN } from './abo';
 import type { Anfrage, Antwort, Ctx, Kontext, Route } from './api-basis';
 import type { Config } from './config';
 import type { DB } from './db';
@@ -602,6 +603,7 @@ export const ROUTEN: Route[] = [
   ...BRANDING_ROUTEN,
   ...AKTIVITAET_ROUTEN,
   ...MELDUNG_ROUTEN,
+  ...ABO_ROUTEN,
 ];
 
 // ---------- Verteiler ----------
