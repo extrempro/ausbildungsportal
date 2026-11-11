@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.18.0] – 2026-11-11
+
+### Neu
+
+- Hinweis auf eine neue Version: Wird das Portal aktualisiert, während es im Browser offen ist, erscheint unten „Das Portal wurde aktualisiert“ mit dem Knopf „Seite neu laden“. Der Hinweis bleibt stehen, bis neu geladen wird; „Später“ blendet ihn für zehn Minuten aus. Bei ungespeicherten Eingaben fragt der Browser vor dem Neuladen nach.
+- Einzelnen Bericht drucken: Im Berichtsheft steht an jeder Woche mit Bericht der Knopf „Drucken“. Auf der Seite des Berichts gibt es „Bericht drucken“ jetzt in jedem Stand – auch beim Schreiben; ein Entwurf trägt auf dem Ausdruck den Vermerk „Entwurf – noch nicht eingereicht und nicht unterschrieben“.
+
+### Geändert
+
+- Ausdruck ohne Kopf- und Fußzeile des Browsers: Seiten mit einem Bericht werden ohne Seitenrand gedruckt, der Rand gehört zum Blatt. Chrome und Edge lassen Datum, Titel und Adresse dann weg. In anderen Browsern hilft der Hinweis neben dem Druck-Knopf: im Druckfenster „Kopf- und Fußzeilen“ ausschalten.
+
 ## [0.17.0] – 2026-11-11
 
 ### Geändert

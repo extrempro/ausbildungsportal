@@ -71,7 +71,10 @@ test('Anmeldung über HTTP: Cookie wird gesetzt und beim nächsten Aufruf erkann
   assert.match(cookie, /^__Host-ap_sitzung=/);
   const ich = await fetch(`${basis}/api/ich`, { headers: { cookie } });
   assert.equal(((await ich.json()) as { konto: { rolle: string } }).konto.rolle, 'admin');
-  assert.equal((await fetch(`${basis}/api/ich`)).status, 401);
+  const ohne = await fetch(`${basis}/api/ich`);
+  assert.equal(ohne.status, 401);
+  // jede API-Antwort nennt die Version des Servers – auch Fehler; daran erkennt eine offene Seite ein Update
+  for (const antwort of [an, ich, ohne]) assert.match(antwort.headers.get('x-app-version') ?? '', /^\d+\.\d+\.\d+$/);
 });
 
 test('nur JSON, begrenzte Größe, keine Formulare', async () => {

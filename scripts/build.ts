@@ -28,7 +28,8 @@ const optionen: BuildOptions = {
   minify: !watch,
   sourcemap: watch,
   metafile: true,
-  define: { 'process.env.NODE_ENV': watch ? '"development"' : '"production"' },
+  // die Version des Bündels – weicht sie später von der des Servers ab, bittet die Oberfläche um Neuladen
+  define: { 'process.env.NODE_ENV': watch ? '"development"' : '"production"', __APP_VERSION__: JSON.stringify(String(JSON.parse(readFileSync('package.json', 'utf8')).version)) },
   logLevel: 'info',
 };
 

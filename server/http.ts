@@ -81,7 +81,8 @@ function sende(res: ServerResponse, status: number, header: Record<string, strin
 }
 
 async function api(k: Kontext, req: IncomingMessage, res: ServerResponse, url: URL, basis: Record<string, string>): Promise<void> {
-  const kopf = { ...basis, 'Cache-Control': 'no-store', 'Content-Type': 'application/json; charset=utf-8' };
+  // X-App-Version: Daran merkt eine noch geöffnete, ältere Oberfläche, dass der Server aktualisiert wurde
+  const kopf = { ...basis, 'Cache-Control': 'no-store', 'Content-Type': 'application/json; charset=utf-8', 'X-App-Version': k.version };
   let body: unknown;
   try {
     body = await leseBody(req);

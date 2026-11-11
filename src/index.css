@@ -4509,3 +4509,108 @@ fieldset.abschnitt.teil legend + * {
 body:not(:has(.glocke-knopf)) .nur-mit-glocke {
   display: none;
 }
+
+/* ---------- Hinweis auf eine neue Version: bleibt stehen, bis neu geladen wird ---------- */
+.meldung-zeile.update {
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 2px solid var(--c-accent);
+  background: var(--c-card);
+  color: var(--c-text);
+  font-weight: 400;
+}
+
+.dark .meldung-zeile.update {
+  background: var(--c-card);
+  color: var(--c-text);
+}
+
+.meldung-zeile.update > svg {
+  color: var(--c-accent);
+}
+
+.meldung-zeile.update > span:first-of-type {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.update-knoepfe {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.meldung-zeile .update-knoepfe button {
+  width: auto;
+  height: auto;
+  min-height: 40px;
+  padding: 4px 12px;
+}
+
+.meldung-zeile .update-knoepfe .knopf:not(.schlicht) {
+  border: 1px solid var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.meldung-zeile .update-knoepfe .knopf.schlicht {
+  border: 1px solid var(--c-border);
+}
+
+/* ---------- Druck eines Berichts ---------- */
+.nur-drucken {
+  display: none;
+}
+
+.blatt-entwurf {
+  margin-top: 6px;
+  color: var(--c-warn-fg);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.druck-hinweis {
+  max-width: 75ch;
+  margin-top: 12px;
+}
+
+td.aktion {
+  white-space: nowrap;
+}
+
+td.aktion .knopf + .knopf {
+  margin-left: 8px;
+}
+
+/*
+ * Seiten mit einem Bericht haben keinen Seitenrand: Dort fänden sonst die Kopf- und Fußzeilen des Browsers
+ * (Datum, Titel, Adresse) Platz. Chrome und Edge lassen sie dann weg. Den Rand bekommt das Blatt selbst.
+ * Andere Seiten des Portals drucken weiter mit dem Rand des Browsers.
+ */
+@page bericht {
+  margin: 0;
+}
+
+@media print {
+  .nur-drucken {
+    display: block;
+  }
+
+  .druckseite {
+    page: bericht;
+  }
+
+  .druckseite .blatt {
+    padding: 14mm 16mm;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .blatt-entwurf {
+    color: #000;
+  }
+
+  .meldungen {
+    display: none !important;
+  }
+}
