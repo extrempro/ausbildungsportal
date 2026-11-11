@@ -32,7 +32,7 @@ const BEDIENUNG: Kapitel = {
       <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
       <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Mehr dazu im Kapitel „Fehler melden“. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
       <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
-      <li>Leicht blau getönte Kästen mit dem Knopf „Anzeigen“ lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
+      <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
       <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
       <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
       <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
