@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../icons';
 import { Link } from '../router';
+import { useLern } from './basis';
 import { Grafik, Inline, TabelleAnsicht } from './teile';
 import type { Bild, Tabelle } from './teile';
 
@@ -99,6 +100,7 @@ export function ZusatzBereich({ feld, zusatz, setzeGelesen }: { feld: string; zu
 function ZusatzKarte({ feld, z, setzeGelesen }: { feld: string; z: Zusatz; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
+  const { basis, lesen } = useLern();
   return (
     <article id={`z-${z.id}`} className={`karte zusatz ${z.gelesen ? 'gelesen' : ''}`}>
       <div className="zusatz-titelzeile">
@@ -110,7 +112,7 @@ function ZusatzKarte({ feld, z, setzeGelesen }: { feld: string; z: Zusatz; setze
             </p>
           )}
         </div>
-        <label className="zusatz-gelesen">
+        <label className="zusatz-gelesen" hidden={lesen}>
           <input
             type="checkbox"
             checked={z.gelesen}
@@ -140,7 +142,7 @@ function ZusatzKarte({ feld, z, setzeGelesen }: { feld: string; z: Zusatz; setze
                 {v.titel}
               </a>
             ) : (
-              <Link key={`${v.feld}.${v.id}`} zu={`/lernen/${v.feld}#u-${v.id}`}>
+              <Link key={`${v.feld}.${v.id}`} zu={`${basis}/${v.feld}#u-${v.id}`}>
                 {v.feldTitel} › {v.titel}
               </Link>
             ),

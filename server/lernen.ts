@@ -279,6 +279,68 @@ function paketKopf(p: Paket) {
 /** je geladenem Inhaltsstand einmal gesammelt; neu geladene Inhalte sind ein neues Objekt */
 const KOMPENDIUM = new WeakMap<Inhalte, Eintrag[]>();
 
+type Themenfeld = Inhalte['themenfelder'][number];
+type FeldAbzeichen = AbzeichenStand['felder'] extends Map<string, infer T> ? T : never;
+const OHNE_ABZEICHEN: FeldAbzeichen = { stufe: 0, name: null, erreicht: null, fehlt: '', fortschritt: 0 };
+
+/** Übersicht eines Pakets: Themenfelder mit Unterthemen und Zusatzwissen – mit dem Stand eines Azubis oder (Leseansicht) ohne. */
+function uebersicht(p: Paket, stand: Map<string, StatusZeile>, gelesen: Set<string>, abz: AbzeichenStand['felder'] | null) {
+  return p.inhalte.themenfelder.map((f) => ({
+    abzeichen: abz?.get(f.id) ?? OHNE_ABZEICHEN,
+    zusatz: f.zusatz.map((z) => ({ id: z.id, titel: z.titel, gelesen: gelesen.has(`${f.id}.${z.id}`) })),
+    id: f.id,
+    titel: f.titel,
+    icon: f.icon,
+    lernfelder: f.lernfelder,
+    pruefung: f.pruefung,
+    unterthemen: f.unterthemen.map((u) => {
+      const s = stand.get(`${f.id}.${u.id}`);
+      return { id: u.id, titel: u.titel, status: s?.status ?? 'rot', lernpunkt: !!s && s.status === 'gelb' && s.luecke.trim() !== '', inhaltAktualisiert: aktualisiert(s, u.hash) };
+    }),
+  }));
+}
+
+/** Ein Themenfeld mit allen Inhalten (Cheatsheet) – mit dem Stand eines Azubis oder (Leseansicht) ohne. */
+function themaAnsicht(p: Paket, f: Themenfeld, stand: Map<string, StatusZeile>, gelesen: Set<string>, abzeichen: FeldAbzeichen) {
+  const vertieft = vertiefungen(p.inhalte);
+  return {
+    abzeichen,
+    // Zusatzwissen: zählt nicht zur Ampel, nur ein Haken „gelesen“
+    zusatz: f.zusatz.map(({ ablaufDatei: _a, zu, ...z }) => ({
+      ...z,
+      zu: zu.map((ref) => unterthemaVerweis(p.inhalte, ref)).filter((v): v is Verweis => v !== null),
+      gelesen: gelesen.has(`${f.id}.${z.id}`),
+    })),
+    id: f.id,
+    titel: f.titel,
+    icon: f.icon,
+    lernfelder: f.lernfelder,
+    pruefung: f.pruefung,
+    worum: f.worum,
+    fehler: f.fehler,
+    links: f.links,
+    unterthemen: f.unterthemen.map((u) => {
+      const s = stand.get(`${f.id}.${u.id}`);
+      const { hash: _hash, keinHinweis: _k, ...inhalt } = u;
+      return { ...inhalt, vertiefung: vertieft.get(`${f.id}.${u.id}`) ?? [], status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash) };
+    }),
+  };
+}
+
+function kompendium(p: Paket) {
+  let eintraege = KOMPENDIUM.get(p.inhalte);
+  if (!eintraege) KOMPENDIUM.set(p.inhalte, (eintraege = sammleEintraege(p.inhalte.themenfelder)));
+  return { paket: paketKopf(p), themenfelder: p.inhalte.themenfelder.map((f) => ({ id: f.id, titel: f.titel })), eintraege };
+}
+
+/** Leseansicht für Ausbilder und Beauftragte: das Paket aus der Adresse – jedes gültige Paket auf dem Server. */
+function lesePaket(c: Ctx): Paket {
+  const p = PAKET_ID.test(c.p.paket ?? '') ? lernpakete(c.k).get(c.p.paket) : undefined;
+  if (!p) throw new Fehler(404, 'Dieses Lernmodul gibt es nicht');
+  return p;
+}
+const BETREUUNG: ('ausbilder' | 'beauftragter')[] = ['ausbilder', 'beauftragter'];
+
 export const LERN_ROUTEN: Route[] = [
   {
     // Übersicht: alle Themenfelder mit dem eigenen Stand je Unterthema – ohne die Inhalte selbst
@@ -287,30 +349,9 @@ export const LERN_ROUTEN: Route[] = [
     wer: ['azubi'],
     h: (c) => {
       const p = meinPaket(c);
-      const stand = standVon(c.k.db, c.b.id, p.id);
-      const gelesen = gelesenVon(c.k.db, c.b.id, p.id);
       // wer schon vor den Abzeichen gelernt hat, bekommt sie hier still gutgeschrieben
       const abz = abzeichenVon(c, p);
-      return {
-        status: 200,
-        body: {
-          paket: paketKopf(p),
-          rang: abz.rang,
-          themenfelder: p.inhalte.themenfelder.map((f) => ({
-            abzeichen: abz.felder.get(f.id)!,
-            zusatz: f.zusatz.map((z) => ({ id: z.id, titel: z.titel, gelesen: gelesen.has(`${f.id}.${z.id}`) })),
-            id: f.id,
-            titel: f.titel,
-            icon: f.icon,
-            lernfelder: f.lernfelder,
-            pruefung: f.pruefung,
-            unterthemen: f.unterthemen.map((u) => {
-              const s = stand.get(`${f.id}.${u.id}`);
-              return { id: u.id, titel: u.titel, status: s?.status ?? 'rot', lernpunkt: !!s && s.status === 'gelb' && s.luecke.trim() !== '', inhaltAktualisiert: aktualisiert(s, u.hash) };
-            }),
-          })),
-        },
-      };
+      return { status: 200, body: { paket: paketKopf(p), rang: abz.rang, themenfelder: uebersicht(p, standVon(c.k.db, c.b.id, p.id), gelesenVon(c.k.db, c.b.id, p.id), abz.felder) } };
     },
   },
 
@@ -321,9 +362,7 @@ export const LERN_ROUTEN: Route[] = [
     wer: ['azubi'],
     h: (c) => {
       const p = meinPaket(c);
-      let eintraege = KOMPENDIUM.get(p.inhalte);
-      if (!eintraege) KOMPENDIUM.set(p.inhalte, (eintraege = sammleEintraege(p.inhalte.themenfelder)));
-      return { status: 200, body: { paket: paketKopf(p), themenfelder: p.inhalte.themenfelder.map((f) => ({ id: f.id, titel: f.titel })), eintraege } };
+      return { status: 200, body: kompendium(p) };
     },
   },
 
@@ -336,37 +375,7 @@ export const LERN_ROUTEN: Route[] = [
       const p = meinPaket(c);
       const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
       if (!f) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
-      const stand = standVon(c.k.db, c.b.id, p.id);
-      const gelesen = gelesenVon(c.k.db, c.b.id, p.id);
-      const vertieft = vertiefungen(p.inhalte);
-      return {
-        status: 200,
-        body: {
-          paket: paketKopf(p),
-          thema: {
-            abzeichen: abzeichenVon(c, p).felder.get(f.id)!,
-            // Zusatzwissen: zählt nicht zur Ampel, nur ein Haken „gelesen“
-            zusatz: f.zusatz.map(({ ablaufDatei: _a, zu, ...z }) => ({
-              ...z,
-              zu: zu.map((ref) => unterthemaVerweis(p.inhalte, ref)).filter((v): v is Verweis => v !== null),
-              gelesen: gelesen.has(`${f.id}.${z.id}`),
-            })),
-            id: f.id,
-            titel: f.titel,
-            icon: f.icon,
-            lernfelder: f.lernfelder,
-            pruefung: f.pruefung,
-            worum: f.worum,
-            fehler: f.fehler,
-            links: f.links,
-            unterthemen: f.unterthemen.map((u) => {
-              const s = stand.get(`${f.id}.${u.id}`);
-              const { hash: _hash, keinHinweis: _k, ...inhalt } = u;
-              return { ...inhalt, vertiefung: vertieft.get(`${f.id}.${u.id}`) ?? [], status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash) };
-            }),
-          },
-        },
-      };
+      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, standVon(c.k.db, c.b.id, p.id), gelesenVon(c.k.db, c.b.id, p.id), abzeichenVon(c, p).felder.get(f.id)!) } };
     },
   },
 
@@ -434,6 +443,56 @@ export const LERN_ROUTEN: Route[] = [
       if (gelesen) c.k.db.prepare('INSERT INTO lern_zusatz (azubi_id, paket, zusatz_id, geaendert) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING').run(c.b.id, p.id, id, c.k.jetzt().toISOString().slice(0, 10));
       else c.k.db.prepare('DELETE FROM lern_zusatz WHERE azubi_id = ? AND paket = ? AND zusatz_id = ?').run(c.b.id, p.id, id);
       return { status: 200, body: { id, gelesen, ...nachSpeichern(c, p, rangVorher) } };
+    },
+  },
+
+  // ---------- Leseansicht für Ausbilder und Beauftragte: dieselben Inhalte, kein Lernstand ----------
+  {
+    // alle Lernmodule auf dem Server – auch solche, die noch an keinem Beruf eingeschaltet sind
+    m: 'GET',
+    p: '/api/lerninhalte',
+    wer: BETREUUNG,
+    h: (c) => {
+      const berufe = c.k.db.prepare("SELECT lernpaket, bezeichnung, fachrichtung FROM beruf WHERE lernpaket IS NOT NULL AND lernpaket <> '' ORDER BY bezeichnung COLLATE NOCASE").all() as unknown as { lernpaket: string; bezeichnung: string; fachrichtung: string }[];
+      return {
+        status: 200,
+        body: {
+          pakete: [...lernpakete(c.k).values()]
+            .sort((a, b) => a.titel.localeCompare(b.titel, 'de'))
+            .map((p) => ({
+              ...paketKopf(p),
+              themenfelder: p.inhalte.themenfelder.length,
+              unterthemen: p.inhalte.themenfelder.reduce((n, f) => n + f.unterthemen.length, 0),
+              berufe: berufe.filter((b) => b.lernpaket === p.id).map((b) => (b.fachrichtung ? `${b.bezeichnung} (${b.fachrichtung})` : b.bezeichnung)),
+            })),
+        },
+      };
+    },
+  },
+  {
+    m: 'GET',
+    p: '/api/lerninhalte/:paket',
+    wer: BETREUUNG,
+    h: (c) => {
+      const p = lesePaket(c);
+      return { status: 200, body: { paket: paketKopf(p), themenfelder: uebersicht(p, new Map(), new Set(), null) } };
+    },
+  },
+  {
+    m: 'GET',
+    p: '/api/lerninhalte/:paket/kompendium',
+    wer: BETREUUNG,
+    h: (c) => ({ status: 200, body: kompendium(lesePaket(c)) }),
+  },
+  {
+    m: 'GET',
+    p: '/api/lerninhalte/:paket/thema/:id',
+    wer: BETREUUNG,
+    h: (c) => {
+      const p = lesePaket(c);
+      const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
+      if (!f) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
+      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
     },
   },
 ];

@@ -12,6 +12,7 @@ import type { Verweis, Zusatz } from '../lernen/zusatz';
 import { Link, useUngespeichert } from '../router';
 import { AbzeichenFeier, Schild } from '../lernen/abzeichen';
 import type { Erfolg, FeldAbzeichen } from '../lernen/abzeichen';
+import { useLern } from '../lernen/basis';
 import { PaketFuss } from './Lernen';
 import type { LernPaket } from './Lernen';
 
@@ -56,7 +57,8 @@ export function LernThema({ id }: { id: string }) {
   // alle Themenfelder mit dem eigenen Stand – für die Navigation am Rand
   const [felder, setFelder] = useState<NavFeld[]>([]);
 
-  const ladeFelder = useCallback(() => api<{ themenfelder: NavFeld[] }>('GET', '/api/lernen').then((r) => setFelder(r.themenfelder), () => undefined), []);
+  const { basis, api: quelle } = useLern();
+  const ladeFelder = useCallback(() => api<{ themenfelder: NavFeld[] }>('GET', quelle).then((r) => setFelder(r.themenfelder), () => undefined), [quelle]);
   useEffect(() => void ladeFelder(), [ladeFelder]);
   // neu erreichtes Abzeichen oder neuer Rang – wird einmal groß gezeigt
   const [erfolg, setErfolg] = useState<Erfolg | null>(null);
@@ -73,14 +75,14 @@ export function LernThema({ id }: { id: string }) {
   useEffect(() => {
     let aktuell = true;
     setFehler('');
-    api<{ paket: LernPaket; thema: Thema }>('GET', `/api/lernen/thema/${encodeURIComponent(id)}`).then(
+    api<{ paket: LernPaket; thema: Thema }>('GET', `${quelle}/thema/${encodeURIComponent(id)}`).then(
       (d) => aktuell && setDaten(d),
       (e: Error) => aktuell && setFehler(e.message),
     );
     return () => {
       aktuell = false;
     };
-  }, [id]);
+  }, [id, quelle]);
 
   const aendere = useCallback(
     async (unterthema: string, patch: Aenderung) => {
@@ -134,7 +136,7 @@ export function LernThema({ id }: { id: string }) {
       )}
       <div className="lern-haupt">
         <p className="klein">
-          <Link zu="/lernen">← Alle Themenfelder</Link>
+          <Link zu={basis}>← Alle Themenfelder</Link>
         </p>
         {navi && (
           <details className="klapp lern-navi-klapp">
@@ -187,6 +189,7 @@ function useAktivesUnterthema(t: Thema | null): string | null {
 
 /** Navigation am Rand: alle Themenfelder mit Stand; beim geöffneten Themenfeld darunter seine Unterthemen. */
 function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; aktiv: string | null }) {
+  const { basis, lesen } = useLern();
   const springe = (ziel: string) => document.getElementById(ziel)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   return (
     <ul className="lern-navi-liste">
@@ -195,23 +198,23 @@ function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; akti
         const a = ampelVon(z);
         return (
           <li key={f.id}>
-            <Link zu={`/lernen/${f.id}`} className="lern-navi-feld">
-              <span className={`lern-punkt ${a}`} aria-hidden="true" />
+            <Link zu={`${basis}/${f.id}`} className="lern-navi-feld">
+              {!lesen && <span className={`lern-punkt ${a}`} aria-hidden="true" />}
               <span className="lern-navi-titel">
                 {f.titel}
-                <span className="nur-vorleser">, {AMPEL_TEXT[a]}</span>
+                {!lesen && <span className="nur-vorleser">, {AMPEL_TEXT[a]}</span>}
               </span>
-              <span className="lern-navi-prozent">{prozent(z)} %</span>
+              {!lesen && <span className="lern-navi-prozent">{prozent(z)} %</span>}
             </Link>
             {f.id === id && (
               <ul className="lern-navi-unter" aria-label={`Unterthemen: ${f.titel}`}>
                 {f.unterthemen.map((u) => (
                   <li key={u.id}>
                     <button type="button" aria-current={aktiv === `u-${u.id}` ? 'location' : undefined} onClick={() => springe(`u-${u.id}`)}>
-                      <span className={`lern-punkt klein ${u.status}`} aria-hidden="true" />
+                      {!lesen && <span className={`lern-punkt klein ${u.status}`} aria-hidden="true" />}
                       <span>
                         {u.titel}
-                        <span className="nur-vorleser">, {AMPEL_TEXT[u.status]}</span>
+                        {!lesen && <span className="nur-vorleser">, {AMPEL_TEXT[u.status]}</span>}
                       </span>
                     </button>
                   </li>
@@ -245,10 +248,11 @@ function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; akti
 
 function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema; paket: LernPaket; abzeichen: FeldAbzeichen; aendere: (unterthema: string, p: Aenderung) => Promise<void>; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
   const z = zaehle(t.unterthemen);
+  const { lesen } = useLern();
   return (
     <>
       <h1>
-        {t.titel} <StatusPille status={ampelVon(z)} />
+        {t.titel} {!lesen && <StatusPille status={ampelVon(z)} />}
       </h1>
       <div className="lern-kopf">
         <span className="lern-marken">
@@ -263,15 +267,15 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
             </span>
           ))}
         </span>
-        <span className="lern-kachel-stand">
-          <StapelBalken z={z} />
-          <span>{prozent(z)} %</span>
-        </span>
-        <span className="leise klein">
-          {z.n} Unterthemen: {zusammenfassung(z)}
-        </span>
+        {!lesen && (
+          <span className="lern-kachel-stand">
+            <StapelBalken z={z} />
+            <span>{prozent(z)} %</span>
+          </span>
+        )}
+        <span className="leise klein">{lesen ? `${z.n} Unterthemen` : `${z.n} Unterthemen: ${zusammenfassung(z)}`}</span>
       </div>
-      <section className="karte abz-feld" aria-label="Abzeichen in diesem Themenfeld">
+      <section className="karte abz-feld" hidden={lesen} aria-label="Abzeichen in diesem Themenfeld">
         <Schild stufe={abzeichen.stufe} groesse={64} />
         <div>
           <strong>{abzeichen.name ? `Abzeichen: ${abzeichen.name}` : 'Noch kein Abzeichen'}</strong>
@@ -294,9 +298,15 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
       )}
 
       <h2 className="abschnitt-titel">Unterthemen</h2>
-      <p className="leise">
-        Stell bei jedem Unterthema ein, wie sicher du bist. Bei „In Arbeit“ notierst du, was noch hakt. <HandbuchLink kapitel="lernen">So nutzt du die Ampel</HandbuchLink>
-      </p>
+      {lesen ? (
+        <p className="leise">
+          So sehen die Azubis die Inhalte. Bei ihnen steht an jedem Unterthema zusätzlich die Ampel und ein Feld für Notizen. <HandbuchLink kapitel="lernansicht">Lerninhalte ansehen</HandbuchLink>
+        </p>
+      ) : (
+        <p className="leise">
+          Stell bei jedem Unterthema ein, wie sicher du bist. Bei „In Arbeit“ notierst du, was noch hakt. <HandbuchLink kapitel="lernen">So nutzt du die Ampel</HandbuchLink>
+        </p>
+      )}
       {t.unterthemen.map((u) => (
         <UnterthemaKarte key={`${t.id}.${u.id}`} feld={t.id} u={u} aendere={(p) => aendere(u.id, p)} />
       ))}
@@ -340,6 +350,7 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
 function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; aendere: (p: Aenderung) => Promise<void> }) {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
+  const { basis, lesen } = useLern();
   const tue = async (p: Aenderung, bestaetigung?: string) => {
     setLaeuft(true);
     setFehler('');
@@ -356,27 +367,27 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
   };
 
   return (
-    <section className={`karte lern-unterthema ${u.status}`} id={`u-${u.id}`}>
+    <section className={`karte lern-unterthema ${lesen ? 'lesen' : u.status}`} id={`u-${u.id}`}>
       <div className="lern-unterthema-kopf">
         <h3>
           {u.titel}
           {!u.hatInhalt && <span className="pille grau">Cheatsheet folgt</span>}
           {u.vertiefung.length > 0 && <span className="pille blau">Vertiefung</span>}
         </h3>
-        <AmpelSchalter titel={u.titel} status={u.status} gesperrt={laeuft} onChange={(s) => {
+        {!lesen && <AmpelSchalter titel={u.titel} status={u.status} gesperrt={laeuft} onChange={(s) => {
             // erst fragen, dann umstellen – ein versehentlicher Klick ändert nichts. Gespeichert wird danach ohne weitere Meldung: Die Ampel zeigt den neuen Stand.
             void rueckfrage(`Ampel umstellen?\n\n„${u.titel}“ steht auf „${AMPEL_TEXT[u.status]}“ und wechselt auf „${AMPEL_TEXT[s]}“.`, { ja: `Auf „${AMPEL_TEXT[s]}“ stellen` }).then((ja) => ja && tue({ status: s }));
           }}
-        />
+        />}
       </div>
-      <p className="leise klein lern-regel">{AMPEL_REGEL[u.status]}</p>
+      {!lesen && <p className="leise klein lern-regel">{AMPEL_REGEL[u.status]}</p>}
       {fehler && (
         <p className="hinweis fehler" role="alert">
           {fehler}
         </p>
       )}
 
-      {u.inhaltAktualisiert && (
+      {!lesen && u.inhaltAktualisiert && (
         <p className="hinweis lern-neu">
           <span>Der Inhalt wurde aktualisiert – ein zweiter Blick lohnt sich.</span>
           <button type="button" className="knopf schlicht" disabled={laeuft} onClick={() => void tue({ bestaetigen: true })}>
@@ -385,7 +396,7 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
         </p>
       )}
 
-      {u.status === 'gelb' && (
+      {!lesen && u.status === 'gelb' && (
         <TextMitSpeichern
           klasse="lern-lernpunkt"
           label="Lernpunkt: Was fällt dir noch schwer? Was willst du dir nochmal ansehen?"
@@ -408,7 +419,7 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
                 {v.feld === feld ? (
                   <a href={`#z-${v.id}`}>{v.titel}</a>
                 ) : (
-                  <Link zu={`/lernen/${v.feld}#z-${v.id}`}>
+                  <Link zu={`${basis}/${v.feld}#z-${v.id}`}>
                     {v.titel} <span className="leise">({v.feldTitel})</span>
                   </Link>
                 )}
@@ -424,10 +435,10 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
           <Inhalt u={u} />
         </details>
       ) : (
-        <p className="leise">Zu diesem Unterthema gibt es noch kein Cheatsheet. Du kannst dir trotzdem eine Notiz machen.</p>
+        <p className="leise">Zu diesem Unterthema gibt es noch kein Cheatsheet.{lesen ? '' : ' Du kannst dir trotzdem eine Notiz machen.'}</p>
       )}
 
-      <details className="klapp" open={u.notiz !== '' || undefined}>
+      <details className="klapp" open={u.notiz !== '' || undefined} hidden={lesen}>
         <summary>Meine Notiz</summary>
         <TextMitSpeichern label="Notiz (nur für dich)" platzhalter="z. B. in der Berufsschule nachfragen" wert={u.notiz} knopf="Notiz speichern" onSpeichern={(text) => tue({ notiz: text }, 'Notiz gespeichert.')} />
       </details>
