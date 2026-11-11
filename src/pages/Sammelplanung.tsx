@@ -6,6 +6,7 @@ import type { Planvorlage, Rolle } from '../api';
 import { EintragFelder } from '../eintragFelder';
 import type { EintragWerte } from '../eintragFelder';
 import { Link, useUngespeichert } from '../router';
+import { HandbuchLink } from '../handbuchLink';
 
 /**
  * Sammelplanung: ein Eintrag oder ein Baustein für mehrere Azubis auf einmal –
@@ -167,7 +168,8 @@ export function Sammelplanung() {
     <>
       <h1>Sammelplanung</h1>
       <p className="leise">
-        Trage etwas in die Pläne mehrerer Azubis auf einmal ein – zum Beispiel einen Schulblock für eine Klasse oder die Einführungswoche für den neuen Jahrgang. Danach ist es in jedem Plan ein eigener Eintrag, den du dort einzeln ändern oder löschen kannst.
+        Trage etwas in die Pläne mehrerer Azubis auf einmal ein – zum Beispiel einen Schulblock für eine Klasse. Danach ist es in jedem Plan ein eigener Eintrag.{' '}
+        <HandbuchLink kapitel="planung">Sammelplanung und Bausteine</HandbuchLink>
       </p>
       {d.azubis.length === 0 ? (
         <p className="karte leise">Es gibt noch keine Azubis.</p>

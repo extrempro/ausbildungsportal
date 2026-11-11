@@ -5,6 +5,7 @@ import type { Konto } from './api';
 import { Icon } from './icons';
 import type { IconName } from './icons';
 import { Link } from './router';
+import { HandbuchLink } from './handbuchLink';
 
 /**
  * Glocke in der Kopfzeile: neue Einträge im Ausbildungsplan und Schritte im Berichtsheft.
@@ -231,7 +232,9 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
               })}
             </ul>
           )}
-          <p className="glocke-fuss leise klein">Gleiche Aktivitäten eines Tages sind zusammengefasst. Nach 60 Tagen werden sie gelöscht.</p>
+          <p className="glocke-fuss leise klein">
+            Gleiche Aktivitäten eines Tages sind zusammengefasst. <HandbuchLink kapitel="glocke">Die Glocke</HandbuchLink>
+          </p>
         </section>
       )}
     </div>

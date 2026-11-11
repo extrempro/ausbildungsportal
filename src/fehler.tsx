@@ -3,6 +3,7 @@ import type { ClipboardEvent, FormEvent } from 'react';
 import { api } from './api';
 import { rueckfrage } from './dialoge';
 import { useUngespeichert } from './router';
+import { HandbuchLink } from './handbuchLink';
 
 /**
  * „Fehler melden“: kurzer Text vom Menschen, dazu automatisch ein paar technische Angaben,
@@ -187,7 +188,9 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
           </>
         ) : (
           <form onSubmit={sende}>
-            <p className="leise">Etwas funktioniert nicht oder sieht falsch aus? Beschreibe es kurz. Die Meldung geht an den Betreiber des Portals.</p>
+            <p className="leise">
+              Etwas funktioniert nicht oder sieht falsch aus? Beschreibe es kurz. Die Meldung geht an den Betreiber des Portals. <HandbuchLink kapitel="fehler">Fehler melden</HandbuchLink>
+            </p>
             <label htmlFor="melden-text">Was ist passiert?</label>
             <textarea
               id="melden-text"

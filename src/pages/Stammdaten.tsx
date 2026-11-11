@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import { api } from '../api';
 import { useEingaben } from '../router';
 import type { Beruf, Berufsschule, Stammdaten as Daten } from '../api';
+import { HandbuchLink } from '../handbuchLink';
 
 type Meldung = { text: string; fehler: boolean } | null;
 
@@ -181,7 +182,9 @@ export function Stammdaten() {
   return (
     <>
       <h1>Stammdaten</h1>
-      <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Berichte und bestimmen Dauer, Feiertage und Ferien.</p>
+      <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Berichte und bestimmen Dauer, Feiertage und Ferien.{' '}
+        <HandbuchLink kapitel="stammdaten">Stammdaten pflegen</HandbuchLink>
+      </p>
       <p className="hinweis" role="note">
         <strong>Diese Stammdaten gelten für das ganze Portal</strong> – für alle Azubis und alle Ausbilder, nicht nur für deine eigenen. Bitte nichts ändern oder löschen, nur weil du es selbst gerade nicht brauchst: Andere Ausbilder
         arbeiten mit denselben Berufen und Berufsschulen.

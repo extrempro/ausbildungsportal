@@ -2,6 +2,7 @@ import { melde, rueckfrage } from '../dialoge';
 import { useEffect, useState } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Rolle } from '../api';
+import { HandbuchLink } from '../handbuchLink';
 
 interface Meldung {
   id: number;
@@ -156,7 +157,8 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
     <>
       <h1>Fehlermeldungen</h1>
       <p className="leise">
-        Was Nutzerinnen und Nutzer über „Fehler melden“ geschickt haben. „Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. Meldungen bleiben gespeichert, bis du sie löschst.
+        Was Nutzerinnen und Nutzer über „Fehler melden“ geschickt haben. Meldungen bleiben gespeichert, bis du sie löschst.{' '}
+        <HandbuchLink kapitel="meldungen">Fehlermeldungen</HandbuchLink>
       </p>
       {fehler && (
         <p className="hinweis fehler" role="alert">

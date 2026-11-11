@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.22.0] – 2026-11-11
+
+### Neu
+
+- **Verweise ins Handbuch auf jeder Seite:** Unter der Überschrift der meisten Seiten und in mehreren Fenstern steht jetzt „Im Handbuch: …“. Der Verweis öffnet das Handbuch in einem neuen Fenster direkt beim passenden Kapitel. Neu dabei: Ausbildungsplan, Berichtsheft, Bericht (Abzeichnen), Abzeichnen, Azubis, Profil und Zuweisungen, Übersicht, Sammelplanung, Planbausteine, Stammdaten, Konten, Protokoll, Fehlermeldungen, Erscheinungsbild, Unterschrift, Glocke, Fehler melden und der Druckhinweis.
+- **Neue Kapitel im Handbuch:** „Fehler melden“ (alle Rollen), „Berichte drucken oder als PDF speichern“ (Azubis, Ausbildungsbeauftragte, Ausbilder), „Dein Konto und deine Unterschrift“ (Azubis), „Die Übersicht lesen“ (Ausbildungsbeauftragte, Ausbilder), „Das Profil eines Azubis“ und „Stammdaten pflegen“ (Ausbilder).
+
+### Geändert
+
+- Einige lange Erklärungen auf den Seiten sind gekürzt; die Einzelheiten stehen im Handbuch (Sammelplanung, Planbausteine, Fehlermeldungen, Zuweisungen, Druckhinweis).
+
 ## [0.21.1] – 2026-11-11
 
 ### Geändert

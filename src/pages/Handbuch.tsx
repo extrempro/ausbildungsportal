@@ -30,7 +30,7 @@ const BEDIENUNG: Kapitel = {
     <ul className="punkte">
       <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
       <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
-      <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
+      <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Mehr dazu im Kapitel „Fehler melden“. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
       <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
       <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
       <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
@@ -38,6 +38,52 @@ const BEDIENUNG: Kapitel = {
     </ul>
   ),
 };
+
+const FEHLER: Kapitel = {
+  id: 'fehler',
+  titel: 'Fehler melden',
+  inhalt: (
+    <>
+      <p>Etwas funktioniert nicht oder sieht falsch aus? Dann melde es – so wird es behoben.</p>
+      <ol className="schritte">
+        <li>Im Menü an deinem Namen (am Handy unter „Mehr“) „Fehler melden“ wählen. Das geht von jeder Seite aus.</li>
+        <li>Kurz beschreiben: Was wolltest du tun? Was ist stattdessen passiert?</li>
+        <li>Wenn du magst, ein Bildschirmfoto anhängen: auswählen, einfügen (Strg + V) oder am PC direkt aufnehmen. Du siehst das Bild vor dem Senden und kannst es wieder entfernen.</li>
+        <li>„Meldung senden“.</li>
+      </ol>
+      <ul className="punkte">
+        <li>
+          <strong>Das wird mitgeschickt:</strong> dein Name und deine Rolle, die Seite, auf der du warst, die Version des Portals, dein Browser, die Größe des Fensters und die letzten Fehlermeldungen des Browsers. Im Fenster steht das unter „Das wird automatisch mitgeschickt“.
+        </li>
+        <li>
+          <strong>Wer liest das?</strong> Der Betreiber des Portals (Super-Admin). Er sieht auch alles, was auf einem Bildschirmfoto steht – zum Beispiel Texte aus einem Bericht. Entferne das Bild, wenn etwas darauf nicht für ihn gedacht ist.
+        </li>
+        <li>Eine Antwort bekommst du im Portal nicht. Wenn es eilt, sprich zusätzlich deinen Ausbilder oder die IT an.</li>
+        <li>Fragen zur Ausbildung oder zu einem Bericht gehören nicht hierher – die klärst du mit deinem Ausbilder.</li>
+      </ul>
+    </>
+  ),
+};
+
+const DRUCKEN = (rolle: Rolle): Kapitel => ({
+  id: 'drucken',
+  titel: 'Berichte drucken oder als PDF speichern',
+  inhalt: (
+    <>
+      <dl className="begriffe">
+        <Begriff wort="Ein einzelner Bericht">Im Berichtsheft steht an jeder Woche mit Bericht „Drucken“. Auf der Seite des Berichts heißt der Knopf „Bericht drucken“.</Begriff>
+        <Begriff wort="Alle Berichte">Im Berichtsheft „Alle Berichte drucken“. Jeder Bericht steht auf einer eigenen Seite.</Begriff>
+        <Begriff wort="Als PDF">Im Druckfenster als Drucker „Als PDF speichern“ wählen. So entsteht eine Datei, zum Beispiel für die Kammer.</Begriff>
+      </dl>
+      <ul className="punkte">
+        <li>Auf dem Ausdruck stehen Kopf, Tätigkeiten, Stunden und die Unterschriften. Menüs und Knöpfe werden nicht gedruckt.</li>
+        <li>Chrome und Edge lassen Datum, Titel und Adresse am Rand von selbst weg. In anderen Browsern schaltest du im Druckfenster unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus – der Browser merkt sich das.</li>
+        <li>{rolle === 'azubi' ? 'Ein Entwurf lässt sich auch drucken. Er trägt dann den Vermerk „Entwurf – noch nicht eingereicht und nicht unterschrieben“.' : 'Entwürfe der Azubis siehst du nicht; drucken lassen sich eingereichte und abgezeichnete Berichte.'}</li>
+        {rolle === 'ausbilder' && <li>Bevor du das Konto eines Azubis löschst: alle Berichte drucken oder als PDF speichern. Mit dem Konto werden die Berichte gelöscht.</li>}
+      </ul>
+    </>
+  ),
+});
 
 const KALENDER = (rolle: Rolle): Kapitel => ({
   id: 'kalender',
@@ -234,7 +280,7 @@ const AZUBI: Kapitel[] = [
           </li>
         </ol>
         <p>
-          <strong>Drucken:</strong> Im Berichtsheft steht an jeder Woche mit Bericht „Drucken“; auf der Seite des Berichts „Bericht drucken“. Im Druckfenster kannst du auch „Als PDF speichern“ wählen. Stehen am Rand Datum und Adresse der Seite, schalte dort „Kopf- und Fußzeilen“ aus.
+          <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte drucken oder als PDF speichern“.
         </p>
         <h3>So schreibst du gute Einträge</h3>
         <p>Schreib kurz und genau: Was hast du gemacht, womit und wozu?</p>
@@ -259,6 +305,25 @@ const AZUBI: Kapitel[] = [
       </dl>
     ),
   },
+  DRUCKEN('azubi'),
+  {
+    id: 'konto',
+    titel: 'Dein Konto und deine Unterschrift',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/konto">Konto</Link> (im Menü an deinem Namen, am Handy unter „Mehr“) steht alles, was nur dich betrifft:
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Meine Ausbildung">Beruf, Berufsschule, Ausbildungszeit, Wochenstunden und Prüfungstermine. Das trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</Begriff>
+          <Begriff wort="Unterschrift">Du unterschreibst einmal mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie kannst du nicht einreichen. Änderst du sie später, behalten alte Berichte die alte Unterschrift.</Begriff>
+          <Begriff wort="Kalender abonnieren">Dein Plan im eigenen Kalender. Mehr dazu im Kapitel „Kalender abonnieren“.</Begriff>
+          <Begriff wort="Darstellung">Hell, dunkel oder automatisch wie dein Gerät.</Begriff>
+        </dl>
+        <p>Angemeldet wirst du mit deinem Microsoft-Konto. Ein eigenes Passwort für das Portal gibt es nicht.</p>
+      </>
+    ),
+  },
   {
     id: 'fragen',
     titel: 'Häufige Fragen',
@@ -277,6 +342,7 @@ const AZUBI: Kapitel[] = [
   },
   KALENDER('azubi'),
   GLOCKE('azubi'),
+  FEHLER,
   APP,
   BEDIENUNG,
 ];
@@ -361,6 +427,27 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
       </>
     ),
   },
+  {
+    id: 'uebersicht',
+    titel: 'Die Übersicht lesen',
+    inhalt: (
+      <>
+        <p>
+          Die <Link zu="/uebersicht">Übersicht</Link> beantwortet: Wer ist wann wo? Oben stehen „Diese Woche“ und „Nächste Woche“ mit allen {rolle === 'ausbilder' ? 'deinen' : 'dir zugewiesenen'} Azubis, darunter die nächsten 26 Wochen nebeneinander – am Handy als Liste der Wochen.
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Berufsschule, Einsatz">Kommen aus den Ausbildungsplänen.</Begriff>
+          <Begriff wort="Urlaub">Kommt aus den Berichten. Er erscheint erst, wenn der Azubi ihn im Bericht der Woche unter „Abwesenheit“ eingetragen hat. Krankheit erscheint in der Übersicht nicht.</Begriff>
+          <Begriff wort="Graue Felder">Die Woche liegt außerhalb der Ausbildung dieses Azubis.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Die Azubis sind nach Ausbildungsjahr geordnet. Ein Klick auf den Namen öffnet den Ausbildungsplan.</li>
+          <li>Private Termine der Azubis (zum Beispiel eine JAV-Sitzung) stehen hier nicht.</li>
+          {rolle === 'ausbilder' && <li>Über „Für mehrere Azubis planen“ kommst du zur Sammelplanung.</li>}
+        </ul>
+      </>
+    ),
+  },
   ...(rolle === 'ausbilder'
     ? [
         {
@@ -419,6 +506,48 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           ),
         },
         {
+          id: 'profil',
+          titel: 'Das Profil eines Azubis',
+          inhalt: (
+            <>
+              <p>
+                Über <Link zu="/azubis">Azubis</Link> → „Profil“. Aus diesen Angaben berechnet das Portal Ausbildungsjahr, Wochen und Ende der Ausbildung.
+              </p>
+              <dl className="begriffe">
+                <Begriff wort="Ausbildungsberuf, Berufsschule">Aus den Stammdaten. Der Beruf bestimmt die Regeldauer, die Berufsschule das Bundesland für die Schulferien.</Begriff>
+                <Begriff wort="Zuständiger Ausbilder">Bestimmt, wer den Azubi sieht und voll bearbeitet. Mehr im Kapitel „Meine Azubis, Übernehmen, Vertretung“.</Begriff>
+                <Begriff wort="Ausbildungsbeginn">Erst damit gibt es Berichtsheft und Plan. Die erste Woche ist die Woche mit diesem Tag.</Begriff>
+                <Begriff wort="Vertragsende">Nur eintragen, wenn es vom berechneten Ende abweicht.</Begriff>
+                <Begriff wort="Verkürzung">Monate und Art: „Ausbildung endet früher“ oder „am Anfang angerechnet“ (Start in einem höheren Ausbildungsjahr). Das Portal rechnet nur mit den Monaten – ob eine Verkürzung zulässig ist, entscheidet die Kammer.</Begriff>
+                <Begriff wort="Wochenstunden">Daran misst der Bericht, ob die eingetragenen Stunden zur Woche passen.</Begriff>
+                <Begriff wort="Prüfungstermine">Bis zu acht, mit freier Bezeichnung. Sie erscheinen im Plan des Azubis, in der Kachel „Wochen bis zur Prüfung“ und im abonnierten Kalender.</Begriff>
+              </dl>
+              <p className="leise klein">Der Azubi sieht diese Angaben unter „Konto“ bei „Meine Ausbildung“, kann sie aber nicht ändern.</p>
+            </>
+          ),
+        },
+        {
+          id: 'stammdaten',
+          titel: 'Stammdaten pflegen',
+          inhalt: (
+            <>
+              <p>
+                Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> stehen Betrieb, Ausbildungsberufe und Berufsschulen. Sie gelten <strong>für das ganze Portal</strong> – alle Ausbilder arbeiten mit denselben Einträgen.
+              </p>
+              <dl className="begriffe">
+                <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
+                <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
+                <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
+              </dl>
+              <ul className="punkte">
+                <li>Bitte nichts ändern oder löschen, nur weil du es selbst gerade nicht brauchst.</li>
+                <li>Ein Beruf oder eine Berufsschule lässt sich erst löschen, wenn kein Azubi mehr zugeordnet ist.</li>
+                <li>Änderungen stehen mit deinem Namen im Protokoll.</li>
+              </ul>
+            </>
+          ),
+        },
+        {
           id: 'einrichten',
           titel: 'Einen neuen Azubi einrichten',
           inhalt: (
@@ -461,8 +590,10 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
       <p>Azubis sehen nur ihre eigenen Daten. Ihre Startseite ist der Ausbildungsplan; im Berichtsheft schreiben und reichen sie ein. Was genau sie lesen, steht im Handbuch für Azubis{rolle === 'ausbilder' || rolle === 'beauftragter' ? ' (Reiter oben)' : ''}.</p>
     ),
   },
+  DRUCKEN(rolle),
   KALENDER(rolle),
   GLOCKE(rolle),
+  FEHLER,
   APP,
   BEDIENUNG,
 ];
@@ -527,6 +658,7 @@ const ADMIN: Kapitel[] = [
       </p>
     ),
   },
+  FEHLER,
   APP,
   BEDIENUNG,
 ];
@@ -540,13 +672,24 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
 
   // Verweise aus dem Portal (HandbuchLink) öffnen das Handbuch gleich beim richtigen Kapitel
   useEffect(() => {
-    const id = /^#kapitel-([a-z-]+)$/.exec(window.location.hash)?.[1];
-    if (!id) return;
-    const el = document.getElementById(`kapitel-${id}`);
-    if (!el) return;
-    el.scrollIntoView({ block: 'start' });
-    el.classList.add('ziel');
-  }, []);
+    const zeige = () => {
+      const id = /^#kapitel-([a-z-]+)$/.exec(window.location.hash)?.[1];
+      if (!id) return;
+      document.querySelectorAll('.kapitel.ziel').forEach((x) => x.classList.remove('ziel'));
+      const el = document.getElementById(`kapitel-${id}`);
+      if (el) {
+        el.scrollIntoView({ block: 'start' });
+        el.classList.add('ziel');
+        return;
+      }
+      // steht das Kapitel nur im Handbuch einer anderen Rolle, die man lesen darf, dorthin wechseln
+      const andere = ansichten.find((r) => r !== ansicht && (r === 'azubi' ? AZUBI : r === 'admin' ? ADMIN : BETREUUNG(r)).some((k) => k.id === id));
+      if (andere) setAnsicht(andere);
+    };
+    zeige();
+    window.addEventListener('hashchange', zeige);
+    return () => window.removeEventListener('hashchange', zeige);
+  }, [ansicht]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { api } from '../api';
 import type { Logos } from '../api';
+import { HandbuchLink } from '../handbuchLink';
 
 const MAX = 150 * 1024;
 type Schema = 'hell' | 'dunkel';
@@ -83,7 +84,8 @@ export function Erscheinungsbild({ logos, onGeaendert }: { logos: Logos; onGeaen
       <h1>Erscheinungsbild</h1>
       <p className="leise">
         Das Logo des Betriebs steht in der Kopfzeile und auf der Anmeldeseite. Der Name „Ausbildungsportal“ bleibt klein daneben stehen. PNG, JPEG oder WebP, höchstens 150 KB; am besten im Querformat mit durchsichtigem
-        Hintergrund. Es wird 32 Pixel hoch dargestellt.
+        Hintergrund. Es wird 32 Pixel hoch dargestellt.{' '}
+        <HandbuchLink kapitel="logo">Logo</HandbuchLink>
       </p>
       <LogoFeld schema="hell" logo={logos.logo} ersatz={null} onGeaendert={onGeaendert} />
       <LogoFeld schema="dunkel" logo={logos.logoDunkel} ersatz={logos.logo} onGeaendert={onGeaendert} />

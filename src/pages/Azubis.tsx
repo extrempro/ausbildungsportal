@@ -3,6 +3,7 @@ import { api } from '../api';
 import type { AzubiKurz, Konto } from '../api';
 import { AzubiKarte } from '../AzubiKarte';
 import { Link } from '../router';
+import { HandbuchLink } from '../handbuchLink';
 
 export function Azubis({ ich }: { ich: Konto }) {
   const [azubis, setAzubis] = useState<AzubiKurz[] | null>(null);
@@ -21,7 +22,8 @@ export function Azubis({ ich }: { ich: Konto }) {
       <h1>Azubis</h1>
       <p className="leise">
         {ich.rolle !== 'ausbilder' ? 'Die Auszubildenden, die dir zugewiesen sind.' : ich.alleAzubis ? 'Alle Auszubildenden des Betriebs.' : 'Die Auszubildenden, für die du zuständig bist oder die du vertrittst – und alle, die noch keinen Ausbilder haben.'} Je Azubi siehst du den Stand der Ausbildung und der Berichte; darunter geht es direkt zu Profil, Ausbildungsplan und
-        Berichtsheft.
+        Berichtsheft.{' '}
+        <HandbuchLink kapitel={ich.rolle === 'ausbilder' ? 'zustaendig' : 'aufgabe'}>{ich.rolle === 'ausbilder' ? 'Meine Azubis, Übernehmen, Vertretung' : 'Deine Aufgaben'}</HandbuchLink>
       </p>
       {fehler && (
         <p className="hinweis fehler" role="alert">

@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 11.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.21.1
+Stand: 11.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.22.0
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md).
 
@@ -21,7 +21,12 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
 - [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px, Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.
 - [ ] **Tastatur:** alles erreichbar, Escape schließt Fenster und Menüs, der Fokus kehrt dorthin zurück, wo er war.
 - [ ] **Hooks** stehen vor jedem frühen `return` einer Komponente.
-- [ ] **Mitziehen:** Führung (`src/fuehrung.tsx`), Handbuch, Versionshinweise und – bei neuen Daten über Personen – die Leistungsbeschreibung für den Betriebsrat sind angepasst.
+- [ ] **Handbuch gehört dazu – bei jeder neuen Funktion und jeder Änderung, ohne dass es eigens verlangt wird:**
+  1. Das Handbuch (`src/pages/Handbuch.tsx`) beschreibt die Funktion für **jede Rolle, die sie sieht** – als eigenes Kapitel, wenn man danach suchen würde (Titel = das Wort, das auf dem Bildschirm steht), sonst als Absatz im passenden Kapitel. Für Azubis in kurzen Sätzen mit erklärten Begriffen.
+  2. An der Stelle im Portal steht ein `<HandbuchLink kapitel="…">` zum Kapitel: auf Seiten am Ende des einleitenden Satzes unter der `h1`, in Fenstern und Abschnitten bei der Erklärung. Kein Verweis, wo es nichts zu erklären gibt (Versionshinweise, Anmeldeseite).
+  3. Ändert sich eine Funktion, wird der Handbuchtext mitgeändert; fällt sie weg, auch das Kapitel und seine Verweise.
+  4. Der Test `server/test/handbuch.test.ts` prüft, dass jeder Verweis auf ein vorhandenes Kapitel zeigt. Gilt ein Kapitel nicht für alle Rollen, wählt der Verweis das Kapitel nach Rolle.
+- [ ] **Mitziehen:** Führung (`src/fuehrung.tsx`), Versionshinweise und – bei neuen Daten über Personen – die Leistungsbeschreibung für den Betriebsrat sind angepasst.
 - [ ] **Im Browser durchgespielt** in PC- und Handybreite, nicht nur übersetzt und getestet.
 
 ## Wenn eine Regel nicht passt

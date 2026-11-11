@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import { api, berufName, datum, standText } from '../api';
 import type { Konto, Profil, ProfilAntwort, Rolle, Stammdaten, ZuweisungZeile } from '../api';
 import { geheZu, Link, useUngespeichert } from '../router';
+import { HandbuchLink } from '../handbuchLink';
 
 type Meldung = { text: string; fehler: boolean } | null;
 
@@ -177,8 +178,7 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
         </button>
       </fieldset>
       <p className="leise klein">
-        Fehlen Beruf oder Berufsschule in der Auswahl, lassen sie sich unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> anlegen. Die App rechnet nur mit den
-        eingetragenen Monaten; ob eine Verkürzung zulässig ist, entscheidet die zuständige Kammer.
+        Fehlen Beruf oder Berufsschule in der Auswahl, lassen sie sich unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> anlegen. <HandbuchLink kapitel="profil">Das Profil eines Azubis</HandbuchLink>
       </p>
       <MeldungZeile m={meldung} />
       <div>
@@ -251,9 +251,8 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
   return (
     <>
       <p className="leise klein">
-        Wer zugewiesen ist, sieht den Azubi ab dem Beginn der Zuweisung, zeichnet Berichte der Wochen in seinem Zeitraum ab und trägt Aufgaben und Notizen ein. Ohne Datum
-        gilt die Zuweisung für die ganze Ausbildung. Für eine <strong>Vertretung</strong> (Urlaub, Krankheit) weist du einen anderen Ausbilder für den Zeitraum zu –
-        zuständig bleibst du.
+        Wer zugewiesen ist, sieht den Azubi ab dem Beginn und zeichnet Berichte der Wochen in seinem Zeitraum ab. Ohne Datum gilt die Zuweisung für die ganze Ausbildung.{' '}
+        <HandbuchLink kapitel="zustaendig">Zuweisen und Vertretung</HandbuchLink>
       </p>
       {personen.length === 0 && <p className="hinweis">Es gibt noch kein Konto, das sich zuweisen lässt (Ausbildungsbeauftragte oder ein weiterer Ausbilder).</p>}
       {zeilen.map((z, i) => (

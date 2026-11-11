@@ -4,6 +4,7 @@ import { api, h, wocheText, zeit } from '../api';
 import type { Bericht, OffenerBericht } from '../api';
 import { Link } from '../router';
 import { BerichtBlatt } from './Bericht';
+import { HandbuchLink } from '../handbuchLink';
 
 const schluessel = (o: Pick<OffenerBericht, 'azubiId' | 'montag'>) => `${o.azubiId}|${o.montag}`;
 const initialen = (name: string) =>
@@ -147,7 +148,9 @@ export function Abzeichnen() {
   return (
     <>
       <h1>Abzeichnen</h1>
-      <p className="leise">Eingereichte Berichte, die auf deine Unterschrift warten – nach Azubi geordnet, die älteste Woche zuerst.</p>
+      <p className="leise">Eingereichte Berichte, die auf deine Unterschrift warten – nach Azubi geordnet, die älteste Woche zuerst.{' '}
+        <HandbuchLink kapitel="abzeichnen">Berichte lesen, abzeichnen, zurückgeben</HandbuchLink>
+      </p>
       {!hatUnterschrift && (
         <p className="hinweis">
           Zum Abzeichnen fehlt noch deine Unterschrift. <Link zu="/konto">Unter „Konto“ hinterlegen</Link>

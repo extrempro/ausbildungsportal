@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ART_TEXT, berufName, PLAN_ARTEN } from '../api';
 import type { PlanArt, Planvorlage, VorlageEintrag } from '../api';
 import { Link, useUngespeichert } from '../router';
+import { HandbuchLink } from '../handbuchLink';
 
 interface Berufe {
   id: number;
@@ -327,8 +328,8 @@ export function Vorlagen() {
     <>
       <h1>Planbausteine</h1>
       <p className="leise">
-        Ein Baustein ist ein Stück Ausbildung, das immer wieder vorkommt – zum Beispiel die Station „IT-Support“ mit 8 Wochen Einsatz und den Aufgaben dazu. Du legst ihn einmal an und fügst ihn in jeden Plan dort ein, wo er für diesen Azubi hingehört. So bleibt jeder Plan
-        individuell, ohne dass du die Texte neu schreibst.
+        Ein Baustein ist ein Stück Ausbildung, das immer wieder vorkommt – zum Beispiel die Station „IT-Support“ mit 8 Wochen Einsatz und den Aufgaben dazu. Du legst ihn einmal an und fügst ihn in jeden Plan dort ein, wo er passt.{' '}
+        <HandbuchLink kapitel="planung">Sammelplanung und Bausteine</HandbuchLink>
       </p>
       <ol className="ablauf-liste abz-hilfe">
         <li>

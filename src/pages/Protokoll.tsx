@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, zeit } from '../api';
 import type { ProtokollEintrag } from '../api';
+import { HandbuchLink } from '../handbuchLink';
 
 const AKTION: Record<string, string> = {
   anmeldung: 'Anmeldung',
@@ -39,7 +40,9 @@ export function Protokoll() {
   return (
     <>
       <h1>Protokoll</h1>
-      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen hier nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Die neuesten 200 Einträge.</p>
+      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen hier nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Die neuesten 200 Einträge.{' '}
+        <HandbuchLink kapitel="protokoll">Protokoll</HandbuchLink>
+      </p>
       {fehler && (
         <p className="hinweis fehler" role="alert">
           {fehler}

@@ -6,6 +6,7 @@ import type { Konto, ProfilAntwort, Theme } from '../api';
 import { KalenderAbo } from '../kalenderAbo';
 import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
+import { HandbuchLink } from '../handbuchLink';
 
 export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<void> }) {
   const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
@@ -194,6 +195,9 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
         <section className="karte">
           <h2>Unterschrift</h2>
           <Unterschrift konto={konto} />
+          <p className="hilfe-zeile klein">
+            <HandbuchLink kapitel={konto.rolle === 'azubi' ? 'konto' : 'unterschrift'}>{konto.rolle === 'azubi' ? 'Dein Konto und deine Unterschrift' : 'Unterschrift hinterlegen'}</HandbuchLink>
+          </p>
         </section>
       )}
 

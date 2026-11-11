@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { api, plusTage } from '../api';
 import type { Uebersicht } from '../api';
 import { Link } from '../router';
+import { HandbuchLink } from '../handbuchLink';
 
 type Azubi = Uebersicht['azubis'][number];
 type Zelle = Azubi['wochen'][number];
@@ -151,7 +152,9 @@ export function UebersichtSeite({ darfPlanen = false }: { darfPlanen?: boolean }
   return (
     <>
       <h1>Übersicht</h1>
-      <p className="leise">Wer ist wann wo? Schulblöcke und Einsätze kommen aus den Ausbildungsplänen, Urlaub aus den Berichten.</p>
+      <p className="leise">Wer ist wann wo? Schulblöcke und Einsätze kommen aus den Ausbildungsplänen, Urlaub aus den Berichten.{' '}
+        <HandbuchLink kapitel="uebersicht">Die Übersicht lesen</HandbuchLink>
+      </p>
       {darfPlanen && (
         <p className="nicht-drucken ue-planen">
           <Link zu="/planung/sammelplanung" className="knopf schlicht">

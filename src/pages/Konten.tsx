@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Konto, Rolle } from '../api';
 import { Icon } from '../icons';
+import { HandbuchLink } from '../handbuchLink';
 
 const HILFE = 'konten-hilfe';
 function hilfeOffen(): boolean {
@@ -104,7 +105,8 @@ export function Konten({ ich }: { ich: Konto }) {
       <p className="leise">
         {ich.rolle === 'admin'
           ? 'Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto an. Hier wird festgelegt, wer Zugang hat und in welcher Rolle.'
-          : 'Azubis und Ausbildungsbeauftragte melden sich mit ihrem Microsoft-Konto an. Hier wird festgelegt, wer Zugang hat.'}
+          : 'Azubis und Ausbildungsbeauftragte melden sich mit ihrem Microsoft-Konto an. Hier wird festgelegt, wer Zugang hat.'}{' '}
+        <HandbuchLink kapitel="konten">Konten verwalten</HandbuchLink>
       </p>
 
       {fehler && (
