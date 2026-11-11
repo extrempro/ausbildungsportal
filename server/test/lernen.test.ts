@@ -186,7 +186,7 @@ test('Lernstand: Ampel, Lernpunkt und Notiz speichern; Eingaben werden geprüft'
   const w = await welt();
   const c = als(w, w.anna);
   const setze = (id: string, body: unknown) => ruf(w.u, 'PATCH', `/api/lernen/unterthema/${id}`, { cookies: c, body });
-  assert.deepEqual(koerper(await setze('netz.subnetting', { status: 'gelb', luecke: '  Blockgröße bei /27 üben ' })), { id: 'netz.subnetting', status: 'gelb', luecke: 'Blockgröße bei /27 üben', notiz: '', geaendert: '2026-11-10', inhaltAktualisiert: false });
+  assert.deepEqual(koerper(await setze('netz.subnetting', { status: 'gelb', luecke: '  Blockgröße bei /27 üben ' })), { id: 'netz.subnetting', status: 'gelb', luecke: 'Blockgröße bei /27 üben', notiz: '', geaendert: '2026-11-10', inhaltAktualisiert: false, abzeichen: { feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 2, name: 'Stein' }, rang: { stufe: 2, name: 'Stein' } });
   assert.equal((await setze('netz.subnetting', { notiz: 'in der Schule fragen' })).status, 200);
   assert.equal(koerper(await setze('netz.subnetting', { status: 'gruen' })).luecke, 'Blockgröße bei /27 üben', 'der Lernpunkt bleibt beim Wechsel auf Sicher');
 
@@ -332,7 +332,7 @@ test('Zusatzwissen: Inhalt, Verweise in beide Richtungen, Haken „gelesen“ �
 
   assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: 'ja' } })).status, 400);
   assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.subnetting', { cookies: c, body: { gelesen: true } })).status, 404);
-  assert.deepEqual(koerper(await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } })), { id: 'netz.planen', gelesen: true });
+  assert.deepEqual(koerper(await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } })), { id: 'netz.planen', gelesen: true, abzeichen: null, rang: null });
   assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } })).status, 200);
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c })).themenfelder[0].zusatz, [{ id: 'planen', titel: 'Subnetze planen', gelesen: true }]);
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).thema.zusatz[0].gelesen, true);
@@ -349,4 +349,68 @@ test('Zusatzwissen: Inhalt, Verweise in beide Richtungen, Haken „gelesen“ �
   const e = koerper(await ruf(w.u, 'GET', '/api/lernen/kompendium', { cookies: c })).eintraege.find((x: { typ: string }) => x.typ === 'zusatz');
   assert.deepEqual([e.titel, e.text, e.feld, e.sub, e.abschnitte], ['Subnetze planen', 'Wie man ein Netz aufteilt.', 'netz', 'planen', ['Vorgehen', 'Fertig?']]);
   assert.match(e.volltext, /Reserve eingeplant/);
+});
+
+test('Abzeichen: Holz, Stein, Bronze je Themenfeld; einmal erreicht bleibt; Rang über die Hälfte der Themenfelder; privat', async () => {
+  // Themenfeld „netz“ mit vier Unterthemen und einem Zusatzwissen, „wiso“ mit einem Unterthema
+  const netz = NETZ.replace('## VLAN {#vlan}', '## VLAN {#vlan}\n\n## Routing {#routing}\n\n## DNS {#dns}');
+  const w = await welt(inhalte(netz));
+  const c = als(w, w.anna);
+  const setze = async (id: string, status: string) => koerper(await ruf(w.u, 'PATCH', `/api/lernen/unterthema/${id}`, { cookies: c, body: { status } }));
+  const lies = async () => koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c }));
+  const feld = async (id: string) => (await lies()).themenfelder.find((f: { id: string }) => f.id === id).abzeichen;
+
+  // am Anfang: nichts
+  const start = await lies();
+  assert.deepEqual(start.rang, { stufe: 0, name: null, noetig: 1, felder: 2, naechste: { stufe: 1, name: 'Holz', haben: 0 } });
+  assert.deepEqual([start.themenfelder[0].abzeichen.stufe, start.themenfelder[0].abzeichen.fortschritt, /Gelb oder Grün/.test(start.themenfelder[0].abzeichen.fehlt)], [0, 0, true]);
+
+  // Rot zählt nicht; das erste Gelb bringt Holz – und weil ein Themenfeld von zweien reicht, auch den Rang
+  assert.deepEqual([(await setze('netz.subnetting', 'rot')).abzeichen, (await feld('netz')).stufe], [null, 0]);
+  const erstes = await setze('netz.subnetting', 'gelb');
+  assert.deepEqual([erstes.abzeichen, erstes.rang], [{ feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 1, name: 'Holz' }, { stufe: 1, name: 'Holz' }]);
+  assert.deepEqual(await feld('netz'), { stufe: 1, name: 'Holz', erreicht: '2026-11-10', fehlt: 'Noch 1 Unterthema bis Stein.', fortschritt: 50 });
+  // dasselbe noch einmal speichern: kein neues Abzeichen
+  assert.deepEqual([(await setze('netz.subnetting', 'gruen')).abzeichen, (await setze('netz.subnetting', 'gelb')).rang], [null, null]);
+
+  // die Hälfte der Unterthemen: Stein
+  assert.equal((await setze('netz.vlan', 'gruen')).abzeichen.name, 'Stein');
+  assert.deepEqual([(await feld('netz')).fehlt, (await feld('netz')).fortschritt], ['Noch 2 Unterthemen und 1× Zusatzwissen bis Bronze.', 40]);
+  // alle Unterthemen, aber das Zusatzwissen fehlt noch: weiter Stein
+  await setze('netz.routing', 'gelb');
+  assert.equal((await setze('netz.dns', 'gelb')).abzeichen, null);
+  assert.equal((await feld('netz')).fehlt, 'Noch 1× Zusatzwissen bis Bronze.');
+  const gelesen = koerper(await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: true } }));
+  assert.deepEqual([gelesen.abzeichen, gelesen.rang], [{ feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 3, name: 'Bronze' }, { stufe: 3, name: 'Bronze' }]);
+  const bronze = await feld('netz');
+  assert.deepEqual([bronze.stufe, bronze.fortschritt, /Silber, Gold und Meister kommen mit den Übungen/.test(bronze.fehlt)], [3, 100, true]);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).thema.abzeichen.name, 'Bronze');
+
+  // einmal erreicht bleibt: Ampel zurück auf Rot, Haken weg – das Abzeichen steht weiter da
+  await setze('netz.subnetting', 'rot');
+  await ruf(w.u, 'PATCH', '/api/lernen/zusatz/netz.planen', { cookies: c, body: { gelesen: false } });
+  assert.deepEqual([(await feld('netz')).stufe, (await lies()).rang.stufe], [3, 3]);
+  // … und es gibt die Stufe nicht ein zweites Mal
+  assert.equal((await setze('netz.subnetting', 'gelb')).abzeichen, null);
+
+  // zweites Themenfeld mit nur einem Unterthema und ohne Zusatzwissen: sofort Bronze
+  assert.equal((await setze('wiso.vertrag', 'gruen')).abzeichen.name, 'Bronze');
+  assert.equal((await lies()).rang.naechste, null, 'mehr als Bronze gibt es noch nicht');
+
+  // privat: Ben hat nichts; Ausbilder, Beauftragte und Super-Admin kommen nicht heran
+  const ben = koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.ben) }));
+  assert.deepEqual([ben.rang.stufe, ben.themenfelder.map((f: { abzeichen: { stufe: number } }) => f.abzeichen.stufe)], [0, [0, 0]]);
+  for (const wer of [w.ausbilder, w.bea, admin(w.u.db)]) assert.equal((await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, wer) })).status, 403);
+  // mit dem Konto verschwinden die Abzeichen
+  w.u.db.prepare('DELETE FROM benutzer WHERE id = ?').run(w.anna.id);
+  assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM lern_abzeichen').get() as { n: number }).n, 0);
+});
+
+test('Abzeichen: Wer schon vorher gelernt hat, bekommt sie beim Öffnen von „Lernen“ gutgeschrieben', async () => {
+  const w = await welt();
+  const c = als(w, w.anna);
+  // Lernstand wie vor der Einführung der Abzeichen: direkt in der Datenbank
+  for (const id of ['netz.subnetting', 'netz.vlan']) w.u.db.prepare("INSERT INTO lern_status (azubi_id, paket, unterthema_id, status, geaendert) VALUES (?, 'fisi', ?, 'gruen', '2026-10-01')").run(w.anna.id, id);
+  const d = koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c }));
+  assert.deepEqual([d.themenfelder[0].abzeichen.name, d.themenfelder[0].abzeichen.erreicht, d.rang.name], ['Stein', '2026-11-10', 'Stein']);
 });

@@ -6,6 +6,8 @@ import { Fehler } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { transaktion } from './db';
+import { naechste, rangVon, STUFEN, stufeVon } from './lernen/abzeichen';
+import type { FeldStand } from './lernen/abzeichen';
 import { ladeInhalte, unterthemaIndex, zusatzIds } from './lernen/store';
 import type { Inhalte } from './lernen/store';
 import type { BenutzerZeile } from './typen';
@@ -212,6 +214,56 @@ function unterthemaVerweis(inhalte: Inhalte, ref: string): Verweis | null {
   return f && u ? { feld: f.id, feldTitel: f.titel, id: u.id, titel: u.titel } : null;
 }
 
+interface AbzeichenStand {
+  /** je Themenfeld: erreichte Stufe (0 = keine), wann, und was bis zur nächsten fehlt */
+  felder: Map<string, { stufe: number; name: string | null; erreicht: string | null; fehlt: string; fortschritt: number }>;
+  rang: { stufe: number; name: string | null; noetig: number; felder: number; naechste: { stufe: number; name: string; haben: number } | null };
+  /** in diesem Aufruf neu erreichte Stufen */
+  neu: { feld: string; feldTitel: string; stufe: number; name: string }[];
+}
+
+/**
+ * Gleicht die Abzeichen mit dem Lernstand ab: Wer eine höhere Stufe erreicht hat, bekommt sie gutgeschrieben.
+ * Eine erreichte Stufe bleibt – auch wenn die Ampel zurückgestellt wird oder neue Inhalte dazukommen.
+ */
+function abzeichenVon(c: Ctx, p: Paket): AbzeichenStand {
+  const { db } = c.k;
+  const stand = standVon(db, c.b.id, p.id);
+  const gelesen = gelesenVon(db, c.b.id, p.id);
+  const alt = new Map((db.prepare('SELECT feld_id, stufe, erreicht FROM lern_abzeichen WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { feld_id: string; stufe: number; erreicht: string }[]).map((z) => [z.feld_id, { stufe: z.stufe, erreicht: z.erreicht }]));
+  const heute = c.k.jetzt().toISOString().slice(0, 10);
+  const felder: AbzeichenStand['felder'] = new Map();
+  const neu: AbzeichenStand['neu'] = [];
+  for (const f of p.inhalte.themenfelder) {
+    const s: FeldStand = {
+      unterthemen: f.unterthemen.length,
+      bearbeitet: f.unterthemen.filter((u) => (stand.get(`${f.id}.${u.id}`)?.status ?? 'rot') !== 'rot').length,
+      zusatz: f.zusatz.length,
+      zusatzGelesen: f.zusatz.filter((z) => gelesen.has(`${f.id}.${z.id}`)).length,
+    };
+    let hat = alt.get(f.id) ?? { stufe: 0, erreicht: null as string | null };
+    const jetzt = stufeVon(s);
+    if (jetzt > hat.stufe) {
+      db.prepare('INSERT INTO lern_abzeichen (azubi_id, paket, feld_id, stufe, erreicht) VALUES (?, ?, ?, ?, ?) ON CONFLICT(azubi_id, paket, feld_id) DO UPDATE SET stufe = excluded.stufe, erreicht = excluded.erreicht').run(c.b.id, p.id, f.id, jetzt, heute);
+      hat = { stufe: jetzt, erreicht: heute };
+      neu.push({ feld: f.id, feldTitel: f.titel, stufe: jetzt, name: STUFEN[jetzt - 1] });
+    }
+    felder.set(f.id, { stufe: hat.stufe, name: hat.stufe ? STUFEN[hat.stufe - 1] : null, erreicht: hat.erreicht, ...naechste(hat.stufe, s) });
+  }
+  const r = rangVon([...felder.values()].map((x) => x.stufe));
+  return { felder, neu, rang: { stufe: r.stufe, name: r.stufe ? STUFEN[r.stufe - 1] : null, noetig: r.noetig, felder: felder.size, naechste: r.naechste && { ...r.naechste, name: STUFEN[r.naechste.stufe - 1] } } };
+}
+
+/** Für die Antwort nach dem Speichern: ein neu erreichtes Abzeichen und, falls er gestiegen ist, der neue Rang. */
+function nachSpeichern(c: Ctx, p: Paket, rangVorher: number) {
+  const a = abzeichenVon(c, p);
+  return { abzeichen: a.neu[0] ?? null, rang: a.rang.stufe > rangVorher ? { stufe: a.rang.stufe, name: a.rang.name } : null };
+}
+function rangJetzt(c: Ctx, p: Paket): number {
+  const hat = new Map((c.k.db.prepare('SELECT feld_id, stufe FROM lern_abzeichen WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { feld_id: string; stufe: number }[]).map((z) => [z.feld_id, z.stufe]));
+  return rangVon(p.inhalte.themenfelder.map((f) => hat.get(f.id) ?? 0)).stufe;
+}
+
 function meinPaket(c: Ctx): Paket {
   const p = paketVon(c.k, c.b);
   if (!p) throw new Fehler(404, 'Für deinen Ausbildungsberuf ist kein Lernmodul eingeschaltet');
@@ -237,11 +289,15 @@ export const LERN_ROUTEN: Route[] = [
       const p = meinPaket(c);
       const stand = standVon(c.k.db, c.b.id, p.id);
       const gelesen = gelesenVon(c.k.db, c.b.id, p.id);
+      // wer schon vor den Abzeichen gelernt hat, bekommt sie hier still gutgeschrieben
+      const abz = abzeichenVon(c, p);
       return {
         status: 200,
         body: {
           paket: paketKopf(p),
+          rang: abz.rang,
           themenfelder: p.inhalte.themenfelder.map((f) => ({
+            abzeichen: abz.felder.get(f.id)!,
             zusatz: f.zusatz.map((z) => ({ id: z.id, titel: z.titel, gelesen: gelesen.has(`${f.id}.${z.id}`) })),
             id: f.id,
             titel: f.titel,
@@ -288,6 +344,7 @@ export const LERN_ROUTEN: Route[] = [
         body: {
           paket: paketKopf(p),
           thema: {
+            abzeichen: abzeichenVon(c, p).felder.get(f.id)!,
             // Zusatzwissen: zählt nicht zur Ampel, nur ein Haken „gelesen“
             zusatz: f.zusatz.map(({ ablaufDatei: _a, zu, ...z }) => ({
               ...z,
@@ -353,11 +410,12 @@ export const LERN_ROUTEN: Route[] = [
       }
       if (!geaendert) throw new Fehler(400, 'Nichts zu ändern');
       neu.geaendert = c.k.jetzt().toISOString().slice(0, 10);
+      const rangVorher = rangJetzt(c, p);
       db.prepare(
         `INSERT INTO lern_status (azubi_id, paket, unterthema_id, status, luecke, notiz, inhalt_hash, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(azubi_id, paket, unterthema_id) DO UPDATE SET status = excluded.status, luecke = excluded.luecke, notiz = excluded.notiz, inhalt_hash = excluded.inhalt_hash, geaendert = excluded.geaendert`,
       ).run(c.b.id, p.id, id, neu.status, neu.luecke, neu.notiz, neu.inhalt_hash, neu.geaendert);
-      return { status: 200, body: { id, status: neu.status, luecke: neu.luecke, notiz: neu.notiz, geaendert: neu.geaendert, inhaltAktualisiert: false } };
+      return { status: 200, body: { id, status: neu.status, luecke: neu.luecke, notiz: neu.notiz, geaendert: neu.geaendert, inhaltAktualisiert: false, ...nachSpeichern(c, p, rangVorher) } };
     },
   },
 
@@ -372,9 +430,10 @@ export const LERN_ROUTEN: Route[] = [
       if (!UNTERTHEMA_ID.test(id) || !zusatzIds(p.inhalte).has(id)) throw new Fehler(404, 'Dieses Zusatzwissen gibt es nicht');
       const gelesen = (c.a.body as { gelesen?: unknown } | null)?.gelesen;
       if (typeof gelesen !== 'boolean') throw new Fehler(400, 'gelesen muss wahr oder falsch sein');
+      const rangVorher = rangJetzt(c, p);
       if (gelesen) c.k.db.prepare('INSERT INTO lern_zusatz (azubi_id, paket, zusatz_id, geaendert) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING').run(c.b.id, p.id, id, c.k.jetzt().toISOString().slice(0, 10));
       else c.k.db.prepare('DELETE FROM lern_zusatz WHERE azubi_id = ? AND paket = ? AND zusatz_id = ?').run(c.b.id, p.id, id);
-      return { status: 200, body: { id, gelesen } };
+      return { status: 200, body: { id, gelesen, ...nachSpeichern(c, p, rangVorher) } };
     },
   },
 ];

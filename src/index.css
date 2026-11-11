@@ -7153,3 +7153,134 @@ ul.antrag-hinweise {
   color: var(--c-warn-fg);
   border: 1px dashed var(--c-warn-fg);
 }
+
+/* ---------- Lernmodul: Abzeichen ---------- */
+.schild {
+  flex: none;
+  display: block;
+  height: auto;
+}
+
+.schild.gesperrt {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.abz-rang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 20px;
+}
+
+.abz-rang > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.abz-rang h2 {
+  margin: 0 0 4px;
+}
+
+.abz-rang p {
+  margin: 0 0 12px;
+}
+
+.abz-zeile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-border);
+}
+
+.abz-zeile > span,
+.abz-fehlt {
+  display: block;
+  min-width: 0;
+}
+
+.abz-feld {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.abz-feld > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.abz-balken {
+  height: 8px;
+  margin: 8px 0 6px;
+  border-radius: 4px;
+  background: var(--c-border);
+  overflow: hidden;
+}
+
+.abz-balken i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--c-accent);
+}
+
+.abz-leiter {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px 20px;
+}
+
+.abz-leiter li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.abz-leiter li > span {
+  min-width: 0;
+}
+
+.abz-wofuer {
+  display: block;
+  font-size: 14px;
+  color: var(--c-muted);
+}
+
+.abz-feier {
+  max-width: 420px;
+  text-align: center;
+}
+
+.abz-feier h2 {
+  margin: 8px 0;
+}
+
+.abz-feier .aktionen {
+  justify-content: center;
+  display: flex;
+  margin-top: 16px;
+}
+
+.abz-feier-bild {
+  display: flex;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .abz-feier-bild .schild {
+    animation: abz-erscheinen 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+}
+
+@keyframes abz-erscheinen {
+  from {
+    transform: scale(0.4) rotate(-8deg);
+    opacity: 0;
+  }
+}
