@@ -15,6 +15,10 @@ export interface Konto {
   letzteAnmeldung: string | null;
   /** Ausbilder mit Gesamtsicht: sieht und bearbeitet alle Azubis */
   alleAzubis: boolean;
+  /** Adresse des Profilbilds aus Microsoft oder null */
+  bild: string | null;
+  /** will die Person ihr Profilbild zeigen? */
+  bildZeigen: boolean;
   verwaltbar?: boolean;
   loeschbar?: boolean;
 }
@@ -217,6 +221,7 @@ export interface ProfilAntwort {
 
 export interface AzubiKurz {
   id: number;
+  bild: string | null;
   anzeigename: string;
   anmeldename: string;
   status: string;
@@ -322,6 +327,7 @@ export interface BerichtListe {
 export interface OffenerBericht {
   azubiId: number;
   azubi: string;
+  bild: string | null;
   montag: string;
   sonntag: string;
   kw: number;

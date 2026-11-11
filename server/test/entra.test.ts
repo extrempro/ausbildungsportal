@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import { after, before, test } from 'node:test';
 import { erzeugeEntra, pkceChallenge } from '../entra';
 import type { Entra } from '../entra';
-import { APP, cookiesAus, koerper, konto, ruf, umgebung } from './hilfe';
+import { admin, APP, cookiesAus, koerper, konto, ohneWechsel, ruf, sitzung, umgebung } from './hilfe';
 import type { Umgebung } from './hilfe';
 
 /**
@@ -28,7 +28,9 @@ interface Anbieter {
   /** der zuletzt am Token-Endpunkt eingegangene Formularinhalt */
   letzteAnfrage: URLSearchParams | null;
   codes: Map<string, { nonce: string; challenge: string }>;
-  naechstes: { claims: Record<string, unknown>; kopf?: Record<string, unknown>; schluessel?: KeyObject; ohneSignatur?: boolean; status?: number };
+  naechstes: { claims: Record<string, unknown>; kopf?: Record<string, unknown>; schluessel?: KeyObject; ohneSignatur?: boolean; status?: number; /** Profilbild bei Microsoft Graph: Bilddaten, 'keins' (404) oder 'kaputt' (500) */ bild?: Buffer | 'keins' | 'kaputt' };
+  /** womit zuletzt bei Graph nach dem Bild gefragt wurde */
+  graphAnfrage: { authorization: string } | null;
 }
 
 const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -53,6 +55,13 @@ before(async () => {
     if (url.pathname === '/v2.0/.well-known/openid-configuration') {
       return json(200, { issuer: a.aussteller, authorization_endpoint: `${a.aussteller}/authorize`, token_endpoint: `${a.aussteller}/token`, jwks_uri: `${a.aussteller}/keys` });
     }
+    if (url.pathname === '/graph/v1.0/me/photos/96x96/$value') {
+      a.graphAnfrage = { authorization: String(req.headers.authorization ?? '') };
+      const bild = a.naechstes.bild ?? 'keins';
+      if (bild === 'keins') return json(404, { error: { code: 'ImageNotFound' } });
+      if (bild === 'kaputt') return json(500, {});
+      return res.writeHead(200, { 'content-type': 'image/jpeg' }).end(bild);
+    }
     if (url.pathname === '/v2.0/keys') return json(200, { keys: [{ ...publicKey.export({ format: 'jwk' }), kid: 'schluessel-1', use: 'sig' }] });
     if (url.pathname === '/v2.0/token' && req.method === 'POST') {
       let roh = '';
@@ -73,13 +82,13 @@ before(async () => {
   });
   await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
   const port = (server.address() as AddressInfo).port;
-  a = { server, aussteller: `http://127.0.0.1:${port}/v2.0`, schluessel: privateKey, letzteAnfrage: null, codes: new Map(), naechstes: { claims: {} } };
+  a = { server, aussteller: `http://127.0.0.1:${port}/v2.0`, schluessel: privateKey, letzteAnfrage: null, graphAnfrage: null, codes: new Map(), naechstes: { claims: {} } };
 });
 
 after(() => a.server.close());
 
-function entra(): Entra {
-  return erzeugeEntra({ aussteller: a.aussteller, clientId: CLIENT, clientSecret: SECRET, redirectUri: REDIRECT, tenantId: TENANT });
+function entra(profilbild = false): Entra {
+  return erzeugeEntra({ aussteller: a.aussteller, clientId: CLIENT, clientSecret: SECRET, redirectUri: REDIRECT, tenantId: TENANT, profilbild, graphUrl: a.aussteller.replace('/v2.0', '/graph') });
 }
 
 /** Beginnt die Anmeldung in der App und „meldet sich beim Anbieter an“: liefert Cookie, state und einen gültigen Code. */
@@ -258,4 +267,81 @@ test('ohne Entra-Konfiguration gibt es keine Microsoft-Anmeldung', async () => {
 test('Aussteller aus der Discovery muss zum konfigurierten Mandanten passen', async () => {
   const falsch = erzeugeEntra({ aussteller: a.aussteller.replace('/v2.0', '/v2.0/'), clientId: CLIENT, clientSecret: SECRET, redirectUri: REDIRECT });
   await assert.rejects(falsch.anmeldeUrl({ state: 's', nonce: 'n', challenge: 'c' }));
+});
+
+// kleinstes gültiges JPEG-Gerüst bzw. PNG-Kopf – der Server prüft nur die ersten Bytes
+const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from('bild-eins')]);
+const JPEG2 = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from('bild-zwei')]);
+
+test('Profilbild: ohne ENTRA_PROFILBILD wird nichts zusätzlich verlangt und nichts geholt', async () => {
+  const u = await umgebung({}, entra());
+  const azubi = konto(u.db, 'azubi', 'Anna Azubi');
+  a.graphAnfrage = null;
+  const r = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: JPEG });
+  assert.equal(r.status, 302);
+  assert.equal(a.graphAnfrage, null);
+  assert.equal((u.db.prepare('SELECT COUNT(*) AS n FROM benutzer_bild').get() as { n: number }).n, 0);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(r) })).profilbild, false);
+});
+
+test('Profilbild: bei der Anmeldung geholt, angezeigt, erneuert und entfernt; ein Fehler bei Graph stört die Anmeldung nicht', async () => {
+  const u = await umgebung({ ENTRA_TENANT_ID: TENANT, ENTRA_CLIENT_ID: CLIENT, ENTRA_CLIENT_SECRET: SECRET, ENTRA_PROFILBILD: 'true' }, entra(true));
+  ohneWechsel(u.db, admin(u.db).id);
+  const azubi = konto(u.db, 'azubi', 'Anna Azubi');
+  const ausbilder = konto(u.db, 'ausbilder', 'Petra Lang');
+  const fremd = konto(u.db, 'ausbilder', 'Olaf Berg');
+  const ben = konto(u.db, 'azubi', 'Ben Bauer');
+  u.db.prepare("INSERT INTO azubi_profil (benutzer_id, ausbilder_id, ausbildungsbeginn, geaendert) VALUES (?, ?, '2025-08-01', '2026-01-01T00:00:00.000Z')").run(azubi.id, ausbilder.id);
+  const als = (wer: typeof azubi) => sitzung(u, wer);
+
+  // die Anmeldung verlangt jetzt zusätzlich User.Read
+  assert.equal((await beginne(u)).url.searchParams.get('scope'), 'openid profile email User.Read');
+
+  const r = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: JPEG });
+  assert.equal(r.status, 302);
+  assert.equal(a.graphAnfrage?.authorization, 'Bearer zugriffstoken-wird-nicht-verwendet');
+  const ich = koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(r) }));
+  assert.match(ich.konto.bild, new RegExp(`^/api/benutzer/${azubi.id}/bild\\?v=[0-9a-f]{12}$`));
+  assert.deepEqual([ich.konto.bildZeigen, ich.profilbild], [true, true]);
+  const bild = await ruf(u, 'GET', `/api/benutzer/${azubi.id}/bild`, { cookies: cookiesAus(r) });
+  assert.deepEqual([bild.status, bild.bild?.typ, bild.bild?.inhalt.equals(JPEG)], [200, 'image/jpeg', true]);
+
+  // wer das Bild sieht: die Person selbst und wer den Azubi sehen darf – sonst niemand
+  assert.equal((await ruf(u, 'GET', `/api/benutzer/${azubi.id}/bild`, { cookies: als(ausbilder) })).status, 200);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/azubis', { cookies: als(ausbilder) })).azubis.find((x: { id: number }) => x.id === azubi.id).bild, ich.konto.bild);
+  for (const wer of [fremd, ben, admin(u.db)]) assert.equal((await ruf(u, 'GET', `/api/benutzer/${azubi.id}/bild`, { cookies: als(wer) })).status, 404, wer.anzeigename);
+  assert.equal((await ruf(u, 'GET', `/api/benutzer/${azubi.id}/bild`)).status, 401);
+  assert.equal((await ruf(u, 'GET', `/api/benutzer/${ausbilder.id}/bild`, { cookies: als(azubi) })).status, 404, 'Azubis sehen keine fremden Bilder');
+
+  // Graph antwortet mit einem Fehler: Anmeldung gelingt, das alte Bild bleibt, der Grund steht im Log
+  const kaputt = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: 'kaputt' });
+  assert.equal(kaputt.status, 302);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(kaputt) })).konto.bild, ich.konto.bild);
+  assert.ok(u.logs.some((l) => l === 'Profilbild nicht geladen: Microsoft Graph antwortet mit Status 500'));
+  // etwas, das kein Bild ist, wird nicht gespeichert
+  await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: Buffer.from('<svg onload=alert(1)>') });
+  assert.ok(u.logs.some((l) => l.includes('weder JPEG noch PNG')));
+  assert.equal((await ruf(u, 'GET', `/api/benutzer/${azubi.id}/bild`, { cookies: als(azubi) })).bild?.inhalt.equals(JPEG), true);
+
+  // neues Bild in Microsoft 365: neue Adresse
+  const neu = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: JPEG2 });
+  const neuerPfad = koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(neu) })).konto.bild;
+  assert.notEqual(neuerPfad, ich.konto.bild);
+
+  // abschalten löscht das Bild sofort – und die nächste Anmeldung holt es nicht wieder
+  assert.equal((await ruf(u, 'PUT', '/api/ich/bild', { cookies: als(azubi), body: { zeigen: 'nein' } })).status, 400);
+  assert.equal((await ruf(u, 'PUT', '/api/ich/bild', { cookies: als(azubi), body: { zeigen: false } })).status, 200);
+  assert.equal((u.db.prepare('SELECT COUNT(*) AS n FROM benutzer_bild').get() as { n: number }).n, 0);
+  assert.equal((await ruf(u, 'GET', `/api/benutzer/${azubi.id}/bild`, { cookies: als(ausbilder) })).status, 404);
+  const aus = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: JPEG2 });
+  assert.deepEqual([koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(aus) })).konto.bild, (u.db.prepare('SELECT COUNT(*) AS n FROM benutzer_bild').get() as { n: number }).n], [null, 0]);
+  // wieder einschalten: das Bild kommt mit der nächsten Anmeldung
+  await ruf(u, 'PUT', '/api/ich/bild', { cookies: als(azubi), body: { zeigen: true } });
+  const wieder = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: JPEG2 });
+  assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(wieder) })).konto.bild, neuerPfad);
+  // Bild in Microsoft 365 entfernt: auch im Portal weg
+  const weg = await anmelden(u, person(azubi.entra_oid!, azubi.anmeldename), { bild: 'keins' });
+  assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies: cookiesAus(weg) })).konto.bild, null);
+  // der Super-Admin meldet sich lokal an – für ihn gibt es kein Profilbild
+  assert.equal((await ruf(u, 'PUT', '/api/ich/bild', { cookies: als(admin(u.db)), body: { zeigen: false } })).status, 400);
 });

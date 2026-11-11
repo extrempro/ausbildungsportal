@@ -33,6 +33,7 @@ export async function erzeugeKontext(
               clientSecret: cfg.entra.clientSecret,
               redirectUri: cfg.appUrl + REDIRECT_PFAD,
               tenantId: cfg.entra.tenantId,
+              profilbild: cfg.entraProfilbild,
             })
         : null;
   const k: Kontext = {

@@ -13,6 +13,7 @@ import { ausbildungsjahrAm, gueltigesDatum, istMontag, kalenderwoche, montagVon,
 import { planDerWoche } from './plan';
 import { darfAbzeichnen, darfAzubiVerwalten, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
+import { bildPfad } from './typen';
 import type { BenutzerZeile } from './typen';
 
 /**
@@ -490,7 +491,7 @@ export const BERICHT_ROUTEN: Route[] = [
         for (const z of zeilen) {
           // Beauftragte sehen hier nur Wochen, die sie abzeichnen dürfen
           if (!darfAbzeichnen(db, c.b, id, z.montag)) continue;
-          offen.push({ azubiId: id, azubi: azubi.anzeigename, montag: z.montag, sonntag: plusTage(z.montag, 6), ...kalenderwoche(z.montag), eingereichtAm: z.eingereicht_am, stunden: summe(inhaltAus(z)).gesamt, soll });
+          offen.push({ azubiId: id, azubi: azubi.anzeigename, bild: bildPfad(azubi), montag: z.montag, sonntag: plusTage(z.montag, 6), ...kalenderwoche(z.montag), eingereichtAm: z.eingereicht_am, stunden: summe(inhaltAus(z)).gesamt, soll });
         }
       }
       return { status: 200, body: { offen, hatUnterschrift: unterschriftVon(db, c.b.id) !== null } };

@@ -1,3 +1,4 @@
+import { Avatar } from '../avatar';
 import { melde } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import { api, h, wocheText, zeit } from '../api';
@@ -7,13 +8,6 @@ import { BerichtBlatt } from './Bericht';
 import { HandbuchLink } from '../handbuchLink';
 
 const schluessel = (o: Pick<OffenerBericht, 'azubiId' | 'montag'>) => `${o.azubiId}|${o.montag}`;
-const initialen = (name: string) =>
-  name
-    .split(/\s+/)
-    .map((t) => t[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
 
 /** Ein wartender Bericht: Zeile mit Haken, Woche und Stunden; aufgeklappt der ganze Bericht zum Lesen und Entscheiden. */
 function Zeile({ o, gewaehlt, hatUnterschrift, onWahl, onErledigt, onFehler }: { o: OffenerBericht; gewaehlt: boolean; hatUnterschrift: boolean; onWahl: () => void; onErledigt: (text: string) => Promise<void>; onFehler: (text: string) => void }) {
@@ -137,11 +131,11 @@ export function Abzeichnen() {
   };
 
   // nach Azubi gliedern, Reihenfolge wie vom Server (Name, dann älteste Woche zuerst)
-  const gruppen: { azubiId: number; azubi: string; berichte: OffenerBericht[] }[] = [];
+  const gruppen: { azubiId: number; azubi: string; bild: string | null; berichte: OffenerBericht[] }[] = [];
   for (const o of offen ?? []) {
     const g = gruppen.find((x) => x.azubiId === o.azubiId);
     if (g) g.berichte.push(o);
-    else gruppen.push({ azubiId: o.azubiId, azubi: o.azubi, berichte: [o] });
+    else gruppen.push({ azubiId: o.azubiId, azubi: o.azubi, bild: o.bild, berichte: [o] });
   }
   const anzahl = offen?.length ?? 0;
 
@@ -210,9 +204,7 @@ export function Abzeichnen() {
             return (
               <section className="karte abz-gruppe" key={g.azubiId} aria-label={`Berichte von ${g.azubi}`}>
                 <div className="abz-gruppe-kopf">
-                  <span className="avatar" aria-hidden="true">
-                    {initialen(g.azubi)}
-                  </span>
+                  <Avatar name={g.azubi} bild={g.bild} />
                   <div className="azubi-name">
                     <h2>{g.azubi}</h2>
                     <span className="leise klein">

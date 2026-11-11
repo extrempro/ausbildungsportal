@@ -1,16 +1,9 @@
 import { datum } from './api';
 import type { AzubiKurz } from './api';
+import { Avatar } from './avatar';
 import { Icon } from './icons';
 import { Link } from './router';
 
-function initialen(name: string): string {
-  return name
-    .split(/\s+/)
-    .map((t) => t[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
 
 /** Anteil der Ausbildungszeit, der vorbei ist (0–100). */
 function fortschritt(a: AzubiKurz): number | null {
@@ -30,9 +23,7 @@ export function AzubiKarte({ a }: { a: AzubiKurz }) {
   return (
     <li className="karte azubi-karte">
       <div className="azubi-kopf">
-        <span className="avatar" aria-hidden="true">
-          {initialen(a.anzeigename)}
-        </span>
+        <Avatar name={a.anzeigename} bild={a.bild} />
         <div className="azubi-name">
           <strong>{a.anzeigename}</strong>
           <span className="leise klein">{a.beruf || 'Beruf noch nicht eingetragen'}</span>

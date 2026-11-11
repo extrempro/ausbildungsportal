@@ -30,6 +30,7 @@ import { Dialoge } from './dialoge';
 import { FehlerMelden } from './fehler';
 import { Glocke } from './glocke';
 import { Meldungen } from './pages/Meldungen';
+import { Avatar } from './avatar';
 import { Icon } from './icons';
 import type { IconName } from './icons';
 import { geheZu, Link, usePfad } from './router';
@@ -75,6 +76,8 @@ export function App() {
   const [angebot, setAngebot] = useState(false);
   // Fenster „Fehler melden“ und (Super-Admin) Zahl der offenen Meldungen
   const [melden, setMelden] = useState(false);
+  // holt das Portal Profilbilder aus Microsoft? (Schalter unter „Konto“)
+  const [profilbild, setProfilbild] = useState(false);
   const [offeneMeldungen, setOffeneMeldungen] = useState(0);
   const schliesseMelden = useCallback(() => setMelden(false), []);
   // Ausbilder und Beauftragte: Urlaubsanträge, bei denen sie selbst etwas tun müssen
@@ -109,8 +112,9 @@ export function App() {
 
   const lade = useCallback(async () => {
     try {
-      const r = await api<{ konto: Konto; version: string; lernen?: boolean }>('GET', '/api/ich');
+      const r = await api<{ konto: Konto; version: string; lernen?: boolean; profilbild?: boolean }>('GET', '/api/ich');
       setKonto(r.konto);
+      setProfilbild(r.profilbild === true);
       setLernen(r.lernen === true);
       setVersion(r.version);
     } catch {
@@ -304,7 +308,7 @@ export function App() {
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
-  else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
+  else if (pfad === '/konto') seite = <KontoSeite konto={konto} profilbild={profilbild} onGeaendert={lade} />;
   else
     seite = (
       <>
@@ -369,12 +373,6 @@ export function App() {
   const inGruppe = (g: { punkte: Punkt[] }) => g.punkte.some((p) => p.zu === pfad || (!!p.aktivAb && pfad.startsWith(`${p.aktivAb}/`)));
   const hauptMehr = haupt.filter((p) => p.mehr);
   const inMehr = gruppen.some(inGruppe) || persoenlich.some((p) => p.zu === pfad) || hauptMehr.some((p) => p.zu === pfad || (!!p.aktivAb && pfad.startsWith(`${p.aktivAb}/`)));
-  const initialen = konto.anzeigename
-    .split(/\s+/)
-    .map((t) => t[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
   const logo = logoFuer(logos, dunkel);
   const schalte = (m: Menue) => setMenue((alt) => (alt === m ? null : m));
 
@@ -485,9 +483,7 @@ export function App() {
           {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
           <div className="menue ich">
             <button type="button" className="menue-knopf" aria-expanded={menue === 'ich'} aria-controls="menue-ich" aria-label={`Menü für ${konto.anzeigename}`} onClick={() => schalte('ich')}>
-              <span className="avatar" aria-hidden="true">
-                {initialen}
-              </span>
+              <Avatar name={konto.anzeigename} bild={konto.bild} />
               <span className="ich-name">
                 {konto.anzeigename}
                 <small>{ROLLE_TEXT[konto.rolle]}</small>
@@ -574,9 +570,7 @@ export function App() {
         <div className="bogen-hintergrund" onClick={() => setMenue(null)}>
           <div id="menue-mehr" className="bogen" role="dialog" aria-label="Weitere Bereiche" onClick={(e) => e.stopPropagation()}>
             <div className="bogen-kopf">
-              <span className="avatar" aria-hidden="true">
-                {initialen}
-              </span>
+              <Avatar name={konto.anzeigename} bild={konto.bild} />
               <span className="ich-name">
                 {konto.anzeigename}
                 <small>{ROLLE_TEXT[konto.rolle]}</small>

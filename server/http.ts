@@ -108,6 +108,9 @@ async function api(k: Kontext, req: IncomingMessage, res: ServerResponse, url: U
   if (a.text) {
     return sende(res, a.status, { ...basis, 'Cache-Control': 'private, no-store', 'Content-Type': a.text.typ, ...(a.text.dateiname ? { 'Content-Disposition': `inline; filename="${a.text.dateiname}"` } : {}) }, a.text.inhalt);
   }
+  if (a.bild) {
+    return sende(res, a.status, { ...basis, 'Cache-Control': 'private, max-age=3600', 'Content-Type': a.bild.typ, 'Content-Length': String(a.bild.inhalt.length), 'X-Content-Type-Options': 'nosniff' }, a.bild.inhalt);
+  }
   if (a.datei) {
     // Dateiname: einmal nur mit einfachen Zeichen (für alte Browser), einmal vollständig nach RFC 5987
     const einfach = a.datei.dateiname.normalize('NFD').replace(/[^\x20-\x7e]/g, '').replace(/["\\]/g, '');

@@ -1,5 +1,19 @@
 # Änderungen
 
+## [0.35.0] – 2026-11-11
+
+### Neu
+
+- **Profilbild aus Microsoft Entra (freiwillig).** Mit `ENTRA_PROFILBILD=true` holt das Portal bei jeder Entra-Anmeldung das Profilbild der Person aus Microsoft 365 (klein, 96 × 96) und zeigt es dort, wo sonst die Anfangsbuchstaben stehen: am Namen oben rechts, auf den Azubi-Karten und beim Abzeichnen.
+- **Abschaltbar für jede Person:** Unter „Konto“ steht „Mein Profilbild aus Microsoft 365 anzeigen“. Wer den Haken herausnimmt, dessen Bild wird sofort gelöscht und nicht wieder geholt.
+- Sichtbar ist ein Bild für die Person selbst und für Ausbilder und Beauftragte, die diesen Azubi sehen dürfen – nicht für andere Azubis, nicht für den Super-Admin.
+- Die Anmeldung hängt nicht am Bild: Antwortet Microsoft Graph nicht oder liefert kein Bild, gelingt sie trotzdem; der Grund steht im Log.
+- Handbuch: Kapitel „Profilbild“ für Azubis, Ausbilder und Beauftragte.
+
+### Wichtig für den Betrieb
+
+- Die Funktion ist **aus**, solange `ENTRA_PROFILBILD` nicht gesetzt ist. Vor dem Einschalten braucht die App-Registrierung die delegierte Berechtigung **User.Read** (Microsoft Graph) mit Zustimmung – sonst fragt Microsoft jede Person bei der Anmeldung nach einer Zustimmung oder lehnt die Anmeldung ab. Die Schritte stehen in `docs/entra-einrichtung.md`.
+
 ## [0.34.0] – 2026-11-11
 
 ### Neu

@@ -244,6 +244,30 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
   ),
 });
 
+const PROFILBILD = (rolle: Rolle): Kapitel => ({
+  id: 'profilbild',
+  titel: 'Profilbild',
+  inhalt: (
+    <>
+      <p>
+        Hat der Betreiber des Portals es eingeschaltet, zeigt das Portal dein Profilbild aus Microsoft 365 – dort, wo sonst deine Anfangsbuchstaben stehen. Unter <Link zu="/konto">Konto</Link> steht dann der Abschnitt „Profilbild“. Fehlt er, ist die Funktion nicht eingeschaltet.
+      </p>
+      <ul className="punkte">
+        <li>Das Portal holt das Bild bei jeder Anmeldung. Ein neues Bild in Microsoft 365 erscheint also nach deiner nächsten Anmeldung.</li>
+        <li>Ändern kannst du das Bild nur in Microsoft 365, nicht im Portal.</li>
+        <li>
+          {rolle === 'azubi'
+            ? 'Dein Bild sehen du selbst, dein Ausbilder und deine Ausbildungsbeauftragten. Andere Azubis sehen es nicht.'
+            : 'Dein eigenes Bild siehst nur du. Die Bilder der Azubis siehst du bei den Azubis, die du auch sonst siehst – auf den Karten und beim Abzeichnen.'}
+        </li>
+        <li>
+          <strong>Du willst kein Bild?</strong> Nimm unter „Konto“ den Haken bei „Mein Profilbild aus Microsoft 365 anzeigen“ heraus. Das Portal löscht dein Bild dann sofort und holt es nicht wieder.
+        </li>
+      </ul>
+    </>
+  ),
+});
+
 const APP: Kapitel = {
   id: 'app',
   titel: 'Als App auf Handy oder Tablet einrichten',
@@ -587,6 +611,7 @@ const AZUBI: Kapitel[] = [
   },
   KALENDER('azubi'),
   GLOCKE('azubi'),
+  PROFILBILD('azubi'),
   FEHLER,
   APP,
   BEDIENUNG,
@@ -1099,6 +1124,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   DRUCKEN(rolle),
   KALENDER(rolle),
   GLOCKE(rolle),
+  PROFILBILD(rolle),
   FEHLER,
   APP,
   BEDIENUNG,

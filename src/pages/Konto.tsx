@@ -7,6 +7,7 @@ import { KalenderAbo } from '../kalenderAbo';
 import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 import { HandbuchLink } from '../handbuchLink';
+import { Avatar } from '../avatar';
 
 export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<void> }) {
   const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
@@ -140,7 +141,24 @@ function MeineAusbildung({ id }: { id: number }) {
   );
 }
 
-export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: () => void | Promise<void> }) {
+export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; profilbild: boolean; onGeaendert: () => void | Promise<void> }) {
+  const [bildFehler, setBildFehler] = useState('');
+  const [bildLaeuft, setBildLaeuft] = useState(false);
+  const setzeBild = async (zeigen: boolean) => {
+    // Abschalten löscht das Bild – deshalb vorher fragen
+    if (!zeigen && konto.bild && !(await rueckfrage('Profilbild abschalten?\n\nDein Bild wird im Portal gelöscht. Statt des Bilds stehen dann deine Anfangsbuchstaben. Du kannst es jederzeit wieder einschalten.', { ja: 'Profilbild abschalten' }))) return;
+    setBildLaeuft(true);
+    setBildFehler('');
+    try {
+      await api('PUT', '/api/ich/bild', { zeigen });
+      await onGeaendert();
+      melde(zeigen ? 'Profilbild eingeschaltet. Es erscheint nach deiner nächsten Anmeldung.' : 'Profilbild abgeschaltet und gelöscht.');
+    } catch (e) {
+      setBildFehler(e instanceof Error ? e.message : 'Das hat nicht geklappt.');
+    } finally {
+      setBildLaeuft(false);
+    }
+  };
   const setzeTheme = async (theme: Theme) => {
     await api('PUT', '/api/ich/theme', { theme });
     await onGeaendert();
@@ -164,6 +182,34 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
           <dd>{zeit(konto.letzteAnmeldung)}</dd>
         </dl>
       </section>
+
+      {profilbild && konto.anmeldung === 'entra' && (
+        <section className="karte">
+          <h2>Profilbild</h2>
+          <div className="konto-bild">
+            <Avatar name={konto.anzeigename} bild={konto.bild} />
+            <div>
+              <label className="haken">
+                <input type="checkbox" checked={konto.bildZeigen} disabled={bildLaeuft} onChange={(e) => void setzeBild(e.target.checked)} />
+                Mein Profilbild aus Microsoft 365 anzeigen
+              </label>
+              <p className="leise klein">
+                {konto.bildZeigen
+                  ? konto.bild
+                    ? 'Das Portal holt dein Bild bei jeder Anmeldung aus Microsoft 365.'
+                    : 'Im Moment gibt es kein Bild: Entweder hast du in Microsoft 365 keins hinterlegt, oder es kommt mit deiner nächsten Anmeldung.'
+                  : 'Abgeschaltet: Das Portal speichert kein Bild von dir und zeigt deine Anfangsbuchstaben.'}{' '}
+                <HandbuchLink kapitel="profilbild">Profilbild</HandbuchLink>
+              </p>
+            </div>
+          </div>
+          {bildFehler && (
+            <p className="hinweis fehler" role="alert">
+              {bildFehler}
+            </p>
+          )}
+        </section>
+      )}
 
       {konto.rolle === 'azubi' && (
         <section className="karte">

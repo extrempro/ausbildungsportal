@@ -28,6 +28,8 @@ export interface Antwort {
   text?: { typ: string; inhalt: string; dateiname?: string };
   /** statt JSON: eine Datei zum Herunterladen (Berichtsheft als PDF) */
   datei?: { typ: string; inhalt: Buffer; dateiname: string };
+  /** statt JSON: ein Bild zum Anzeigen (Profilbild); der Browser darf es kurz zwischenspeichern – die Adresse wechselt mit dem Bild */
+  bild?: { typ: string; inhalt: Buffer };
 }
 
 export interface Kontext {

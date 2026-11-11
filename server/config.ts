@@ -24,6 +24,8 @@ export interface Config {
   /** X-Forwarded-For des Reverse Proxys für die Client-IP verwenden */
   trustProxy: boolean;
   entra: EntraEinstellung | null;
+  /** Profilbild der Konten bei der Anmeldung aus Microsoft Graph holen (braucht die Berechtigung User.Read) */
+  entraProfilbild: boolean;
   /** Anmeldung als Testkonto ohne Entra – nie in Produktion */
   devAnmeldung: boolean;
   /** Adresse eines Teams-Workflows (Webhook), der bei jeder neuen Fehlermeldung benachrichtigt wird */
@@ -100,6 +102,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     sicher: url.protocol === 'https:',
     trustProxy: env.TRUST_PROXY === 'true',
     entra,
+    entraProfilbild: entra !== null && env.ENTRA_PROFILBILD === 'true',
     devAnmeldung: !production && env.DEV_ANMELDUNG === 'true',
     fehlerWebhook,
     fehlerWebhookMitText: env.FEHLER_WEBHOOK_MIT_TEXT === 'true',
