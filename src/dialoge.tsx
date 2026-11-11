@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { neueVersion } from './api';
 import { Icon } from './icons';
 
 /**
@@ -114,11 +115,29 @@ function FrageFenster({ f }: { f: Frage }) {
 export function Dialoge() {
   const f = useSyncExternalStore(abonniere, () => frage);
   const liste = useSyncExternalStore(abonniere, () => meldungen);
+  const version = useSyncExternalStore(neueVersion.abonniere, neueVersion.lies);
   return (
     <>
       {f && <FrageFenster key={f.text} f={f} />}
       {/* immer im Dokument, damit Bildschirmleser neue Meldungen ansagen */}
       <div className="meldungen nicht-drucken" role="status" aria-live="polite">
+        {/* bleibt stehen, bis neu geladen oder „Später“ gewählt wird – anders als die kurzen Bestätigungen */}
+        {version && (
+          <div className="meldung-zeile update">
+            <Icon name="versionen" />
+            <span>
+              <strong>Das Portal wurde aktualisiert (Version {version}).</strong> Bitte lade die Seite neu, damit alles richtig funktioniert. Speichere vorher, was du gerade eingibst.
+            </span>
+            <span className="update-knoepfe">
+              <button type="button" className="knopf klein" onClick={() => window.location.reload()}>
+                Seite neu laden
+              </button>
+              <button type="button" className="knopf schlicht klein" onClick={neueVersion.spaeter}>
+                Später
+              </button>
+            </span>
+          </div>
+        )}
         {liste.map((m) => (
           <div key={m.id} className="meldung-zeile">
             <Icon name="abzeichnen" />

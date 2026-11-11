@@ -49,6 +49,34 @@ export function setzeAbmeldung(fn: () => void): void {
   beiAbmeldung = fn;
 }
 
+/**
+ * Neue Version: Der Server nennt in jeder Antwort seine Version. Weicht sie von der dieser Oberfläche ab,
+ * wurde das Portal aktualisiert, während die Seite offen war – dann bittet ein Hinweis um Neuladen.
+ */
+let serverVersion: string | null = null;
+let spaeterBis = 0;
+const versionsHoerer = new Set<() => void>();
+const SPAETER_MS = 10 * 60 * 1000;
+function pruefeVersion(v: string | null): void {
+  const neu = v && v !== __APP_VERSION__ && Date.now() >= spaeterBis ? v : null;
+  if (neu === serverVersion) return;
+  serverVersion = neu;
+  versionsHoerer.forEach((h) => h());
+}
+export const neueVersion = {
+  abonniere: (h: () => void) => {
+    versionsHoerer.add(h);
+    return () => versionsHoerer.delete(h);
+  },
+  /** Version des Servers, wenn sie von der geladenen Oberfläche abweicht – sonst null */
+  lies: () => serverVersion,
+  /** „Später“: Der Hinweis verschwindet und kommt nach zehn Minuten wieder */
+  spaeter: () => {
+    spaeterBis = Date.now() + SPAETER_MS;
+    pruefeVersion(null);
+  },
+};
+
 export async function api<T>(methode: string, pfad: string, body?: unknown): Promise<T> {
   let r: Response;
   try {
@@ -61,6 +89,7 @@ export async function api<T>(methode: string, pfad: string, body?: unknown): Pro
   } catch {
     throw new ApiFehler(0, 'Der Server ist nicht erreichbar');
   }
+  pruefeVersion(r.headers.get('X-App-Version'));
   const daten = (await r.json().catch(() => ({}))) as { fehler?: string; code?: string };
   if (!r.ok) {
     if (r.status === 401 && daten.code === 'anmeldung') beiAbmeldung();

@@ -1,5 +1,5 @@
 import { melde, rueckfrage } from '../dialoge';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
 import { geheZu, Link, useUngespeichert } from '../router';
@@ -49,6 +49,15 @@ function summeVon(i: BerichtInhalt): number {
   return s(i.betrieb) + s(i.unterweisung) + s(i.schule) + s(i.abwesenheit);
 }
 
+/** Hinweis neben jedem Druck-Knopf: PDF und die Kopf- und Fußzeilen des Browsers. */
+export function DruckHinweis() {
+  return (
+    <p className="leise klein nicht-drucken druck-hinweis">
+      Im Druckfenster kannst du auch „Als PDF speichern“ wählen. Stehen am Rand des Ausdrucks Datum, Titel oder Adresse der Seite? Dann schalte im Druckfenster unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus – der Browser merkt sich das.
+    </p>
+  );
+}
+
 /** Der Bericht zum Lesen und Drucken: Kopf, Inhalte, Summe, Unterschriften. */
 export function BerichtBlatt({ b }: { b: Bericht }) {
   const azubi = b.signaturen.find((s) => s.art === 'azubi');
@@ -64,6 +73,8 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
           {[b.kopf.azubi, b.kopf.beruf, b.kopf.betrieb].filter(Boolean).join(' · ')}
           {b.kopf.ausbilder ? ` · Ausbilder: ${b.kopf.ausbilder}` : ''}
         </div>
+        {/* ein Ausdruck vor dem Einreichen ist als solcher zu erkennen */}
+        {(b.status === 'fehlt' || b.status === 'entwurf' || b.status === 'zurueck') && <div className="blatt-entwurf">Entwurf – noch nicht eingereicht und nicht unterschrieben</div>}
       </header>
 
       {ABSCHNITTE.map((a) => (
@@ -260,6 +271,15 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   // Teile, die der Azubi von Hand aufgeklappt hat (leere Teile sind sonst nur eine Zeile)
   const [auf, setAuf] = useState<Set<string>>(new Set());
   useUngespeichert(geaendert);
+  const sollDrucken = useRef(new URLSearchParams(window.location.search).has('drucken'));
+  useEffect(() => {
+    if (!b || !sollDrucken.current) return;
+    sollDrucken.current = false;
+    // die Adresse wieder ohne „?drucken“ – sonst würde ein Neuladen noch einmal drucken (derselbe Verlaufseintrag bleibt)
+    window.history.replaceState(window.history.state, '', window.location.pathname);
+    const zeit = window.setTimeout(() => window.print(), 300);
+    return () => window.clearTimeout(zeit);
+  }, [b]);
   const pfad = `/api/azubis/${azubiId}/berichte/${montag}`;
   const zurListe = berichtsheftPfad(azubiId, eigenes);
 
@@ -363,6 +383,11 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
       <button type="button" className={`knopf schlicht${kurz ? ' klein' : ''}`} aria-label={speicherText} onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
         {kurz ? 'Speichern' : speicherText}
       </button>
+      {!kurz && ist > 0 && (
+        <button type="button" className="knopf schlicht" onClick={() => window.print()}>
+          Bericht drucken
+        </button>
+      )}
       {!kurz && b.rechte.loeschen && (
         <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
           Entwurf löschen
@@ -491,13 +516,18 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
             </details>
           </aside>
 
-          {b.rechte.loeschen && (
-            <p className="bericht-ende">
+          <p className="bericht-ende">
+            {ist > 0 && (
+              <button type="button" className="knopf schlicht" onClick={() => window.print()}>
+                Bericht drucken
+              </button>
+            )}
+            {b.rechte.loeschen && (
               <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
                 Entwurf löschen
               </button>
-            </p>
-          )}
+            )}
+          </p>
           {/* Handy und Tablet: Summe und Knöpfe bleiben beim Schreiben am unteren Rand erreichbar */}
           <div className="bericht-leiste" role="group" aria-label="Stunden und Speichern">
             <span className="bericht-leiste-summe">
@@ -512,7 +542,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           </div>
         </div>
       ) : (
-        <section className="karte">
+        <section className="karte druckseite">
           <BerichtBlatt b={b} />
         </section>
       )}
@@ -541,11 +571,18 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           )}
           {b.status !== 'fehlt' && (
             <button type="button" className="knopf schlicht" onClick={() => window.print()}>
-              Drucken
+              Bericht drucken
             </button>
           )}
         </div>
       )}
+      {/* beim Schreiben: Auf dem Bildschirm steht das Formular, gedruckt wird das Blatt mit dem aktuellen Stand der Eingabe */}
+      {b.rechte.schreiben && (
+        <section className="karte druckseite nur-drucken">
+          <BerichtBlatt b={{ ...b, inhalt, summe: { ...b.summe, gesamt: ist } }} />
+        </section>
+      )}
+      {(b.status !== 'fehlt' || ist > 0) && <DruckHinweis />}
 
       {grund && (
         <section className="karte nicht-drucken">

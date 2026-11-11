@@ -5,7 +5,7 @@ import { api, berichtsheftPfad, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '
 import type { BerichtListe, BerichtStatus } from '../api';
 import { Icon } from '../icons';
 import { Link } from '../router';
-import { BerichtBlatt } from './Bericht';
+import { BerichtBlatt, DruckHinweis } from './Bericht';
 
 /**
  * Merkt, ob der Azubi die Anleitung selbst auf- oder zugeklappt hat.
@@ -199,6 +199,14 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                           , KW {w.kw}/{w.jahr}
                         </span>
                       </Link>
+                      {w.status !== 'fehlt' && (
+                        <Link zu={`${basis}/${w.montag}?drucken`} className="knopf schlicht klein">
+                          Drucken
+                          <span className="nur-vorleser">
+                            , KW {w.kw}/{w.jahr}
+                          </span>
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -240,7 +248,7 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         </p>
         <h1>Berichte drucken</h1>
         <p className="leise">
-          {daten.azubi.anzeigename} · {berichte.length} Berichte, jeder auf einer eigenen Seite. Über „Drucken“ lässt sich im Druckdialog auch „Als PDF speichern“ wählen.
+          {daten.azubi.anzeigename} · {berichte.length} Berichte, jeder auf einer eigenen Seite. Einen einzelnen Bericht druckst du im Berichtsheft über „Drucken“ an der jeweiligen Woche.
         </p>
         <div className="filter">
           <button type="button" className="knopf schlicht" aria-pressed={nur === 'alle'} onClick={() => setNur('alle')}>
@@ -250,9 +258,10 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
             Nur abgezeichnete
           </button>
           <button type="button" className="knopf rechts" onClick={() => window.print()} disabled={berichte.length === 0}>
-            Drucken
+            Alle drucken
           </button>
         </div>
+        <DruckHinweis />
       </div>
       {berichte.map((b) => (
         <section className="karte druckseite" key={b.montag}>

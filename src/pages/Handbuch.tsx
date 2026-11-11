@@ -31,6 +31,7 @@ const BEDIENUNG: Kapitel = {
       <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
       <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
       <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
+      <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
       <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
       <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
       <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
@@ -177,6 +178,9 @@ const AZUBI: Kapitel[] = [
             Fertig? <strong>„Einreichen“</strong>. Damit unterschreibst du den Bericht und gibst ihn ab.
           </li>
         </ol>
+        <p>
+          <strong>Drucken:</strong> Im Berichtsheft steht an jeder Woche mit Bericht „Drucken“; auf der Seite des Berichts „Bericht drucken“. Im Druckfenster kannst du auch „Als PDF speichern“ wählen. Stehen am Rand Datum und Adresse der Seite, schalte dort „Kopf- und Fußzeilen“ aus.
+        </p>
         <h3>So schreibst du gute Einträge</h3>
         <p>Schreib kurz und genau: Was hast du gemacht, womit und wozu?</p>
         <dl className="begriffe">
