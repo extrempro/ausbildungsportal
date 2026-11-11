@@ -294,6 +294,39 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'lernen',
+    titel: 'Lernen mit Cheatsheets und Ampel',
+    inhalt: (
+      <>
+        <p>
+          Den Menüpunkt <Link zu="/lernen">Lernen</Link> gibt es, wenn für deinen Ausbildungsberuf Lerninhalte eingeschaltet sind. Fehlt er, gibt es für deinen Beruf noch keine – frag deinen Ausbilder.
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Themenfeld">Ein großes Thema deines Berufs, zum Beispiel „Netzwerkgrundlagen“. Jedes Themenfeld hat mehrere Unterthemen.</Begriff>
+          <Begriff wort="Cheatsheet">Ein Spickzettel zu einem Unterthema: die wichtigsten Begriffe, Tabellen, Befehle, ein Merksatz und oft eine typische Prüfungsfrage mit Lösungsweg. Grafiken werden groß, wenn du sie anklickst.</Begriff>
+          <Begriff wort="Ampel">Damit schätzt du dich selbst ein: „Offen“ (noch nichts gemacht), „In Arbeit“ (kenne ich, brauche aber noch das Cheatsheet), „Sicher“ (kann ich ohne Hilfe erklären und anwenden).</Begriff>
+          <Begriff wort="Lernpunkt">Steht ein Unterthema auf „In Arbeit“, kannst du notieren, was dir noch schwerfällt. Der Text bleibt, auch wenn du später auf „Sicher“ stellst.</Begriff>
+          <Begriff wort="Notiz">Eine freie Notiz zu jedem Unterthema, zum Beispiel „in der Berufsschule nachfragen“.</Begriff>
+        </dl>
+        <ol className="schritte">
+          <li>Unter „Lernen“ ein Themenfeld öffnen.</li>
+          <li>Beim Unterthema „Cheatsheet“ aufklappen und lesen.</li>
+          <li>Die Ampel einstellen. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
+          <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
+        </ol>
+        <ul className="punkte">
+          <li>
+            <strong>Deinen Lernstand siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen weder deine Ampeln noch deine Lernpunkte oder Notizen. Es gibt auch keine Auswertung für sie.
+          </li>
+          <li>Die Ampel eines Themenfelds ergibt sich aus den Unterthemen: „Sicher“, wenn mindestens 80 von 100 Unterthemen sicher sind und keines offen ist. „Offen“, wenn alle offen sind. Sonst „In Arbeit“.</li>
+          <li>Die Prozentzahl: sicher zählt ganz, in Arbeit halb, offen gar nicht.</li>
+          <li>Steht bei einem Unterthema „Inhalt aktualisiert“, wurde das Cheatsheet geändert, seit du es bewertet hast. Lies es noch einmal und wähle „Als gesehen merken“.</li>
+          <li>Die Cheatsheets ersetzen nicht die Berufsschule. Sie helfen dir, den Stoff zu sortieren und Lücken zu finden.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'stand',
     titel: 'Was bedeutet der Stand eines Berichts?',
     inhalt: (
@@ -538,6 +571,10 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <dl className="begriffe">
                 <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
+                <Begriff wort="Lernmodul">
+                  Am Beruf lässt sich ein Paket mit Lerninhalten einschalten, sofern eines auf dem Server liegt. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“ mit Cheatsheets und einer Ampel zur Selbsteinschätzung. Den Lernstand sieht nur der Azubi selbst – du siehst ihn nicht, auch
+                  nicht als Zusammenfassung. Die Inhalte pflegt, wer den Server betreibt.
+                </Begriff>
                 <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
               </dl>
               <ul className="punkte">

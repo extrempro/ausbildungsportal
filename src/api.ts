@@ -112,6 +112,8 @@ export interface Beruf {
   bezeichnung: string;
   fachrichtung: string;
   regeldauer_monate: number;
+  /** Inhaltspaket des Lernmoduls oder null (aus) */
+  lernpaket: string | null;
 }
 
 export interface Berufsschule {
@@ -128,6 +130,8 @@ export interface Stammdaten {
   berufsschulen: Berufsschule[];
   bundeslaender: { kuerzel: string; name: string }[];
   ausbilder: { id: number; anzeigename: string }[];
+  /** Inhaltspakete, die sich an einem Beruf als Lernmodul einschalten lassen */
+  lernpakete: { id: string; titel: string; stand: string; themenfelder: number; unterthemen: number; fehler: number }[];
 }
 
 export interface Profil {

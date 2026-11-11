@@ -4959,3 +4959,541 @@ details.klapp > summary:focus-visible,
     background: none;
   }
 }
+
+/* ---------- Lernmodul ----------
+   Grafiken aus den Inhaltspaketen (Format des FISI-Lernkompass): Die SVGs nutzen nur die Klassen sv-… statt fester
+   Farben und passen sich so an Hell und Dunkel an.
+   Flächen: sv-box (neutral), sv-a (blau), sv-b (grün), sv-c (gelb), sv-d (violett), sv-e (rot)
+   Linien: sv-ln, sv-ln-d (gestrichelt), sv-ln-a … sv-ln-e (farbig), sv-pf (Pfeilspitze)
+   Text: sv-t, sv-tb (fett), sv-tk (klein), sv-tc (Code), sv-xa … sv-xe (farbig) */
+:root {
+  --sv-line: #64748b;
+  --sv-a-bg: #dbeafe;
+  --sv-a-fg: #1d4ed8;
+  --sv-b-bg: #dcfce7;
+  --sv-b-fg: #15803d;
+  --sv-c-bg: #fef3c7;
+  --sv-c-fg: #b45309;
+  --sv-d-bg: #ede9fe;
+  --sv-d-fg: #6d28d9;
+  --sv-e-bg: #ffe4e6;
+  --sv-e-fg: #be123c;
+  --sv-glas: #e2e8f0;
+  --ampel-rot: #dc2626;
+  --ampel-gelb: #f59e0b;
+  --ampel-gruen: #16a34a;
+}
+
+html.dark {
+  --sv-line: #94a3b8;
+  --sv-a-bg: #1e3a5f;
+  --sv-a-fg: #93c5fd;
+  --sv-b-bg: #143a2a;
+  --sv-b-fg: #86efac;
+  --sv-c-bg: #3f3214;
+  --sv-c-fg: #fcd34d;
+  --sv-d-bg: #2f2755;
+  --sv-d-fg: #c4b5fd;
+  --sv-e-bg: #4a1d2b;
+  --sv-e-fg: #fda4af;
+  --sv-glas: #475569;
+}
+
+.sv-figur svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: inherit;
+}
+/* Großansicht: so groß wie möglich, aber ganz sichtbar */
+.sv-lupe svg { max-height: calc(100vh - 160px); }
+.sv-box { fill: var(--c-card); stroke: var(--sv-line); stroke-width: 1.5; }
+.sv-a { fill: var(--sv-a-bg); stroke: var(--sv-a-fg); stroke-width: 1.5; }
+.sv-b { fill: var(--sv-b-bg); stroke: var(--sv-b-fg); stroke-width: 1.5; }
+.sv-c { fill: var(--sv-c-bg); stroke: var(--sv-c-fg); stroke-width: 1.5; }
+.sv-d { fill: var(--sv-d-bg); stroke: var(--sv-d-fg); stroke-width: 1.5; }
+.sv-e { fill: var(--sv-e-bg); stroke: var(--sv-e-fg); stroke-width: 1.5; }
+.sv-ln { fill: none; stroke: var(--sv-line); stroke-width: 2; }
+.sv-ln-d { fill: none; stroke: var(--sv-line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.sv-ln-a { fill: none; stroke: var(--sv-a-fg); stroke-width: 2; }
+.sv-ln-b { fill: none; stroke: var(--sv-b-fg); stroke-width: 2; }
+.sv-ln-c { fill: none; stroke: var(--sv-c-fg); stroke-width: 2; }
+.sv-ln-e { fill: none; stroke: var(--sv-e-fg); stroke-width: 2; }
+.sv-pf { fill: var(--sv-line); }
+.sv-t { fill: var(--c-text); font-size: 13px; }
+.sv-tb { fill: var(--c-text); font-size: 13px; font-weight: 600; }
+.sv-tk { fill: var(--c-muted); font-size: 11px; }
+.sv-tc { fill: var(--c-text); font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.sv-xa { fill: var(--sv-a-fg); font-size: 12px; font-weight: 600; }
+.sv-xb { fill: var(--sv-b-fg); font-size: 12px; font-weight: 600; }
+.sv-xc { fill: var(--sv-c-fg); font-size: 12px; font-weight: 600; }
+.sv-xd { fill: var(--sv-d-fg); font-size: 12px; font-weight: 600; }
+.sv-xe { fill: var(--sv-e-fg); font-size: 12px; font-weight: 600; }
+/* Aderfarben (echte Farben, in beiden Modi gleich) */
+.sv-ader-or { fill: #f97316; }
+.sv-ader-gn { fill: #16a34a; }
+.sv-ader-bl { fill: #2563eb; }
+.sv-ader-br { fill: #92400e; }
+.sv-ader-ws { fill: #ffffff; stroke: #64748b; stroke-width: 1; }
+.sv-glas { fill: var(--sv-glas); stroke: var(--sv-line); stroke-width: 1; }
+/* Figuren (z. B. Sitzhaltung): Körper als dicke Linien, Möbel als kräftige Linien */
+.sv-koerper { fill: none; stroke: var(--sv-a-fg); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.sv-kopf { fill: var(--sv-a-bg); stroke: var(--sv-a-fg); stroke-width: 3; }
+.sv-moebel { fill: none; stroke: var(--sv-line); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Gesamtstand und Kacheln */
+.lern-gesamt {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.lern-gesamt-zahl {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+}
+
+.lern-gesamt-zahl strong {
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.lern-gesamt-balken {
+  flex: 1;
+  min-width: 0;
+}
+
+.lern-gesamt-balken p {
+  margin: 8px 0 0;
+}
+
+.lern-balken {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--c-track);
+}
+
+.lern-balken .gruen {
+  background: var(--ampel-gruen);
+}
+
+.lern-balken .gelb {
+  background: var(--ampel-gelb);
+}
+
+.lern-balken .rot {
+  background: var(--c-track);
+}
+
+.lern-kacheln {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.lern-kachel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  margin: 0;
+  color: var(--c-text);
+  text-decoration: none;
+}
+
+.lern-kachel:hover {
+  border-color: var(--c-accent);
+}
+
+.lern-kachel-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 17px;
+}
+
+.lern-marken {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lern-kachel-stand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.lern-kachel-stand .lern-balken {
+  flex: 1;
+}
+
+.lern-kopf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 560px;
+  margin-bottom: 20px;
+}
+
+.lern-fuss {
+  margin-top: 24px;
+}
+
+/* Unterthema: Titel, Ampel, Lernpunkt, Cheatsheet */
+.lern-unterthema {
+  border-left: 4px solid var(--c-track);
+}
+
+.lern-unterthema.gelb {
+  border-left-color: var(--ampel-gelb);
+}
+
+.lern-unterthema.gruen {
+  border-left-color: var(--ampel-gruen);
+}
+
+.lern-unterthema-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.lern-unterthema-kopf h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+}
+
+.lern-regel {
+  margin: 4px 0 8px;
+}
+
+.ampel-schalter {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--c-rand-feld);
+  border-radius: 10px;
+}
+
+.ampel-knopf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-left: 1px solid var(--c-border);
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ampel-knopf:first-child {
+  border-left: 0;
+}
+
+.ampel-knopf:hover:not([aria-pressed='true']):not(:disabled) {
+  background: var(--c-chip);
+}
+
+.ampel-punkt {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.ampel-knopf.rot .ampel-punkt {
+  border-color: var(--ampel-rot);
+}
+
+.ampel-knopf.gelb .ampel-punkt {
+  border-color: var(--ampel-gelb);
+  background: linear-gradient(90deg, var(--ampel-gelb) 50%, transparent 50%);
+}
+
+.ampel-knopf.gruen .ampel-punkt {
+  border-color: var(--ampel-gruen);
+  background: var(--ampel-gruen);
+}
+
+.ampel-knopf[aria-pressed='true'] {
+  font-weight: 700;
+}
+
+.ampel-knopf.rot[aria-pressed='true'] {
+  background: var(--c-rot-bg);
+  color: var(--c-rot-fg);
+}
+
+.ampel-knopf.gelb[aria-pressed='true'] {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+}
+
+.ampel-knopf.gruen[aria-pressed='true'] {
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+}
+
+.lern-neu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lern-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lern-text p {
+  margin: 0;
+}
+
+.lern-lernpunkt {
+  margin: 8px 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--c-warn-bg);
+}
+
+.lern-lernpunkt label {
+  color: var(--c-warn-fg);
+  font-weight: 600;
+}
+
+/* Inhalt eines Cheatsheets */
+.lern-inhalt {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lern-inhalt h4 {
+  margin: 0 0 8px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lern-begriffe {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.lern-begriffe > div {
+  display: grid;
+  grid-template-columns: minmax(140px, 26%) 1fr;
+  gap: 4px 16px;
+}
+
+.lern-begriffe dt {
+  font-weight: 600;
+}
+
+.lern-begriffe dd {
+  margin: 0;
+  color: var(--c-muted);
+}
+
+.lern-tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.lern-tabelle th,
+.lern-tabelle td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--c-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.lern-tabelle th {
+  background: var(--c-chip);
+  white-space: nowrap;
+}
+
+.lern-tabelle tr:last-child td {
+  border-bottom: 0;
+}
+
+.lern-befehle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lern-befehle code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lern-merksatz {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--c-accent-soft);
+}
+
+.lern-merksatz svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--c-accent);
+}
+
+.lern-merksatz strong {
+  color: var(--c-accent);
+  font-size: 14px;
+}
+
+.lern-merksatz p {
+  margin: 2px 0 0;
+}
+
+.lern-frage {
+  padding: 14px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-bg);
+}
+
+.lern-frage > p {
+  margin: 0 0 8px;
+}
+
+.lern-frage ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.lern-grafiken {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.lern-grafik {
+  flex: 1 1 260px;
+  min-width: 0;
+  margin: 0;
+}
+
+.lern-grafik-knopf {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-bg);
+  cursor: zoom-in;
+}
+
+.lern-grafik-knopf:hover {
+  border-color: var(--c-accent);
+}
+
+.lern-grafik-knopf .sv-figur {
+  display: block;
+}
+
+.lern-grafik figcaption {
+  margin-top: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.lern-lupe {
+  z-index: 60;
+  padding: 12px;
+}
+
+.lern-lupe-inhalt {
+  position: relative;
+  width: min(1400px, 100%);
+  max-height: 100%;
+  padding: 20px;
+  overflow: auto;
+  border-radius: 14px;
+  background: var(--c-bg);
+}
+
+.lern-lupe-zu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 44px;
+}
+
+.lern-lupe-inhalt p {
+  margin: 10px 44px 0 0;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .lern-gesamt {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .lern-begriffe > div {
+    grid-template-columns: 1fr;
+  }
+
+  .ampel-schalter {
+    display: flex;
+    width: 100%;
+  }
+
+  .ampel-knopf {
+    flex: 1;
+    justify-content: center;
+    padding: 0 6px;
+  }
+}
+
+@media print {
+  .ampel-schalter,
+  .lern-text .aktionen,
+  .lern-grafik-knopf {
+    border: 0;
+  }
+}
+
+.lern-unterthema-kopf h3 {
+  padding-top: 0;
+  border-top: 0;
+}

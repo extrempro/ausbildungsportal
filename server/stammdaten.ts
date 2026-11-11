@@ -1,5 +1,6 @@
+import { lernpakete, paketListe } from './lernen';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
-import type { Ctx, Route } from './api-basis';
+import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { heute } from './datum';
 import { BUNDESLAENDER, feiertageZwischen, istBundesland } from './feiertage';
@@ -19,6 +20,8 @@ export interface Beruf {
   bezeichnung: string;
   fachrichtung: string;
   regeldauer_monate: number;
+  /** Inhaltspaket des Lernmoduls für diesen Beruf (Ordnername in LERN_DIR) oder null */
+  lernpaket: string | null;
 }
 
 export interface Berufsschule {
@@ -204,11 +207,19 @@ function idOderNull(x: unknown): number | null {
   return n;
 }
 
-function pruefeBeruf(body: Record<string, unknown>) {
+function pruefeBeruf(k: Kontext, body: Record<string, unknown>, bisher: string | null = null) {
+  // Lernmodul: leer = aus; sonst muss es das Inhaltspaket geben. Fehlt die Angabe, bleibt es, wie es ist.
+  let lernpaket = bisher;
+  if (body.lernpaket !== undefined) {
+    if (body.lernpaket === null || body.lernpaket === '') lernpaket = null;
+    else if (typeof body.lernpaket === 'string' && lernpakete(k).has(body.lernpaket)) lernpaket = body.lernpaket;
+    else throw new Fehler(400, 'Dieses Lernpaket gibt es nicht');
+  }
   return {
     bezeichnung: text(body.bezeichnung, 150, 'Bezeichnung'),
     fachrichtung: text(body.fachrichtung, 100, 'Fachrichtung', false),
     regeldauer: ganzzahl(body.regeldauerMonate, 12, 60, 'Regeldauer in Monaten'),
+    lernpaket,
   };
 }
 
@@ -245,6 +256,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         berufe: alleBerufe(c.k.db),
         berufsschulen: alleSchulen(c.k.db),
         bundeslaender: Object.entries(BUNDESLAENDER).map(([kuerzel, name]) => ({ kuerzel, name })),
+        // Inhaltspakete für das Lernmodul – zur Auswahl am Beruf
+        lernpakete: c.b.rolle === 'ausbilder' ? paketListe(c.k) : [],
         // nur Ausbilder brauchen die Liste, um den zuständigen Ausbilder auszuwählen
         ausbilder:
           c.b.rolle === 'ausbilder'
@@ -279,8 +292,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
     p: '/api/stammdaten/berufe',
     wer: ['ausbilder'],
     h: (c) => {
-      const b = pruefeBeruf(koerper(c));
-      const r = c.k.db.prepare('INSERT INTO beruf (bezeichnung, fachrichtung, regeldauer_monate) VALUES (?, ?, ?)').run(b.bezeichnung, b.fachrichtung, b.regeldauer);
+      const b = pruefeBeruf(c.k, koerper(c));
+      const r = c.k.db.prepare('INSERT INTO beruf (bezeichnung, fachrichtung, regeldauer_monate, lernpaket) VALUES (?, ?, ?, ?)').run(b.bezeichnung, b.fachrichtung, b.regeldauer, b.lernpaket);
       protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, `Beruf angelegt: ${b.bezeichnung}`);
       return { status: 201, body: { beruf: c.k.db.prepare('SELECT * FROM beruf WHERE id = ?').get(Number(r.lastInsertRowid)) } };
     },
@@ -292,10 +305,12 @@ export const STAMMDATEN_ROUTEN: Route[] = [
     wer: ['ausbilder'],
     h: (c) => {
       const id = idAus(c.p.id);
-      if (!c.k.db.prepare('SELECT 1 FROM beruf WHERE id = ?').get(id)) throw new Fehler(404, 'Beruf nicht gefunden');
-      const b = pruefeBeruf(koerper(c));
-      c.k.db.prepare('UPDATE beruf SET bezeichnung = ?, fachrichtung = ?, regeldauer_monate = ? WHERE id = ?').run(b.bezeichnung, b.fachrichtung, b.regeldauer, id);
-      protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, `Beruf geändert: ${b.bezeichnung}`);
+      const alt = c.k.db.prepare('SELECT * FROM beruf WHERE id = ?').get(id) as Beruf | undefined;
+      if (!alt) throw new Fehler(404, 'Beruf nicht gefunden');
+      const b = pruefeBeruf(c.k, koerper(c), alt.lernpaket);
+      c.k.db.prepare('UPDATE beruf SET bezeichnung = ?, fachrichtung = ?, regeldauer_monate = ?, lernpaket = ? WHERE id = ?').run(b.bezeichnung, b.fachrichtung, b.regeldauer, b.lernpaket, id);
+      const lern = b.lernpaket === alt.lernpaket ? '' : b.lernpaket ? ` · Lernmodul eingeschaltet (${b.lernpaket})` : ' · Lernmodul ausgeschaltet';
+      protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, `Beruf geändert: ${b.bezeichnung}${lern}`);
       return { status: 200, body: { beruf: c.k.db.prepare('SELECT * FROM beruf WHERE id = ?').get(id) } };
     },
   },

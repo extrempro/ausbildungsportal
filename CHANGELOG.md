@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.23.0] – 2026-11-11
+
+### Neu
+
+- **Lernen (Lernmodul, Stufe 1):** Azubis bekommen den Menüpunkt „Lernen“, wenn für ihren Ausbildungsberuf Lerninhalte eingeschaltet sind. Dort stehen die Themenfelder ihres Berufs mit je einem Cheatsheet: Kernbegriffe, Tabellen, Befehle, Merksätze, typische Prüfungsfragen mit Lösungsweg und Grafiken zum Vergrößern.
+- **Ampel je Unterthema:** „Offen“, „In Arbeit“ oder „Sicher“. Bei „In Arbeit“ lässt sich ein Lernpunkt notieren (was noch schwerfällt), dazu eine freie Notiz. Die Übersicht zeigt den Stand je Themenfeld und insgesamt.
+- **Der Lernstand ist privat.** Nur der Azubi selbst sieht ihn. Ausbilder, Ausbildungsbeauftragte und der Super-Admin sehen weder Ampeln noch Lernpunkte oder Notizen – auch keine Zusammenfassung.
+- **Einschalten je Beruf:** Unter „Stammdaten“ wählt ein Ausbilder am Ausbildungsberuf das Lernmodul (Inhaltspaket) aus. Ohne Auswahl gibt es für diesen Beruf kein „Lernen“.
+- Die Inhalte kommen als Dateien von außen (Ordner `lerninhalte/`, Format des FISI-Lernkompass). Wie man sie einbindet, steht in `lerninhalte/README.md`. Ändern sich die Inhalte, zeigt das Portal bei schon bewerteten Unterthemen „Inhalt aktualisiert“.
+- Noch nicht enthalten: Kompendium, Üben (Karteikarten, Quiz, Prüfungssimulation), Prüfungsseite und Zusatzwissen – sie folgen in den nächsten Stufen.
+
 ## [0.22.2] – 2026-11-11
 
 ### Geändert

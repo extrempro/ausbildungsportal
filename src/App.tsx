@@ -14,6 +14,8 @@ import { UebersichtSeite } from './pages/Uebersicht';
 import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
+import { Lernen } from './pages/Lernen';
+import { LernThema } from './pages/LernThema';
 import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
@@ -57,6 +59,8 @@ function wendeThemeAn(theme: Theme): boolean {
 export function App() {
   const pfad = usePfad();
   const [konto, setKonto] = useState<Konto | null | undefined>(undefined); // undefined = lädt
+  // Lernmodul: nur für Azubis, deren Ausbildungsberuf ein Inhaltspaket hat
+  const [lernen, setLernen] = useState(false);
   const [version, setVersion] = useState('');
   const [dunkel, setDunkel] = useState(false);
   const [menue, setMenue] = useState<Menue>(null);
@@ -94,8 +98,9 @@ export function App() {
 
   const lade = useCallback(async () => {
     try {
-      const r = await api<{ konto: Konto; version: string }>('GET', '/api/ich');
+      const r = await api<{ konto: Konto; version: string; lernen?: boolean }>('GET', '/api/ich');
       setKonto(r.konto);
+      setLernen(r.lernen === true);
       setVersion(r.version);
     } catch {
       setKonto(null);
@@ -249,6 +254,8 @@ export function App() {
     return null;
   }
 
+  const lernThema = /^\/lernen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
+
   let seite;
   if (pfad === '/' && konto.rolle === 'azubi') seite = <PlanSeite key={konto.id} azubiId={konto.id} />;
   else if (pfad === '/' && konto.rolle !== 'admin') seite = <Start konto={konto} />;
@@ -269,6 +276,8 @@ export function App() {
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
+  else if (pfad === '/lernen' && lernen) seite = <Lernen />;
+  else if (lernThema && lernen) seite = <LernThema key={lernThema} id={lernThema} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
   else
     seite = (
@@ -294,6 +303,7 @@ export function App() {
             // die Startseite des Azubis ist sein Ausbildungsplan
             { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
             { zu: '/berichtsheft', text: 'Berichtsheft', icon: 'heft', aktivAb: '/berichtsheft' },
+            ...(lernen ? [{ zu: '/lernen', text: 'Lernen', icon: 'lernen', aktivAb: '/lernen' } as Punkt] : []),
           ]
         : [
             { zu: '/', text: 'Start', icon: 'start' },

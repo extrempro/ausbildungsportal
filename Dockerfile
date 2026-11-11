@@ -20,6 +20,7 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     DATA_DIR=/app/data \
     CONTENT_DIR=/app/content \
+    LERN_DIR=/app/lerninhalte \
     TZ=Europe/Berlin
 WORKDIR /app
 
