@@ -3,7 +3,7 @@ import { api } from '../api';
 import { Ladefehler, melde } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { Icon } from '../icons';
-import { AMPEL_REGEL, ampelVon, prozent, zaehle, zusammenfassung } from '../lernen/ampel';
+import { AMPEL_REGEL, AMPEL_TEXT, ampelVon, prozent, zaehle, zusammenfassung } from '../lernen/ampel';
 import type { LernStatus } from '../lernen/ampel';
 import { AmpelSchalter, Grafik, Inline, StapelBalken, StatusPille, TabelleAnsicht } from '../lernen/teile';
 import type { Bild, Tabelle } from '../lernen/teile';
@@ -45,9 +45,23 @@ type Aenderung = { status?: LernStatus; luecke?: string; notiz?: string; bestaet
 export function LernThema({ id }: { id: string }) {
   const [daten, setDaten] = useState<{ paket: LernPaket; thema: Thema } | null>(null);
   const [fehler, setFehler] = useState('');
+  // alle Themenfelder mit dem eigenen Stand – für die Navigation am Rand
+  const [felder, setFelder] = useState<NavFeld[]>([]);
 
   useEffect(() => {
-    api<{ paket: LernPaket; thema: Thema }>('GET', `/api/lernen/thema/${encodeURIComponent(id)}`).then(setDaten, (e: Error) => setFehler(e.message));
+    api<{ themenfelder: NavFeld[] }>('GET', '/api/lernen').then((r) => setFelder(r.themenfelder), () => undefined);
+  }, []);
+
+  useEffect(() => {
+    let aktuell = true;
+    setFehler('');
+    api<{ paket: LernPaket; thema: Thema }>('GET', `/api/lernen/thema/${encodeURIComponent(id)}`).then(
+      (d) => aktuell && setDaten(d),
+      (e: Error) => aktuell && setFehler(e.message),
+    );
+    return () => {
+      aktuell = false;
+    };
   }, [id]);
 
   const aendere = useCallback(
@@ -56,32 +70,132 @@ export function LernThema({ id }: { id: string }) {
       // die Antwort nennt die volle Kennung (themenfeld.unterthema) – hier zählt nur der neue Stand
       const stand = { status: r.status, luecke: r.luecke, notiz: r.notiz, geaendert: r.geaendert, inhaltAktualisiert: r.inhaltAktualisiert };
       setDaten((d) => d && { ...d, thema: { ...d.thema, unterthemen: d.thema.unterthemen.map((u) => (u.id === unterthema ? { ...u, ...stand } : u)) } });
+      setFelder((fs) => fs.map((f) => (f.id === id ? { ...f, unterthemen: f.unterthemen.map((u) => (u.id === unterthema ? { ...u, status: r.status } : u)) } : f)));
     },
     [id],
   );
 
   // Sprung aus dem Kompendium (#u-…): zum Unterthema rollen und dessen Cheatsheet aufklappen – einmal, sobald die Seite steht
-  const gesprungen = useRef(false);
+  const gesprungen = useRef('');
   useEffect(() => {
-    if (!daten || gesprungen.current) return;
-    gesprungen.current = true;
+    if (!daten || daten.thema.id !== id || gesprungen.current === id) return;
+    gesprungen.current = id;
     const marke = decodeURIComponent(window.location.hash.slice(1));
     const ziel = marke.startsWith('u-') ? document.getElementById(marke) : null;
     if (!ziel) return;
     ziel.querySelector<HTMLDetailsElement>('details.lern-cheatsheet')?.setAttribute('open', '');
     ziel.scrollIntoView();
-  }, [daten]);
+  }, [daten, id]);
+
+  const geladen = daten?.thema.id === id ? daten : null;
+  const aktiv = useAktivesUnterthema(geladen?.thema ?? null);
 
   if (fehler) return <Ladefehler titel="Lernen" text={fehler} />;
   if (!daten) return <p className="leise">Lädt …</p>;
-  const t = daten.thema;
-  const z = zaehle(t.unterthemen);
+  const navi = felder.length > 0 && <ThemenNavi felder={felder} id={id} aktiv={aktiv} />;
 
   return (
+    <div className="lern-layout">
+      {navi && (
+        <aside className="karte lern-navi" aria-label="Themenfelder">
+          <h2>Themenfelder</h2>
+          {navi}
+        </aside>
+      )}
+      <div className="lern-haupt">
+        <p className="klein">
+          <Link zu="/lernen">← Alle Themenfelder</Link>
+        </p>
+        {navi && (
+          <details className="klapp lern-navi-klapp">
+            <summary>Themenfeld wechseln</summary>
+            {navi}
+          </details>
+        )}
+        {geladen ? <ThemaInhalt t={geladen.thema} paket={geladen.paket} aendere={aendere} /> : <p className="leise">Lädt …</p>}
+      </div>
+    </div>
+  );
+}
+
+interface NavFeld {
+  id: string;
+  titel: string;
+  unterthemen: { id: string; titel: string; status: LernStatus }[];
+}
+
+/** Welches Unterthema steht gerade oben im Fenster? Für die Markierung in der Navigation. */
+function useAktivesUnterthema(t: Thema | null): string | null {
+  const [aktiv, setAktiv] = useState<string | null>(null);
+  useEffect(() => {
+    if (!t) return;
+    let wartet = 0;
+    const miss = () => {
+      wartet = 0;
+      let treffer: string | null = null;
+      for (const u of t.unterthemen) {
+        const el = document.getElementById(`u-${u.id}`);
+        if (el && el.getBoundingClientRect().top <= 140) treffer = u.id;
+      }
+      setAktiv(treffer);
+    };
+    const beiRollen = () => {
+      if (!wartet) wartet = requestAnimationFrame(miss);
+    };
+    miss();
+    window.addEventListener('scroll', beiRollen, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', beiRollen);
+      if (wartet) cancelAnimationFrame(wartet);
+    };
+  }, [t]);
+  return aktiv;
+}
+
+/** Navigation am Rand: alle Themenfelder mit Stand; beim geöffneten Themenfeld darunter seine Unterthemen. */
+function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; aktiv: string | null }) {
+  const springe = (ziel: string) => document.getElementById(ziel)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  return (
+    <ul className="lern-navi-liste">
+      {felder.map((f) => {
+        const z = zaehle(f.unterthemen);
+        const a = ampelVon(z);
+        return (
+          <li key={f.id}>
+            <Link zu={`/lernen/${f.id}`} className="lern-navi-feld">
+              <span className={`lern-punkt ${a}`} aria-hidden="true" />
+              <span className="lern-navi-titel">
+                {f.titel}
+                <span className="nur-vorleser">, {AMPEL_TEXT[a]}</span>
+              </span>
+              <span className="lern-navi-prozent">{prozent(z)} %</span>
+            </Link>
+            {f.id === id && (
+              <ul className="lern-navi-unter" aria-label={`Unterthemen: ${f.titel}`}>
+                {f.unterthemen.map((u) => (
+                  <li key={u.id}>
+                    <button type="button" aria-current={aktiv === u.id ? 'location' : undefined} onClick={() => springe(`u-${u.id}`)}>
+                      <span className={`lern-punkt klein ${u.status}`} aria-hidden="true" />
+                      <span>
+                        {u.titel}
+                        <span className="nur-vorleser">, {AMPEL_TEXT[u.status]}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function ThemaInhalt({ t, paket, aendere }: { t: Thema; paket: LernPaket; aendere: (unterthema: string, p: Aenderung) => Promise<void> }) {
+  const z = zaehle(t.unterthemen);
+  return (
     <>
-      <p className="klein">
-        <Link zu="/lernen">← Alle Themenfelder</Link>
-      </p>
       <h1>
         {t.titel} <StatusPille status={ampelVon(z)} />
       </h1>
@@ -121,7 +235,7 @@ export function LernThema({ id }: { id: string }) {
         Stell bei jedem Unterthema ein, wie sicher du bist. Bei „In Arbeit“ notierst du, was noch hakt. <HandbuchLink kapitel="lernen">So nutzt du die Ampel</HandbuchLink>
       </p>
       {t.unterthemen.map((u) => (
-        <UnterthemaKarte key={u.id} u={u} aendere={(p) => aendere(u.id, p)} />
+        <UnterthemaKarte key={`${t.id}.${u.id}`} u={u} aendere={(p) => aendere(u.id, p)} />
       ))}
 
       {t.fehler.length > 0 && (
@@ -153,7 +267,7 @@ export function LernThema({ id }: { id: string }) {
           </ul>
         </section>
       )}
-      <PaketFuss p={daten.paket} />
+      <PaketFuss p={paket} />
     </>
   );
 }
@@ -183,7 +297,7 @@ function UnterthemaKarte({ u, aendere }: { u: Unterthema; aendere: (p: Aenderung
           {u.titel}
           {!u.hatInhalt && <span className="pille grau">Cheatsheet folgt</span>}
         </h3>
-        <AmpelSchalter titel={u.titel} status={u.status} gesperrt={laeuft} onChange={(s) => void tue({ status: s })} />
+        <AmpelSchalter titel={u.titel} status={u.status} gesperrt={laeuft} onChange={(s) => void tue({ status: s }, `„${u.titel}“ steht jetzt auf „${AMPEL_TEXT[s]}“.`)} />
       </div>
       <p className="leise klein lern-regel">{AMPEL_REGEL[u.status]}</p>
       {fehler && (

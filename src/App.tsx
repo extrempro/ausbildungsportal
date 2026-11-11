@@ -279,7 +279,7 @@ export function App() {
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
-  else if (lernThema && lernen) seite = <LernThema key={lernThema} id={lernThema} />;
+  else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
   else
     seite = (

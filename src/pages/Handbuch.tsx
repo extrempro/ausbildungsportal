@@ -309,9 +309,9 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Notiz">Eine freie Notiz zu jedem Unterthema, zum Beispiel „in der Berufsschule nachfragen“.</Begriff>
         </dl>
         <ol className="schritte">
-          <li>Unter „Lernen“ ein Themenfeld öffnen.</li>
+          <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
           <li>Beim Unterthema „Cheatsheet“ aufklappen und lesen.</li>
-          <li>Die Ampel einstellen. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
+          <li>Die Ampel einstellen. Sie wird sofort gespeichert; unten erscheint kurz eine Bestätigung. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
           <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
         </ol>
         <ul className="punkte">

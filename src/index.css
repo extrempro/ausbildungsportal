@@ -5658,3 +5658,157 @@ html.dark {
     padding: 12px 14px;
   }
 }
+
+/* ---------- Lernmodul: Themenfeld mit Navigation am linken Rand ---------- */
+.lern-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.lern-navi {
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 92px);
+  margin: 0;
+  padding: 14px 8px;
+  overflow-y: auto;
+}
+
+.lern-navi h2 {
+  margin: 0 8px 8px;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+.lern-navi-klapp {
+  display: none;
+}
+
+.lern-navi-liste,
+.lern-navi-unter {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lern-navi-feld {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--c-text);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.lern-navi-feld:hover {
+  background: var(--c-chip);
+}
+
+.lern-navi-feld[aria-current='page'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.lern-navi-titel {
+  flex: 1;
+  min-width: 0;
+}
+
+.lern-navi-prozent {
+  flex: none;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.lern-punkt {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ampel-rot);
+}
+
+.lern-punkt.klein {
+  width: 8px;
+  height: 8px;
+}
+
+.lern-punkt.gelb {
+  background: var(--ampel-gelb);
+}
+
+.lern-punkt.gruen {
+  background: var(--ampel-gruen);
+}
+
+.lern-navi-unter {
+  margin: 2px 0 8px 12px;
+  border-left: 1px solid var(--c-border);
+}
+
+.lern-navi-unter button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  margin-left: -1px;
+  padding: 4px 8px 4px 12px;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: none;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lern-navi-unter button:hover {
+  color: var(--c-text);
+}
+
+.lern-navi-unter button[aria-current='location'] {
+  border-left-color: var(--c-accent);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+@media (max-width: 1000px) {
+  .lern-layout {
+    display: block;
+  }
+
+  .lern-navi {
+    display: none;
+  }
+
+  .lern-navi-klapp {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .lern-navi-unter button {
+    min-height: 44px;
+  }
+}
+
+@media print {
+  .lern-navi,
+  .lern-navi-klapp {
+    display: none;
+  }
+
+  .lern-layout {
+    display: block;
+  }
+}
