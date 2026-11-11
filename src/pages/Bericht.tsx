@@ -1,7 +1,7 @@
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
-import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
+import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund, Logos } from '../api';
 import { HandbuchLink } from '../handbuchLink';
 import { geheZu, Link, useUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
@@ -59,8 +59,28 @@ export function DruckHinweis() {
   );
 }
 
+/** Logo des Betriebs (helle Fassung) für den Ausdruck – einmal je Sitzung geholt. */
+let logoAbruf: Promise<Logos> | null = null;
+function useDruckLogo(): string | null {
+  const [logo, setLogo] = useState<string | null>(null);
+  useEffect(() => {
+    let aktuell = true;
+    (logoAbruf ??= api<Logos>('GET', '/api/branding')).then(
+      (l) => aktuell && setLogo(l.logo),
+      () => {
+        logoAbruf = null;
+      },
+    );
+    return () => {
+      aktuell = false;
+    };
+  }, []);
+  return logo;
+}
+
 /** Der Bericht zum Lesen und Drucken: Kopf, Inhalte, Summe, Unterschriften. */
 export function BerichtBlatt({ b }: { b: Bericht }) {
+  const logo = useDruckLogo();
   const azubi = b.signaturen.find((s) => s.art === 'azubi');
   const abzeichnung = b.signaturen.find((s) => s.art === 'abzeichnung');
   return (
@@ -129,7 +149,11 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
           { titel: 'Ausbilder/in bzw. Ausbildungsbeauftragte/r', s: abzeichnung },
         ].map(({ titel, s }) => (
           <div key={titel} className="signatur">
-            <div className="signatur-feld">{s && <UnterschriftBild pfad={s.pfad} titel={`Unterschrift von ${s.name}`} />}</div>
+            <div className="signatur-feld">
+              {/* nur im Ausdruck: das Logo des Betriebs blass hinter der Unterschrift, wie ein Stempel */}
+              {logo && <img className="signatur-logo nur-drucken" src={logo} alt="" />}
+              {s && <UnterschriftBild pfad={s.pfad} titel={`Unterschrift von ${s.name}`} />}
+            </div>
             <div className="klein">
               {s ? `${s.name}, ${datum(s.zeit)}` : ' '}
               <br />

@@ -14,6 +14,43 @@ interface Kapitel {
   inhalt: ReactNode;
 }
 
+const IMPORT_BEISPIEL = `{
+  "format": "ausbildungsportal-planvorlagen",
+  "version": 1,
+  "vorlagen": [
+    {
+      "titel": "Station IT-Support",
+      "beruf": "Fachinformatiker/-in – Systemintegration",
+      "eintraege": [
+        {
+          "art": "einsatz",
+          "abWoche": 1,
+          "wochen": 8,
+          "titel": "IT-Support",
+          "text": "Tickets annehmen und bearbeiten, Arbeitsplätze einrichten.",
+          "unteraufgaben": []
+        },
+        {
+          "art": "aufgabe",
+          "abWoche": 2,
+          "wochen": 1,
+          "titel": "Drucker einrichten",
+          "text": "",
+          "unteraufgaben": ["Treiber installieren", "Testseite drucken"]
+        },
+        {
+          "art": "notiz",
+          "abWoche": 8,
+          "wochen": 1,
+          "titel": "Abschlussgespräch mit dem Teamleiter",
+          "text": "",
+          "unteraufgaben": []
+        }
+      ]
+    }
+  ]
+}`;
+
 function Begriff({ wort, children }: { wort: string; children: ReactNode }) {
   return (
     <>
@@ -68,14 +105,26 @@ const FEHLER: Kapitel = {
 
 const DRUCKEN = (rolle: Rolle): Kapitel => ({
   id: 'drucken',
-  titel: 'Berichte drucken oder als PDF speichern',
+  titel: 'Berichte und Berichtsheft drucken oder als PDF speichern',
   inhalt: (
     <>
       <dl className="begriffe">
         <Begriff wort="Ein einzelner Bericht">Im Berichtsheft steht an jeder Woche mit Bericht „Drucken“. Auf der Seite des Berichts heißt der Knopf „Bericht drucken“.</Begriff>
-        <Begriff wort="Alle Berichte">Im Berichtsheft „Alle Berichte drucken“. Jeder Bericht steht auf einer eigenen Seite.</Begriff>
+        <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft als PDF oder drucken“. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
         <Begriff wort="Als PDF">Im Druckfenster als Drucker „Als PDF speichern“ wählen. So entsteht eine Datei, zum Beispiel für die Kammer.</Begriff>
       </dl>
+      <h3>Das ganze Berichtsheft als PDF</h3>
+      <ol className="schritte">
+        <li>Im Berichtsheft „Berichtsheft als PDF oder drucken“ wählen.</li>
+        <li>Auswählen, was hinein soll: alle vorhandenen Berichte oder nur die abgezeichneten; alle Ausbildungsjahre oder eines; mit oder ohne Deckblatt. Darunter steht, wie viele Berichte es sind und welcher Zeitraum.</li>
+        <li>„Als PDF speichern oder drucken“. Im Druckfenster als Drucker „Als PDF speichern“ wählen und speichern.</li>
+      </ol>
+      <ul className="punkte">
+        <li>Auf dem Deckblatt stehen Name, Beruf, Betrieb, Ausbilder, Zeitraum und die Zahl der Berichte – und das Logo des Betriebs, wenn eines hinterlegt ist.</li>
+        <li>Der Browser schlägt als Dateinamen „Berichtsheft“, den Namen und den Zeitraum vor.</li>
+        <li>Für die Kammer meist richtig: „Nur abgezeichnete“.</li>
+        <li>Im Ausdruck steht das Logo des Betriebs blass hinter den Unterschriften, wenn eines hinterlegt ist. Am Bildschirm ist es nicht zu sehen.</li>
+      </ul>
       <ul className="punkte">
         <li>Auf dem Ausdruck stehen Kopf, Tätigkeiten, Stunden und die Unterschriften. Menüs und Knöpfe werden nicht gedruckt.</li>
         <li>Chrome und Edge lassen Datum, Titel und Adresse am Rand von selbst weg. In anderen Browsern schaltest du im Druckfenster unter „Weitere Einstellungen“ die „Kopf- und Fußzeilen“ aus – der Browser merkt sich das.</li>
@@ -281,7 +330,7 @@ const AZUBI: Kapitel[] = [
           </li>
         </ol>
         <p>
-          <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte drucken oder als PDF speichern“.
+          <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte und Berichtsheft drucken oder als PDF speichern“.
         </p>
         <h3>So schreibst du gute Einträge</h3>
         <p>Schreib kurz und genau: Was hast du gemacht, womit und wozu?</p>
@@ -396,7 +445,7 @@ const AZUBI: Kapitel[] = [
         <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
         <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
         <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
-        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Alle Berichte drucken“ wählen. Im Druckfenster kannst du auch „Als PDF speichern“ nehmen.</Begriff>
+        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft als PDF oder drucken“ wählen. Im Druckfenster kannst du auch „Als PDF speichern“ nehmen.</Begriff>
         <Begriff wort="Ich komme nicht weiter.">Frag deinen Ausbilder oder deine Ausbildungsbeauftragten. Wenn die Anmeldung nicht klappt, hilft die IT deines Betriebs.</Begriff>
       </dl>
     ),
@@ -534,7 +583,88 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   Ein <Link zu="/planung/bausteine">Baustein</Link> ist ein Stück Ausbildung, das immer wieder vorkommt – etwa die Station „IT-Support“ mit 8 Wochen Einsatz und den Aufgaben dazu.
                 </li>
                 <li>Im Ausbildungsplan eines Azubis wählst du den Baustein und die Woche, ab der er gelten soll. So bleibt jeder Plan individuell.</li>
-                <li>Bausteine lassen sich als Datei exportieren und wieder importieren – zur Sicherung oder für ein anderes Portal.</li>
+                <li>
+                  Bausteine lassen sich als Datei exportieren und wieder importieren – zur Sicherung oder für ein anderes Portal. Wie die Datei aussehen muss, steht im Kapitel „Bausteine importieren: Aufbau der Datei“ gleich darunter.
+                </li>
+              </ul>
+            </>
+          ),
+        },
+        {
+          id: 'import',
+          titel: 'Bausteine importieren: Aufbau der Datei',
+          inhalt: (
+            <>
+              <p>
+                Unter <Link zu="/planung/bausteine">Planung → Planbausteine</Link> liest „Importieren“ eine Datei mit Bausteinen ein. <strong>Am einfachsten:</strong> Einen vorhandenen Baustein mit „Exportieren“ speichern, die Datei in einem Texteditor ändern und wieder importieren. So stimmt der Aufbau von selbst.
+              </p>
+              <h3>Die Datei</h3>
+              <ul className="punkte">
+                <li>
+                  Eine Textdatei im Format <strong>JSON</strong>, Endung <code>.json</code>, Zeichensatz UTF-8 (damit Umlaute stimmen). Höchstens 1 MB.
+                </li>
+                <li>Bearbeiten mit einem Texteditor (Editor, Notepad++, VS Code) – nicht mit Word oder Excel.</li>
+                <li>Die Datei enthält nur Bausteine, keine Daten von Azubis.</li>
+              </ul>
+              <h3>Beispiel</h3>
+              <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel einer Datei mit einem Baustein">{IMPORT_BEISPIEL}</pre>
+              <h3>Der Rahmen</h3>
+              <dl className="begriffe">
+                <Begriff wort="format">
+                  Immer genau <code>"ausbildungsportal-planvorlagen"</code>. Daran erkennt das Portal die Datei. Fehlt die Angabe oder ist sie anders geschrieben, heißt es „Das ist keine Baustein-Datei aus dem Ausbildungsportal“.
+                </Begriff>
+                <Begriff wort="version">
+                  Immer <code>1</code>.
+                </Begriff>
+                <Begriff wort="vorlagen">Die Liste der Bausteine in eckigen Klammern. Mindestens einer, höchstens 50 je Datei.</Begriff>
+              </dl>
+              <h3>Ein Baustein</h3>
+              <dl className="begriffe">
+                <Begriff wort="titel">Name des Bausteins, Pflicht, höchstens 120 Zeichen. Gibt es den Namen schon, hängt das Portal „(Import)“ an – vorhandene Bausteine werden nie überschrieben.</Begriff>
+                <Begriff wort="beruf">
+                  Für welchen Beruf der Baustein gilt: der Name genau so, wie er in den Stammdaten steht – mit Fachrichtung in der Form <code>"Bezeichnung – Fachrichtung"</code> (Leerzeichen, Halbgeviertstrich, Leerzeichen). Für alle Berufe: <code>null</code> (ohne Anführungszeichen). Kennt das Portal den Beruf nicht, gilt der Baustein für alle Berufe; das Portal sagt das nach dem Import.
+                </Begriff>
+                <Begriff wort="eintraege">Die Einträge des Bausteins in eckigen Klammern, höchstens 100.</Begriff>
+              </dl>
+              <h3>Ein Eintrag</h3>
+              <dl className="begriffe">
+                <Begriff wort="art">
+                  Pflicht. Eines von: <code>"schule"</code> (Berufsschule), <code>"einsatz"</code> (Einsatz in einer Abteilung), <code>"aufgabe"</code>, <code>"notiz"</code>. Klein geschrieben. Termine gibt es in Bausteinen nicht.
+                </Begriff>
+                <Begriff wort="abWoche">
+                  Pflicht. In welcher Woche des Bausteins der Eintrag beginnt: <code>1</code> ist die Woche, die du beim Einfügen als Startwoche wählst, <code>3</code> zwei Wochen später. Ganze Zahl von 1 bis 260, ohne Anführungszeichen.
+                </Begriff>
+                <Begriff wort="wochen">
+                  Dauer in Wochen, ganze Zahl von 1 bis 160. Fehlt die Angabe, gilt <code>1</code>.
+                </Begriff>
+                <Begriff wort="titel">Pflicht, höchstens 120 Zeichen. Zum Beispiel „IT-Support“ oder „Drucker einrichten“.</Begriff>
+                <Begriff wort="text">
+                  Beschreibung, höchstens 2000 Zeichen. Ohne Beschreibung: <code>""</code>. Ein Zeilenumbruch im Text wird als <code>\n</code> geschrieben.
+                </Begriff>
+                <Begriff wort="unteraufgaben">
+                  Nur bei der Art <code>"aufgabe"</code>: Liste von Texten, höchstens 30, je höchstens 200 Zeichen. Bei den anderen Arten wird sie nicht beachtet. Ohne Unteraufgaben: <code>[]</code>.
+                </Begriff>
+              </dl>
+              <h3>Worauf es bei JSON ankommt</h3>
+              <ul className="punkte">
+                <li>
+                  Namen und Texte stehen in geraden doppelten Anführungszeichen <code>"…"</code> – nicht in „deutschen“ und nicht in einfachen.
+                </li>
+                <li>
+                  Zahlen und <code>null</code> stehen ohne Anführungszeichen.
+                </li>
+                <li>Zwischen zwei Angaben steht ein Komma, nach der letzten in einer Klammer keines.</li>
+                <li>Die Namen der Angaben genau so schreiben wie hier, auch die Großbuchstaben („abWoche“).</li>
+                <li>
+                  Ein Anführungszeichen im Text wird als <code>\"</code> geschrieben.
+                </li>
+              </ul>
+              <h3>Was beim Import passiert</h3>
+              <ul className="punkte">
+                <li>Jeder Baustein der Datei wird zusätzlich angelegt. Nichts wird überschrieben oder gelöscht.</li>
+                <li>Stimmt in einem Baustein etwas nicht, bricht der Import dort ab. Das Portal nennt den Baustein und den Grund und sagt, wie viele davor schon angelegt wurden. Die Datei berichtigen, die schon importierten Bausteine aus der Datei entfernen und noch einmal importieren.</li>
+                <li>„Die Datei lässt sich nicht lesen“ heißt: Das JSON ist nicht in Ordnung – meist fehlt ein Komma oder eine Klammer, oder es stehen falsche Anführungszeichen darin.</li>
+                <li>Danach den Baustein öffnen und prüfen, bevor du ihn in Pläne einfügst.</li>
               </ul>
             </>
           ),

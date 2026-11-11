@@ -373,7 +373,7 @@ export function Vorlagen() {
         <input ref={datei} type="file" accept="application/json,.json" hidden aria-label="Datei mit Bausteinen zum Importieren" onChange={(e) => e.target.files?.[0] && void importiere(e.target.files[0])} />
       </div>
       <p className="leise klein">
-        Exportieren speichert Bausteine als Datei – zur Sicherung oder um sie in ein anderes Ausbildungsportal zu übernehmen. Importieren legt die Bausteine aus einer solchen Datei zusätzlich an; vorhandene werden nie überschrieben. Die Datei enthält keine Daten von Azubis.
+        Exportieren speichert Bausteine als Datei – zur Sicherung oder um sie in ein anderes Ausbildungsportal zu übernehmen. Importieren legt die Bausteine aus einer solchen Datei zusätzlich an; vorhandene werden nie überschrieben. Die Datei enthält keine Daten von Azubis. <HandbuchLink kapitel="import">Aufbau der Datei für den Import</HandbuchLink>
       </p>
       {meldung && (
         <p className={`hinweis ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
