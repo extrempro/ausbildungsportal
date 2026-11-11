@@ -14,6 +14,52 @@ interface Kapitel {
   inhalt: ReactNode;
 }
 
+const LERN_ORDNER = `industriekaufleute/
+  paket.json            Titel, Quelle, Lizenz
+  meta.json             Stand der Inhalte
+  themenfelder.json     Liste und Reihenfolge der Themenfelder
+  themen/
+    buchfuehrung.md     je Themenfeld eine Datei
+    beschaffung.md
+  bilder/               Grafiken (nur SVG), freiwillig
+  zusatz/               Abläufe Schritt für Schritt, freiwillig`;
+
+const LERN_THEMA = `---
+titel: Buchführung
+---
+
+Wie Geschäftsvorfälle erfasst werden: Konten, Buchungssätze und der Weg zum Jahresabschluss.
+
+## Buchungssätze {#buchungssaetze}
+
+### Kernbegriffe
+- **Soll:** linke Seite eines Kontos.
+- **Haben:** rechte Seite eines Kontos.
+
+### Tabelle: Kontenarten
+| Kontenart | Zugang | Abgang |
+| --- | --- | --- |
+| Aktivkonto | im Soll | im Haben |
+| Passivkonto | im Haben | im Soll |
+
+### Merksatz
+Jeder Buchungssatz lautet: Soll an Haben.
+
+### Prüfungsfrage
+Ein Kunde bezahlt eine Rechnung über 1.190 € per Überweisung. Bilde den Buchungssatz.
+
+1. Bank nimmt zu – Aktivkonto, also im Soll.
+2. Forderungen nehmen ab – Aktivkonto, also im Haben.
+3. Bank 1.190 € an Forderungen 1.190 €.
+
+## Inventur {#inventur}
+
+## Häufige Fehler
+- Soll und Haben vertauscht.
+
+## Links
+- [Beispiel-Seite](https://www.example.org/) – Erklärungen zum Nachlesen`;
+
 const IMPORT_BEISPIEL = `{
   "format": "ausbildungsportal-planvorlagen",
   "version": 1,
@@ -762,7 +808,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
                 <Begriff wort="Lernmodul">
                   Am Beruf lässt sich ein Paket mit Lerninhalten einschalten, sofern eines auf dem Server liegt. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“ mit Cheatsheets und einer Ampel zur Selbsteinschätzung. Den Lernstand sieht nur der Azubi selbst – du siehst ihn nicht, auch
-                  nicht als Zusammenfassung. Die Inhalte pflegt, wer den Server betreibt. Liegen dort noch keine, ist das Feld gesperrt und die Seite sagt, was fehlt.
+                  nicht als Zusammenfassung. Die Inhalte legt der Betreiber des Portals auf dem Server ab; schreiben kannst du sie selbst – siehe „Lerninhalte für einen Beruf erstellen“. Liegen dort noch keine, ist das Feld gesperrt und die Seite sagt, was fehlt.
                 </Begriff>
                 <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
               </dl>
@@ -771,6 +817,102 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Ein Beruf oder eine Berufsschule lässt sich erst löschen, wenn kein Azubi mehr zugeordnet ist.</li>
                 <li>Änderungen stehen mit deinem Namen im Protokoll.</li>
               </ul>
+            </>
+          ),
+        },
+        {
+          id: 'lerninhalte',
+          titel: 'Lerninhalte für einen Beruf erstellen',
+          inhalt: (
+            <>
+              <p>
+                Für jeden Ausbildungsberuf kann es ein eigenes <strong>Lernmodul</strong> geben – Cheatsheets, Kompendium und Zusatzwissen wie beim Fachinformatiker. Dafür muss niemand programmieren: Ein Lernmodul ist ein Ordner mit Textdateien in einem festen Aufbau. Die eigentliche Arbeit ist, die Inhalte zu schreiben.
+              </p>
+              <p className="hinweis">
+                <strong>Wichtig:</strong> Du kannst die Dateien nicht selbst ins Portal hochladen. Den fertigen Ordner <strong>gibst du dem Betreiber des Portals</strong> (der Person, die den Server betreut – meist der Super-Admin). Er legt ihn auf dem Server ab. Danach erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Dasselbe gilt für jede spätere Änderung: geänderte Dateien wieder an den Betreiber geben.
+              </p>
+              <h3>So gehst du vor</h3>
+              <ol className="schritte">
+                <li>
+                  <strong>Stoff gliedern.</strong> Ausbildungsrahmenplan und Prüfungskatalog des Berufs in etwa 8 bis 15 Themenfelder aufteilen, jedes mit 5 bis 10 Unterthemen. Zum Vergleich: Das Modul für Fachinformatiker hat 13 Themenfelder.
+                </li>
+                <li>
+                  <strong>Gerüst anlegen.</strong> Die Liste der Themenfelder und je Themenfeld eine Datei mit den Unterthemen – noch ohne Inhalt. Schon damit funktioniert das Modul; bei leeren Unterthemen steht „Cheatsheet folgt“.
+                </li>
+                <li>
+                  <strong>Cheatsheets schreiben.</strong> Unterthema für Unterthema füllen: Kernbegriffe, Tabellen, ein Merksatz, eine typische Prüfungsfrage mit Lösungsweg.
+                </li>
+                <li>
+                  <strong>Ordner an den Betreiber geben</strong> – zum Beispiel als ZIP-Datei.
+                </li>
+                <li>
+                  <strong>Prüfen und einschalten.</strong> Unter Stammdaten steht das Paket mit der Zahl der Themenfelder. Stimmt in einer Datei etwas nicht, zeigt die Seite den Fehler mit Datei und Zeile. Dann am Beruf einschalten.
+                </li>
+              </ol>
+              <h3>Der Ordner</h3>
+              <p>
+                Der Name des Ordners ist die Kennung des Pakets: nur Kleinbuchstaben, Ziffern und Bindestrich, zum Beispiel <code>industriekaufleute</code>.
+              </p>
+              <pre className="datei-beispiel" tabIndex={0} aria-label="Aufbau des Ordners eines Lernmoduls">{LERN_ORDNER}</pre>
+              <dl className="begriffe">
+                <Begriff wort="paket.json">
+                  Titel, Quelle und Lizenz – stehen unter den Lerninhalten. Beispiel: <code>{'{ "titel": "Industriekaufleute", "quelle": "Muster GmbH", "lizenz": "nur für den internen Gebrauch" }'}</code>
+                </Begriff>
+                <Begriff wort="meta.json">
+                  Der Stand der Inhalte als Datum: <code>{'{ "stand": "2026-11-11" }'}</code>. Bei jeder Änderung das Datum erhöhen – daran erkennt das Portal, dass es neu einlesen soll.
+                </Begriff>
+                <Begriff wort="themenfelder.json">
+                  Die Themenfelder in der Reihenfolge, in der sie erscheinen sollen. Je Themenfeld: <code>id</code> (so heißt auch die Datei unter <code>themen/</code>), <code>lernfelder</code> und <code>pruefung</code> (beides Listen kurzer Texte, die als Marken am Themenfeld stehen).
+                </Begriff>
+                <Begriff wort="themen/">Je Themenfeld eine Textdatei im Format Markdown – siehe unten.</Begriff>
+                <Begriff wort="bilder/">Grafiken, nur im Format SVG. Dateinamen nur mit Kleinbuchstaben, Ziffern und Bindestrich.</Begriff>
+                <Begriff wort="zusatz/">Nur für Abläufe Schritt für Schritt im Zusatzwissen. Das Format ist aufwendiger – dafür am besten Hilfe holen.</Begriff>
+              </dl>
+              <h3>Eine Themen-Datei</h3>
+              <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel einer Themen-Datei">{LERN_THEMA}</pre>
+              <ul className="punkte">
+                <li>Ganz oben steht zwischen zwei Zeilen aus drei Strichen der Titel des Themenfelds. Der Absatz danach ist „Worum geht’s“.</li>
+                <li>
+                  Jede Überschrift mit <code>##</code> ist ein <strong>Unterthema</strong> und braucht eine Kennung in geschweiften Klammern: <code>{'{#buchungssaetze}'}</code>. Nur Kleinbuchstaben, Ziffern und Bindestrich; in einer Datei jede nur einmal.
+                </li>
+                <li>
+                  <strong>An dieser Kennung hängt der Lernstand der Azubis.</strong> Den Titel darfst du jederzeit ändern – die Kennung nicht. Musst du sie doch ändern, sag es dem Betreiber: Er trägt alt und neu in die Datei <code>umbenennungen.json</code> ein, damit kein Lernstand verloren geht.
+                </li>
+                <li>
+                  Im Unterthema sind diese Abschnitte erlaubt, alle freiwillig: <code>### Kernbegriffe</code>, <code>### Tabelle: Titel</code> (beliebig oft), <code>### Abbildung: Titel</code>, <code>### Befehle</code>, <code>### Merksatz</code>, <code>### Prüfungsfrage</code>. Andere Überschriften mit <code>###</code> meldet das Portal als Fehler.
+                </li>
+                <li>
+                  Kernbegriffe immer in der Form <code>- **Begriff:** Erklärung</code>. Eine Prüfungsfrage besteht aus dem Fragetext und nummerierten Lösungsschritten.
+                </li>
+                <li>
+                  Am Ende der Datei dürfen <code>## Häufige Fehler</code> (Liste) und <code>## Links</code> stehen. Links in der Form <code>- [Titel](https://…) – Beschreibung</code>.
+                </li>
+                <li>
+                  Zusatzwissen beginnt mit <code>## Zusatz: Titel {'{#kennung}'}</code>, darunter <code>typ: text</code> und bei Bedarf <code>zu: kennung-des-unterthemas</code>. Darin sind Abschnitte mit <code>###</code> frei; <code>### Checkliste: …</code> zeigt Haken, <code>### Vergleich: …</code> mit Karten unter <code>####</code> stellt Dinge nebeneinander.
+                </li>
+                <li>
+                  Im Text gehen <code>**fett**</code>, <code>`Code`</code> und Links. Mehr Auszeichnung gibt es nicht.
+                </li>
+              </ul>
+              <h3>Worauf du achten solltest</h3>
+              <ul className="punkte">
+                <li>
+                  <strong>Urheberrecht:</strong> Texte, Tabellen und Bilder aus Lehrbüchern, von Webseiten oder aus alten Prüfungen darfst du nicht einfach übernehmen. Schreib die Inhalte selbst oder klär die Rechte. In <code>paket.json</code> steht, woher die Inhalte kommen.
+                </li>
+                <li>
+                  <strong>Sprache:</strong> kurze Sätze, ein Gedanke je Satz. Ein Cheatsheet ist ein Spickzettel, kein Lehrbuch.
+                </li>
+                <li>
+                  <strong>Keine Personen:</strong> In die Inhalte gehören keine Namen oder Daten von Azubis oder Kollegen.
+                </li>
+                <li>Bearbeiten mit einem Texteditor (Editor, Notepad++, VS Code) – nicht mit Word. Zeichensatz UTF-8, damit Umlaute stimmen.</li>
+                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt.</li>
+                <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
+                <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>
+              </ul>
+              <p>
+                Für den Betreiber: Wo der Ordner hingehört und wie er eingebunden wird, steht in der Datei <code>lerninhalte/README.md</code> des Portals.
+              </p>
             </>
           ),
         },

@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.29.4] – 2026-11-11
+
+### Neu
+
+- Handbuch (Ausbilder): Kapitel „Lerninhalte für einen Beruf erstellen“ – Vorgehen, Aufbau des Ordners, Beispiel einer Themen-Datei, Regeln und Hinweise zu Urheberrecht und Kennungen. Es sagt ausdrücklich: Den fertigen Ordner bekommt der Betreiber des Portals, der ihn auf dem Server ablegt. Link dorthin beim Feld „Lernmodul“ in den Stammdaten.
+
 ## [0.29.3] – 2026-11-11
 
 ### Geändert
