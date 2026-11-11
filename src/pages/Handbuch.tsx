@@ -247,8 +247,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <li>Mit „+“ an einer Woche oder „Eintrag hinzufügen“ legst du Schulblöcke, Einsätze, Aufgaben und Notizen an. Ein Eintrag kann über mehrere Wochen gehen.</li>
             <li>Bei Einsätzen und Aufgaben kannst du eine zuständige Person wählen. Ist es ein Ausbildungsbeauftragter, lässt er sich beim Speichern gleich für den Zeitraum zuweisen.</li>
             <li>
-              Was immer wieder vorkommt – etwa eine Station mit ihren Aufgaben –, legst du als <Link zu="/verwaltung/vorlagen">Planbaustein</Link> an und fügst es im Plan ab der passenden Woche ein. Was für mehrere Azubis gleich ist, zum Beispiel ein Schulblock, trägst du in der{' '}
-              <Link zu="/sammelplanung">Sammelplanung</Link> für alle auf einmal ein. Bausteine lassen sich als Datei exportieren und wieder importieren.
+              Was immer wieder vorkommt, fügst du als <Link zu="/planung/bausteine">Planbaustein</Link> ein; was für mehrere Azubis gleich ist, trägst du in der <Link zu="/planung/sammelplanung">Sammelplanung</Link> ein. Mehr dazu im Kapitel „Planung“.
             </li>
             <li>Azubis können eigene Aufgaben und Notizen eintragen. Diese sind mit „vom Azubi eingetragen“ gekennzeichnet; du kannst sie ändern.</li>
           </ul>
@@ -266,6 +265,34 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   },
   ...(rolle === 'ausbilder'
     ? [
+        {
+          id: 'planung',
+          titel: 'Planung: Sammelplanung und Bausteine',
+          inhalt: (
+            <>
+              <p>Unter „Planung“ (auf dem Handy unter „Mehr“) steht, was über den Plan eines einzelnen Azubis hinausgeht.</p>
+              <h3>Sammelplanung</h3>
+              <ol className="schritte">
+                <li>
+                  <Link zu="/planung/sammelplanung">Sammelplanung</Link> öffnen und die Azubis anhaken – einzeln oder per Schnellauswahl nach Ausbildungsjahr, Berufsschule oder Beruf.
+                </li>
+                <li>Einen einzelnen Eintrag ausfüllen (zum Beispiel einen Schulblock) oder einen Baustein mit Startwoche wählen.</li>
+                <li>„Eintragen“. Danach steht bei jedem Azubi, ob es geklappt hat. Wer in dem Zeitraum nicht in der Ausbildung ist, wird ausgelassen.</li>
+              </ol>
+              <p>
+                <strong>Versehen?</strong> Unter „Zuletzt eingetragen“ nimmst du eine Sammelplanung der letzten 30 Tage wieder zurück. Einträge, die seitdem jemand geändert oder abgehakt hat, bleiben stehen.
+              </p>
+              <h3>Planbausteine</h3>
+              <ul className="punkte">
+                <li>
+                  Ein <Link zu="/planung/bausteine">Baustein</Link> ist ein Stück Ausbildung, das immer wieder vorkommt – etwa die Station „IT-Support“ mit 8 Wochen Einsatz und den Aufgaben dazu.
+                </li>
+                <li>Im Ausbildungsplan eines Azubis wählst du den Baustein und die Woche, ab der er gelten soll. So bleibt jeder Plan individuell.</li>
+                <li>Bausteine lassen sich als Datei exportieren und wieder importieren – zur Sicherung oder für ein anderes Portal.</li>
+              </ul>
+            </>
+          ),
+        },
         {
           id: 'einrichten',
           titel: 'Einen neuen Azubi einrichten',
@@ -344,6 +371,20 @@ const ADMIN: Kapitel[] = [
       <p>
         Das <Link zu="/verwaltung/protokoll">Protokoll</Link> zeigt Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen dort nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Nur du kannst das Protokoll einsehen.
       </p>
+    ),
+  },
+  {
+    id: 'meldungen',
+    titel: 'Fehlermeldungen',
+    inhalt: (
+      <ul className="punkte">
+        <li>
+          Jede angemeldete Person kann über „Fehler melden“ ein Problem beschreiben, auf Wunsch mit Bildschirmfoto. Die Meldungen stehen unter <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link>; die Zahl am Menüpunkt zeigt die offenen.
+        </li>
+        <li>Ein Bildschirmfoto erscheint erst nach einem Klick. Es kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</li>
+        <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig.</li>
+        <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
+      </ul>
     ),
   },
   {

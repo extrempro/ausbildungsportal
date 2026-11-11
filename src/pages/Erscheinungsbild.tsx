@@ -1,3 +1,4 @@
+import { melde, rueckfrage } from '../dialoge';
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { api } from '../api';
@@ -20,7 +21,8 @@ function LogoFeld({ schema, logo, ersatz, onGeaendert }: { schema: Schema; logo:
     leser.onload = async () => {
       try {
         onGeaendert(await api<Logos>('PUT', '/api/branding/logo', { daten: leser.result, schema }));
-        setMeldung({ text: `Logo für die ${name} Darstellung gespeichert.`, fehler: false });
+        setMeldung(null);
+        melde(`Logo für die ${name} Darstellung gespeichert.`);
       } catch (err) {
         setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
       }
@@ -28,10 +30,11 @@ function LogoFeld({ schema, logo, ersatz, onGeaendert }: { schema: Schema; logo:
     leser.readAsDataURL(datei);
   };
   const entferne = async () => {
-    if (!window.confirm(`Das Logo für die ${name} Darstellung entfernen?`)) return;
+    if (!(await rueckfrage(`Das Logo für die ${name} Darstellung entfernen?\n\nIn der Kopfzeile und auf der Anmeldeseite steht dann wieder das Zeichen des Portals.`, { ja: 'Logo entfernen', gefahr: true }))) return;
     try {
       onGeaendert(await api<Logos>('DELETE', `/api/branding/logo?schema=${schema}`));
-      setMeldung({ text: 'Logo entfernt.', fehler: false });
+      setMeldung(null);
+      melde('Logo entfernt.');
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
     }

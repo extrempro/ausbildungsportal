@@ -1,3 +1,4 @@
+import { melde, rueckfrage } from '../dialoge';
 import { useEffect, useState } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Rolle } from '../api';
@@ -72,8 +73,12 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
   }, []);
 
   const setze = (m: Meldung, status: Meldung['status']) => api<Antwort>('PATCH', `/api/fehlermeldungen/${m.id}`, { status }).then(nimm, zeigeFehler);
-  const loesche = (m: Meldung) => {
-    if (window.confirm(`Meldung Nr. ${m.id} von ${m.name} endgültig löschen?`)) void api<Antwort>('DELETE', `/api/fehlermeldungen/${m.id}`).then(nimm, zeigeFehler);
+  const loesche = async (m: Meldung) => {
+    if (!(await rueckfrage(`Meldung Nr. ${m.id} von ${m.name} endgültig löschen?\n\nText${m.hatBild ? ', Bildschirmfoto' : ''} und technische Angaben sind danach weg.`, { ja: 'Meldung löschen', gefahr: true }))) return;
+    await api<Antwort>('DELETE', `/api/fehlermeldungen/${m.id}`).then((r) => {
+      nimm(r);
+      melde(`Meldung Nr. ${m.id} gelöscht.`);
+    }, zeigeFehler);
   };
   const kopiere = async (m: Meldung) => {
     try {
@@ -125,7 +130,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
             <span className="leise klein">Kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</span>
           </p>
         ))}
-      <div className="knopfzeile">
+      <div className="aktionen links">
         {m.status === 'offen' ? (
           <button type="button" className="knopf klein" onClick={() => void setze(m, 'erledigt')}>
             Als erledigt markieren
@@ -139,7 +144,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
           {kopiert === m.id ? 'Kopiert' : 'Als Text kopieren'}
         </button>
         <button type="button" className="knopf schlicht klein gefahr" onClick={() => loesche(m)}>
-          Löschen
+          Meldung löschen
         </button>
       </div>
     </article>

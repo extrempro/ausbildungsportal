@@ -1,3 +1,4 @@
+import { Ladefehler } from '../dialoge';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, berichtsheftPfad, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '../api';
@@ -227,7 +228,7 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
     api<BerichtListe>('GET', `/api/azubis/${azubiId}/berichte?voll=1`).then(setDaten, (e: Error) => setFehler(e.message));
   }, [azubiId]);
 
-  if (fehler) return <p className="hinweis fehler">{fehler}</p>;
+  if (fehler) return <Ladefehler titel="Berichtsheft" text={fehler} />;
   if (!daten) return <p className="leise">Lädt …</p>;
   const berichte = (daten.berichte ?? []).filter((b) => nur === 'alle' || b.status === 'abgezeichnet');
 

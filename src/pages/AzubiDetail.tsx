@@ -1,8 +1,9 @@
+import { melde } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, berufName, datum, standText } from '../api';
 import type { Konto, Profil, ProfilAntwort, Stammdaten, ZuweisungZeile } from '../api';
-import { Link } from '../router';
+import { Link, useUngespeichert } from '../router';
 
 type Meldung = { text: string; fehler: boolean } | null;
 
@@ -61,6 +62,7 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
 function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; stammdaten: Stammdaten; onGespeichert: () => Promise<void> }) {
   const [wert, setWert] = useState<Profil>(p.profil);
   const [meldung, setMeldung] = useState<Meldung>(null);
+  useUngespeichert(JSON.stringify(wert) !== JSON.stringify(p.profil));
   const setze = <K extends keyof Profil>(k: K, v: Profil[K]) => setWert((alt) => ({ ...alt, [k]: v }));
   const idOderNull = (s: string) => (s ? Number(s) : null);
 
@@ -69,7 +71,8 @@ function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; st
     try {
       await api('PUT', `/api/azubis/${p.azubi.id}/profil`, wert);
       await onGespeichert();
-      setMeldung({ text: 'Gespeichert.', fehler: false });
+      setMeldung(null);
+      melde('Gespeichert.');
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
     }
@@ -180,10 +183,14 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
   const [zeilen, setZeilen] = useState<ZuweisungZeile[] | null>(null);
   const [beauftragte, setBeauftragte] = useState<Konto[]>([]);
   const [meldung, setMeldung] = useState<Meldung>(null);
+  // Stand vom Server zum Vergleich – was davon abweicht, ist noch nicht gespeichert
+  const [geladen, setGeladen] = useState('');
+  useUngespeichert(zeilen !== null && geladen !== '' && JSON.stringify(zeilen) !== geladen);
 
   const lade = useCallback(async () => {
     const r = await api<{ zuweisungen: ZuweisungZeile[] }>('GET', `/api/azubis/${azubiId}/zuweisungen`);
     setZeilen(r.zuweisungen);
+    setGeladen(JSON.stringify(r.zuweisungen));
   }, [azubiId]);
 
   useEffect(() => {
@@ -204,7 +211,8 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
         zuweisungen: (zeilen ?? []).map((z) => ({ beauftragterId: z.beauftragter_id, von: z.von || null, bis: z.bis || null })),
       });
       await lade();
-      setMeldung({ text: 'Zuweisungen gespeichert.', fehler: false });
+      setMeldung(null);
+      melde('Zuweisungen gespeichert.');
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
     }

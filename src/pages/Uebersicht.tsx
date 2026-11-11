@@ -1,3 +1,4 @@
+import { Ladefehler } from '../dialoge';
 import { Fragment, useEffect, useState } from 'react';
 import { api, plusTage } from '../api';
 import type { Uebersicht } from '../api';
@@ -135,7 +136,7 @@ export function UebersichtSeite({ darfPlanen = false }: { darfPlanen?: boolean }
     api<Uebersicht>('GET', '/api/uebersicht?wochen=2').then(setJetzt, () => {});
   }, []);
 
-  if (fehler) return <p className="hinweis fehler">{fehler}</p>;
+  if (fehler) return <Ladefehler titel="Übersicht" text={fehler} />;
   if (!d) return <p className="leise">Lädt …</p>;
   const start = d.wochen[0].montag;
   const istHeute = (montag: string) => montag <= d.heute && plusTage(montag, 6) >= d.heute;
@@ -153,7 +154,7 @@ export function UebersichtSeite({ darfPlanen = false }: { darfPlanen?: boolean }
       <p className="leise">Wer ist wann wo? Schulblöcke und Einsätze kommen aus den Ausbildungsplänen, Urlaub aus den Berichten.</p>
       {darfPlanen && (
         <p className="nicht-drucken ue-planen">
-          <Link zu="/sammelplanung" className="knopf schlicht">
+          <Link zu="/planung/sammelplanung" className="knopf schlicht">
             Für mehrere Azubis planen
           </Link>
           <span className="leise klein">Schulblock oder Baustein in mehrere Pläne auf einmal eintragen.</span>

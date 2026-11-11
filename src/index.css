@@ -3378,11 +3378,8 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
   resize: vertical;
 }
 
-.melden .knopfzeile,
-.meldung .knopfzeile {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.melden .aktionen,
+.meldung .aktionen {
   margin-top: 16px;
 }
 
@@ -3759,7 +3756,7 @@ fieldset.vorlage-eintrag legend + * {
   margin: 0 0 8px;
 }
 
-.melden-bild .knopfzeile {
+.melden-bild .aktionen {
   margin: 0 0 8px;
 }
 
@@ -3998,4 +3995,165 @@ fieldset.vorlage-eintrag legend + * {
   display: block;
   margin-top: 4px;
   font-weight: 400;
+}
+
+/* ---------- Rückfrage (eigenes Fenster statt Browser-Dialog) ---------- */
+.frage-hintergrund {
+  z-index: 90;
+  align-items: center;
+}
+
+.frage-dialog {
+  max-width: 520px;
+}
+
+.frage-dialog h2 {
+  margin-top: 0;
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.frage-dialog p {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.frage-dialog .aktionen {
+  margin-top: 20px;
+}
+
+.knopf.rot {
+  border-color: #b91c1c;
+  background: #b91c1c;
+  color: #fff;
+}
+
+.knopf.rot:hover {
+  background: #991b1b;
+}
+
+/* ---------- Rückmeldungen: immer unten, einige Sekunden, schließbar ---------- */
+.meldungen {
+  position: fixed;
+  right: 16px;
+  bottom: 20px;
+  left: 16px;
+  z-index: 85;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.meldung-zeile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(640px, 100%);
+  padding: 8px 8px 8px 16px;
+  border: 1px solid var(--c-gruen-fg);
+  border-radius: 12px;
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  font-weight: 500;
+  line-height: 1.4;
+  pointer-events: auto;
+}
+
+.dark .meldung-zeile {
+  background: #14532d;
+  color: #dcfce7;
+}
+
+.meldung-zeile > svg {
+  flex: none;
+}
+
+.meldung-zeile button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.meldung-zeile button:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .meldung-zeile {
+    animation: meldung-ein 0.2s ease-out;
+  }
+
+  @keyframes meldung-ein {
+    from {
+      opacity: 0;
+      translate: 0 12px;
+    }
+  }
+}
+
+@media (max-width: 1023px) {
+  /* über der Leiste unten */
+  .meldungen {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .frage-hintergrund {
+    align-items: flex-end;
+  }
+}
+
+/* ---------- Aufklappen: überall derselbe Kopf mit „Anzeigen“ / „Einklappen“ ---------- */
+details.karte > summary,
+.meldung-erledigt > summary,
+.melden-technik > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details.karte > summary::-webkit-details-marker,
+.meldung-erledigt > summary::-webkit-details-marker,
+.melden-technik > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.karte > summary::after,
+.meldung-erledigt > summary::after,
+.melden-technik > summary::after {
+  flex: none;
+  margin-left: auto;
+  padding-left: 16px;
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 600;
+  content: 'Anzeigen ▾';
+}
+
+details.karte[open] > summary::after,
+.meldung-erledigt[open] > summary::after,
+.melden-technik[open] > summary::after {
+  content: 'Einklappen ▴';
+}
+
+/* der Baustein-Kopf hatte einen eigenen Hinweis – jetzt gilt der gemeinsame */
+.vorlage-auf {
+  display: none;
+}
+
+.vorlage-mehr {
+  margin: 0 0 16px;
+}
+
+.sammel-eintrag {
+  margin-top: 16px;
 }
