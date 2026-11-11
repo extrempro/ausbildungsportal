@@ -89,7 +89,7 @@ export function Jahreskalender({ azubiId }: { azubiId?: number }) {
           ? 'Dein Jahr auf einen Blick: Berufsschule, Einsätze, Prüfungen, Urlaub, Feiertage und deine eigenen Termine. Die Monate stehen nebeneinander, die Tage untereinander.'
           : einer
             ? `${einer.beruf ? `${einer.beruf} · ` : ''}Das Jahr auf einen Blick: Berufsschule, Einsätze, Prüfungen, Urlaub und Feiertage. Die Monate stehen nebeneinander, die Tage untereinander.`
-            : 'Wer ist wann wo – das ganze Jahr auf einen Blick. Die Monate stehen nebeneinander, jeder Azubi hat eine Zeile. Ein Klick auf den Namen zeigt den Kalender dieses Azubis Tag für Tag.'}{' '}
+            : 'Wer ist wann wo – das ganze Jahr auf einen Blick: je Azubi Berufsschule, Einsätze, Urlaub und Prüfungen. Ein Klick auf den Namen zeigt den Kalender dieses Azubis Tag für Tag.'}{' '}
         <HandbuchLink kapitel="jahreskalender">Den Jahreskalender lesen</HandbuchLink>
       </p>
 
@@ -285,7 +285,9 @@ function JahrAlle({ d }: { d: Daten }) {
   if (d.azubis.length === 0) return <p className="karte leise">Du siehst im Moment keinen Azubi – deshalb ist der Jahreskalender leer.</p>;
 
   return (
-    <div className="karte jk-rahmen" tabIndex={0} role="region" aria-label={`Jahreskalender ${d.jahr} aller Azubis, seitlich rollbar`}>
+    <>
+    <JahrKarten d={d} lage={lage} monate={monate} />
+    <div className="karte jk-rahmen nur-breit" tabIndex={0} role="region" aria-label={`Jahreskalender ${d.jahr} aller Azubis, seitlich rollbar`}>
       <table className="jk-alle">
         <caption className="nur-vorleser">Jahreskalender {d.jahr}: je Azubi eine Zeile mit Berufsschule, Einsätzen, Urlaub und Prüfungen</caption>
         <thead>
@@ -384,6 +386,121 @@ function JahrAlle({ d }: { d: Daten }) {
           </tbody>
         ))}
       </table>
+    </div>
+    </>
+  );
+}
+
+interface Zeile {
+  art: 'schule' | 'einsatz' | 'urlaub' | 'pruefung';
+  von: string;
+  bis: string;
+  titel: string;
+}
+const ART_NAME: Record<Zeile['art'], string> = { schule: 'Schule', einsatz: 'Einsatz', urlaub: 'Urlaub', pruefung: 'Prüfung' };
+const kurz = (tag: string) => `${tag.slice(8, 10)}.${tag.slice(5, 7)}.`;
+
+/** Alles, was bei einem Azubi im Jahr ansteht, der Reihe nach. */
+function zeilenVon(a: JkAzubi): Zeile[] {
+  return [
+    ...a.eintraege.map((e) => ({ art: e.art, von: e.von, bis: e.bis, titel: e.titel })),
+    ...bloecke(a.urlaub).map((u) => ({ art: 'urlaub' as const, von: u.von, bis: u.bis, titel: '' })),
+    ...a.pruefungen.map((p) => ({ art: 'pruefung' as const, von: p.tag, bis: p.tag, titel: p.bezeichnung })),
+  ].sort((x, y) => x.von.localeCompare(y.von) || x.bis.localeCompare(y.bis));
+}
+
+function ZeilenListe({ zeilen, heute }: { zeilen: Zeile[]; heute: string }) {
+  return (
+    <ul className="jk-zeilen">
+      {zeilen.map((z, i) => (
+        <li key={i} className={z.von <= heute && z.bis >= heute ? 'jetzt' : undefined}>
+          <span className={`jk-marke ${z.art}`}>{ART_NAME[z.art]}</span>
+          <span className="jk-wann">{z.von === z.bis ? kurz(z.von) : `${kurz(z.von)}–${kurz(z.bis)}`}</span>
+          <span className="jk-was">
+            {z.titel}
+            {z.von <= heute && z.bis >= heute && <span className="leise"> · läuft gerade</span>}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Handy: statt der breiten Tabelle je Azubi eine Karte – oben das Jahr als schmale Leiste zum Überblicken,
+ * darunter als Text, was als Nächstes ansteht; das ganze Jahr lässt sich aufklappen.
+ */
+function JahrKarten({ d, lage, monate }: { d: Daten; lage: (von: string, bis: string) => { left: string; width: string }; monate: { m: string; i: number; left: string; width: string }[] }) {
+  const anfang = `${d.jahr}-01-01`;
+  const ende = `${d.jahr}-12-31`;
+  const laufend = d.heute >= anfang && d.heute <= ende;
+  return (
+    <div className="nur-schmal jk-karten">
+      {gruppen(d.azubis).map((g) => (
+        <section key={g.titel} aria-label={g.titel}>
+          <h2 className="ueberschrift-klein">{g.titel}</h2>
+          {g.azubis.map((a) => {
+            const alle = zeilenVon(a);
+            // im laufenden Jahr: was heute läuft oder noch kommt; sonst der Anfang des Jahres
+            const kommend = (laufend ? alle.filter((z) => z.bis >= d.heute) : alle).slice(0, 3);
+            return (
+              <article key={a.id} className="karte jk-karte">
+                <header>
+                  <Link zu={`/jahreskalender/${a.id}`}>{a.anzeigename}</Link>
+                  {a.beruf && <span className="leise klein">{a.beruf}</span>}
+                </header>
+                <div className="jk-mini" aria-hidden="true">
+                  <div className="jk-mini-monate">
+                    {monate.map((x) => (
+                      <span key={x.m} style={{ left: x.left, width: x.width }} className={d.heute.startsWith(`${d.jahr}-${zwei(x.i + 1)}`) ? 'jetzt' : undefined}>
+                        {MONATE_KURZ[x.i][0]}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="jk-bahn klein">
+                    {monate.slice(1).map((x) => (
+                      <i key={x.m} className="jk-strich" style={{ left: x.left }} />
+                    ))}
+                    {!a.beginn && <i className="jk-aus" style={{ left: 0, width: '100%' }} />}
+                    {a.beginn && a.beginn > anfang && <i className="jk-aus" style={lage(anfang, a.beginn > ende ? ende : a.beginn)} />}
+                    {a.ende && a.ende < ende && <i className="jk-aus" style={lage(a.ende < anfang ? anfang : a.ende, ende)} />}
+                    {alle
+                      .filter((z) => z.art !== 'pruefung')
+                      .map((z, i) => (
+                        <b key={i} className={`jk-balken ${z.art}`} style={lage(z.von, z.bis)} />
+                      ))}
+                    {a.pruefungen.map((p, i) => (
+                      <b key={`p${i}`} className="jk-pruefung" style={{ left: lage(p.tag, p.tag).left }} />
+                    ))}
+                    {laufend && <i className="jk-heute" style={{ left: lage(d.heute, d.heute).left }} />}
+                  </div>
+                </div>
+                {!a.beginn ? (
+                  <p className="leise klein">Ausbildungsbeginn fehlt im Profil.</p>
+                ) : alle.length === 0 ? (
+                  <p className="leise klein">Für {d.jahr} ist nichts eingetragen.</p>
+                ) : (
+                  <>
+                    <h3 className="jk-karte-titel">{laufend ? 'Jetzt und als Nächstes' : `Anfang ${d.jahr}`}</h3>
+                    {kommend.length === 0 ? <p className="leise klein">Bis zum Jahresende steht nichts mehr an.</p> : <ZeilenListe zeilen={kommend} heute={d.heute} />}
+                    {alle.length > kommend.length && (
+                      <details className="klapp">
+                        <summary>
+                          Ganzes Jahr ({alle.length} {alle.length === 1 ? 'Eintrag' : 'Einträge'})
+                        </summary>
+                        <ZeilenListe zeilen={alle} heute={d.heute} />
+                      </details>
+                    )}
+                  </>
+                )}
+                <p className="klein jk-karte-fuss">
+                  <Link zu={`/jahreskalender/${a.id}`}>Tag für Tag ansehen</Link>
+                </p>
+              </article>
+            );
+          })}
+        </section>
+      ))}
     </div>
   );
 }

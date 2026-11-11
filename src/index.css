@@ -6721,3 +6721,234 @@ td.aktion .pdf-fehler {
     opacity: 0.1;
   }
 }
+
+/* Berichtsheft: Leiste über der Liste – links die Filter, rechts die Ausgabe des ganzen Hefts */
+.heft-leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+
+.heft-leiste .filter {
+  margin-bottom: 0;
+}
+
+.heft-gruppe {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .heft-leiste {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  /* Filter: gleich breite Knöpfe in zwei Spalten statt einer zerfransten Reihe */
+  .heft-filter {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .heft-filter .knopf {
+    width: 100%;
+    padding-right: 8px;
+    padding-left: 8px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Ausgabe: der Hauptknopf über die ganze Breite, die Abkürzung rechts daneben */
+  .heft-pdf {
+    display: flex;
+    flex-direction: row-reverse;
+    width: 100%;
+  }
+
+  .heft-pdf > a.knopf {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Knöpfe einer Woche: links beginnen, gleicher Abstand – nicht über die Breite verteilt */
+  table.stapel td.aktion {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  table.stapel td.aktion .knopf + .knopf {
+    margin-left: 0;
+  }
+}
+
+/* ---------- Jahreskalender am Handy: je Azubi eine Karte ---------- */
+.jk-karten > section {
+  margin-bottom: 20px;
+}
+
+.jk-karten h2 {
+  margin: 0 0 8px;
+}
+
+.jk-karte {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.jk-karte header {
+  display: flex;
+  flex-direction: column;
+}
+
+.jk-karte header a {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.jk-mini-monate {
+  position: relative;
+  height: 16px;
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.jk-mini-monate span {
+  position: absolute;
+  text-align: center;
+}
+
+.jk-mini-monate span.jetzt {
+  color: var(--c-accent);
+}
+
+.jk-bahn.klein {
+  height: 38px;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.jk-bahn.klein .jk-balken {
+  height: 10px;
+  min-width: 2px;
+  padding: 0;
+  border-radius: 2px;
+}
+
+.jk-bahn.klein .jk-balken.schule {
+  top: 3px;
+}
+
+.jk-bahn.klein .jk-balken.einsatz {
+  top: 14px;
+}
+
+.jk-bahn.klein .jk-balken.urlaub {
+  top: 25px;
+  height: 8px;
+}
+
+.jk-bahn.klein .jk-pruefung::after {
+  display: none;
+}
+
+.jk-karte-titel {
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.jk-zeilen {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jk-zeilen li {
+  display: grid;
+  grid-template-columns: 62px 96px 1fr;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.jk-zeilen li.jetzt .jk-wann {
+  font-weight: 700;
+}
+
+.jk-marke {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.jk-marke.schule {
+  background: var(--c-schule-soft);
+  color: var(--c-schule);
+}
+
+.jk-marke.einsatz {
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+}
+
+.jk-marke.urlaub {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+}
+
+.jk-marke.pruefung {
+  background: var(--c-rot-bg);
+  color: var(--c-rot-fg);
+}
+
+.jk-wann {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.jk-was {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.jk-karte-fuss {
+  margin: 0;
+}
+
+.jk-karte .klapp .jk-zeilen {
+  padding-top: 4px;
+}
+
+/* Tablet: Die Knöpfe einer Zeile dürfen umbrechen – sonst wird die Tabelle breiter als der Bildschirm. */
+@media (min-width: 701px) and (max-width: 1023px) {
+  td.aktion {
+    white-space: normal;
+  }
+
+  td.aktion .knopf {
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+}
