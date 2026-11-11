@@ -29,7 +29,7 @@ const BEDIENUNG: Kapitel = {
   inhalt: (
     <ul className="punkte">
       <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
-      <li>Die Glocke oben rechts zeigt, was es Neues gibt: neue Einträge im Ausbildungsplan und Neues zu Berichten (eingereicht, abgezeichnet, zurückgegeben). Die Zahl sagt, wie viel neu ist. Ein Tipp auf eine Zeile führt dich direkt dorthin. Was du selbst gemacht hast, steht dort nicht.</li>
+      <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
       <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
       <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
       <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
@@ -37,6 +37,37 @@ const BEDIENUNG: Kapitel = {
     </ul>
   ),
 };
+
+const GLOCKE = (rolle: Rolle): Kapitel => ({
+  id: 'glocke',
+  titel: 'Die Glocke: Was gibt es Neues?',
+  inhalt: (
+    <>
+      <p>Oben rechts steht eine Glocke. Eine rote Zahl daran sagt dir, wie viel seit deinem letzten Blick neu ist.</p>
+      <dl className="begriffe">
+        {rolle === 'azubi' ? (
+          <>
+            <Begriff wort="Neuer Eintrag im Ausbildungsplan">Dein Ausbilder oder ein Ausbildungsbeauftragter hat etwas in deinen Plan eingetragen.</Begriff>
+            <Begriff wort="Bericht abgezeichnet">Der Bericht ist unterschrieben und damit fertig.</Begriff>
+            <Begriff wort="Bericht zurückgegeben">Du sollst etwas ändern. Ein Tipp auf die Zeile öffnet den Bericht, dort steht der Grund.</Begriff>
+          </>
+        ) : (
+          <>
+            <Begriff wort="Bericht wartet auf Abzeichnung">Ein Azubi hat einen Bericht eingereicht. Die Zeile führt zu „Abzeichnen“.</Begriff>
+            <Begriff wort="Neuer Eintrag im Ausbildungsplan">Ein Azubi hat eine eigene Aufgabe oder Notiz eingetragen – oder eine andere betreuende Person hat etwas geplant.</Begriff>
+          </>
+        )}
+      </dl>
+      <ul className="punkte">
+        <li>Ein Tipp auf eine Zeile führt direkt zum Plan oder zum Bericht.</li>
+        <li>Sobald du die Glocke öffnest, verschwindet die Zahl. Die Zeilen bleiben stehen, damit du später noch einmal nachsehen kannst.</li>
+        <li>Mehrere gleiche Dinge an einem Tag stehen in einer Zeile, zum Beispiel „3 Berichte abgezeichnet“.</li>
+        <li>Was du selbst gemacht hast, steht nicht in der Glocke. Nach 60 Tagen werden die Zeilen gelöscht.</li>
+        <li>Eine E-Mail oder Mitteilung aufs Handy schickt das Portal nicht – sieh also regelmäßig hinein.</li>
+      </ul>
+    </>
+  ),
+});
 
 const APP: Kapitel = {
   id: 'app',
@@ -122,7 +153,7 @@ const AZUBI: Kapitel[] = [
             Öffne das <Link zu="/berichtsheft">Berichtsheft</Link> und wähle bei der Woche „Schreiben“.
           </li>
           <li>
-            Trag ein, was du gemacht hast, und wie viele Stunden es waren:
+            Trag ein, was du gemacht hast, und wie viele Stunden es waren. Die Seite hat vier Teile. „Betriebliche Tätigkeiten“ ist offen; die anderen öffnest du mit „Eintragen“, wenn du sie brauchst:
             <ul className="punkte">
               <li>
                 <strong>Betriebliche Tätigkeiten</strong> – deine Arbeit im Betrieb.
@@ -138,7 +169,7 @@ const AZUBI: Kapitel[] = [
               </li>
             </ul>
           </li>
-          <li>Die Summe sollte ungefähr zu deinen Wochenstunden passen. Das Portal zeigt dir, wie viel fehlt oder zu viel ist.</li>
+          <li>Unter „Deine Woche“ (am Handy in der Leiste unten) siehst du beim Schreiben, wie viele Stunden schon drinstehen und wie viele noch fehlen. Die Summe sollte ungefähr zu deinen Wochenstunden passen.</li>
           <li>
             Noch nicht fertig? <strong>„Als Entwurf speichern“</strong>. Den Entwurf siehst nur du.
           </li>
@@ -185,6 +216,7 @@ const AZUBI: Kapitel[] = [
       </dl>
     ),
   },
+  GLOCKE('azubi'),
   APP,
   BEDIENUNG,
 ];
@@ -336,6 +368,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
       <p>Azubis sehen nur ihre eigenen Daten. Ihre Startseite ist der Ausbildungsplan; im Berichtsheft schreiben und reichen sie ein. Was genau sie lesen, steht im Handbuch für Azubis{rolle === 'ausbilder' || rolle === 'beauftragter' ? ' (Reiter oben)' : ''}.</p>
     ),
   },
+  GLOCKE(rolle),
   APP,
   BEDIENUNG,
 ];

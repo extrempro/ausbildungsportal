@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.17.0] – 2026-11-11
+
+### Geändert
+
+- Bericht schreiben, neu gegliedert: Jeder der vier Teile (Betriebliche Tätigkeiten, Unterweisungen, Berufsschule, Abwesenheit) ist eine eigene Karte mit Nummer und den Stunden dieses Teils. Teile, in denen diese Woche nichts steht, sind nur eine Zeile mit „Eintragen“ – steht Berufsschule im Ausbildungsplan, ist der Teil gleich offen.
+- Neben dem Formular steht „Deine Woche“: Stunden mit Balken, was noch fehlt, die Aufteilung nach Teilen, ob schon gespeichert ist, und die Knöpfe „Einreichen“ und „Als Entwurf speichern“. Am PC bleibt das beim Scrollen stehen; auf Handy und Tablet bleiben Summe und Knöpfe als Leiste am unteren Rand erreichbar.
+- Zeilen sind nummeriert; bei der Abwesenheit wird der nächste freie Tag der Woche vorgeschlagen.
+- Handbuch: eigenes Kapitel „Die Glocke: Was gibt es Neues?“ für Azubis, Ausbilder und Ausbildungsbeauftragte.
+
 ## [0.16.0] – 2026-11-10
 
 Einheitliche Bedienung: Die Anwendung wurde Seite für Seite auf gleiche Abläufe, Beschriftungen und Rückmeldungen durchgesehen (Maßstab: ISO 9241-110).
