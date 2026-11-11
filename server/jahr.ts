@@ -25,14 +25,15 @@ function kalenderVon(c: Ctx, azubiId: number, jahr: number, tag: string) {
     db.prepare("SELECT art, von, bis, titel FROM plan_eintrag WHERE azubi_id = ? AND art IN ('schule', 'einsatz') AND von <= ? AND bis >= ? ORDER BY von, id").all(azubiId, bis, plusTage(von, -6)) as unknown as { art: 'schule' | 'einsatz'; von: string; bis: string; titel: string }[]
   ).map((e) => ({ art: e.art, von: e.von, bis: plusTage(e.bis, 6), titel: e.titel }));
   const urlaub = new Set<string>();
-  for (const z of db.prepare('SELECT inhalt FROM bericht WHERE azubi_id = ? AND montag >= ? AND montag <= ?').all(azubiId, plusTage(von, -6), bis) as unknown as { inhalt: string }[]) {
+  const eigener = c.b.id === azubiId;
+  // Urlaub steht in den Berichten. Entwürfe sieht nur der Azubi selbst – andere erfahren den Urlaub erst mit dem Einreichen.
+  for (const z of db.prepare(`SELECT inhalt FROM bericht WHERE azubi_id = ? AND montag >= ? AND montag <= ?${eigener ? '' : " AND status != 'entwurf'"}`).all(azubiId, plusTage(von, -6), bis) as unknown as { inhalt: string }[]) {
     try {
       for (const a of (JSON.parse(z.inhalt) as { abwesenheit?: { tag: string; grund: string }[] }).abwesenheit ?? []) if (a.grund === 'urlaub' && a.tag >= von && a.tag <= bis) urlaub.add(a.tag);
     } catch {
       // unlesbarer Bericht: kein Urlaub daraus
     }
   }
-  const eigener = c.b.id === azubiId;
   const termine = eigener
     ? (db.prepare("SELECT tag, zeit_von AS zeitVon, titel FROM plan_eintrag WHERE azubi_id = ? AND art = 'termin' AND tag >= ? AND tag <= ? ORDER BY tag, zeit_von, id").all(azubiId, von, bis) as unknown as { tag: string; zeitVon: string; titel: string }[]).map((t) => ({ tag: t.tag, zeitVon: t.zeitVon, titel: t.titel }))
     : [];

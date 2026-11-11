@@ -63,8 +63,8 @@ export function PdfKnopf({ pfad, text, klasse = 'knopf schlicht', gesperrt, symb
       <button
         type="button"
         className={symbol ? `${klasse} symbol pdf-symbol` : klasse}
-        title={symbol ? (laeuft ? 'PDF wird erstellt …' : text) : undefined}
-        aria-label={symbol ? text : undefined}
+        title={symbol ? (laeuft ? 'PDF wird erstellt …' : (gesperrt ?? text)) : undefined}
+        aria-label={symbol ? (gesperrt ? `${text} – ${gesperrt}` : text) : undefined}
         aria-busy={laeuft || undefined}
         disabled={laeuft || !!gesperrt}
         onClick={() => {
@@ -132,8 +132,10 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
   const logo = useDruckLogo();
   const azubi = b.signaturen.find((s) => s.art === 'azubi');
   const abzeichnung = b.signaturen.find((s) => s.art === 'abzeichnung');
+  // nicht abgezeichnete Berichte sind auf dem Blatt unübersehbar gekennzeichnet – am Bildschirm, im Ausdruck und im PDF
+  const vermerk = b.status === 'abgezeichnet' ? '' : b.status === 'eingereicht' ? 'Nicht abgezeichnet' : 'Entwurf';
   return (
-    <article className="blatt">
+    <article className={`blatt${vermerk ? ' offen' : ''}`} data-vermerk={vermerk || undefined}>
       <header className="blatt-kopf">
         <div>
           <strong>Ausbildungsnachweis</strong> · Woche {b.kw}/{b.jahr} · {wocheText(b.montag, b.sonntag)}
@@ -145,6 +147,7 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
         </div>
         {/* ein Ausdruck vor dem Einreichen ist als solcher zu erkennen */}
         {(b.status === 'fehlt' || b.status === 'entwurf' || b.status === 'zurueck') && <div className="blatt-entwurf">Entwurf – noch nicht eingereicht und nicht unterschrieben</div>}
+        {b.status === 'eingereicht' && <div className="blatt-entwurf">Eingereicht – noch nicht abgezeichnet</div>}
       </header>
 
       {ABSCHNITTE.map((a) => (

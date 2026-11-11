@@ -148,7 +148,8 @@ export function dauerVon(db: DB, p: Profil): Dauer | null {
 
 /** Wie viele Berichte warten, zurückgegeben sind oder für vergangene Wochen fehlen. */
 function berichtStand(db: DB, azubiId: number, beginn: string | null, ende: string | null, tag: string) {
-  const zeilen = db.prepare('SELECT montag, status FROM bericht WHERE azubi_id = ?').all(azubiId) as unknown as { montag: string; status: string }[];
+  // für Ausbilder und Beauftragte: Entwürfe sieht nur der Azubi, sie zählen hier als fehlend
+  const zeilen = db.prepare("SELECT montag, status FROM bericht WHERE azubi_id = ? AND status != 'entwurf'").all(azubiId) as unknown as { montag: string; status: string }[];
   const wartend = zeilen.filter((b) => b.status === 'eingereicht').length;
   const zurueck = zeilen.filter((b) => b.status === 'zurueck').length;
   let fehlend = 0;

@@ -244,6 +244,19 @@ export class PdfSeite {
     this.befehle.push(`BT ${z(r)} ${z(g)} ${z(b)} rg /${o.fett ? 'F2' : 'F1'} ${z(groesse)} Tf ${z(links)} ${z(A4.hoehe - y)} Td <${hex}> Tj ET`);
   }
 
+  /** Großer, blasser Schriftzug schräg über die Seite – steht hinter allem, was danach gezeichnet wird. */
+  wasserzeichen(text: string, groesse = 64): void {
+    const winkel = (35 * Math.PI) / 180;
+    const cos = Math.cos(winkel);
+    const sin = Math.sin(winkel);
+    const breite = textBreite(text, groesse, true);
+    // Mitte des Schriftzugs auf die Mitte der Seite
+    const x = A4.breite / 2 - (breite / 2) * cos + (groesse * 0.35) * sin;
+    const y = A4.hoehe / 2 - (breite / 2) * sin - (groesse * 0.35) * cos;
+    const hex = alsCp1252(text).map((b) => b.toString(16).padStart(2, '0')).join('');
+    this.befehle.push(`BT 0.86 0.87 0.9 rg /F2 ${z(groesse)} Tf ${cos.toFixed(4)} ${sin.toFixed(4)} ${(-sin).toFixed(4)} ${cos.toFixed(4)} ${z(x)} ${z(y)} Tm <${hex}> Tj ET`);
+  }
+
   linie(x1: number, y1: number, x2: number, y2: number, o: { dicke?: number; farbe?: Farbe } = {}): void {
     const [r, g, b] = o.farbe ?? SCHWARZ;
     this.befehle.push(`q ${z(r)} ${z(g)} ${z(b)} RG ${z(o.dicke ?? 0.5)} w ${z(x1)} ${z(A4.hoehe - y1)} m ${z(x2)} ${z(A4.hoehe - y2)} l S Q`);

@@ -71,7 +71,9 @@ export function berichtsheftPdf(a: HeftAngaben): Buffer {
     if (erster.kopf.betrieb) zeilen.push(['Ausbildungsbetrieb', erster.kopf.betrieb]);
     if (letzter.kopf.ausbilder) zeilen.push(['Ausbilder/in', letzter.kopf.ausbilder]);
     zeilen.push(['Zeitraum', `${zeitraum}${a.ausbildungsjahr ? ` (${a.ausbildungsjahr}. Ausbildungsjahr)` : ''}`]);
-    zeilen.push(['Inhalt', `${a.berichte.length === 1 ? '1 Wochenbericht' : `${a.berichte.length} Wochenberichte`}, ${abgezeichnet} davon abgezeichnet${!a.nurAbgezeichnete && abgezeichnet < a.berichte.length ? ' – nicht abgezeichnete Berichte sind als solche zu erkennen' : ''}`]);
+    const offen = a.berichte.length - abgezeichnet;
+    const anzahl = a.berichte.length === 1 ? '1 Wochenbericht' : `${a.berichte.length} Wochenberichte`;
+    zeilen.push(['Inhalt', offen === 0 ? `${anzahl}, ${a.berichte.length === 1 ? 'abgezeichnet' : 'alle abgezeichnet'}` : `${anzahl}: ${abgezeichnet} abgezeichnet, ${offen} nicht abgezeichnet (als solche gekennzeichnet)`]);
     const links = 110;
     const spalte = 135;
     for (const [name, wert] of zeilen) {
@@ -101,7 +103,10 @@ function zeichneBericht(dok: PdfDokument, b: BerichtFuerPdf, logo: number | null
   let y = 0;
 
   /** Kopf einer Seite; auf Folgeseiten kürzer */
+  const vermerk = b.status === 'abgezeichnet' ? '' : b.status === 'eingereicht' ? 'NICHT ABGEZEICHNET' : 'ENTWURF';
   const kopf = (fortsetzung: boolean) => {
+    // nicht abgezeichnete Berichte sind auf jeder Seite unübersehbar gekennzeichnet
+    if (vermerk) s.wasserzeichen(vermerk, vermerk.length > 10 ? 50 : 84);
     y = 56;
     s.text(RAND, y, 'Ausbildungsnachweis', { groesse: 12, fett: true });
     const rest = ` · ${woche(b)}${fortsetzung ? ' · Fortsetzung' : b.ausbildungsjahr ? ` · ${b.ausbildungsjahr}. Ausbildungsjahr` : ''}`;

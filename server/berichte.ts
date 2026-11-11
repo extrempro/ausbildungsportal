@@ -140,6 +140,14 @@ function vorbelegung(db: DB, montag: string, wochenstunden: number): Inhalt {
 
 // ---------- Lesen ----------
 
+/**
+ * Was jemand von einem Bericht sehen darf: Ein Entwurf gehört dem Azubi allein. Erst mit dem Einreichen sehen ihn
+ * Ausbilder und Beauftragte; ein zurückgegebener Bericht bleibt für sie sichtbar (sie haben ihn schon gelesen).
+ */
+function sichtbar<T extends { status: string }>(z: T | undefined, eigener: boolean): T | undefined {
+  return z && (eigener || z.status !== 'entwurf') ? z : undefined;
+}
+
 function holeBericht(db: DB, azubiId: number, montag: string): BerichtZeile | undefined {
   return db.prepare('SELECT * FROM bericht WHERE azubi_id = ? AND montag = ?').get(azubiId, montag) as BerichtZeile | undefined;
 }
@@ -195,8 +203,9 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
   const tag = heute(c.k.jetzt());
   const profil = leseProfil(db, azubi.id);
   const dauer = dauerVon(db, profil);
-  const z = holeBericht(db, azubi.id, montag);
   const eigener = c.b.rolle === 'azubi' && c.b.id === azubi.id;
+  // Entwürfe sieht nur der Azubi selbst – für alle anderen gibt es die Woche noch nicht
+  const z = sichtbar(holeBericht(db, azubi.id, montag), eigener);
   const status = z?.status ?? null;
   const inhalt = z ? inhaltAus(z) : vorbelegung(db, montag, profil.wochenstunden);
   const zeichnet = darfAbzeichnen(db, c.b, azubi.id, montag);
@@ -216,8 +225,8 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
     plan: planDerWoche(db, azubi.id, montag, eigener),
     eingereichtAm: z?.eingereicht_am ?? null,
     abgezeichnetAm: z?.abgezeichnet_am ?? null,
-    signaturen: db.prepare('SELECT art, name, rolle, pfad, zeit FROM bericht_signatur WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag),
-    verlauf: db.prepare('SELECT zeit, aktion, name, rolle, kommentar FROM bericht_verlauf WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag),
+    signaturen: z ? db.prepare('SELECT art, name, rolle, pfad, zeit FROM bericht_signatur WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag) : [],
+    verlauf: z || eigener ? db.prepare('SELECT zeit, aktion, name, rolle, kommentar FROM bericht_verlauf WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag) : [],
     kopf: {
       azubi: azubi.anzeigename,
       beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
@@ -298,7 +307,8 @@ export const BERICHT_ROUTEN: Route[] = [
       if (jahrRoh !== null && !/^[1-9]$/.test(jahrRoh)) throw new Fehler(400, 'Das Ausbildungsjahr ist ungültig');
       const jahr = jahrRoh === null ? null : Number(jahrRoh);
       const nurAbgezeichnete = q.get('nur') === 'abgezeichnet';
-      const montage = (db.prepare('SELECT montag FROM bericht WHERE azubi_id = ? ORDER BY montag').all(azubi.id) as { montag: string }[]).map((z) => z.montag);
+      const eigener = c.b.rolle === 'azubi' && c.b.id === azubi.id;
+      const montage = (db.prepare('SELECT montag, status FROM bericht WHERE azubi_id = ? ORDER BY montag').all(azubi.id) as { montag: string; status: string }[]).filter((z) => sichtbar(z, eigener)).map((z) => z.montag);
       const berichte = montage
         .filter((m) => woche === null || m === woche)
         .map((m) => berichtAnsicht(c, azubi, m))
@@ -335,7 +345,8 @@ export const BERICHT_ROUTEN: Route[] = [
       const tag = heute(c.k.jetzt());
       const profil = leseProfil(db, azubi.id);
       const dauer = dauerVon(db, profil);
-      const vorhanden = new Map((db.prepare('SELECT * FROM bericht WHERE azubi_id = ?').all(azubi.id) as unknown as BerichtZeile[]).map((z) => [z.montag, z]));
+      const eigener = c.b.rolle === 'azubi' && c.b.id === azubi.id;
+      const vorhanden = new Map((db.prepare('SELECT * FROM bericht WHERE azubi_id = ?').all(azubi.id) as unknown as BerichtZeile[]).filter((z) => sichtbar(z, eigener)).map((z) => [z.montag, z]));
       // Wochen der Ausbildung bis heute, dazu alle vorhandenen Berichte (falls der Beginn später geändert wurde)
       const montage = new Set([...(dauer ? ausbildungswochen(dauer.beginn, dauer.ende, tag) : []), ...vorhanden.keys()]);
       const wochen = [...montage]

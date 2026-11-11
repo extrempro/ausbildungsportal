@@ -352,8 +352,9 @@ test('Berichtsheft als PDF: Deckblatt, Auswahl, einzelne Woche, lange Berichte; 
   const a = lies(alle.datei!.inhalt);
   // Deckblatt + langer Bericht (2 Seiten) + 2 Berichte
   assert.equal(a.seiten, 5);
-  for (const erwartet of ['Berichtsheft', 'Anna Azubi', 'Muster GmbH', '19.10.2026 bis 08.11.2026', '3 Wochenberichte, 1 davon abgezeichnet', 'Woche 43/2026', 'Fortsetzung', 'Tätigkeit 30:', 'Switch konfiguriert', 'VLANs eingerichtet', '06.11.2026 · Urlaub'.replace('·', '\xb7'), 'Summe: 41,5 Stunden', 'Entwurf \x96 noch nicht eingereicht und nicht unterschrieben', 'Seite 5 von 5']) {
-    assert.ok(a.text.includes(erwartet), `im PDF steht: ${erwartet}`);
+  for (const erwartet of ['Berichtsheft', 'Anna Azubi', 'Muster GmbH', '19.10.2026 bis 08.11.2026', '3 Wochenberichte: 1 abgezeichnet, 2 nicht abgezeichnet (als solche gekennzeichnet)', 'Woche 43/2026', 'Fortsetzung', 'Tätigkeit 30:', 'Switch konfiguriert', 'VLANs eingerichtet', '06.11.2026 · Urlaub'.replace('·', '\xb7'), 'Summe: 41,5 Stunden', 'Entwurf \x96 noch nicht eingereicht und nicht unterschrieben', 'Seite 5 von 5']) {
+    // lange Angaben auf dem Deckblatt laufen über mehrere Zeilen
+    assert.ok(a.text.includes(erwartet) || a.text.replace(/\n/g, ' ').includes(erwartet), `im PDF steht: ${erwartet}`);
   }
   assert.ok(a.text.includes('\x84B\xfcro 1\x93'), 'Umlaute und deutsche Anführungszeichen stimmen');
   assert.equal((a.roh.match(/\/Subtype \/Image/g) ?? []).length, 2, 'Logo mit Durchsichtigkeit: Bild und Maske');
@@ -364,7 +365,9 @@ test('Berichtsheft als PDF: Deckblatt, Auswahl, einzelne Woche, lange Berichte; 
 
   const nur = lies((await hole('?nur=abgezeichnet&deckblatt=0')).datei!.inhalt);
   assert.equal(nur.seiten, 1);
-  assert.ok(!nur.text.includes('Entwurf') && nur.text.includes('Woche 45/2026'));
+  assert.ok(!nur.text.includes('Entwurf') && !nur.text.includes('ENTWURF') && nur.text.includes('Woche 45/2026'));
+  // nicht abgezeichnete Berichte tragen den Vermerk quer über jede ihrer Seiten: der lange Entwurf zweimal, der kurze einmal
+  assert.equal((a.text.match(/^ENTWURF$/gm) ?? []).length, 3);
   const woche = await hole('?woche=2026-10-26');
   assert.equal(woche.datei!.dateiname, 'Ausbildungsnachweis Anna Azubi KW 44-2026.pdf');
   assert.equal(lies(woche.datei!.inhalt).seiten, 1, 'eine einzelne Woche hat kein Deckblatt');
@@ -383,4 +386,52 @@ test('Berichtsheft als PDF: Deckblatt, Auswahl, einzelne Woche, lange Berichte; 
   w.u.db.prepare("UPDATE einstellungen SET wert = 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==' WHERE schluessel = 'branding_logo'").run();
   const ohne = lies((await hole()).datei!.inhalt);
   assert.equal([ohne.seiten, (ohne.roh.match(/\/Subtype \/Image/g) ?? []).length].join(), '5,0');
+});
+
+test('Entwürfe gehören dem Azubi allein: Ausbilder und Beauftragte sehen sie nirgends – erst nach dem Einreichen', async () => {
+  const w = await welt();
+  zuweisen(w.u.db, w.azubi, w.beauftragter);
+  assert.equal((await schreibe(w)).status, 200);
+  const liste = async (wer: BenutzerZeile, frage = '') => koerper(await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichte${frage}`, { cookies: als(w, wer) }));
+  const wocheVon = async (wer: BenutzerZeile) => (await liste(wer)).wochen.find((x: { montag: string }) => x.montag === WOCHE);
+  const karte = async () => koerper(await ruf(w.u, 'GET', '/api/azubis', { cookies: als(w, w.ausbilder) })).azubis.find((a: { id: number }) => a.id === w.azubi.id).berichte;
+  const fehlendVorher = (await karte()).fehlend;
+
+  // der Azubi selbst sieht seinen Entwurf
+  assert.deepEqual([(await wocheVon(w.azubi)).status, (await wocheVon(w.azubi)).stunden], ['entwurf', 41.5]);
+  assert.equal((await lies(w, w.azubi)).inhalt.betrieb[0].text, 'Switch konfiguriert\nVLANs eingerichtet');
+  assert.equal((await liste(w.azubi, '?voll=1')).berichte.length, 1);
+
+  for (const wer of [w.ausbilder, w.beauftragter]) {
+    // in der Liste zählt die Woche als „fehlt“, ohne Stunden
+    assert.deepEqual([(await wocheVon(wer)).status, (await wocheVon(wer)).stunden], ['fehlt', 0], wer.rolle);
+    // die Einzelansicht zeigt nichts vom Entwurf
+    const b = await lies(w, wer);
+    assert.equal(b.status, 'fehlt', wer.rolle);
+    assert.ok(!JSON.stringify(b).includes('Switch konfiguriert') && !JSON.stringify(b).includes('Brandschutz'), `${wer.rolle}: kein Inhalt des Entwurfs`);
+    assert.deepEqual([b.signaturen, b.verlauf], [[], []]);
+    // weder im Sammeldruck noch im PDF
+    assert.deepEqual((await liste(wer, '?voll=1')).berichte, [], wer.rolle);
+    assert.equal((await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichtsheft.pdf`, { cookies: als(w, wer) })).status, 404, wer.rolle);
+    assert.equal((await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichtsheft.pdf?woche=${WOCHE}`, { cookies: als(w, wer) })).status, 404, wer.rolle);
+  }
+  // auf der Karte des Azubis zählt der Entwurf wie eine fehlende Woche
+  assert.ok(fehlendVorher >= 1);
+
+  // nach dem Einreichen sehen ihn alle; zieht der Azubi zurück, ist er wieder nur seiner
+  assert.equal((await reicheEin(w)).status, 200);
+  assert.equal((await karte()).fehlend, fehlendVorher - 1);
+  for (const wer of [w.ausbilder, w.beauftragter]) {
+    assert.equal((await wocheVon(wer)).status, 'eingereicht');
+    assert.equal((await lies(w, wer)).inhalt.unterweisung[0].text, 'Brandschutz');
+    assert.equal((await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichtsheft.pdf`, { cookies: als(w, wer) })).status, 200);
+  }
+  assert.equal((await ruf(w.u, 'POST', pfad(w.azubi, WOCHE, 'zurueckziehen'), { cookies: als(w, w.azubi) })).status, 200);
+  assert.equal((await wocheVon(w.ausbilder)).status, 'fehlt');
+  assert.deepEqual((await lies(w, w.ausbilder)).verlauf, []);
+  assert.ok((await lies(w, w.azubi)).verlauf.length > 0, 'der Azubi sieht den Verlauf weiter');
+  // zurückgegeben: bleibt für die Ausbilderin sichtbar
+  await reicheEin(w);
+  assert.equal((await ruf(w.u, 'POST', pfad(w.azubi, WOCHE, 'zurueckgeben'), { cookies: als(w, w.ausbilder), body: { kommentar: 'Bitte genauer.' } })).status, 200);
+  assert.equal((await wocheVon(w.ausbilder)).status, 'zurueck');
 });
