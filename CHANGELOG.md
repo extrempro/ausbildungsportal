@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.29.2] – 2026-11-11
+
+### Geändert
+
+- Lernmodul: Vor dem Umstellen der Ampel fragt das Portal nach („Ampel umstellen? … steht auf „Offen“ und wechselt auf „Sicher““). Erst nach der Bestätigung wird gespeichert. Die Meldung nach dem Speichern entfällt – die Ampel zeigt den neuen Stand.
+
 ## [0.29.1] – 2026-11-11
 
 ### Geändert

@@ -386,7 +386,7 @@ const AZUBI: Kapitel[] = [
         <ol className="schritte">
           <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
           <li>Beim Unterthema „Cheatsheet“ aufklappen und lesen.</li>
-          <li>Die Ampel einstellen. Sie wird sofort gespeichert; unten erscheint kurz eine Bestätigung. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
+          <li>Die Ampel einstellen. Das Portal fragt nach, ob du wirklich umstellen willst – so ändert ein versehentlicher Klick nichts. Nach „Auf … stellen“ ist der neue Stand gespeichert. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
           <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
         </ol>
         <ul className="punkte">
