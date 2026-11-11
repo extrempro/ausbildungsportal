@@ -1,4 +1,6 @@
 import { resolve } from 'node:path';
+import { istMailAdresse } from './smtp';
+import type { SmtpEinstellung } from './smtp';
 
 export interface EntraEinstellung {
   tenantId: string;
@@ -28,6 +30,8 @@ export interface Config {
   fehlerWebhook: string | null;
   /** auch den Text der Meldung an Teams schicken (sonst nur: dass eine Meldung da ist) */
   fehlerWebhookMitText: boolean;
+  /** Mailserver für die Mail an die Personalstelle (Urlaub); null = kein Mailversand */
+  smtp: SmtpEinstellung | null;
   adminBenutzer: string;
   adminPasswort: string;
 }
@@ -68,6 +72,23 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     if (!ziel || ziel.protocol !== 'https:') throw new Error('FEHLER_WEBHOOK_URL muss eine vollständige https-Adresse sein');
   }
 
+  let smtp: SmtpEinstellung | null = null;
+  const smtpHost = (env.SMTP_HOST || '').trim();
+  if (smtpHost) {
+    const sicherheit = (env.SMTP_SICHERHEIT || 'starttls').trim().toLowerCase();
+    if (sicherheit !== 'starttls' && sicherheit !== 'tls' && sicherheit !== 'keine') throw new Error('SMTP_SICHERHEIT muss starttls, tls oder keine sein');
+    const smtpPort = env.SMTP_PORT ? Number(env.SMTP_PORT) : sicherheit === 'tls' ? 465 : sicherheit === 'keine' ? 25 : 587;
+    if (!Number.isInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535) throw new Error('SMTP_PORT ist keine gültige Portnummer');
+    const absender = (env.SMTP_ABSENDER || '').trim();
+    if (!istMailAdresse(absender)) throw new Error('SMTP_ABSENDER muss eine Mail-Adresse sein, z. B. ausbildungsportal@firma.de');
+    const benutzer = (env.SMTP_BENUTZER || '').trim();
+    const passwort = env.SMTP_PASSWORT || '';
+    if (!!benutzer !== !!passwort) throw new Error('SMTP_BENUTZER und SMTP_PASSWORT gehören zusammen – beide setzen oder beide leer lassen');
+    if (benutzer && sicherheit === 'keine') throw new Error('Mit SMTP_SICHERHEIT=keine ist keine Anmeldung möglich – das Passwort ginge unverschlüsselt über das Netz');
+    if (/[\s<>]/.test(smtpHost)) throw new Error('SMTP_HOST ist kein gültiger Servername');
+    smtp = { host: smtpHost, port: smtpPort, sicherheit, benutzer, passwort, absender };
+  }
+
   return {
     port,
     host: env.HOST || '0.0.0.0',
@@ -82,6 +103,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     devAnmeldung: !production && env.DEV_ANMELDUNG === 'true',
     fehlerWebhook,
     fehlerWebhookMitText: env.FEHLER_WEBHOOK_MIT_TEXT === 'true',
+    smtp,
     adminBenutzer: (env.ADMIN_BENUTZER || '').trim().toLowerCase(),
     adminPasswort: env.ADMIN_PASSWORT || '',
   };

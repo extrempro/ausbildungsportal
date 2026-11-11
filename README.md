@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.31.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.32.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -83,6 +83,9 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
 | `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
 | `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung nach Teams; Standard `false` |
+| `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle (siehe „Mail an die Personalstelle“) |
+| `SMTP_PORT`, `SMTP_SICHERHEIT` | Port und `starttls` (Vorgabe, Port 587), `tls` (Port 465) oder `keine` (Port 25, nur internes Relay ohne Anmeldung) |
+| `SMTP_BENUTZER`, `SMTP_PASSWORT` | Anmeldung am Mailserver, falls er eine verlangt |
 | `DEV_ANMELDUNG` | nur zum Entwickeln |
 
 
@@ -101,6 +104,33 @@ Gut zu wissen:
 - Gesendet werden Nummer, Rolle der meldenden Person, Seite, Version und ein Link ins Portal. Name und Bildschirmfoto bleiben im Portal; den Text der Meldung schickt das Portal nur mit `FEHLER_WEBHOOK_MIT_TEXT=true`.
 - Antwortet Teams nicht, wird die Meldung trotzdem gespeichert; der Grund steht im Log (`docker compose logs app`).
 - Die früheren „Eingehenden Webhooks“ (Office-365-Connectors) hat Microsoft eingestellt; das Portal schickt das Format, das die Workflows erwarten (Adaptive Card). Mit einem echten Teams-Kanal ist das noch nicht erprobt.
+
+### Mail an die Personalstelle
+
+Freiwillig: Wird ein Urlaub genehmigt oder ein genehmigter Urlaub storniert, schickt das Portal eine kurze Mail an die Personalstelle.
+
+1. In der `.env` den Mailserver eintragen, dann `docker compose up -d`:
+
+   ```
+   SMTP_HOST=mail.firma.de
+   SMTP_ABSENDER=ausbildungsportal@firma.de
+   SMTP_BENUTZER=ausbildungsportal@firma.de
+   SMTP_PASSWORT=…
+   ```
+
+   Vorgabe ist STARTTLS auf Port 587. Für Port 465 `SMTP_SICHERHEIT=tls`; für ein internes Relay ohne Anmeldung `SMTP_SICHERHEIT=keine` (Port 25).
+2. Als Ausbilder unter **Stammdaten → Betrieb** die Mail-Adresse der Personalstelle eintragen und speichern.
+3. Dort auf „Testmail an die Personalstelle senden“ klicken.
+
+Gut zu wissen:
+
+- Der Server muss den Mailserver erreichen können (ausgehende Verbindung auf dem SMTP-Port).
+- Das Passwort gehört nur in die `.env`. Es wird nie unverschlüsselt gesendet: Bietet der Server bei `starttls` keine Verschlüsselung an, geht nichts raus; mit `keine` ist keine Anmeldung möglich.
+- Das Zertifikat des Mailservers wird geprüft. Für eine firmeneigene Zertifizierungsstelle die Datei in den Container einbinden und `NODE_EXTRA_CA_CERTS` auf ihren Pfad setzen.
+- In der Mail stehen Name des Azubis, Zeitraum, Arbeitstage und wer bestätigt und entschieden hat – nicht die Bemerkung des Azubis und nicht die Begründung einer Stornierung.
+- Kommt die Mail nicht an, gilt die Genehmigung trotzdem. Am Antrag steht der Grund, im Log (`docker compose logs app`) ebenfalls; der Ausbilder kann erneut senden.
+- Unterstützt wird die Anmeldung mit Benutzer und Passwort (AUTH PLAIN oder LOGIN). **Microsoft 365 / Exchange Online** verlangt dafür „SMTP AUTH“ am Postfach; ist das im Tenant abgeschaltet, braucht es ein internes Relay oder einen Connector. OAuth-Anmeldung kann das Portal nicht.
+- Erprobt ist der Versand mit einem nachgestellten Mailserver in den Tests (auch STARTTLS und TLS), noch nicht mit einem echten Mailserver.
 
 ## Berufe, Feiertage und Ferien
 
@@ -157,7 +187,7 @@ Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchge
 - Protokoll über Anmeldungen und Änderungen (Konten, Zuweisungen, Stammdaten, Azubi-Profile), ohne Passwörter. Berichte und Pläne erscheinen dort nicht – auch nicht, wer wann eingereicht oder abgezeichnet hat; das steht nur im Verlauf des jeweiligen Berichts. Einsehen kann das Protokoll nur der Super-Admin.
 - Fehler melden: Jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt. Freiwillig lässt sich ein Bildschirmfoto anhängen (auswählen, einfügen oder am PC aufnehmen); der Browser verkleinert es auf höchstens 150 KB, die meldende Person sieht es vor dem Senden. Lesen, erledigen und löschen kann nur der Super-Admin. Eine automatische Löschfrist gibt es noch nicht.
 - **Jahreskalender:** ein Kalenderjahr auf einer Seite. Azubis sehen ihr Jahr Tag für Tag (Monate als Spalten), Ausbilder und Beauftragte alle ihre Azubis als Zeilen mit Balken für Berufsschule, Einsätze, Urlaub (genehmigte Anträge und Abwesenheiten aus eingereichten Berichten; beantragter Urlaub gestreift; Krankheit erscheint nicht) und Prüfungen. Nur zum Lesen. Er ersetzt die frühere „Übersicht“ über 26 Wochen.
-- **Urlaub beantragen:** Azubis stellen den Antrag im Portal (Zeitraum, freiwillige Bemerkung). Alle, denen der Azubi im Zeitraum zugewiesen ist, bestätigen; danach genehmigt der zuständige Ausbilder. Ablehnen und Stornieren nur mit Begründung, jeder Schritt steht im Verlauf des Antrags. Das Portal zählt Arbeitstage (Montag bis Freitag ohne Feiertage des Betriebs), führt je Azubi ein Urlaubskonto pro Kalenderjahr (Anspruch im Profil) und warnt bei Berufsschule, Prüfung oder zu wenig freien Tagen – es sperrt nichts. Genehmigter Urlaub steht im Jahreskalender, als Abwesenheit im Bericht der Woche und im Kalender-Abo. Keine halben Tage, kein Resturlaub aus dem Vorjahr, keine Krankmeldung. Die Mail an die Personalstelle folgt in der nächsten Version.
+- **Urlaub beantragen:** Azubis stellen den Antrag im Portal (Zeitraum, freiwillige Bemerkung). Alle, denen der Azubi im Zeitraum zugewiesen ist, bestätigen; danach genehmigt der zuständige Ausbilder. Ablehnen und Stornieren nur mit Begründung, jeder Schritt steht im Verlauf des Antrags. Das Portal zählt Arbeitstage (Montag bis Freitag ohne Feiertage des Betriebs), führt je Azubi ein Urlaubskonto pro Kalenderjahr (Anspruch im Profil) und warnt bei Berufsschule, Prüfung oder zu wenig freien Tagen – es sperrt nichts. Genehmigter Urlaub steht im Jahreskalender, als Abwesenheit im Bericht der Woche und im Kalender-Abo. Keine halben Tage, kein Resturlaub aus dem Vorjahr, keine Krankmeldung. Nach Genehmigung und Storno geht eine Mail an die Personalstelle (Adresse in den Stammdaten, Mailserver in der `.env`).
 - **Lernmodul (Stufe 2 von 4):** Lerninhalte je Ausbildungsberuf. Ein Ausbilder schaltet in den Stammdaten am Beruf ein Inhaltspaket ein; Azubis dieses Berufs sehen den Menüpunkt „Lernen“ mit Themenfeldern, Cheatsheets (Kernbegriffe, Tabellen, Befehle, Merksätze, Prüfungsfragen, Grafiken) und einer Ampel je Unterthema (Offen / In Arbeit / Sicher) samt Lernpunkt und Notiz. Das **Kompendium** sammelt alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen zum Nachschlagen – mit Suche und Filtern. **Der Lernstand ist privat:** Nur der Azubi selbst sieht ihn (Ampel, Lernpunkt, Notiz, Haken „Gelesen“); für Ausbilder, Beauftragte und Super-Admin gibt es keine Auswertung. Die Inhalte liegen als Dateien in `LERN_DIR` im Format des [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass) – Einrichtung in [lerninhalte/README.md](lerninhalte/README.md). Dazu das **Zusatzwissen** des Lernkompass (Texte, Vergleiche, Checklisten, Abläufe Schritt für Schritt) mit einem privaten Haken „Gelesen“. Üben und Prüfungsseite folgen in weiteren Stufen.
 - Kalender-Abo (ICS): Jedes Konto außer dem Super-Admin kann unter „Konto“ einen persönlichen, nur lesenden Link erstellen (`/api/abo/<Geheimnis>.ics`). Er liefert Schulblöcke, Einsätze und Prüfungstermine als ganztägige Termine – ohne Aufgaben, Notizen und Freitexte; im eigenen Kalender eines Azubis stehen dazu seine privaten Termine. Der Abruf braucht keine Anmeldung, nur den Link; die Rechte des Kontos werden bei jedem Abruf neu geprüft. Damit Outlook (neu/Web) und Google Kalender abrufen können, muss dieser Pfad aus dem Internet erreichbar sein.
 - Glocke mit Aktivitäten: Azubis sehen neue Einträge in ihrem Plan sowie abgezeichnete und zurückgegebene Berichte; Ausbilder und zugewiesene Beauftragte sehen neue Einträge und eingereichte Berichte ihrer Azubis. Gespeichert wird nur „wer, was, welche Woche, wann“ – keine Berichtsinhalte und keine Kommentare; nach 60 Tagen wird gelöscht. Der Super-Admin sieht davon nichts.

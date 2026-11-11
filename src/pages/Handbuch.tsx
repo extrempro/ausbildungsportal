@@ -406,7 +406,7 @@ const AZUBI: Kapitel[] = [
         <dl className="begriffe">
           <Begriff wort="Wartet auf Bestätigung">Deine Ausbildungsbeauftragten müssen zustimmen. Sind es mehrere, dann alle.</Begriff>
           <Begriff wort="Wartet auf Genehmigung">Jetzt entscheidet dein Ausbilder. Ist dir niemand zugewiesen, liegt der Antrag sofort bei ihm.</Begriff>
-          <Begriff wort="Genehmigt">Der Urlaub steht fest. Er erscheint von selbst im Jahreskalender, im Bericht der Woche und im abonnierten Kalender.</Begriff>
+          <Begriff wort="Genehmigt">Der Urlaub steht fest. Er erscheint von selbst im Jahreskalender, im Bericht der Woche und im abonnierten Kalender. Die Personalstelle bekommt vom Portal eine Mail mit deinem Namen und dem Zeitraum – deine Bemerkung steht nicht darin.</Begriff>
           <Begriff wort="Abgelehnt">Der Grund steht am Antrag. Du kannst einen neuen Antrag für eine andere Zeit stellen.</Begriff>
           <Begriff wort="Storniert">Dein Ausbilder hat einen genehmigten Urlaub wieder aufgehoben. Der Grund steht am Antrag.</Begriff>
         </dl>
@@ -679,6 +679,12 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>Ein Klick auf den Namen zeigt das Urlaubskonto des Azubis: Anspruch, genehmigt, beantragt, frei.{rolle === 'ausbilder' ? ' Den Anspruch trägst du im Profil des Azubis unter „Urlaubstage im Jahr“ ein.' : ' Den Anspruch trägt der Ausbilder im Profil ein.'} Resturlaub aus dem Vorjahr kennt das Portal nicht.</li>
           <li>Genehmigter Urlaub steht von selbst im Jahreskalender, im Bericht der Woche (als Abwesenheit) und im abonnierten Kalender des Azubis. Beantragter Urlaub steht im Jahreskalender gestreift.</li>
           <li>In der Glocke steht, wenn ein Antrag gestellt, bestätigt oder zurückgezogen wurde.</li>
+          <li>
+            <strong>Mail an die Personalstelle:</strong> Nach der Genehmigung und nach einer Stornierung schickt das Portal von selbst eine kurze Mail an die Personalstelle – mit Name, Zeitraum, Arbeitstagen und wer bestätigt und entschieden hat. Die Bemerkung des Azubis und die Begründung einer Stornierung stehen nicht darin.{' '}
+            {rolle === 'ausbilder'
+              ? 'Die Adresse trägst du in den Stammdaten ein. Kommt die Mail nicht raus, gilt die Genehmigung trotzdem: Am Antrag steht dann der Grund und der Knopf „Mail an die Personalstelle senden“.'
+              : 'Darum kümmert sich der Ausbilder.'}
+          </li>
           <li>Die Bemerkung des Azubis ist freiwillig. Bitte keine Gründe verlangen – erst recht keine zur Gesundheit.</li>
           <li>Krankmeldungen laufen nicht über das Portal.</li>
         </ul>
@@ -883,6 +889,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </p>
               <dl className="begriffe">
                 <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
+                <Begriff wort="Mail-Adresse der Personalstelle">Dorthin schickt das Portal eine kurze Mail, sobald ein Urlaub genehmigt oder storniert wurde. Genau eine Adresse, am besten ein Sammelpostfach. Mit „Testmail an die Personalstelle senden“ prüfst du, ob Mails ankommen. Der Knopf ist gesperrt, solange der Betreiber des Portals keinen Mailserver eingerichtet hat oder die Adresse fehlt.</Begriff>
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
                 <Begriff wort="Lernmodul">
                   Am Beruf lässt sich ein Paket mit Lerninhalten einschalten, sofern eines auf dem Server liegt. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“ mit Cheatsheets und einer Ampel zur Selbsteinschätzung. Den Lernstand sieht nur der Azubi selbst – du siehst ihn nicht, auch

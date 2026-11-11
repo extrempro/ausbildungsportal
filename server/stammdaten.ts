@@ -262,6 +262,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       body: {
         // die Adresse der Personalstelle brauchen nur Ausbilder
         betrieb: c.b.rolle === 'ausbilder' ? leseBetrieb(c.k.db) : { ...leseBetrieb(c.k.db), personalMail: '' },
+        // ist ein Mailserver eingerichtet? (für den Hinweis am Feld „Mail der Personalstelle“)
+        mailversand: c.k.cfg.smtp !== null,
         berufe: alleBerufe(c.k.db),
         berufsschulen: alleSchulen(c.k.db),
         bundeslaender: Object.entries(BUNDESLAENDER).map(([kuerzel, name]) => ({ kuerzel, name })),

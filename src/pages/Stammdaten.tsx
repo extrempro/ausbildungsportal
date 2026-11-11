@@ -165,6 +165,8 @@ export function Stammdaten() {
   const eingaben = useEingaben();
   const [daten, setDaten] = useState<Daten | null>(null);
   const [meldung, setMeldung] = useState<Meldung>(null);
+  const [test, setTest] = useState<Meldung>(null);
+  const [testLaeuft, setTestLaeuft] = useState(false);
 
   const lade = useCallback(async () => setDaten(await api<Daten>('GET', '/api/stammdaten')), []);
   useEffect(() => {
@@ -181,11 +183,25 @@ export function Stammdaten() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     try {
-      await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland') });
+      await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland'), personalMail: f.get('personalMail') });
       eingaben.gespeichert();
       await fertig('Angaben zum Betrieb gespeichert.');
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
+    }
+  };
+
+  // Testmail an die gespeicherte Adresse – Erfolg und Fehler stehen direkt am Feld
+  const sendeTestmail = async () => {
+    setTestLaeuft(true);
+    setTest(null);
+    try {
+      const r = await api<{ an: string }>('POST', '/api/urlaub/mail-test');
+      setTest({ text: `Die Testmail ist an ${r.an} gegangen. Bitte dort nachsehen, ob sie angekommen ist (auch im Spam-Ordner).`, fehler: false });
+    } catch (err) {
+      setTest({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
+    } finally {
+      setTestLaeuft(false);
     }
   };
 
@@ -230,10 +246,33 @@ export function Stammdaten() {
               ))}
             </select>
           </label>
+          <label className="ganz">
+            Mail-Adresse der Personalstelle (für genehmigten Urlaub)
+            <input name="personalMail" type="email" defaultValue={daten.betrieb.personalMail} maxLength={200} placeholder="personal@firma.de" autoComplete="off" />
+          </label>
           <div>
             <button className="knopf">Betrieb speichern</button>
           </div>
         </form>
+        <p className="leise klein">
+          An diese Adresse schickt das Portal eine kurze Mail, sobald ein Urlaub genehmigt oder storniert wurde. <HandbuchLink kapitel="urlaub">Urlaubsanträge</HandbuchLink>
+        </p>
+        {!daten.mailversand && (
+          <p className="hinweis" role="note">
+            <strong>Im Portal ist noch kein Mailversand eingerichtet</strong> – deshalb gehen im Moment keine Mails raus. Das richtet der Betreiber des Portals ein (Mailserver in der Datei <code>.env</code>, beschrieben in der README). Die Adresse kannst du schon eintragen.
+          </p>
+        )}
+        <p className="aktionen links">
+          <button type="button" className="knopf schlicht" disabled={!daten.mailversand || !daten.betrieb.personalMail || testLaeuft} onClick={() => void sendeTestmail()}>
+            Testmail an die Personalstelle senden
+          </button>
+          {daten.mailversand && !daten.betrieb.personalMail && <span className="leise klein"> Erst die Adresse eintragen und speichern.</span>}
+        </p>
+        {test && (
+          <p className={`hinweis${test.fehler ? ' fehler' : ' gut'}`} role={test.fehler ? 'alert' : 'status'}>
+            {test.text}
+          </p>
+        )}
       </section>
 
       <section className="karte">

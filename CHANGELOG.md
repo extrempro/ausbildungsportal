@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.32.0] – 2026-11-11
+
+### Neu
+
+- **Mail an die Personalstelle.** Sobald ein Urlaub genehmigt oder ein genehmigter Urlaub storniert wurde, schickt das Portal eine kurze Mail an die Personalstelle: Name, Zeitraum, Arbeitstage, wer bestätigt und entschieden hat. Die Bemerkung des Azubis und die Begründung einer Stornierung gehen nicht mit. Die Personalstelle braucht kein Konto.
+- Stammdaten → Betrieb: Feld „Mail-Adresse der Personalstelle“ und Knopf „Testmail an die Personalstelle senden“. Der Knopf ist gesperrt und erklärt, solange kein Mailserver eingerichtet ist oder die Adresse fehlt.
+- Versand über den Mailserver des Betriebs (SMTP): neue Einstellungen `SMTP_HOST`, `SMTP_ABSENDER`, `SMTP_PORT`, `SMTP_SICHERHEIT`, `SMTP_BENUTZER`, `SMTP_PASSWORT` in der `.env` (README: „Mail an die Personalstelle“). Ohne `SMTP_HOST` verschickt das Portal nichts. Das Passwort geht nie unverschlüsselt über das Netz, das Zertifikat des Mailservers wird geprüft.
+- **Die Genehmigung gilt auch, wenn die Mail nicht rausgeht.** Am Antrag sieht der zuständige Ausbilder, ob die Personalstelle informiert ist – sonst den Grund und den Knopf „Mail an die Personalstelle senden“. Das gilt auch für Urlaub, der vor dieser Version genehmigt wurde.
+- Handbuch: Urlaubsanträge und Stammdaten ergänzt.
+
 ## [0.31.0] – 2026-11-11
 
 ### Neu
@@ -18,7 +28,7 @@
 
 ### Noch offen
 
-- Die **Mail an die Personalstelle** nach Genehmigung und Storno folgt in der nächsten Version (Versand über SMTP). Der Server kennt die Adresse schon, in den Stammdaten erscheint das Feld mit dem Versand.
+- Die **Mail an die Personalstelle** nach Genehmigung und Storno folgt mit Version 0.32.0.
 - Bewusst nicht enthalten: halbe Tage, Resturlaub aus dem Vorjahr, andere Abwesenheiten (Krankheit, Sonderurlaub).
 
 ## [0.30.1] – 2026-11-11

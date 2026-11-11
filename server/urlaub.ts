@@ -9,6 +9,7 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { gueltigesDatum, montagVon, plusTage } from './kalender';
 import { darfAzubiSehen, darfAzubiVerwalten, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi } from './stammdaten';
+import { informierePersonal, mailHindernis, versende } from './urlaub-mail';
 
 /**
  * Urlaub beantragen.
@@ -150,14 +151,14 @@ function ansicht(c: Ctx, z: AntragZeile) {
     erstellt: z.erstellt,
     verlauf: (db.prepare('SELECT zeit, aktion, name, rolle, kommentar FROM urlaub_verlauf WHERE antrag_id = ? ORDER BY id').all(z.id) as unknown as Record<string, string>[]).map((v) => ({ zeit: v.zeit, aktion: v.aktion, name: v.name, rolle: v.rolle, kommentar: v.kommentar })),
     // den Stand der Mail sieht, wer genehmigt
-    mail: verwaltet && z.mail_stand ? { stand: z.mail_stand, fehler: z.mail_fehler } : null,
+    mail: verwaltet && (z.status === 'genehmigt' || z.status === 'storniert') ? { stand: z.mail_stand || 'offen', fehler: z.mail_fehler } : null,
     rechte: {
       zurueckziehen: offen && c.b.id === z.azubi_id,
       bestaetigen: wartetAufMich,
       ablehnen: offen && (wartetAufMich || verwaltet || bestaetigungen.some((b) => b.ich)),
       genehmigen: offen && verwaltet,
       stornieren: z.status === 'genehmigt' && verwaltet,
-      mailErneut: verwaltet && (z.mail_stand === 'fehler' || z.mail_stand === 'ohne'),
+      mailErneut: verwaltet && (z.status === 'genehmigt' || z.status === 'storniert') && z.mail_stand !== 'gesendet',
     },
     // für die Rückfrage beim Genehmigen ohne Bestätigung
     bestaetigungFehlt: fehlt,
@@ -191,9 +192,6 @@ function zeitraumAus(c: Ctx, von: unknown, bis: unknown): { von: string; bis: st
   if (bis > plusTage(von, MAX_TAGE_ZEITRAUM)) throw new Fehler(400, 'Der Zeitraum ist zu lang – bitte mehrere Anträge stellen');
   return { von, bis };
 }
-
-/** Hook für den Mailversand – gesetzt von urlaub-mail.ts, damit dieses Modul nichts vom Versand wissen muss. */
-export const nachEntscheidung: { genehmigt?: (c: Ctx, antragId: number) => void; storniert?: (c: Ctx, antragId: number) => void } = {};
 
 export const URLAUB_ROUTEN: Route[] = [
   {
@@ -341,7 +339,7 @@ export const URLAUB_ROUTEN: Route[] = [
     m: 'POST',
     p: '/api/urlaub/:id/genehmigen',
     wer: ['ausbilder'],
-    h: (c) => {
+    h: async (c) => {
       const { db } = c.k;
       const z = antragFuer(c);
       if (!darfAzubiVerwalten(db, c.b, z.azubi_id)) throw new Fehler(403, 'Genehmigen kann nur der zuständige Ausbilder');
@@ -352,7 +350,8 @@ export const URLAUB_ROUTEN: Route[] = [
       db.prepare("UPDATE urlaub_antrag SET status = 'genehmigt', geaendert = ?, mail_stand = 'offen', mail_fehler = '' WHERE id = ?").run(c.k.jetzt().toISOString(), z.id);
       schreibeVerlauf(c, z.id, 'genehmigt', fehlt.length ? `ohne Bestätigung von ${fehlt.map((f) => f.name).join(', ')}` : '');
       melde(c, z, 'urlaub_genehmigt');
-      nachEntscheidung.genehmigt?.(c, z.id);
+      // die Genehmigung gilt, auch wenn die Mail nicht ankommt – der Stand steht dann am Antrag
+      await informierePersonal(c.k, z.id);
       return { status: 200, body: { antrag: ansicht(c, hole(db, z.id)!) } };
     },
   },
@@ -362,7 +361,7 @@ export const URLAUB_ROUTEN: Route[] = [
     m: 'POST',
     p: '/api/urlaub/:id/stornieren',
     wer: ['ausbilder'],
-    h: (c) => {
+    h: async (c) => {
       const { db } = c.k;
       const z = antragFuer(c);
       if (!darfAzubiVerwalten(db, c.b, z.azubi_id)) throw new Fehler(403, 'Stornieren kann nur der zuständige Ausbilder');
@@ -371,8 +370,43 @@ export const URLAUB_ROUTEN: Route[] = [
       db.prepare("UPDATE urlaub_antrag SET status = 'storniert', geaendert = ?, mail_stand = 'offen', mail_fehler = '' WHERE id = ?").run(c.k.jetzt().toISOString(), z.id);
       schreibeVerlauf(c, z.id, 'storniert', kommentar);
       melde(c, z, 'urlaub_storniert');
-      nachEntscheidung.storniert?.(c, z.id);
+      await informierePersonal(c.k, z.id);
       return { status: 200, body: { antrag: ansicht(c, hole(db, z.id)!) } };
+    },
+  },
+
+  {
+    // Testmail an die Personalstelle – damit sich die Einrichtung prüfen lässt, bevor der erste Urlaub genehmigt wird
+    m: 'POST',
+    p: '/api/urlaub/mail-test',
+    wer: ['ausbilder'],
+    h: async (c) => {
+      const hindernis = mailHindernis(c.k);
+      if (hindernis) throw new Fehler(409, hindernis);
+      const betrieb = leseBetrieb(c.k.db);
+      const fehler = await versende(
+        c.k,
+        betrieb.personalMail,
+        'Test: Mails aus dem Ausbildungsportal',
+        `Guten Tag,\n\ndies ist eine Testmail aus dem Ausbildungsportal${betrieb.name ? ` (${betrieb.name})` : ''}, ausgelöst von ${c.b.anzeigename}.\n\nAn diese Adresse schickt das Portal künftig eine kurze Mail, wenn für Auszubildende Urlaub genehmigt oder ein genehmigter Urlaub storniert wurde. Bitte nicht auf diese Mail antworten.`,
+      );
+      if (fehler) throw new Fehler(502, `Die Testmail wurde nicht gesendet: ${fehler}`);
+      return { status: 200, body: { ok: true, an: betrieb.personalMail } };
+    },
+  },
+  {
+    // Mail an die Personalstelle noch einmal senden – wenn sie nicht ankam oder der Versand erst später eingerichtet wurde
+    m: 'POST',
+    p: '/api/urlaub/:id/mail',
+    wer: ['ausbilder'],
+    h: async (c) => {
+      const z = antragFuer(c);
+      if (!darfAzubiVerwalten(c.k.db, c.b, z.azubi_id)) throw new Fehler(403, 'Das kann nur der zuständige Ausbilder');
+      if (z.status !== 'genehmigt' && z.status !== 'storniert') throw new Fehler(409, 'Eine Mail gibt es nur für genehmigten oder stornierten Urlaub');
+      if (z.mail_stand === 'gesendet') throw new Fehler(409, 'Die Personalstelle ist schon informiert');
+      await informierePersonal(c.k, z.id);
+      schreibeVerlauf(c, z.id, 'mail', hole(c.k.db, z.id)!.mail_stand === 'gesendet' ? 'Mail an die Personalstelle gesendet' : 'Mail an die Personalstelle nicht gesendet');
+      return { status: 200, body: { antrag: ansicht(c, hole(c.k.db, z.id)!) } };
     },
   },
 ];

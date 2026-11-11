@@ -1,6 +1,7 @@
 import type { Config } from './config';
 import type { DB } from './db';
 import type { Entra } from './entra';
+import type { Mail } from './smtp';
 import type { BenutzerZeile, Rolle } from './typen';
 
 /**
@@ -44,6 +45,8 @@ export interface Kontext {
   gemeldeteHerkunft: Set<string>;
   /** schickt JSON an eine fremde Adresse (Teams-Webhook); in Tests ersetzt */
   sende: (url: string, body: unknown) => Promise<{ ok: boolean; status: number }>;
+  /** schickt eine Mail über den eingerichteten Mailserver; wirft MailFehler. In Tests ersetzt */
+  mail: (m: Mail) => Promise<void>;
 }
 
 export class Fehler extends Error {
