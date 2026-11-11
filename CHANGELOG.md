@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.26.0] – 2026-11-11
+
+### Neu
+
+- **Berichtsheft als PDF:** Aus „Alle Berichte drucken“ wird „Berichtsheft als PDF oder drucken“. Die Seite baut aus den gewählten Berichten ein Dokument – mit Deckblatt (Name, Beruf, Betrieb, Ausbilder, Zeitraum, Zahl der Berichte, Logo), Auswahl nach „alle / nur abgezeichnete“ und Ausbildungsjahr. Gespeichert wird über „Als PDF speichern“ im Druckfenster; als Dateiname schlägt der Browser „Berichtsheft <Name> <Zeitraum>“ vor.
+- **Logo hinter den Unterschriften:** Im Ausdruck (und im PDF) steht das Logo des Betriebs blass hinter beiden Unterschriften, wenn eines hinterlegt ist. Am Bildschirm bleibt es unsichtbar.
+- **Handbuch (Ausbilder): „Bausteine importieren: Aufbau der Datei“** – ausführlich mit Beispiel, allen Angaben, Grenzen, JSON-Regeln und dem Verhalten bei Fehlern. Link dorthin beim Knopf „Importieren“.
+
+### Geändert
+
+- **Führung:** Der Schritt „Deine Azubis“ zeigt jetzt immer auf den Bereich mit den Azubis – auch wenn noch kein Azubi zugeordnet ist (bisher sprang er dann auf die Begrüßung).
+- **Führung:** Jede Karte nennt die Seite, auf der der Schritt spielt. Wechselt die Führung die Seite, steht dort hervorgehoben „→ Neue Seite: …“, und der Menüpunkt der neuen Seite ist zusätzlich umrandet.
+
 ## [0.25.0] – 2026-11-11
 
 ### Neu

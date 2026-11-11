@@ -39,7 +39,7 @@ export function Start({ konto }: { konto: Konto }) {
       )}
 
       {betreut && (
-        <>
+        <section className="start-azubis">
           <h2 className="abschnitt-titel">{konto.rolle !== 'ausbilder' ? 'Mir zugewiesene Azubis' : konto.alleAzubis ? 'Alle Azubis' : 'Meine Azubis'}</h2>
           {azubis === null ? (
             <p className="leise">Lädt …</p>
@@ -60,7 +60,7 @@ export function Start({ konto }: { konto: Konto }) {
               ))}
             </ul>
           )}
-        </>
+        </section>
       )}
     </>
   );

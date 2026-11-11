@@ -1,11 +1,11 @@
 import { Ladefehler } from '../dialoge';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api, berichtsheftPfad, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '../api';
-import type { BerichtListe, BerichtStatus } from '../api';
+import { api, berichtsheftPfad, datum, h, STATUS_FARBE, STATUS_TEXT, wocheText } from '../api';
+import type { BerichtListe, BerichtStatus, Logos } from '../api';
 import { Icon } from '../icons';
 import { Link } from '../router';
-import { BerichtBlatt, DruckHinweis } from './Bericht';
+import { BerichtBlatt } from './Bericht';
 import { HandbuchLink } from '../handbuchLink';
 
 /**
@@ -156,7 +156,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
             ))}
             {anzahl('alle') > anzahl('fehlt') && (
               <Link zu={`${basis}/druck`} className="knopf schlicht rechts">
-                Alle Berichte drucken
+                Berichtsheft als PDF oder drucken
               </Link>
             )}
           </div>
@@ -227,11 +227,26 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
   );
 }
 
-/** Alle vorhandenen Berichte untereinander – jede Woche auf einer eigenen Druckseite. */
+/** Logo des Betriebs (helle Fassung) für das Deckblatt. */
+function useLogo(): string | null {
+  const [logo, setLogo] = useState<string | null>(null);
+  useEffect(() => {
+    api<Logos>('GET', '/api/branding').then((l) => setLogo(l.logo), () => {});
+  }, []);
+  return logo;
+}
+
+/**
+ * Das Berichtsheft als eine Datei: Deckblatt und alle gewählten Berichte, jede Woche auf einer eigenen Seite.
+ * Gespeichert wird über das Druckfenster des Browsers („Als PDF speichern“) – oder gedruckt.
+ */
 export function BerichteDruck({ azubiId }: { azubiId: number }) {
   const [daten, setDaten] = useState<BerichtListe | null>(null);
   const [fehler, setFehler] = useState('');
   const [nur, setNur] = useState<'alle' | 'abgezeichnet'>('alle');
+  const [jahr, setJahr] = useState(0); // 0 = alle Ausbildungsjahre
+  const [deckblatt, setDeckblatt] = useState(true);
+  const logo = useLogo();
 
   useEffect(() => {
     api<BerichtListe>('GET', `/api/azubis/${azubiId}/berichte?voll=1`).then(setDaten, (e: Error) => setFehler(e.message));
@@ -239,7 +254,21 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
 
   if (fehler) return <Ladefehler titel="Berichtsheft" text={fehler} />;
   if (!daten) return <p className="leise">Lädt …</p>;
-  const berichte = (daten.berichte ?? []).filter((b) => nur === 'alle' || b.status === 'abgezeichnet');
+  const alle = [...(daten.berichte ?? [])].sort((a, b) => a.montag.localeCompare(b.montag));
+  const jahre = [...new Set(alle.map((b) => b.ausbildungsjahr).filter((j): j is number => !!j))].sort();
+  const berichte = alle.filter((b) => (nur === 'alle' || b.status === 'abgezeichnet') && (jahr === 0 || b.ausbildungsjahr === jahr));
+  const erster = berichte[0];
+  const letzter = berichte[berichte.length - 1];
+  const zeitraum = erster ? `${datum(erster.montag)} bis ${datum(letzter.sonntag)}` : '';
+  const abgezeichnet = berichte.filter((b) => b.status === 'abgezeichnet').length;
+
+  /** Der Browser schlägt den Seitentitel als Dateinamen vor – deshalb heißt die Seite beim Drucken wie das Heft. */
+  const drucke = () => {
+    const vorher = document.title;
+    document.title = `Berichtsheft ${daten.azubi.anzeigename}${erster ? ` ${erster.montag} bis ${letzter.sonntag}` : ''}`;
+    window.addEventListener('afterprint', () => (document.title = vorher), { once: true });
+    window.print();
+  };
 
   return (
     <>
@@ -247,29 +276,100 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         <p className="klein">
           <Link zu={berichtsheftPfad(azubiId, daten.eigenes)}>← Berichtsheft</Link>
         </p>
-        <h1>Berichte drucken</h1>
+        <h1>Berichtsheft als PDF speichern oder drucken</h1>
         <p className="leise">
-          {daten.azubi.anzeigename} · {berichte.length} Berichte, jeder auf einer eigenen Seite. Einen einzelnen Bericht druckst du im Berichtsheft über „Drucken“ an der jeweiligen Woche.
+          {daten.azubi.anzeigename} · Aus den gewählten Berichten wird ein Dokument: {deckblatt ? 'ein Deckblatt, dann ' : ''}jede Woche auf einer eigenen Seite. Einen einzelnen Bericht druckst du im Berichtsheft über „Drucken“ an der jeweiligen Woche.
         </p>
-        <div className="filter">
-          <button type="button" className="knopf schlicht" aria-pressed={nur === 'alle'} onClick={() => setNur('alle')}>
-            Alle vorhandenen
-          </button>
-          <button type="button" className="knopf schlicht" aria-pressed={nur === 'abgezeichnet'} onClick={() => setNur('abgezeichnet')}>
-            Nur abgezeichnete
-          </button>
-          <button type="button" className="knopf rechts" onClick={() => window.print()} disabled={berichte.length === 0}>
-            Alle drucken
-          </button>
-        </div>
-        <DruckHinweis />
+        <section className="karte heft-auswahl" aria-label="Auswahl für das Dokument">
+          <div className="filter" role="group" aria-label="Welche Berichte">
+            <button type="button" className="knopf schlicht" aria-pressed={nur === 'alle'} onClick={() => setNur('alle')}>
+              Alle vorhandenen
+            </button>
+            <button type="button" className="knopf schlicht" aria-pressed={nur === 'abgezeichnet'} onClick={() => setNur('abgezeichnet')}>
+              Nur abgezeichnete
+            </button>
+          </div>
+          {jahre.length > 1 && (
+            <div className="filter" role="group" aria-label="Welches Ausbildungsjahr">
+              <button type="button" className="knopf schlicht" aria-pressed={jahr === 0} onClick={() => setJahr(0)}>
+                Alle Ausbildungsjahre
+              </button>
+              {jahre.map((j) => (
+                <button key={j} type="button" className="knopf schlicht" aria-pressed={jahr === j} onClick={() => setJahr(j)}>
+                  {j}. Ausbildungsjahr
+                </button>
+              ))}
+            </div>
+          )}
+          <label className="haken">
+            <input type="checkbox" checked={deckblatt} onChange={(e) => setDeckblatt(e.target.checked)} /> Mit Deckblatt
+          </label>
+          <p role="status" aria-live="polite">
+            <strong>{berichte.length === 1 ? '1 Bericht' : `${berichte.length} Berichte`}</strong>
+            {zeitraum && ` · ${zeitraum}`}
+            {berichte.length > 0 && ` · ${abgezeichnet} davon abgezeichnet`}
+          </p>
+          <div className="aktionen links">
+            <button type="button" className="knopf" onClick={drucke} disabled={berichte.length === 0}>
+              Als PDF speichern oder drucken
+            </button>
+          </div>
+          <p className="leise klein">
+            Es öffnet sich das Druckfenster. Für eine Datei dort als Drucker <strong>„Als PDF speichern“</strong> wählen. <HandbuchLink kapitel="drucken">Berichtsheft als PDF speichern oder drucken</HandbuchLink>
+          </p>
+        </section>
       </div>
+      {deckblatt && erster && (
+        <section className="karte druckseite">
+          <article className="blatt deckblatt">
+            {logo && <img src={logo} alt="" className="deckblatt-logo" />}
+            <p className="deckblatt-art">Ausbildungsnachweis</p>
+            <h2>Berichtsheft</h2>
+            <p className="deckblatt-name">{erster.kopf.azubi || daten.azubi.anzeigename}</p>
+            <dl>
+              {erster.kopf.beruf && (
+                <div>
+                  <dt>Ausbildungsberuf</dt>
+                  <dd>{erster.kopf.beruf}</dd>
+                </div>
+              )}
+              {erster.kopf.betrieb && (
+                <div>
+                  <dt>Ausbildungsbetrieb</dt>
+                  <dd>{erster.kopf.betrieb}</dd>
+                </div>
+              )}
+              {letzter.kopf.ausbilder && (
+                <div>
+                  <dt>Ausbilder/in</dt>
+                  <dd>{letzter.kopf.ausbilder}</dd>
+                </div>
+              )}
+              <div>
+                <dt>Zeitraum</dt>
+                <dd>
+                  {zeitraum}
+                  {jahr > 0 && ` (${jahr}. Ausbildungsjahr)`}
+                </dd>
+              </div>
+              <div>
+                <dt>Inhalt</dt>
+                <dd>
+                  {berichte.length === 1 ? '1 Wochenbericht' : `${berichte.length} Wochenberichte`}, {abgezeichnet} davon abgezeichnet
+                  {nur === 'alle' && abgezeichnet < berichte.length && ' – nicht abgezeichnete Berichte sind als solche zu erkennen'}
+                </dd>
+              </div>
+            </dl>
+            <p className="leise klein deckblatt-fuss">Erstellt am {datum(new Date().toISOString().slice(0, 10))} im Ausbildungsportal</p>
+          </article>
+        </section>
+      )}
       {berichte.map((b) => (
         <section className="karte druckseite" key={b.montag}>
           <BerichtBlatt b={b} />
         </section>
       ))}
-      {berichte.length === 0 && <p className="karte leise">Keine Berichte vorhanden.</p>}
+      {berichte.length === 0 && <p className="karte leise">Keine Berichte in dieser Auswahl.</p>}
     </>
   );
 }

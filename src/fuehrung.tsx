@@ -45,7 +45,8 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     titel: rolle === 'ausbilder' ? 'Deine Azubis' : 'Die dir zugewiesenen Azubis',
     text: 'Jede Karte zeigt den Stand der Ausbildung und der Berichte. Darunter geht es zu Profil, Ausbildungsplan und Berichtsheft.',
     pfad: '/',
-    ziel: ['.azubi-karte', 'main h1'],
+    // gibt es (noch) keine Karte, wird der ganze Bereich „Azubis“ gezeigt – nicht die Begrüßung
+    ziel: ['.start-azubis .azubi-karte', '.start-azubis'],
   },
   { titel: 'Berichte abzeichnen', text: 'Hier stehen alle eingereichten Berichte, nach Azubi geordnet. „Lesen“ klappt einen Bericht auf; darunter zeichnest du ab oder gibst ihn mit einem Kommentar zurück.', pfad: '/abzeichnen', ziel: ['.abz-gruppe', 'main h1'] },
   { titel: 'Wer ist wann wo?', text: 'Die Übersicht zeigt diese und die nächste Woche und darunter den Zeitstrahl: Schule, Einsätze und Urlaub deiner Azubis.', pfad: '/uebersicht', ziel: ['.ue-oben', 'main h1'] },
@@ -74,6 +75,32 @@ const ADMIN: Schritt[] = [
   ENDE,
 ];
 
+/** Wie die Seite im Menü heißt – die Karte nennt sie, damit ein Wechsel der Seite auffällt. */
+function seitenName(pfad: string | undefined, rolle: Rolle): string {
+  switch (pfad) {
+    case '/':
+      return rolle === 'azubi' ? 'Ausbildungsplan' : 'Start';
+    case '/berichtsheft':
+      return 'Berichtsheft';
+    case '/konto':
+      return 'Mein Konto';
+    case '/abzeichnen':
+      return 'Abzeichnen';
+    case '/uebersicht':
+      return 'Übersicht';
+    case '/verwaltung/konten':
+      return 'Konten';
+    case '/verwaltung/protokoll':
+      return 'Protokoll';
+    case '/verwaltung/meldungen':
+      return 'Fehlermeldungen';
+    case '/verwaltung/erscheinungsbild':
+      return 'Erscheinungsbild';
+    default:
+      return '';
+  }
+}
+
 export function schritteFuer(rolle: Rolle): Schritt[] {
   return rolle === 'azubi' ? AZUBI : rolle === 'admin' ? ADMIN : betreuung(rolle);
 }
@@ -99,11 +126,18 @@ export function Fuehrung({ rolle, onEnde }: { rolle: Rolle; onEnde: () => void }
   const [nr, setNr] = useState(0);
   const [rahmen, setRahmen] = useState<Rahmen | null>(null);
   const [bereit, setBereit] = useState(false);
+  // nach einem Wechsel der Seite: der Menüpunkt der neuen Seite, zusätzlich umrandet
+  const [menue, setMenue] = useState<Rahmen | null>(null);
+  const menuePfad = useRef<string | null>(null);
   const karte = useRef<HTMLDivElement>(null);
   const ziel = useRef<Element | null>(null);
   const vorher = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const s = schritte[nr];
   const letzter = nr === schritte.length - 1;
+  const seite = seitenName(s.pfad, rolle);
+  // Der Schritt spielt auf einer anderen Seite als der vorige: Das sagt die Karte deutlich.
+  const gewechselt = nr > 0 && !!s.pfad && schritte[nr - 1].pfad !== s.pfad;
+  menuePfad.current = gewechselt ? (s.pfad ?? null) : null;
 
   const beende = useCallback(() => {
     onEnde();
@@ -111,6 +145,9 @@ export function Fuehrung({ rolle, onEnde }: { rolle: Rolle; onEnde: () => void }
   }, [onEnde]);
 
   const miss = useCallback(() => {
+    const punkt = menuePfad.current ? ([...document.querySelectorAll(`.haupt-nav a[href="${menuePfad.current}"], .tabs a[href="${menuePfad.current}"]`)].find(sichtbar) ?? null) : null;
+    const pr = punkt?.getBoundingClientRect();
+    setMenue(pr ? { top: pr.top - 3, left: pr.left - 3, width: pr.width + 6, height: pr.height + 6 } : null);
     const el = ziel.current;
     if (!el || !el.isConnected) return setRahmen(null);
     const r = el.getBoundingClientRect();
@@ -230,6 +267,7 @@ export function Fuehrung({ rolle, onEnde }: { rolle: Rolle; onEnde: () => void }
       {/* fängt Klicks auf die Seite ab, solange die Führung läuft */}
       <div className="fuehrung-sperre" />
       {rahmen && bereit ? <div className="fuehrung-ring" style={rahmen} /> : <div className="fuehrung-dunkel" />}
+      {menue && bereit && <div className="fuehrung-menuepunkt" style={menue} />}
       {bereit && (
         <div key={nr} ref={karte} className="fuehrung-karte" role="dialog" aria-modal="true" aria-labelledby="fuehrung-titel" aria-describedby="fuehrung-text" style={lage}>
           {/* farbiger Kopf: so ist die Karte auf jeder Seite sofort als „die Führung“ zu erkennen */}
@@ -243,6 +281,19 @@ export function Fuehrung({ rolle, onEnde }: { rolle: Rolle; onEnde: () => void }
           <div className="fuehrung-fortschritt" aria-hidden="true">
             <span style={{ width: `${((nr + 1) / schritte.length) * 100}%` }} />
           </div>
+          {seite && (
+            <p className={`fuehrung-seite${gewechselt ? ' neu' : ''}`}>
+              {gewechselt ? (
+                <>
+                  <span aria-hidden="true">→</span> Neue Seite: <strong>{seite}</strong>
+                </>
+              ) : (
+                <>
+                  Seite: <strong>{seite}</strong>
+                </>
+              )}
+            </p>
+          )}
           <h2 id="fuehrung-titel">{s.titel}</h2>
           <p id="fuehrung-text">{s.text}</p>
           <div className="fuehrung-knoepfe">

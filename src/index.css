@@ -6294,3 +6294,180 @@ html.dark {
   padding: 0;
   border: 0;
 }
+
+/* Führung: auf welcher Seite spielt der Schritt? Ein Wechsel der Seite fällt auf. */
+.fuehrung-karte p.fuehrung-seite {
+  margin: 12px 18px 0;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.fuehrung-karte p.fuehrung-seite.neu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #78350f;
+  font-size: 14px;
+  font-weight: 600;
+  animation: fuehrung-seite-neu 0.6s ease-out;
+}
+
+@keyframes fuehrung-seite-neu {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fuehrung-karte p.fuehrung-seite.neu {
+    animation: none;
+  }
+}
+
+/* Ausdruck: Logo des Betriebs blass hinter den Unterschriften */
+.signaturen .signatur-feld {
+  position: relative;
+}
+
+.signatur-logo {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: auto;
+  max-width: 80%;
+  height: calc(100% - 8px);
+  object-fit: contain;
+  opacity: 0.14;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.signaturen .unterschrift-bild {
+  position: relative;
+}
+
+/* Handbuch: Beispiel einer Datei */
+.datei-beispiel {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-code);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+/* Führung: Nach einem Wechsel der Seite leuchtet auch ihr Menüpunkt – so sieht man, wohin es ging. */
+.fuehrung-menuepunkt {
+  position: fixed;
+  z-index: 61;
+  border: 3px solid #fbbf24;
+  border-radius: 10px;
+  -webkit-backdrop-filter: brightness(3.2);
+  backdrop-filter: brightness(3.2);
+  pointer-events: none;
+}
+
+/* ---------- Berichtsheft als PDF: Auswahl und Deckblatt ---------- */
+.heft-auswahl .filter {
+  margin-bottom: 10px;
+}
+
+.heft-auswahl p {
+  margin: 10px 0;
+}
+
+.deckblatt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  text-align: center;
+}
+
+.deckblatt-logo {
+  max-width: 220px;
+  max-height: 90px;
+  margin-bottom: 16px;
+  object-fit: contain;
+}
+
+.deckblatt-art {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.deckblatt h2 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.deckblatt-name {
+  margin: 8px 0 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.deckblatt dl {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  text-align: left;
+}
+
+.deckblatt dl > div {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.deckblatt dt {
+  color: var(--c-muted);
+}
+
+.deckblatt dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.deckblatt-fuss {
+  margin-top: 24px;
+}
+
+@media (max-width: 560px) {
+  .deckblatt dl > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+@media print {
+  .druckseite .deckblatt {
+    min-height: 250mm;
+    padding-top: 45mm;
+  }
+
+  .deckblatt dl > div {
+    border-bottom-color: #999;
+  }
+}
