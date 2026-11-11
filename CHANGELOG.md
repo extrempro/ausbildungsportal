@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.24.0] – 2026-11-11
+
+### Neu
+
+- **Lernmodul, Stufe 2: Kompendium.** Unter „Lernen“ gibt es neben „Themenfelder“ den Bereich „Kompendium“: alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen aus allen Cheatsheets in einer Liste von A bis Z. Mit Suche (mehrere Wörter, Umlaute egal, Fundstellen markiert), Filter nach Themenfeld und Art, Buchstabenleiste und eingeklapptem Lösungsweg bei Prüfungsfragen.
+- Von jedem Eintrag führt „Zum Cheatsheet“ zum passenden Unterthema; dessen Cheatsheet ist dann schon aufgeklappt. Suche und Filter bleiben beim Zurückkommen stehen.
+- Handbuch für Azubis: neues Kapitel „Im Kompendium nachschlagen“.
+- Schnittstelle `GET /api/lernen/kompendium` (nur Azubis mit eingeschaltetem Lernmodul; enthält nur Inhalte, keinen Lernstand).
+
+### Noch nicht enthalten
+
+- Das „Zusatzwissen“ des Lernkompass (Abläufe, Vergleiche) zeigt das Portal noch nicht – weder im Cheatsheet noch im Kompendium.
+
 ## [0.23.2] – 2026-11-11
 
 ### Geändert

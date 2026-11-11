@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { Ladefehler, melde } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
@@ -59,6 +59,18 @@ export function LernThema({ id }: { id: string }) {
     },
     [id],
   );
+
+  // Sprung aus dem Kompendium (#u-…): zum Unterthema rollen und dessen Cheatsheet aufklappen – einmal, sobald die Seite steht
+  const gesprungen = useRef(false);
+  useEffect(() => {
+    if (!daten || gesprungen.current) return;
+    gesprungen.current = true;
+    const marke = decodeURIComponent(window.location.hash.slice(1));
+    const ziel = marke.startsWith('u-') ? document.getElementById(marke) : null;
+    if (!ziel) return;
+    ziel.querySelector<HTMLDetailsElement>('details.lern-cheatsheet')?.setAttribute('open', '');
+    ziel.scrollIntoView();
+  }, [daten]);
 
   if (fehler) return <Ladefehler titel="Lernen" text={fehler} />;
   if (!daten) return <p className="leise">Lädt …</p>;
@@ -202,7 +214,7 @@ function UnterthemaKarte({ u, aendere }: { u: Unterthema; aendere: (p: Aenderung
       )}
 
       {u.hatInhalt ? (
-        <details className="klapp">
+        <details className="klapp lern-cheatsheet">
           <summary>Cheatsheet</summary>
           <Inhalt u={u} />
         </details>

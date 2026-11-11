@@ -15,6 +15,7 @@ import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Lernen } from './pages/Lernen';
+import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
 import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
@@ -277,6 +278,7 @@ export function App() {
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
+  else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (lernThema && lernen) seite = <LernThema key={lernThema} id={lernThema} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} onGeaendert={lade} />;
   else

@@ -5497,3 +5497,164 @@ html.dark {
   padding-top: 0;
   border-top: 0;
 }
+
+/* ---------- Lernmodul: Bereiche (Themenfelder, Kompendium) ---------- */
+.lern-reiter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 16px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.lern-reiter a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  color: var(--c-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lern-reiter a:hover {
+  color: var(--c-text);
+  background: var(--c-accent-soft);
+}
+
+.lern-reiter a[aria-current='page'] {
+  border-bottom-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+/* ---------- Kompendium ---------- */
+.komp-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.komp-filter .filter {
+  margin-bottom: 0;
+}
+
+.komp-felder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.komp-felder label {
+  display: block;
+  flex: 0 1 16rem;
+}
+
+.komp-felder label:first-child {
+  flex: 1 1 16rem;
+}
+
+.komp-buchstaben {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.komp-buchstaben a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.komp-buchstaben a:hover {
+  background: var(--c-accent-soft);
+}
+
+.komp-gruppe {
+  scroll-margin-top: 80px;
+}
+
+.komp-gruppe > h2 {
+  margin: 20px 0 8px;
+  color: var(--c-accent);
+}
+
+.komp-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.komp-liste > li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.komp-liste > li:last-child {
+  border-bottom: 0;
+}
+
+.komp-liste p {
+  margin: 0;
+}
+
+.komp-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.komp-kopf strong {
+  min-width: 0;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.komp-liste p,
+.komp-liste ol {
+  overflow-wrap: anywhere;
+}
+
+.komp-kopf code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.komp-merksatz {
+  display: flex;
+  gap: 8px;
+}
+
+.komp-merksatz svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--c-accent);
+}
+
+.komp-liste mark {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ampel-gelb) 38%, transparent);
+  color: inherit;
+}
+
+.lern-unterthema {
+  scroll-margin-top: 80px;
+}
+
+@media (max-width: 640px) {
+  .komp-liste > li {
+    padding: 12px 14px;
+  }
+}

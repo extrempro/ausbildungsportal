@@ -4,7 +4,7 @@ import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { AMPEL_REIHE, AMPEL_TEXT, ampelVon, prozent, summe, zaehle, zusammenfassung } from '../lernen/ampel';
 import type { LernStatus } from '../lernen/ampel';
-import { StapelBalken, StatusPille } from '../lernen/teile';
+import { LernReiter, StapelBalken, StatusPille } from '../lernen/teile';
 import { Link } from '../router';
 
 export interface LernPaket {
@@ -57,6 +57,7 @@ export function Lernen() {
   return (
     <>
       <h1>Lernen</h1>
+      <LernReiter />
       <p className="leise">
         Lernstoff für deinen Beruf, sortiert nach Themen. Zu jedem Thema gibt es ein Cheatsheet – das Wichtigste auf einen Blick. Mit der Ampel hältst du fest, was schon sitzt. <strong>Deinen Lernstand siehst nur du.</strong>{' '}
         <HandbuchLink kapitel="lernen">Lernen mit Cheatsheets und Ampel</HandbuchLink>

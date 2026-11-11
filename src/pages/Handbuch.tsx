@@ -327,6 +327,29 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'kompendium',
+    titel: 'Im Kompendium nachschlagen',
+    inhalt: (
+      <>
+        <p>
+          Das <Link zu="/lernen/kompendium">Kompendium</Link> ist ein Nachschlagewerk: Es sammelt alles aus allen Cheatsheets in einer Liste von A bis Z – Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen. Praktisch, wenn du im Betrieb schnell etwas wissen willst und nicht weißt, in welchem Themenfeld es steht. Du findest es unter „Lernen“ oben neben „Themenfelder“.
+        </p>
+        <ol className="schritte">
+          <li>Bei „Suchen“ ein Wort eintippen, zum Beispiel „DHCP“. Die Liste zeigt sofort nur noch passende Einträge. Die Fundstellen sind gelb markiert.</li>
+          <li>Wenn du willst: ein Themenfeld wählen oder nur eine Art anzeigen, zum Beispiel „Befehle“.</li>
+          <li>Unter jedem Eintrag steht „Zum Cheatsheet“. Damit springst du zum passenden Unterthema; das Cheatsheet ist dann schon aufgeklappt.</li>
+        </ol>
+        <ul className="punkte">
+          <li>Mehrere Suchwörter: Es erscheinen nur Einträge, in denen alle vorkommen.</li>
+          <li>Umlaute musst du nicht genau treffen: „Schluessel“ findet auch „Schlüssel“.</li>
+          <li>Bei Prüfungsfragen ist der Lösungsweg eingeklappt. Überleg erst selbst, dann klapp ihn auf.</li>
+          <li>Mit den Buchstaben springst du in der Liste weiter. „Filter zurücksetzen“ zeigt wieder alles.</li>
+          <li>Suche und Filter bleiben stehen, wenn du zu einem Cheatsheet springst und zurückkommst.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'stand',
     titel: 'Was bedeutet der Stand eines Berichts?',
     inhalt: (

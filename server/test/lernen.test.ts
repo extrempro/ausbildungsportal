@@ -196,7 +196,7 @@ test('Der Lernstand ist privat: andere Azubis, Ausbilder, Beauftragte und Super-
   assert.deepEqual([ben.status, ben.luecke], ['rot', '']);
 
   for (const wer of [w.ausbilder, w.bea, admin(w.u.db)]) {
-    for (const [m, pfad] of [['GET', '/api/lernen'], ['GET', '/api/lernen/thema/netz'], ['PATCH', '/api/lernen/unterthema/netz.subnetting']] as const) {
+    for (const [m, pfad] of [['GET', '/api/lernen'], ['GET', '/api/lernen/kompendium'], ['GET', '/api/lernen/thema/netz'], ['PATCH', '/api/lernen/unterthema/netz.subnetting']] as const) {
       assert.equal((await ruf(w.u, m, pfad, { cookies: als(w, wer), body: { status: 'rot' } })).status, 403, `${wer.rolle} ${m} ${pfad}`);
     }
     // und nirgends sonst taucht er auf: Profil, Liste, Übersicht, Plan, Berichte
@@ -276,4 +276,25 @@ test('Unterordner beim Kopieren vergessen: 0 Themenfelder, und die Seite sagt, w
   vergissLernpakete();
   const leer = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
   assert.match(leer.meldungen[0], /ist leer/);
+});
+
+test('Kompendium: alle Bausteine aus allen Cheatsheets, nach Titel sortiert, mit Weg zum Unterthema', async () => {
+  const w = await welt();
+  const k = koerper(await ruf(w.u, 'GET', '/api/lernen/kompendium', { cookies: als(w, w.anna) }));
+  assert.equal(k.paket.lizenz, 'CC BY-SA 4.0');
+  assert.deepEqual(k.themenfelder, [{ id: 'netz', titel: 'Netzwerkgrundlagen' }, { id: 'wiso', titel: 'Wirtschaft' }]);
+  assert.deepEqual(k.eintraege.map((e: { typ: string; titel: string }) => `${e.typ}:${e.titel}`), [
+    'merksatz:Ausbildungsvertrag',
+    'begriff:Broadcast',
+    'befehl:ip addr show',
+    'begriff:Netzadresse',
+    'tabelle:Präfixe',
+    'merksatz:Subnetting',
+    'frage:Teile 192.168.10.0/24 in 4 Subnetze.',
+  ]);
+  const frage = k.eintraege.at(-1);
+  assert.deepEqual([frage.feld, frage.sub, frage.subTitel, frage.loesung.length], ['netz', 'subnetting', 'Subnetting', 2]);
+  assert.deepEqual(k.eintraege[4].tabelle.kopf, ['Präfix', 'Hosts']);
+  // ohne Lernmodul am Beruf: nichts
+  assert.equal((await ruf(w.u, 'GET', '/api/lernen/kompendium', { cookies: als(w, w.maler) })).status, 404);
 });
