@@ -4780,3 +4780,36 @@ details.klapp.schmal[open] > summary::after {
   padding-left: 0;
   min-height: 18px;
 }
+
+/* ---------- Verweis ins Handbuch aus Fenstern und Formularen ---------- */
+.handbuch-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  color: var(--c-accent);
+  font-weight: 600;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.handbuch-link:hover span {
+  text-decoration: underline;
+}
+
+.handbuch-link svg {
+  flex: none;
+}
+
+.hilfe-zeile {
+  margin: 0;
+}
+
+.kapitel {
+  scroll-margin-top: calc(var(--kopf, 60px) + 16px);
+}
+
+.kapitel.ziel {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 2px var(--c-accent-soft);
+}

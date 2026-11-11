@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ROLLE_TEXT } from '../api';
 import type { Rolle } from '../api';
@@ -41,7 +41,7 @@ const BEDIENUNG: Kapitel = {
 
 const KALENDER = (rolle: Rolle): Kapitel => ({
   id: 'kalender',
-  titel: 'Den Plan im eigenen Kalender sehen',
+  titel: 'Kalender abonnieren (Kalender-Abo)',
   inhalt: (
     <>
       <p>
@@ -51,12 +51,18 @@ const KALENDER = (rolle: Rolle): Kapitel => ({
         <li>
           Unter <Link zu="/konto">Konto</Link> bei „Kalender abonnieren“ auf „Kalender-Link erstellen“ gehen.
         </li>
-        <li>Den Link kopieren und im Kalenderprogramm als Kalender-Abo eintragen. Wie das je Programm geht, steht dort unter „So trägst du den Link ein“.</li>
+        <li>Den Link kopieren und im Kalenderprogramm als Kalender-Abo eintragen – so geht es je Programm:</li>
       </ol>
+      <dl className="begriffe">
+        <Begriff wort="iPhone, iPad, Mac">Im Portal „Im Kalenderprogramm öffnen“ antippen und „Abonnieren“ bestätigen. Oder: Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen, dort den Link einfügen.</Begriff>
+        <Begriff wort="Outlook">Im Kalender „Kalender hinzufügen“ → „Aus dem Internet abonnieren“ wählen und den Link einfügen. Der Kalender erscheint danach auch in der Outlook-App auf dem Handy.</Begriff>
+        <Begriff wort="Google Kalender (Android)">Am PC calendar.google.com öffnen: links bei „Weitere Kalender“ auf „+“ → „Per URL“, den Link einfügen. Danach erscheint der Kalender auch auf dem Handy.</Begriff>
+      </dl>
       <ul className="punkte">
         <li>Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine. {rolle === 'azubi' ? 'Dazu kommen deine eigenen Termine, mit Uhrzeit, wenn du eine angegeben hast. ' : 'Private Termine der Azubis stehen nicht in deinem Kalender. '}Aufgaben, Notizen und Berichte stehen dort nicht.</li>
         {rolle !== 'azubi' && <li>Vor jedem Termin steht der Name des Azubis. Du kannst den Link auch auf einen einzelnen Azubi beschränken. Du siehst nur Azubis, die du auch im Portal siehst.</li>}
         <li>Änderungen kommen mit Verzögerung an – je nach Programm nach einigen Stunden oder am nächsten Tag. Verbindlich ist der Plan im Portal.</li>
+        <li>Der Kalender ist nur zum Lesen. Termine änderst du im Portal, nicht im Kalenderprogramm. Wochen gehen im Kalender von Montag bis Sonntag.</li>
         <li>
           <strong>Der Link ist wie ein Passwort:</strong> Wer ihn kennt, kann die Termine lesen. Gib ihn nicht weiter. Mit „Link erneuern“ wird der alte ungültig, mit „Abo beenden“ schaltest du es ganz ab.
         </li>
@@ -164,7 +170,19 @@ const AZUBI: Kapitel[] = [
           <strong>Selbst etwas eintragen:</strong> Mit dem „+“ an einer Woche legst du eigene Aufgaben und Notizen an, zum Beispiel „Für die Klassenarbeit lernen“. Diese kannst du auch wieder ändern oder löschen.
         </p>
         <p>
-          <strong>Termine eintragen:</strong> Mit „+ Termin“ bei „Diese Woche“ oder „Nächste Woche“ – oder über „+“ an einer Woche und die Art „Termin“ – trägst du einzelne Tage ein, die du dir merken willst. Zum Beispiel eine Sitzung der JAV (Jugend- und
+          <strong>Termine:</strong> Einzelne Tage wie eine JAV-Sitzung trägst du als Termin ein. Mehr dazu im Kapitel „Eigene Termine eintragen“.
+        </p>
+        <p>Was dein Ausbilder oder deine Ausbildungsbeauftragten eingetragen haben, kannst du nicht ändern – nur abhaken.</p>
+      </>
+    ),
+  },
+  {
+    id: 'termine',
+    titel: 'Eigene Termine eintragen',
+    inhalt: (
+      <>
+        <p>
+          Mit „+ Termin“ bei „Diese Woche“ oder „Nächste Woche“ – oder über „+“ an einer Woche und die Art „Termin“ – trägst du einzelne Tage ein, die du dir merken willst. Zum Beispiel eine Sitzung der JAV (Jugend- und
           Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung. Du gibst den Tag an und, wenn du willst, Beginn und Ende.
         </p>
         <ul className="punkte">
@@ -174,7 +192,6 @@ const AZUBI: Kapitel[] = [
           <li>Termine stehen oben bei „Diese Woche“ und „Nächste Woche“ und, wenn du deinen Kalender abonniert hast, auch dort.</li>
           <li>Du kannst jeden Termin ändern oder löschen.</li>
         </ul>
-        <p>Was dein Ausbilder oder deine Ausbildungsbeauftragten eingetragen haben, kannst du nicht ändern – nur abhaken.</p>
       </>
     ),
   },
@@ -210,10 +227,10 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Unter „Deine Woche“ (am Handy in der Leiste unten) siehst du beim Schreiben, wie viele Stunden schon drinstehen und wie viele noch fehlen. Die Summe sollte ungefähr zu deinen Wochenstunden passen.</li>
           <li>
-            Noch nicht fertig? <strong>„Als Entwurf speichern“</strong>. Den Entwurf siehst nur du.
+            Noch nicht fertig? <strong>„Als Entwurf speichern“</strong>. Du schreibst später weiter; den Entwurf siehst nur du.
           </li>
           <li>
-            Fertig? <strong>„Einreichen“</strong>. Damit unterschreibst du den Bericht und gibst ihn ab.
+            Fertig? <strong>„Einreichen“</strong>. Damit unterschreibst du den Bericht und gibst ihn an deinen Ausbilder. Bis er unterschrieben hat, kannst du den Bericht noch zurückholen.
           </li>
         </ol>
         <p>
@@ -520,6 +537,16 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
   const [ansicht, setAnsicht] = useState<Rolle>(rolle);
   const kapitel = ansicht === 'azubi' ? AZUBI : ansicht === 'admin' ? ADMIN : BETREUUNG(ansicht);
   const springe = (id: string) => document.getElementById(`kapitel-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Verweise aus dem Portal (HandbuchLink) öffnen das Handbuch gleich beim richtigen Kapitel
+  useEffect(() => {
+    const id = /^#kapitel-([a-z-]+)$/.exec(window.location.hash)?.[1];
+    if (!id) return;
+    const el = document.getElementById(`kapitel-${id}`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'start' });
+    el.classList.add('ziel');
+  }, []);
 
   return (
     <>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { ART_TEXT, ROLLE_TEXT } from './api';
-import { Icon } from './icons';
+import { HandbuchLink } from './handbuchLink';
 import type { PlanArt, Rolle, Unteraufgabe } from './api';
 
 /**
@@ -59,16 +59,9 @@ export function EintragFelder({
       </label>
       {termin ? (
         <>
-          <details className="klapp ganz">
-            <summary>
-              <Icon name="hilfe" />
-              Wofür sind Termine – und wer sieht sie?
-            </summary>
-            <p>
-              Für einzelne Tage, die du dir merken willst – zum Beispiel eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung.{' '}
-            <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – auch nicht in ihrer Übersicht oder ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
-            </p>
-          </details>
+          <p className="ganz hilfe-zeile">
+            <strong>Termine siehst nur du.</strong> <HandbuchLink kapitel="termine">Wofür sind Termine?</HandbuchLink>
+          </p>
           <label>
             Datum
             <input type="date" value={wert.tag ?? ''} required onChange={(ev) => setze({ tag: ev.target.value })} />
