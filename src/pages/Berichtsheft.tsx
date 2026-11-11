@@ -159,7 +159,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                 {/* Abkürzung: das ganze Heft sofort als PDF – ohne die Seite mit der Auswahl */}
                 <PdfKnopf symbol pfad={`/api/azubis/${azubiId}/berichtsheft.pdf`} text="Ganzes Berichtsheft sofort als PDF herunterladen" />
                 <Link zu={`${basis}/druck`} className="knopf">
-                  <Icon name="heft" /> Berichtsheft als PDF …
+                  <Icon name="heft" /> Berichtsheft drucken …
                 </Link>
               </span>
             )}
@@ -281,7 +281,7 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
         <p className="klein">
           <Link zu={berichtsheftPfad(azubiId, daten.eigenes)}>← Berichtsheft</Link>
         </p>
-        <h1>Berichtsheft als PDF herunterladen oder drucken</h1>
+        <h1>Berichtsheft drucken oder als PDF herunterladen</h1>
         <p className="leise">
           {daten.azubi.anzeigename} · Aus den gewählten Berichten wird ein Dokument: {deckblatt ? 'ein Deckblatt, dann ' : ''}jede Woche auf einer eigenen Seite. Einen einzelnen Bericht bekommst du auf der Seite des Berichts über „Als PDF herunterladen“.
         </p>
@@ -315,18 +315,17 @@ export function BerichteDruck({ azubiId }: { azubiId: number }) {
             {berichte.length > 0 && ` · ${abgezeichnet} davon abgezeichnet`}
           </p>
           <div className="aktionen links">
+            <button type="button" className="knopf" onClick={drucke} disabled={berichte.length === 0}>
+              Berichtsheft drucken
+            </button>
             <PdfKnopf
-              klasse="knopf"
               text="PDF herunterladen"
               pfad={`/api/azubis/${azubiId}/berichtsheft.pdf?${[nur === 'abgezeichnet' ? 'nur=abgezeichnet' : '', jahr ? `jahr=${jahr}` : '', deckblatt ? '' : 'deckblatt=0'].filter(Boolean).join('&')}`}
               gesperrt={berichte.length === 0 ? 'In dieser Auswahl gibt es keine Berichte.' : undefined}
             />
-            <button type="button" className="knopf schlicht" onClick={drucke} disabled={berichte.length === 0}>
-              Berichtsheft drucken
-            </button>
           </div>
           <p className="leise klein">
-            „PDF herunterladen“ erzeugt die Datei direkt – ohne Druckfenster. Die Vorschau darunter zeigt, was hineinkommt. <HandbuchLink kapitel="drucken">Berichtsheft als PDF herunterladen oder drucken</HandbuchLink>
+            „Berichtsheft drucken“ öffnet das Druckfenster. „PDF herunterladen“ erzeugt die Datei direkt. Die Vorschau darunter zeigt, was hineinkommt. <HandbuchLink kapitel="drucken">Berichtsheft drucken oder als PDF herunterladen</HandbuchLink>
           </p>
         </section>
       </div>

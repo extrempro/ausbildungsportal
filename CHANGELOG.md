@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.29.3] – 2026-11-11
+
+### Geändert
+
+- Berichtsheft: Der Knopf heißt jetzt „Berichtsheft drucken …“ statt „Berichtsheft als PDF …“ – er führt zur Seite, auf der man das Heft druckt oder als PDF herunterlädt. Das Symbol daneben bleibt die Abkürzung zum PDF. Seitentitel und Handbuch entsprechend.
+
 ## [0.29.2] – 2026-11-11
 
 ### Geändert
