@@ -14,9 +14,13 @@ export interface EintragWerte {
   text: string;
   zustaendigId: number | null;
   unteraufgaben: Unteraufgabe[];
+  /** nur Termine */
+  tag?: string;
+  zeitVon?: string;
+  zeitBis?: string;
 }
 
-const BEISPIEL: Record<PlanArt, string> = { schule: 'z. B. Berufsschule Block 2', einsatz: 'z. B. IT-Support', aufgabe: 'z. B. Arbeitsplatz einrichten', notiz: '' };
+const BEISPIEL: Record<PlanArt, string> = { schule: 'z. B. Berufsschule Block 2', einsatz: 'z. B. IT-Support', aufgabe: 'z. B. Arbeitsplatz einrichten', notiz: '', termin: 'z. B. JAV-Sitzung' };
 
 export function EintragFelder({
   wert,
@@ -34,6 +38,7 @@ export function EintragFelder({
   nachZustaendig?: ReactNode;
   autoFokus?: boolean;
 }) {
+  const termin = wert.art === 'termin';
   const mitPerson = (wert.art === 'einsatz' || wert.art === 'aufgabe') && personen.length > 0;
   return (
     <>
@@ -51,14 +56,37 @@ export function EintragFelder({
         Titel
         <input value={wert.titel} maxLength={120} required autoFocus={autoFokus} onChange={(ev) => setze({ titel: ev.target.value })} placeholder={BEISPIEL[wert.art]} />
       </label>
-      <label>
-        Von (Woche mit diesem Tag)
-        <input type="date" value={wert.von} required onChange={(ev) => setze({ von: ev.target.value })} />
-      </label>
-      <label>
-        Bis (leer = eine Woche)
-        <input type="date" value={wert.bis} min={wert.von || undefined} onChange={(ev) => setze({ bis: ev.target.value })} />
-      </label>
+      {termin ? (
+        <>
+          <p className="hinweis ganz">
+            <strong>Wofür sind Termine?</strong> Für einzelne Tage, die du dir merken willst – zum Beispiel eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung.{' '}
+            <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – auch nicht in ihrer Übersicht oder ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
+          </p>
+          <label>
+            Datum
+            <input type="date" value={wert.tag ?? ''} required onChange={(ev) => setze({ tag: ev.target.value })} />
+          </label>
+          <label>
+            Beginn (leer = ganzer Tag)
+            <input type="time" value={wert.zeitVon ?? ''} onChange={(ev) => setze({ zeitVon: ev.target.value, ...(ev.target.value ? {} : { zeitBis: '' }) })} />
+          </label>
+          <label>
+            Ende (freiwillig)
+            <input type="time" value={wert.zeitBis ?? ''} disabled={!wert.zeitVon} min={wert.zeitVon || undefined} onChange={(ev) => setze({ zeitBis: ev.target.value })} />
+          </label>
+        </>
+      ) : (
+        <>
+          <label>
+            Von (Woche mit diesem Tag)
+            <input type="date" value={wert.von} required onChange={(ev) => setze({ von: ev.target.value })} />
+          </label>
+          <label>
+            Bis (leer = eine Woche)
+            <input type="date" value={wert.bis} min={wert.von || undefined} onChange={(ev) => setze({ bis: ev.target.value })} />
+          </label>
+        </>
+      )}
       {mitPerson && (
         <label>
           Zuständig
@@ -74,8 +102,8 @@ export function EintragFelder({
       )}
       {nachZustaendig}
       <label className="ganz">
-        Beschreibung
-        <textarea rows={3} maxLength={2000} value={wert.text} onChange={(ev) => setze({ text: ev.target.value })} />
+        {termin ? 'Ort oder Anmerkung (freiwillig)' : 'Beschreibung'}
+        <textarea rows={termin ? 2 : 3} maxLength={2000} value={wert.text} onChange={(ev) => setze({ text: ev.target.value })} />
       </label>
       {wert.art === 'aufgabe' && (
         <div className="ganz">

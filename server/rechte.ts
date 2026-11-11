@@ -121,11 +121,14 @@ export function darfAbzeichnen(db: DB, wer: Wer, azubiId: number, montag: string
 /**
  * Darf im Ausbildungsplan dieses Azubis Einträge dieser Art anlegen.
  * Ausbilder bei eigenen Azubis: alles. Beauftragte und vertretende Ausbilder: nur Aufgaben und Notizen, solange ihre Zuweisung läuft.
- * Azubis: Aufgaben und Notizen im eigenen Plan. Schulblöcke und Einsätze plant allein der Ausbilder.
+ * Azubis: Aufgaben, Notizen und Termine im eigenen Plan. Schulblöcke und Einsätze plant allein der Ausbilder.
+ * Termine sind einzelne Tage, die nur der Azubi selbst einträgt – und nur er sieht sie (plan.ts lässt sie für alle anderen aus).
  * Ändern und Löschen: siehe darfPlanEintragAendern.
  */
 export function darfPlanBearbeiten(db: DB, wer: Wer, azubiId: number, art: string, heute: string): boolean {
   if (!Number.isInteger(azubiId) || !istAzubi(db, azubiId)) return false;
+  // Termine (z. B. JAV-Sitzung) sind privat: Nur der Azubi selbst trägt sie ein, ändert und sieht sie
+  if (art === 'termin') return wer.rolle === 'azubi' && wer.id === azubiId;
   if (wer.rolle === 'azubi') return wer.id === azubiId && (art === 'aufgabe' || art === 'notiz');
   if (istEigener(db, wer, azubiId)) return true;
   return (art === 'aufgabe' || art === 'notiz') && zugewiesen(db, wer, azubiId, heute, heute);

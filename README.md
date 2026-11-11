@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.19.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.21.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -13,7 +13,7 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 | Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, Fehlermeldungen bearbeiten, das Logo des Betriebs hinterlegen – kein Zugriff auf Pläne, Berichte und Stammdaten |
 | Ausbilder | Microsoft | **nur die eigenen Azubis** (im Profil als zuständig eingetragen) und Azubis ohne Ausbilder: Berichte abzeichnen, zurückgeben und eine Abzeichnung aufheben, Ausbildungsplan und Profil pflegen, Beauftragte und Vertretungen zuweisen, Konten dieser Azubis und der Beauftragten anlegen, sperren und löschen; für alle: Stammdaten und Planbausteine. Als **Vertretung** (Zuweisung mit Zeitraum) dieselben Rechte wie Beauftragte. Mit **Gesamtsicht** (setzt der Super-Admin) volle Rechte bei allen Azubis |
 | Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, während der Zuweisung Aufgaben und Notizen im Plan anlegen |
-| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan eigene Aufgaben und Notizen eintragen und Aufgaben abhaken |
+| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan eigene Aufgaben, Notizen und Termine eintragen und Aufgaben abhaken |
 
 Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
 
@@ -124,6 +124,7 @@ Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Au
 
 - **Arten:** Berufsschule (Schulblock), Einsatz (Abteilung oder Einsatzort), Aufgabe (mit Unteraufgaben zum Abhaken) und Notiz.
 - **Wer plant:** Ausbilder alles. Ausbildungsbeauftragte legen Aufgaben und Notizen an, solange ihre Zuweisung läuft. Azubis tragen eigene Aufgaben und Notizen ein und haken Aufgaben ab; ändern und löschen können sie nur, was sie selbst eingetragen haben.
+- **Termine:** Einzelne Tage mit freiwilliger Uhrzeit (z. B. JAV-Sitzung, Gespräch mit der Personalabteilung). Nur der Azubi selbst trägt sie ein – und **nur er sieht sie**: Für Ausbilder und Beauftragte gibt es sie weder im Plan noch in Übersicht, Glocke oder Kalender-Abo. Im eigenen Kalender-Abo des Azubis stehen sie. (Der Serverbetreiber kann sie wie alles in der Datenbank lesen.)
 - **Prüfungen:** Prüfungstermine stehen im Azubi-Profil (Bezeichnung frei, z. B. „Abschlussprüfung Teil 1“). Sie erscheinen in ihrer Woche, im Wochenband und oben in der Kachel „Wochen bis zur Prüfung“; ohne Termin zählt die Kachel bis zum Ende der Ausbildung.
 - **Zuständig:** Bei Einsätzen und Aufgaben lässt sich eine zuständige Person wählen – Ausbilder oder Ausbildungsbeauftragte. Ist es ein Beauftragter, kann der Ausbilder ihn beim Speichern gleich für den Zeitraum zuweisen.
 - **Planvorlagen:** Abläufe in Wochen ab Ausbildungsbeginn (z. B. „Woche 1–8 Einsatz IT-Support“), je Beruf oder für alle. Eine Vorlage wird in den Plan eines Azubis kopiert; danach ist der Plan unabhängig von ihr.
@@ -155,6 +156,7 @@ Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchge
 - Schreibende Anfragen nur von der eigenen Adresse (`Origin`-Prüfung), strenge Content-Security-Policy.
 - Protokoll über Anmeldungen und Änderungen (Konten, Zuweisungen, Stammdaten, Azubi-Profile), ohne Passwörter. Berichte und Pläne erscheinen dort nicht – auch nicht, wer wann eingereicht oder abgezeichnet hat; das steht nur im Verlauf des jeweiligen Berichts. Einsehen kann das Protokoll nur der Super-Admin.
 - Fehler melden: Jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt. Freiwillig lässt sich ein Bildschirmfoto anhängen (auswählen, einfügen oder am PC aufnehmen); der Browser verkleinert es auf höchstens 150 KB, die meldende Person sieht es vor dem Senden. Lesen, erledigen und löschen kann nur der Super-Admin. Eine automatische Löschfrist gibt es noch nicht.
+- Kalender-Abo (ICS): Jedes Konto außer dem Super-Admin kann unter „Konto“ einen persönlichen, nur lesenden Link erstellen (`/api/abo/<Geheimnis>.ics`). Er liefert Schulblöcke, Einsätze und Prüfungstermine als ganztägige Termine – ohne Aufgaben, Notizen und Freitexte; im eigenen Kalender eines Azubis stehen dazu seine privaten Termine. Der Abruf braucht keine Anmeldung, nur den Link; die Rechte des Kontos werden bei jedem Abruf neu geprüft. Damit Outlook (neu/Web) und Google Kalender abrufen können, muss dieser Pfad aus dem Internet erreichbar sein.
 - Glocke mit Aktivitäten: Azubis sehen neue Einträge in ihrem Plan sowie abgezeichnete und zurückgegebene Berichte; Ausbilder und zugewiesene Beauftragte sehen neue Einträge und eingereichte Berichte ihrer Azubis. Gespeichert wird nur „wer, was, welche Woche, wann“ – keine Berichtsinhalte und keine Kommentare; nach 60 Tagen wird gelöscht. Der Super-Admin sieht davon nichts.
 
 Der Server nutzt außer Node.js selbst nur **eine** Bibliothek: `openid-client` für die Microsoft-Anmeldung. Mehr dazu und der Meldeweg für Lücken: [SECURITY.md](SECURITY.md).

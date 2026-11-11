@@ -1,5 +1,23 @@
 # Änderungen
 
+## [0.21.0] – 2026-11-11
+
+### Neu
+
+- **Termine für Azubis:** Azubis können einzelne Tage in ihren Plan eintragen – mit Datum und, wenn gewünscht, Beginn und Ende. Gedacht zum Merken einzelner Termine: eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung, eine Betriebsversammlung.
+- **Termine sind privat.** Nur der Azubi selbst trägt sie ein, sieht, ändert und löscht sie. Ausbilder und Ausbildungsbeauftragte sehen sie nicht – weder im Plan des Azubis noch in ihrer Übersicht, in der Glocke oder in ihrem Kalender. Das Formular sagt das dem Azubi.
+- Für den Azubi stehen Termine oben in den Kacheln „Diese Woche“ und „Nächste Woche“ (dort gibt es den Knopf „+ Termin“), in der Wochenliste und in seinem abonnierten Kalender – dort mit Uhrzeit, aber ohne Ort und Anmerkung.
+
+## [0.20.0] – 2026-11-11
+
+### Neu
+
+- **Kalender abonnieren:** Azubis, Ausbildungsbeauftragte und Ausbilder können den Ausbildungsplan in ihr Kalenderprogramm holen (Outlook, iPhone, Google Kalender und andere). Unter „Konto“ erstellt jeder einen persönlichen Link und trägt ihn dort als Kalender-Abo ein.
+- Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine, Wochen von Montag bis Sonntag. Aufgaben, Notizen, Freitexte und Berichte stehen nicht darin.
+- Ausbilder und Ausbildungsbeauftragte sehen alle ihre Azubis in einem Kalender (mit Namen im Termin) oder beschränken den Link auf einen Azubi. Es gelten bei jedem Abruf dieselben Rechte wie im Portal.
+- Der Link ist wie ein Passwort und nur zum Lesen. Er lässt sich erneuern oder abschalten; das Portal zeigt, wann er zuletzt abgerufen wurde. Erstellen, Erneuern und Beenden stehen im Protokoll.
+- Änderungen am Plan kommen im Kalender mit Verzögerung an – wie oft abgerufen wird, bestimmt das Kalenderprogramm.
+
 ## [0.19.0] – 2026-11-11
 
 ### Geändert

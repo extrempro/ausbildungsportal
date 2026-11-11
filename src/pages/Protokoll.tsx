@@ -23,6 +23,9 @@ const AKTION: Record<string, string> = {
   stammdaten_geaendert: 'Stammdaten geändert',
   logo_geaendert: 'Logo geändert',
   logo_entfernt: 'Logo entfernt',
+  kalender_link_erstellt: 'Kalender-Link erstellt',
+  kalender_link_erneuert: 'Kalender-Link erneuert',
+  kalender_link_geloescht: 'Kalender-Abo beendet',
 };
 
 export function Protokoll() {

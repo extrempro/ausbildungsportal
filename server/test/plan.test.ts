@@ -44,7 +44,7 @@ test('Plan lesen: Wochen der Ausbildung mit Ausbildungsjahr, Feiertage und Ferie
   assert.equal(p.wochen.at(-1).montag, '2028-07-31', 'letzte Woche enthält das Ende am 31.07.2028');
   assert.ok(p.feiertage.some((f: any) => f.datum === '2026-10-31'), 'Reformationstag in Hamburg');
   assert.ok(p.ferienVorhanden && p.ferien.length > 0, 'Hamburger Ferien');
-  assert.deepEqual(p.rechte, { arten: ['aufgabe', 'notiz'], zuweisen: false });
+  assert.deepEqual(p.rechte, { arten: ['aufgabe', 'notiz', 'termin'], zuweisen: false });
   assert.deepEqual(p.personen, []);
   assert.deepEqual(p.pruefungen, []);
   assert.deepEqual(p.vorlagen, []);
@@ -460,4 +460,80 @@ test('Sammelplanung zurücknehmen: entfernt Unverändertes, lässt Geändertes u
   assert.deepEqual((await letzte()).map((l: any) => l.titel), ['Neuer Lauf']);
   assert.equal((await nimm(alt.laufId)).status, 404);
   assert.ok((await plan(w, w.azubi)).eintraege.some((e: any) => e.titel === 'Alter Lauf'));
+});
+
+// ---------- Termine ----------
+
+test('Termine sind privat: nur der Azubi selbst trägt ein, sieht, ändert und löscht', async () => {
+  const w = await welt();
+  zuweisen(w.u.db, w.azubi, w.beauftragter);
+  w.u.db.prepare('UPDATE benutzer SET alle_azubis = 1 WHERE id = ?').run(w.ausbilder.id); // selbst die Gesamtsicht ändert nichts
+  const neu = (wer: BenutzerZeile, body: unknown, a: BenutzerZeile = w.azubi) => ruf(w.u, 'POST', `/api/azubis/${a.id}/plan`, { cookies: als(w, wer), body });
+  const termin = { art: 'termin', titel: 'JAV-Sitzung', tag: '2026-11-18', zeitVon: '14:00', zeitBis: '15:30', text: 'Raum 2' };
+
+  const r = await neu(w.azubi, termin);
+  assert.equal(r.status, 201);
+  const e = koerper(r).eintrag;
+  // Mittwoch, 18.11.2026 → steht in der Woche ab Montag, 16.11.
+  assert.deepEqual([e.art, e.von, e.bis, e.tag, e.zeitVon, e.zeitBis, e.bearbeitbar], ['termin', '2026-11-16', '2026-11-16', '2026-11-18', '14:00', '15:30', true]);
+  assert.deepEqual((await plan(w, w.azubi)).rechte.arten, ['aufgabe', 'notiz', 'termin']);
+  assert.equal((await plan(w, w.azubi)).eintraege.length, 1);
+
+  for (const wer of [w.ausbilder, w.beauftragter]) {
+    assert.equal((await neu(wer, termin)).status, 403, `${wer.rolle} trägt keine Termine ein`);
+    const p = await plan(w, wer);
+    assert.equal(p.rechte.arten.includes('termin'), false);
+    assert.deepEqual(p.eintraege, [], `${wer.rolle} sieht den Termin nicht`);
+    assert.equal(JSON.stringify(p).includes('JAV'), false);
+    // für andere gibt es den Eintrag nicht – auch nicht zum Ändern, Löschen oder Abhaken
+    assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer), body: { art: 'notiz', titel: 'x', von: '2026-11-16' } })).status, 404);
+    assert.equal((await ruf(w.u, 'DELETE', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer) })).status, 404);
+    assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan/${e.id}/haken`, { cookies: als(w, wer), body: { erledigt: true } })).status, 404);
+  }
+  assert.equal((await neu(w.ben, termin, w.azubi)).status, 404, 'fremder Azubi');
+
+  const geaendert = await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, w.azubi), body: { art: 'termin', titel: 'JAV-Sitzung', tag: '2026-11-24' } });
+  assert.equal(geaendert.status, 200);
+  assert.deepEqual([koerper(geaendert).eintrag.von, koerper(geaendert).eintrag.tag, koerper(geaendert).eintrag.zeitVon], ['2026-11-23', '2026-11-24', ''], 'neuer Tag, jetzt ganztägig');
+  assert.equal((await ruf(w.u, 'DELETE', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, w.azubi) })).status, 200);
+});
+
+test('Termine: Eingaben werden geprüft; nicht in Bausteinen und nicht in der Sammelplanung', async () => {
+  const w = await welt();
+  const status = async (body: unknown) => (await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan`, { cookies: als(w, w.azubi), body: { art: 'termin', titel: 'Gespräch', tag: '2026-11-18', ...(body as object) } })).status;
+  assert.equal(await status({}), 201, 'ganztägig');
+  assert.equal(await status({ zeitVon: '09:00' }), 201, 'nur Beginn');
+  assert.equal(await status({ tag: '' }), 400);
+  assert.equal(await status({ tag: '18.11.2026' }), 400);
+  assert.equal(await status({ zeitVon: '9 Uhr' }), 400);
+  assert.equal(await status({ zeitVon: '24:00' }), 400);
+  assert.equal(await status({ zeitBis: '10:00' }), 400, 'Ende ohne Beginn');
+  assert.equal(await status({ zeitVon: '10:00', zeitBis: '10:00' }), 400);
+  assert.equal(await status({ titel: '' }), 400);
+
+  const c = als(w, w.ausbilder);
+  assert.equal((await ruf(w.u, 'POST', '/api/planvorlagen', { cookies: c, body: { titel: 'B', eintraege: [{ art: 'termin', abWoche: 1, wochen: 1, titel: 'x' }] } })).status, 400);
+  assert.equal((await ruf(w.u, 'POST', '/api/plan/sammel', { cookies: c, body: { azubiIds: [w.azubi.id], eintrag: { art: 'termin', titel: 'x', tag: '2026-11-18' } } })).status, 400);
+});
+
+test('Termine hinterlassen bei anderen keine Spur: Glocke, Übersicht, Bericht-Hinweis, Wochen des Plans', async () => {
+  const w = await welt();
+  const c = als(w, w.azubi);
+  // ein Termin weit nach dem Ende der Ausbildung würde sonst den Plan um Wochen verlängern
+  for (const t of [{ titel: 'JAV-Sitzung', tag: '2026-11-12', zeitVon: '09:00' }, { titel: 'Weit weg', tag: '2031-05-05' }]) {
+    assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan`, { cookies: c, body: { art: 'termin', ...t } })).status, 201);
+  }
+  const alsAusbilder = als(w, w.ausbilder);
+  assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM aktivitaet').get() as { n: number }).n, 0, 'kein Eintrag für die Glocke');
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: alsAusbilder })).neu ?? 0, 0);
+  assert.equal(JSON.stringify(koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: alsAusbilder }))).includes('JAV'), false);
+
+  const eigen = await plan(w, w.azubi);
+  const fremd = await plan(w, w.ausbilder);
+  assert.ok(eigen.wochen.some((x: { montag: string }) => x.montag === '2031-05-05'), 'der Azubi sieht die Woche seines Termins');
+  assert.equal(fremd.wochen.some((x: { montag: string }) => x.montag > '2029-01-01'), false, 'für den Ausbilder endet der Plan wie ohne Termin');
+
+  const bericht = (wer: BenutzerZeile) => ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichte/2026-11-09`, { cookies: als(w, wer) }).then(koerper);
+  assert.deepEqual((await bericht(w.azubi)).plan, [{ art: 'termin', titel: 'JAV-Sitzung' }], 'dem Azubi hilft der Termin beim Schreiben');
+  assert.deepEqual((await bericht(w.ausbilder)).plan, []);
 });

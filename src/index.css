@@ -1260,6 +1260,11 @@ a.bericht-link:hover {
   --art: var(--c-rot-fg);
 }
 
+.eintrag.termin,
+.legende-art.termin {
+  --art: var(--c-accent);
+}
+
 .eintrag.pruefung {
   background: var(--c-rot-bg);
 }
@@ -4613,4 +4618,17 @@ td.aktion .knopf + .knopf {
   .meldungen {
     display: none !important;
   }
+}
+
+/* ---------- Kalender-Abo ---------- */
+.abo-link {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+details.abo-hilfe {
+  margin: 0.75rem 0;
+  box-shadow: none;
+}
+#kalender-abo .aktionen {
+  margin: 10px 0;
 }

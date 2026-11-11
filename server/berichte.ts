@@ -210,7 +210,7 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
     soll: profil.wochenstunden,
     kommentar: z?.kommentar ?? '',
     // was laut Ausbildungsplan in dieser Woche ansteht – als Gedankenstütze beim Schreiben
-    plan: planDerWoche(db, azubi.id, montag),
+    plan: planDerWoche(db, azubi.id, montag, eigener),
     eingereichtAm: z?.eingereicht_am ?? null,
     abgezeichnetAm: z?.abgezeichnet_am ?? null,
     signaturen: db.prepare('SELECT art, name, rolle, pfad, zeit FROM bericht_signatur WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag),

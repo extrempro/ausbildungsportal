@@ -23,6 +23,8 @@ export interface Antwort {
   body?: unknown;
   cookies?: string[];
   redirect?: string;
+  /** statt JSON: Text mit eigenem Inhaltstyp (Kalender-Abo) */
+  text?: { typ: string; inhalt: string; dateiname?: string };
 }
 
 export interface Kontext {
