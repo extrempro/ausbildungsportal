@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, zeit } from './api';
 import type { Konto } from './api';
 import { melde, rueckfrage } from './dialoge';
+import { Icon } from './icons';
 
 interface Abo {
   aktiv: boolean;
@@ -104,8 +105,11 @@ export function KalenderAbo({ konto }: { konto: Konto }) {
             Erstellt am {zeit(abo.erstellt ?? null)} · {abo.letzterAbruf ? `zuletzt von einem Kalenderprogramm abgerufen am ${zeit(abo.letzterAbruf)}` : 'noch von keinem Kalenderprogramm abgerufen'}
           </p>
 
-          <details className="karte abo-hilfe">
-            <summary>So trägst du den Link ein</summary>
+          <details className="klapp abo-hilfe">
+            <summary>
+              <Icon name="hilfe" />
+              So trägst du den Link ein
+            </summary>
             <dl className="erklaerung">
               <dt>iPhone, iPad, Mac</dt>
               <dd>„Im Kalenderprogramm öffnen“ antippen und „Abonnieren“ bestätigen. Oder: Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen, dort den Link einfügen.</dd>

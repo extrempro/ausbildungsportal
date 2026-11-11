@@ -2,6 +2,7 @@ import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
+import { Icon } from '../icons';
 import { geheZu, Link, useUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
@@ -505,8 +506,11 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
               {geaendert ? 'Noch nicht gespeichert' : b.status === 'fehlt' ? 'Noch nichts gespeichert' : 'Alles gespeichert'}
             </p>
             {aktionen(false)}
-            <details className="bericht-erklaerung">
-              <summary>Entwurf oder einreichen?</summary>
+            <details className="klapp schmal bericht-erklaerung">
+              <summary>
+                <Icon name="hilfe" />
+                Entwurf oder einreichen?
+              </summary>
               <p className="leise klein">
                 <strong>Als Entwurf speichern:</strong> Du bist noch nicht fertig und schreibst später weiter. Nur du siehst den Entwurf.
               </p>

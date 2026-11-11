@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.21.1] – 2026-11-11
+
+### Geändert
+
+- Alles, was sich ein- und ausklappen lässt, sieht jetzt gleich aus: links der Titel, rechts „Anzeigen“ oder „Einklappen“ mit einem Pfeil. Hilfetexte tragen vorn ein Fragezeichen-Symbol. Das betrifft die Anleitung im Berichtsheft, „Was bewirkt was?“ bei den Konten, Planbausteine, ältere Versionen, „So trägst du den Link ein“, „Entwurf oder einreichen?“, die technischen Angaben beim Fehler-Melden und erledigte Fehlermeldungen.
+- Die Erklärung „Wofür sind Termine – und wer sieht sie?“ im Termin-Fenster ist eingeklappt und lässt sich bei Bedarf öffnen.
+- Beim Abzeichnen heißt der Knopf zum Schließen eines Berichts jetzt „Einklappen“ statt „Zuklappen“.
+
 ## [0.21.0] – 2026-11-11
 
 ### Neu

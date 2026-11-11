@@ -194,7 +194,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
         </section>
       )}
       {erledigt.length > 0 && (
-        <details className="meldung-erledigt">
+        <details className="klapp frei meldung-erledigt">
           <summary>Erledigt ({erledigt.length})</summary>
           {erledigt.map(karte)}
         </details>
