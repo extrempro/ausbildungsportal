@@ -20,6 +20,7 @@ import { LernThema } from './pages/LernThema';
 import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
+import { UrlaubAzubi, UrlaubListe } from './pages/Urlaub';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
@@ -74,6 +75,11 @@ export function App() {
   const [melden, setMelden] = useState(false);
   const [offeneMeldungen, setOffeneMeldungen] = useState(0);
   const schliesseMelden = useCallback(() => setMelden(false), []);
+  // Ausbilder und Beauftragte: Urlaubsanträge, bei denen sie selbst etwas tun müssen
+  const [urlaubZuTun, setUrlaubZuTun] = useState(0);
+  const ladeUrlaubZuTun = useCallback(() => {
+    api<{ zuTun: number }>('GET', '/api/urlaub').then((r) => setUrlaubZuTun(r.zuTun), () => {});
+  }, []);
   // Knopf „Nach oben“ erscheint erst, wenn man ein Stück gescrollt hat
   const [weitUnten, setWeitUnten] = useState(false);
   useEffect(() => {
@@ -148,6 +154,9 @@ export function App() {
     if (konto?.rolle !== 'admin' || konto.passwortWechsel) return;
     api<{ offen: number }>('GET', '/api/fehlermeldungen').then((r) => setOffeneMeldungen(r.offen), () => {});
   }, [konto?.rolle, konto?.passwortWechsel, pfad]);
+  useEffect(() => {
+    if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
+  }, [konto?.rolle, pfad, ladeUrlaubZuTun]);
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
   useEffect(() => setMenue(null), [pfad]);
@@ -258,6 +267,7 @@ export function App() {
   }
 
   const jahrAzubi = /^\/jahreskalender\/(\d{1,12})$/.exec(pfad)?.[1];
+  const urlaubAzubi = /^\/azubis\/(\d{1,12})\/urlaub$/.exec(pfad)?.[1];
   const lernThema = /^\/lernen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
 
   let seite;
@@ -269,6 +279,9 @@ export function App() {
   else if (plan && planAzubi !== null) seite = <PlanSeite key={planAzubi} azubiId={planAzubi} />;
   else if (pfad === '/jahreskalender' && (betreut || konto.rolle === 'azubi')) seite = <Jahreskalender />;
   else if (jahrAzubi && betreut) seite = <Jahreskalender key={jahrAzubi} azubiId={Number(jahrAzubi)} />;
+  else if (pfad === '/urlaub' && konto.rolle === 'azubi') seite = <UrlaubAzubi key={konto.id} azubiId={konto.id} />;
+  else if (pfad === '/urlaub' && betreut) seite = <UrlaubListe konto={konto} onGeaendert={ladeUrlaubZuTun} />;
+  else if (urlaubAzubi && betreut) seite = <UrlaubAzubi key={urlaubAzubi} azubiId={Number(urlaubAzubi)} />;
   else if (pfad === '/planung/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
   else if (pfad === '/planung/bausteine' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
@@ -310,12 +323,14 @@ export function App() {
             { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
             { zu: '/berichtsheft', text: 'Berichtsheft', icon: 'heft', aktivAb: '/berichtsheft' },
             ...(lernen ? [{ zu: '/lernen', text: 'Lernen', icon: 'lernen', aktivAb: '/lernen' } as Punkt] : []),
+            { zu: '/urlaub', text: 'Urlaub', icon: 'urlaub' },
           ]
         : [
             { zu: '/', text: 'Start', icon: 'start' },
             { zu: '/azubis', text: 'Azubis', icon: 'azubis', aktivAb: '/azubis' },
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
             { zu: '/jahreskalender', text: 'Jahreskalender', kurz: 'Jahr', icon: 'uebersicht', aktivAb: '/jahreskalender' },
+            { zu: '/urlaub', text: 'Urlaub', icon: 'urlaub', mehr: true, zahl: urlaubZuTun },
           ];
   const verwaltung: Punkt[] =
     konto.rolle === 'ausbilder'

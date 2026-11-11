@@ -10,7 +10,18 @@ import type { BenutzerZeile } from './typen';
  * Gemerkt wird nur „wer hat was für welchen Azubi in welcher Woche getan“ – nie der Inhalt eines Berichts.
  * Wer eine Aktivität sieht, entscheidet allein sichtbareAzubis (rechte.ts); die eigenen Handlungen sieht niemand.
  */
-export type AktivitaetArt = 'plan_neu' | 'bericht_eingereicht' | 'bericht_abgezeichnet' | 'bericht_zurueck' | 'bericht_geoeffnet';
+export type AktivitaetArt =
+  | 'plan_neu'
+  | 'bericht_eingereicht'
+  | 'bericht_abgezeichnet'
+  | 'bericht_zurueck'
+  | 'bericht_geoeffnet'
+  | 'urlaub_beantragt'
+  | 'urlaub_bestaetigt'
+  | 'urlaub_genehmigt'
+  | 'urlaub_abgelehnt'
+  | 'urlaub_zurueckgezogen'
+  | 'urlaub_storniert';
 
 const AUFBEWAHRUNG_TAGE = 60;
 /** so viele Aktivitäten werden höchstens gelesen und zusammengefasst */

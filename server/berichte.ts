@@ -1,3 +1,4 @@
+import { genehmigteTage } from './urlaub';
 import { berichtsheftPdf } from './bericht-pdf';
 import type { BerichtFuerPdf } from './bericht-pdf';
 import { leseLogo } from './branding';
@@ -127,14 +128,18 @@ function inhaltAus(z: BerichtZeile): Inhalt {
 }
 
 /** Startwerte für einen neuen Bericht: landesweite Feiertage an Werktagen als Abwesenheit. */
-function vorbelegung(db: DB, montag: string, wochenstunden: number): Inhalt {
+function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: number): Inhalt {
   const inhalt = leererInhalt();
-  const land = leseBetrieb(db).bundesland;
-  if (!istBundesland(land)) return inhalt;
   const tagSoll = Math.round((wochenstunden / 5) * 4) / 4;
-  inhalt.abwesenheit = feiertageZwischen(land, montag, plusTage(montag, 4))
-    .filter((f) => !f.teilweise)
-    .map((f) => ({ tag: f.datum, grund: 'feiertag', stunden: tagSoll, text: f.name }));
+  // genehmigter Urlaub der Woche ist schon als Abwesenheit vorgetragen
+  const urlaub: Abwesenheit[] = genehmigteTage(db, azubiId, montag, plusTage(montag, 4)).map((tag) => ({ tag, grund: 'urlaub', stunden: tagSoll, text: '' }));
+  const land = leseBetrieb(db).bundesland;
+  const feiertage: Abwesenheit[] = istBundesland(land)
+    ? feiertageZwischen(land, montag, plusTage(montag, 4))
+        .filter((f) => !f.teilweise)
+        .map((f) => ({ tag: f.datum, grund: 'feiertag', stunden: tagSoll, text: f.name }))
+    : [];
+  inhalt.abwesenheit = [...feiertage, ...urlaub].sort((a, b) => a.tag.localeCompare(b.tag));
   return inhalt;
 }
 
@@ -207,7 +212,7 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
   // Entwürfe sieht nur der Azubi selbst – für alle anderen gibt es die Woche noch nicht
   const z = sichtbar(holeBericht(db, azubi.id, montag), eigener);
   const status = z?.status ?? null;
-  const inhalt = z ? inhaltAus(z) : vorbelegung(db, montag, profil.wochenstunden);
+  const inhalt = z ? inhaltAus(z) : vorbelegung(db, azubi.id, montag, profil.wochenstunden);
   const zeichnet = darfAbzeichnen(db, c.b, azubi.id, montag);
   const { beruf } = standAus(db, profil, tag);
   const ausbilder = profil.ausbilderId ? holeBenutzer(db, profil.ausbilderId) : undefined;

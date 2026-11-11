@@ -7,11 +7,13 @@ import { Link } from '../router';
 export function Start({ konto }: { konto: Konto }) {
   const [azubis, setAzubis] = useState<AzubiKurz[] | null>(null);
   const [wartend, setWartend] = useState<number | null>(null);
+  const [urlaub, setUrlaub] = useState<number | null>(null);
   const betreut = konto.rolle === 'ausbilder' || konto.rolle === 'beauftragter';
 
   useEffect(() => {
     if (betreut) api<{ azubis: AzubiKurz[] }>('GET', '/api/azubis').then((r) => setAzubis(r.azubis), () => setAzubis([]));
     if (betreut) api<{ offen: OffenerBericht[] }>('GET', '/api/abzeichnen').then((r) => setWartend(r.offen.length), () => {});
+    if (betreut) api<{ zuTun: number }>('GET', '/api/urlaub').then((r) => setUrlaub(r.zuTun), () => {});
   }, [betreut, konto.rolle, konto.id]);
 
   return (
@@ -24,6 +26,11 @@ export function Start({ konto }: { konto: Konto }) {
             <span className="kachel-wert">{wartend ?? '–'}</span>
             <span className="kachel-text">{wartend === 1 ? 'Bericht wartet' : 'Berichte warten'}</span>
             <span className="kachel-zusatz">auf deine Unterschrift</span>
+          </Link>
+          <Link zu="/urlaub" className={`kachel${urlaub ? ' warnung' : ''}`}>
+            <span className="kachel-wert">{urlaub ?? '–'}</span>
+            <span className="kachel-text">{urlaub === 1 ? 'Urlaubsantrag wartet' : 'Urlaubsanträge warten'}</span>
+            <span className="kachel-zusatz">{konto.rolle === 'ausbilder' ? 'auf deine Entscheidung' : 'auf deine Bestätigung'}</span>
           </Link>
           <Link zu="/azubis" className="kachel">
             <span className="kachel-wert">{azubis?.length ?? '–'}</span>

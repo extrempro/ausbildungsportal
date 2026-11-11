@@ -44,6 +44,8 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
       )}
       <dt>Wochenstunden</dt>
       <dd>{String(p.profil.wochenstunden).replace('.', ',')}</dd>
+      <dt>Urlaubstage im Jahr</dt>
+      <dd>{p.profil.urlaubstage ?? 'nicht eingetragen'}</dd>
       {p.profil.pruefungen.length > 0 && (
         <>
           <dt>Prüfungen</dt>
@@ -127,6 +129,10 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
         <label>
           Wochenstunden
           <input type="number" min={1} max={60} step={0.25} value={wert.wochenstunden} onChange={(e) => setze('wochenstunden', Number(e.target.value))} required />
+        </label>
+        <label>
+          Urlaubstage im Jahr
+          <input type="number" min={0} max={60} step={1} value={wert.urlaubstage ?? ''} onChange={(e) => setze('urlaubstage', e.target.value === '' ? null : Number(e.target.value))} placeholder="z. B. 30" />
         </label>
         <label>
           Ausbildungsbeginn
@@ -388,6 +394,9 @@ export function AzubiDetail({ id, ich }: { id: number; ich: Konto }) {
           </Link>{' '}
           <Link zu={`/azubis/${p.azubi.id}/plan`} className="knopf schlicht">
             Ausbildungsplan
+          </Link>{' '}
+          <Link zu={`/azubis/${p.azubi.id}/urlaub`} className="knopf schlicht">
+            Urlaub
           </Link>
         </p>
       </section>

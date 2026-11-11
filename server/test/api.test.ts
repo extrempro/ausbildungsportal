@@ -127,6 +127,15 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'PUT /api/planvorlagen/:id': 'ausbilder',
     'DELETE /api/planvorlagen/:id': 'ausbilder',
     'GET /api/jahreskalender': 'azubi,ausbilder,beauftragter',
+    'GET /api/azubis/:id/urlaub': 'ausbilder,beauftragter,azubi',
+    'GET /api/azubis/:id/urlaub/pruefen': 'azubi',
+    'POST /api/azubis/:id/urlaub': 'azubi',
+    'GET /api/urlaub': 'ausbilder,beauftragter',
+    'POST /api/urlaub/:id/zurueckziehen': 'azubi',
+    'POST /api/urlaub/:id/bestaetigen': 'ausbilder,beauftragter',
+    'POST /api/urlaub/:id/ablehnen': 'ausbilder,beauftragter',
+    'POST /api/urlaub/:id/genehmigen': 'ausbilder',
+    'POST /api/urlaub/:id/stornieren': 'ausbilder',
   });
 });
 

@@ -11,7 +11,18 @@ import { HandbuchLink } from './handbuchLink';
  * Glocke in der Kopfzeile: neue Einträge im Ausbildungsplan und Schritte im Berichtsheft.
  * Der Server fasst zusammen, was zusammengehört (gleiche Person, gleicher Azubi, gleiche Art, gleicher Tag).
  */
-type Art = 'plan_neu' | 'bericht_eingereicht' | 'bericht_abgezeichnet' | 'bericht_zurueck' | 'bericht_geoeffnet';
+type Art =
+  | 'plan_neu'
+  | 'bericht_eingereicht'
+  | 'bericht_abgezeichnet'
+  | 'bericht_zurueck'
+  | 'bericht_geoeffnet'
+  | 'urlaub_beantragt'
+  | 'urlaub_bestaetigt'
+  | 'urlaub_genehmigt'
+  | 'urlaub_abgelehnt'
+  | 'urlaub_zurueckgezogen'
+  | 'urlaub_storniert';
 
 interface Gruppe {
   id: number;
@@ -101,6 +112,18 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
         mitte: wochenText(g.wochen),
         zu: bericht,
       };
+    case 'urlaub_beantragt':
+      return { icon: 'urlaub', farbe: 'gelb', kopf: n === 1 ? 'Urlaub beantragt' : `${n} Urlaubsanträge`, mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
+    case 'urlaub_bestaetigt':
+      return { icon: 'urlaub', farbe: 'blau', kopf: azubi ? 'Urlaub bestätigt – jetzt entscheidet dein Ausbilder' : 'Urlaub bestätigt', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
+    case 'urlaub_genehmigt':
+      return { icon: 'urlaub', farbe: 'gruen', kopf: 'Urlaub genehmigt', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
+    case 'urlaub_abgelehnt':
+      return { icon: 'urlaub', farbe: 'rot', kopf: 'Urlaub abgelehnt', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
+    case 'urlaub_zurueckgezogen':
+      return { icon: 'urlaub', farbe: 'grau', kopf: 'Urlaubsantrag zurückgezogen', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
+    case 'urlaub_storniert':
+      return { icon: 'urlaub', farbe: 'rot', kopf: 'Genehmigter Urlaub storniert', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
     default:
       return { icon: 'heft', farbe: 'rot', kopf: n === 1 ? 'Abzeichnung aufgehoben' : `${n} Abzeichnungen aufgehoben`, mitte: wochenText(g.wochen), zu: bericht };
   }
@@ -200,15 +223,15 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
             <p className="glocke-leer">
               Noch nichts Neues.
               <br />
-              <span className="klein">Hier steht, wenn jemand etwas in den Ausbildungsplan einträgt oder sich bei einem Bericht etwas tut.</span>
+              <span className="klein">Hier steht, wenn jemand etwas in den Ausbildungsplan einträgt oder sich bei einem Bericht oder Urlaubsantrag etwas tut.</span>
             </p>
           )}
           {!fehler && gezeigt !== null && liste.length > 0 && (
             <ul className="glocke-liste">
               {liste.map((g) => {
                 const z = beschreibe(g, konto);
-                const wer = g.art === 'bericht_eingereicht' ? g.azubiName : `von ${g.akteurName}`;
-                const fuer = konto.rolle !== 'azubi' && g.art !== 'bericht_eingereicht' && g.akteurName !== g.azubiName ? ` · für ${g.azubiName}` : '';
+                const wer = g.art === 'bericht_eingereicht' || g.art === 'urlaub_beantragt' || g.art === 'urlaub_zurueckgezogen' ? g.azubiName : `von ${g.akteurName}`;
+                const fuer = konto.rolle !== 'azubi' && g.art !== 'bericht_eingereicht' && g.art !== 'urlaub_beantragt' && g.art !== 'urlaub_zurueckgezogen' && g.akteurName !== g.azubiName ? ` · für ${g.azubiName}` : '';
                 return (
                   <li key={g.id} className={g.neu ? 'neu' : undefined}>
                     <Link zu={z.zu}>
