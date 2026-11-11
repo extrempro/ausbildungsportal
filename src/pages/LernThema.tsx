@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import { Ladefehler, melde } from '../dialoge';
+import { Ladefehler, melde, rueckfrage } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { Icon } from '../icons';
 import { AMPEL_REGEL, AMPEL_TEXT, ampelVon, prozent, zaehle, zusammenfassung } from '../lernen/ampel';
@@ -334,7 +334,11 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
           {!u.hatInhalt && <span className="pille grau">Cheatsheet folgt</span>}
           {u.vertiefung.length > 0 && <span className="pille blau">Vertiefung</span>}
         </h3>
-        <AmpelSchalter titel={u.titel} status={u.status} gesperrt={laeuft} onChange={(s) => void tue({ status: s }, `„${u.titel}“ steht jetzt auf „${AMPEL_TEXT[s]}“.`)} />
+        <AmpelSchalter titel={u.titel} status={u.status} gesperrt={laeuft} onChange={(s) => {
+            // erst fragen, dann umstellen – ein versehentlicher Klick ändert nichts. Gespeichert wird danach ohne weitere Meldung: Die Ampel zeigt den neuen Stand.
+            void rueckfrage(`Ampel umstellen?\n\n„${u.titel}“ steht auf „${AMPEL_TEXT[u.status]}“ und wechselt auf „${AMPEL_TEXT[s]}“.`, { ja: `Auf „${AMPEL_TEXT[s]}“ stellen` }).then((ja) => ja && tue({ status: s }));
+          }}
+        />
       </div>
       <p className="leise klein lern-regel">{AMPEL_REGEL[u.status]}</p>
       {fehler && (
