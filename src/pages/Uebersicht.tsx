@@ -8,8 +8,6 @@ type Azubi = Uebersicht['azubis'][number];
 type Zelle = Azubi['wochen'][number];
 
 const tagMonat = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
-const WOCHENTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-const tagKurz = (iso: string) => `${WOCHENTAG[new Date(`${iso}T00:00:00Z`).getUTCDay()]} ${tagMonat(iso)}`;
 /** Monat einer Woche = Monat ihres Donnerstags (wie bei der Kalenderwoche). */
 const monat = (montag: string) => new Date(`${plusTage(montag, 3)}T00:00:00Z`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -22,7 +20,7 @@ function gruppen(azubis: Azubi[]): { titel: string; azubis: Azubi[] }[] {
 /** Wo ein Azubi in einer Woche ist – als kurze Wörter für die Karten oben. */
 function Lage({ z }: { z: Zelle }) {
   if (!z.inAusbildung) return <span className="leise">nicht in der Ausbildung</span>;
-  if (!z.schule && z.einsatz.length === 0 && z.urlaubstage === 0 && z.termine.length === 0) return <span className="leise">nichts geplant</span>;
+  if (!z.schule && z.einsatz.length === 0 && z.urlaubstage === 0) return <span className="leise">nichts geplant</span>;
   return (
     <>
       {z.schule && <span className="ue schule">Berufsschule</span>}
@@ -36,12 +34,6 @@ function Lage({ z }: { z: Zelle }) {
           {z.urlaubstage} {z.urlaubstage === 1 ? 'Tag' : 'Tage'} Urlaub
         </span>
       )}
-      {z.termine.map((t, i) => (
-        <span key={`t${i}`} className="ue termin">
-          {tagKurz(t.tag)}
-          {t.zeitVon ? ` ${t.zeitVon}` : ''}: {t.titel}
-        </span>
-      ))}
     </>
   );
 }
@@ -86,7 +78,7 @@ function WochenListe({ d }: { d: Uebersicht }) {
       {d.wochen.map((w, i) => {
         const heute = w.montag <= d.heute && plusTage(w.montag, 6) >= d.heute;
         const naechste = plusTage(w.montag, -7) <= d.heute && w.montag > d.heute;
-        const belegt = (z: Zelle) => z.schule || z.einsatz.length > 0 || z.urlaubstage > 0 || z.termine.length > 0;
+        const belegt = (z: Zelle) => z.schule || z.einsatz.length > 0 || z.urlaubstage > 0;
         const zeigen = d.azubis.filter((a) => (heute || naechste ? true : belegt(a.wochen[i])));
         const name = monat(w.montag);
         const neuerMonat = name !== letzterMonat;

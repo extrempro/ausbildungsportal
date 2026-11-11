@@ -4,9 +4,9 @@
 
 ### Neu
 
-- **Termine für Azubis:** Azubis können einzelne Tage in ihren Plan eintragen – mit Datum und, wenn gewünscht, Beginn und Ende. Gedacht für alles, was vom normalen Tag abweicht: eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung, eine Betriebsversammlung.
-- Termine trägt nur der Azubi selbst ein; nur er kann sie ändern und löschen. Ausbilder und Ausbildungsbeauftragte sehen sie, damit sie wissen, wann der Azubi nicht am Platz ist. Das Formular sagt das dem Azubi.
-- Termine stehen oben in den Kacheln „Diese Woche“ und „Nächste Woche“ (dort gibt es den Knopf „+ Termin“), in der Wochenliste, in der Übersicht der Ausbilder und im abonnierten Kalender – dort mit Uhrzeit, aber ohne Ort und Anmerkung.
+- **Termine für Azubis:** Azubis können einzelne Tage in ihren Plan eintragen – mit Datum und, wenn gewünscht, Beginn und Ende. Gedacht zum Merken einzelner Termine: eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung, eine Betriebsversammlung.
+- **Termine sind privat.** Nur der Azubi selbst trägt sie ein, sieht, ändert und löscht sie. Ausbilder und Ausbildungsbeauftragte sehen sie nicht – weder im Plan des Azubis noch in ihrer Übersicht, in der Glocke oder in ihrem Kalender. Das Formular sagt das dem Azubi.
+- Für den Azubi stehen Termine oben in den Kacheln „Diese Woche“ und „Nächste Woche“ (dort gibt es den Knopf „+ Termin“), in der Wochenliste und in seinem abonnierten Kalender – dort mit Uhrzeit, aber ohne Ort und Anmerkung.
 
 ## [0.20.0] – 2026-11-11
 

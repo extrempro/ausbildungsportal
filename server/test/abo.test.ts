@@ -134,7 +134,7 @@ test('ICS: lange Zeilen werden nach 75 Bytes gefaltet, Sonderzeichen maskiert', 
   assert.ok(glatt.includes('DESCRIPTION:a\\nb\r\n') && glatt.includes('DTSTAMP:20261110T090000Z\r\n') && glatt.includes('LAST-MODIFIED:20260101T100000Z\r\n'));
 });
 
-test('Eigene Termine der Azubis stehen im Kalender: mit Uhrzeit als Ortszeit, ohne Freitext', async () => {
+test('Eigene Termine stehen nur im Kalender des Azubis selbst: mit Uhrzeit als Ortszeit, ohne Freitext', async () => {
   const { u, petra, anna } = await welt();
   const c = sitzung(u, anna);
   for (const t of [{ titel: 'JAV-Sitzung', tag: '2026-11-18', zeitVon: '14:00', zeitBis: '15:30', text: 'Vertraulicher Ort' }, { titel: 'Nur Beginn', tag: '2026-11-19', zeitVon: '23:30' }, { titel: 'Ganztags', tag: '2026-11-20' }]) {
@@ -145,5 +145,6 @@ test('Eigene Termine der Azubis stehen im Kalender: mit Uhrzeit als Ortszeit, oh
   assert.ok(text.includes('DTSTART:20261119T233000\r\nDTEND:20261119T235900\r\nSUMMARY:Nur Beginn'), 'ohne Ende: eine Stunde, höchstens bis Mitternacht');
   assert.ok(text.includes('DTSTART;VALUE=DATE:20261120\r\nDTEND;VALUE=DATE:20261121\r\nSUMMARY:Ganztags'));
   assert.equal(text.includes('Vertraulicher Ort'), false);
-  assert.ok((await ics(u, await link(u, petra))).includes('SUMMARY:Anna Azubi: JAV-Sitzung'), 'die Ausbilderin sieht den Termin mit Namen');
+  const petras = await link(u, petra);
+  for (const pfad of [petras, `${petras}?azubi=${anna.id}`]) assert.equal((await ics(u, pfad)).includes('JAV'), false, 'im Kalender der Ausbilderin stehen private Termine nicht');
 });

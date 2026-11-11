@@ -94,7 +94,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
     }
   };
   const loesche = async () => {
-    if (e.id === null || !(await rueckfrage(e.art === 'termin' ? `Termin „${e.titel}“ löschen?\n\nEr verschwindet aus deinem Plan und aus abonnierten Kalendern.` : `„${e.titel}“ aus dem Plan löschen?\n\nDer Eintrag verschwindet aus allen Wochen, in denen er steht.`, { ja: 'Eintrag löschen', gefahr: true }))) return;
+    if (e.id === null || !(await rueckfrage(e.art === 'termin' ? `Termin „${e.titel}“ löschen?\n\nEr verschwindet aus deinem Plan und aus deinem abonnierten Kalender.` : `„${e.titel}“ aus dem Plan löschen?\n\nDer Eintrag verschwindet aus allen Wochen, in denen er steht.`, { ja: 'Eintrag löschen', gefahr: true }))) return;
     try {
       await api('DELETE', `${basis}/${e.id}`);
       await onFertig('Eintrag gelöscht.');
@@ -236,8 +236,8 @@ function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: W
     wochen > 1 && `Woche ${nr} von ${wochen} (${tagMonat(e.von)}–${tagMonat(plusTage(e.bis, 6))})`,
     e.zustaendig && `Zuständig: ${e.zustaendig}`,
     e.unteraufgaben.length > 0 && `${erledigt} von ${e.unteraufgaben.length} Unteraufgaben erledigt`,
-    // Termine trägt immer der Azubi selbst ein – ihm muss das niemand sagen
-    e.vomAzubi && !(eigenes && e.art === 'termin') && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
+    // Termine sieht nur der Azubi selbst – das steht dabei, damit er es nicht vergisst
+    e.art === 'termin' ? 'nur für dich sichtbar' : e.vomAzubi && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
   ].filter(Boolean);
   return (
     <div className={`eintrag ${e.art}`}>
@@ -674,7 +674,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
       <p className="leise">
         {d.beruf ? `${d.beruf} · ` : ''}
         {d.eigenes
-          ? 'Deine Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Du kannst eigene Aufgaben, Notizen und Termine (zum Beispiel eine JAV-Sitzung) eintragen und Aufgaben abhaken.'
+          ? 'Deine Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Du kannst eigene Aufgaben, Notizen und Termine (zum Beispiel eine JAV-Sitzung) eintragen und Aufgaben abhaken. Termine siehst nur du.'
           : d.rechte.arten.includes('einsatz')
             ? 'Die Ausbildung Woche für Woche – Schulblöcke, Einsätze, Aufgaben und Notizen. Jeder Eintrag lässt sich über „Bearbeiten“ ändern.'
             : plant
@@ -851,7 +851,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
                 <span>
                   <i className="streifen" /> Schulwoche
                 </span>
-                {REIHENFOLGE.map((art) => (
+                {REIHENFOLGE.filter((art) => art !== 'termin' || d.rechte.arten.includes('termin')).map((art) => (
                   <span key={art} className={`legende-art ${art}`}>
                     {ART_TEXT[art]}
                   </span>

@@ -59,8 +59,8 @@ export function EintragFelder({
       {termin ? (
         <>
           <p className="hinweis ganz">
-            <strong>Wofür sind Termine?</strong> Für einzelne Tage, an denen du etwas anderes vorhast als sonst – zum Beispiel eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung.
-            Dein Ausbilder und deine Ausbildungsbeauftragten sehen den Termin und wissen so, wann du nicht am Platz bist. Schreib nur hinein, was sie wissen dürfen.
+            <strong>Wofür sind Termine?</strong> Für einzelne Tage, die du dir merken willst – zum Beispiel eine JAV-Sitzung (Jugend- und Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung.{' '}
+            <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – auch nicht in ihrer Übersicht oder ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
           </p>
           <label>
             Datum

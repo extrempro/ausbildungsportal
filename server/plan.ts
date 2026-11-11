@@ -16,6 +16,8 @@ import type { BenutzerZeile } from './typen';
  * Ausbildungsplan: Einträge je Azubi über ganze Kalenderwochen.
  * Arten: Schulblock, Einsatz (Abteilung/Einsatzort mit zuständiger Person), Aufgabe (mit Unteraufgaben), Notiz
  * und Termin – ein einzelner Tag mit freiwilliger Uhrzeit, den nur der Azubi selbst einträgt (z. B. JAV-Sitzung).
+ * Termine sind privat: Nur der Azubi selbst sieht sie. Für alle anderen gibt es sie nicht – weder im Plan noch in
+ * Übersicht, Glocke, Bericht-Hinweis oder Kalender-Abo. Jede Abfrage, die nicht vom Azubi selbst kommt, lässt sie aus.
  * Ausbilder planen alles; Beauftragte legen während ihrer Zuweisung Aufgaben und Notizen an;
  * Azubis legen eigene Aufgaben und Notizen an und haken ab.
  */
@@ -219,7 +221,8 @@ function ansicht(c: Ctx, z: EintragZeile) {
 
 function holeEintrag(c: Ctx, azubiId: number): EintragZeile {
   const z = c.k.db.prepare('SELECT * FROM plan_eintrag WHERE id = ? AND azubi_id = ?').get(idAus(c.p.eid), azubiId) as EintragZeile | undefined;
-  if (!z) throw new Fehler(404, 'Nicht gefunden');
+  // fremde Termine sehen aus wie unbekannte Einträge
+  if (!z || (z.art === 'termin' && c.b.id !== azubiId)) throw new Fehler(404, 'Nicht gefunden');
   return z;
 }
 
@@ -235,10 +238,10 @@ function berufOderNull(db: DB, x: unknown): number | null {
 }
 
 /** Plan-Einträge, die eine Woche berühren – als Hinweis beim Schreiben des Berichts. */
-export function planDerWoche(db: DB, azubiId: number, montag: string): { art: Art; titel: string }[] {
+export function planDerWoche(db: DB, azubiId: number, montag: string, mitTerminen: boolean): { art: Art; titel: string }[] {
   const zeilen = db
-    .prepare("SELECT art, titel FROM plan_eintrag WHERE azubi_id = ? AND von <= ? AND bis >= ? AND art != 'notiz' ORDER BY CASE art WHEN 'schule' THEN 1 WHEN 'einsatz' THEN 2 WHEN 'termin' THEN 3 ELSE 4 END, von, tag, zeit_von, id")
-    .all(azubiId, montag, montag) as unknown as { art: Art; titel: string }[];
+    .prepare("SELECT art, titel FROM plan_eintrag WHERE azubi_id = ? AND von <= ? AND bis >= ? AND art != 'notiz' AND (art != 'termin' OR ?) ORDER BY CASE art WHEN 'schule' THEN 1 WHEN 'einsatz' THEN 2 WHEN 'termin' THEN 3 ELSE 4 END, von, tag, zeit_von, id")
+    .all(azubiId, montag, montag, mitTerminen ? 1 : 0) as unknown as { art: Art; titel: string }[];
   return zeilen.map((z) => ({ art: z.art, titel: z.titel }));
 }
 
@@ -287,7 +290,8 @@ function letzteLaeufe(db: DB, wer: BenutzerZeile) {
 function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boolean, lauf: Lauf | null = null): { id: number; zugewiesen: boolean } {
   const { db } = c.k;
   if (!darfPlanBearbeiten(db, c.b, azubi.id, e.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diese Art von Eintrag darfst du hier nicht anlegen', 'rolle');
-  const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
+  // private Termine zählen für sich – sie sollen weder den Plan der Ausbilder füllen noch sich dort bemerkbar machen
+  const anzahl = (db.prepare("SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ? AND (art = 'termin') = ?").get(azubi.id, e.art === 'termin' ? 1 : 0) as { n: number }).n;
   if (anzahl >= MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hat schon ${MAX_EINTRAEGE} Einträge`);
   const jetzt = lauf?.zeit ?? c.k.jetzt();
   let zugewiesen = false;
@@ -298,7 +302,8 @@ function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boole
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(azubi.id, e.art, e.von, e.bis, e.titel, e.text, e.zustaendig?.id ?? null, e.erledigt ? 1 : 0, JSON.stringify(e.unteraufgaben), c.b.id, c.b.id, jetzt.toISOString(), lauf?.id ?? null, e.tag, e.zeitVon, e.zeitBis);
-    merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel, 1, lauf?.id ?? null);
+    // Termine sind privat – sie erscheinen nicht in der Glocke der Betreuenden
+    if (e.art !== 'termin') merkeAktivitaet(db, jetzt, 'plan_neu', azubi.id, c.b, e.von, e.titel, 1, lauf?.id ?? null);
     if (zuweisen && darfAzubiVerwalten(db, c.b, azubi.id)) zugewiesen = weiseZu(db, jetzt, c.b, azubi, e);
     return Number(r.lastInsertRowid);
   });
@@ -325,7 +330,7 @@ function fuegeBausteinEin(c: Ctx, azubi: BenutzerZeile, v: VorlageZeile, ab: str
       const bis = plusTage(von, 7 * (e.wochen - 1));
       return { e, von, bis: bis > letzte ? letzte : bis };
     });
-  const anzahl = (db.prepare('SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ?').get(azubi.id) as { n: number }).n;
+  const anzahl = (db.prepare("SELECT COUNT(*) AS n FROM plan_eintrag WHERE azubi_id = ? AND art != 'termin'").get(azubi.id) as { n: number }).n;
   if (anzahl + neu.length > MAX_EINTRAEGE) throw new Fehler(409, `Der Plan hätte danach mehr als ${MAX_EINTRAEGE} Einträge`);
   const jetzt = lauf?.zeit ?? c.k.jetzt();
   transaktion(db, () => {
@@ -367,7 +372,7 @@ export const PLAN_ROUTEN: Route[] = [
       const tag = heute(c.k.jetzt());
       const profil = leseProfil(db, azubi.id);
       const dauer = dauerVon(db, profil);
-      const zeilen = db.prepare('SELECT * FROM plan_eintrag WHERE azubi_id = ? ORDER BY von, bis, tag, zeit_von, id').all(azubi.id) as unknown as EintragZeile[];
+      const zeilen = db.prepare("SELECT * FROM plan_eintrag WHERE azubi_id = ? AND (art != 'termin' OR ?) ORDER BY von, bis, tag, zeit_von, id").all(azubi.id, c.b.id === azubi.id ? 1 : 0) as unknown as EintragZeile[];
 
       // Wochen der Ausbildung; Einträge außerhalb (z. B. nach geändertem Beginn) bleiben sichtbar
       let erste = dauer ? montagVon(dauer.beginn) : null;
@@ -727,7 +732,6 @@ export const PLAN_ROUTEN: Route[] = [
         const dauer = dauerVon(db, profil);
         const { beruf, stand } = standAus(db, profil, tag);
         const eintraege = db.prepare("SELECT art, von, bis, titel FROM plan_eintrag WHERE azubi_id = ? AND art IN ('schule', 'einsatz') AND von <= ? AND bis >= ? ORDER BY von, id").all(id, letzte, start) as unknown as { art: Art; von: string; bis: string; titel: string }[];
-        const termine = db.prepare("SELECT von, tag, zeit_von, titel FROM plan_eintrag WHERE azubi_id = ? AND art = 'termin' AND von <= ? AND von >= ? ORDER BY tag, zeit_von, id").all(id, letzte, start) as unknown as { von: string; tag: string; zeit_von: string; titel: string }[];
         // Urlaub steht nicht im Plan, sondern in den Berichten (Abwesenheit mit Grund „Urlaub“)
         const urlaub = new Map<string, number>();
         for (const z of db.prepare('SELECT montag, inhalt FROM bericht WHERE azubi_id = ? AND montag >= ? AND montag <= ?').all(id, start, letzte) as unknown as { montag: string; inhalt: string }[]) {
@@ -745,7 +749,6 @@ export const PLAN_ROUTEN: Route[] = [
             schule: eintraege.some((e) => e.art === 'schule' && e.von <= w.montag && e.bis >= w.montag),
             einsatz: eintraege.filter((e) => e.art === 'einsatz' && e.von <= w.montag && e.bis >= w.montag).map((e) => e.titel),
             urlaubstage: urlaub.get(w.montag) ?? 0,
-            termine: termine.filter((t) => t.von === w.montag).map((t) => ({ tag: t.tag, zeitVon: t.zeit_von, titel: t.titel })),
           })),
         };
       });

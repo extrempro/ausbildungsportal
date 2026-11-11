@@ -330,7 +330,7 @@ export function berichtsheftPfad(azubiId: number, eigenes: boolean): string {
 // ---------- Ausbildungsplan ----------
 
 export type PlanArt = 'schule' | 'einsatz' | 'aufgabe' | 'notiz' | 'termin';
-/** was Ausbilder planen (Bausteine, Sammelplanung); Termine tragen nur Azubis selbst ein */
+/** was Ausbilder planen (Bausteine, Sammelplanung); Termine tragen nur Azubis selbst ein – und nur sie sehen sie */
 export const PLAN_ARTEN: PlanArt[] = ['schule', 'einsatz', 'aufgabe', 'notiz'];
 export const ART_TEXT: Record<PlanArt, string> = { schule: 'Berufsschule', einsatz: 'Einsatz', aufgabe: 'Aufgabe', notiz: 'Notiz', termin: 'Termin' };
 export const ART_FARBE: Record<PlanArt, string> = { schule: 'violett', einsatz: 'gruen', aufgabe: 'gelb', notiz: 'grau', termin: 'blau' };
@@ -407,7 +407,7 @@ export interface Planvorlage {
 export interface Uebersicht {
   heute: string;
   wochen: { montag: string; kw: number; jahr: number }[];
-  azubis: { id: number; anzeigename: string; beruf: string; ausbildungsjahr: number | null; wochen: { inAusbildung: boolean; schule: boolean; einsatz: string[]; urlaubstage: number; termine: { tag: string; zeitVon: string; titel: string }[] }[] }[];
+  azubis: { id: number; anzeigename: string; beruf: string; ausbildungsjahr: number | null; wochen: { inAusbildung: boolean; schule: boolean; einsatz: string[]; urlaubstage: number }[] }[];
 }
 
 export interface Versionshinweis {

@@ -14,7 +14,7 @@ import type { BenutzerZeile } from './typen';
  * Kalenderprogramme können sich nicht über Microsoft anmelden. Deshalb gibt es je Konto einen Link mit einem langen,
  * zufälligen Geheimnis. Er gibt nur Lesezugriff, und bei jedem Abruf gelten die Rechte des Kontos von diesem Moment
  * (rechte.ts) – ein gesperrtes Konto oder eine beendete Zuweisung liefert sofort nichts mehr.
- * Dazu die Termine, die Azubis selbst eintragen. Bewusst nicht enthalten: Aufgaben, Notizen, Freitexte, Berichte, Ferien und Feiertage.
+ * Im eigenen Kalender eines Azubis stehen dazu seine eigenen Termine – in keinem anderen. Bewusst nicht enthalten: Aufgaben, Notizen, Freitexte, Berichte, Ferien und Feiertage.
  */
 
 const ROLLEN: Route['wer'] = ['ausbilder', 'beauftragter', 'azubi'];
@@ -108,7 +108,7 @@ interface Termin {
   beschreibung: string;
 }
 
-function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string): Termin[] {
+function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string, eigener: boolean): Termin[] {
   const vorn = mitName ? `${azubi.anzeigename}: ` : '';
   const zeilen = db
     .prepare(
@@ -126,10 +126,12 @@ function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string
     geaendert: z.geaendert,
     beschreibung: [z.art === 'schule' ? 'Berufsschule' : 'Einsatz', z.zustaendig ? `Zuständig: ${z.zustaendig}` : ''].filter(Boolean).join('\n'),
   }));
-  // Termine, die der Azubi selbst eingetragen hat (z. B. JAV-Sitzung) – ohne den Freitext
-  const eigene = db
-    .prepare("SELECT id, tag, zeit_von, zeit_bis, titel, geaendert FROM plan_eintrag WHERE azubi_id = ? AND art = 'termin' ORDER BY tag, zeit_von, id")
-    .all(azubi.id) as unknown as { id: number; tag: string; zeit_von: string; zeit_bis: string; titel: string; geaendert: string }[];
+  // Termine, die der Azubi selbst eingetragen hat (z. B. JAV-Sitzung) – nur in seinem eigenen Kalender, ohne den Freitext
+  const eigene = !eigener
+    ? []
+    : db
+        .prepare("SELECT id, tag, zeit_von, zeit_bis, titel, geaendert FROM plan_eintrag WHERE azubi_id = ? AND art = 'termin' ORDER BY tag, zeit_von, id")
+        .all(azubi.id) as unknown as { id: number; tag: string; zeit_von: string; zeit_bis: string; titel: string; geaendert: string }[];
   for (const z of eigene) {
     termine.push({ uid: `plan-${z.id}@${host}`, von: z.tag, bis: z.tag, zeitVon: z.zeit_von || undefined, zeitBis: z.zeit_bis || undefined, titel: vorn + z.titel, art: 'Termin', geaendert: z.geaendert, beschreibung: 'Termin' });
   }
@@ -236,7 +238,7 @@ export const ABO_ROUTEN: Route[] = [
       }
       const azubis = ids.map((id) => db.prepare('SELECT * FROM benutzer WHERE id = ?').get(id) as unknown as BenutzerZeile);
       const mitName = wer.rolle !== 'azubi' && nur === null;
-      const termine = azubis.flatMap((a) => termineVon(db, a, mitName, host));
+      const termine = azubis.flatMap((a) => termineVon(db, a, mitName, host, a.id === wer.id));
       const name = wer.rolle === 'azubi' ? 'Ausbildungsplan' : nur !== null && azubis[0] ? `Ausbildungsplan ${azubis[0].anzeigename}` : 'Ausbildungsplan Azubis';
 
       db.prepare('UPDATE kalender_abo SET letzter_abruf = ? WHERE benutzer_id = ?').run(jetzt.toISOString(), wer.id);

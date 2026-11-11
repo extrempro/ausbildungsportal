@@ -256,9 +256,9 @@ test('Übersicht: Schule, Einsatz und Urlaub je Woche; Beauftragte sehen nur ihr
   assert.deepEqual(r.azubis.map((x: any) => x.anzeigename), ['Anna Azubi', 'Ben Azubi']);
   assert.equal(r.azubis[0].ausbildungsjahr, 2);
   const anna = r.azubis[0].wochen;
-  assert.deepEqual(anna[0], { inAusbildung: true, schule: false, einsatz: [], urlaubstage: 2, termine: [] });
-  assert.deepEqual(anna[1], { inAusbildung: true, schule: false, einsatz: ['IT-Support'], urlaubstage: 0, termine: [] });
-  assert.deepEqual(anna[2], { inAusbildung: true, schule: true, einsatz: ['IT-Support'], urlaubstage: 0, termine: [] });
+  assert.deepEqual(anna[0], { inAusbildung: true, schule: false, einsatz: [], urlaubstage: 2 });
+  assert.deepEqual(anna[1], { inAusbildung: true, schule: false, einsatz: ['IT-Support'], urlaubstage: 0 });
+  assert.deepEqual(anna[2], { inAusbildung: true, schule: true, einsatz: ['IT-Support'], urlaubstage: 0 });
   assert.ok(!JSON.stringify(r).includes('krank'), 'Krankheit erscheint nicht in der Übersicht');
 
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: als(w, w.beauftragter) })).azubis, []);
@@ -464,9 +464,10 @@ test('Sammelplanung zurücknehmen: entfernt Unverändertes, lässt Geändertes u
 
 // ---------- Termine ----------
 
-test('Termine: nur der Azubi selbst trägt ein, ändert und löscht; alle, die den Plan sehen, sehen sie', async () => {
+test('Termine sind privat: nur der Azubi selbst trägt ein, sieht, ändert und löscht', async () => {
   const w = await welt();
   zuweisen(w.u.db, w.azubi, w.beauftragter);
+  w.u.db.prepare('UPDATE benutzer SET alle_azubis = 1 WHERE id = ?').run(w.ausbilder.id); // selbst die Gesamtsicht ändert nichts
   const neu = (wer: BenutzerZeile, body: unknown, a: BenutzerZeile = w.azubi) => ruf(w.u, 'POST', `/api/azubis/${a.id}/plan`, { cookies: als(w, wer), body });
   const termin = { art: 'termin', titel: 'JAV-Sitzung', tag: '2026-11-18', zeitVon: '14:00', zeitBis: '15:30', text: 'Raum 2' };
 
@@ -474,21 +475,21 @@ test('Termine: nur der Azubi selbst trägt ein, ändert und löscht; alle, die d
   assert.equal(r.status, 201);
   const e = koerper(r).eintrag;
   // Mittwoch, 18.11.2026 → steht in der Woche ab Montag, 16.11.
-  assert.deepEqual([e.art, e.von, e.bis, e.tag, e.zeitVon, e.zeitBis, e.vomAzubi, e.bearbeitbar], ['termin', '2026-11-16', '2026-11-16', '2026-11-18', '14:00', '15:30', true, true]);
+  assert.deepEqual([e.art, e.von, e.bis, e.tag, e.zeitVon, e.zeitBis, e.bearbeitbar], ['termin', '2026-11-16', '2026-11-16', '2026-11-18', '14:00', '15:30', true]);
+  assert.deepEqual((await plan(w, w.azubi)).rechte.arten, ['aufgabe', 'notiz', 'termin']);
+  assert.equal((await plan(w, w.azubi)).eintraege.length, 1);
 
   for (const wer of [w.ausbilder, w.beauftragter]) {
     assert.equal((await neu(wer, termin)).status, 403, `${wer.rolle} trägt keine Termine ein`);
     const p = await plan(w, wer);
     assert.equal(p.rechte.arten.includes('termin'), false);
-    const gesehen = p.eintraege.find((x: { id: number }) => x.id === e.id);
-    assert.equal(gesehen.titel, 'JAV-Sitzung', `${wer.rolle} sieht den Termin`);
-    assert.equal(gesehen.bearbeitbar, false);
-    assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer), body: { ...termin, titel: 'Geändert' } })).status, 403);
-    assert.equal((await ruf(w.u, 'DELETE', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer) })).status, 403);
-    // auch nicht über den Umweg, die Art zu ändern
-    assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer), body: { art: 'notiz', titel: 'x', von: '2026-11-16' } })).status, 403);
+    assert.deepEqual(p.eintraege, [], `${wer.rolle} sieht den Termin nicht`);
+    assert.equal(JSON.stringify(p).includes('JAV'), false);
+    // für andere gibt es den Eintrag nicht – auch nicht zum Ändern, Löschen oder Abhaken
+    assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer), body: { art: 'notiz', titel: 'x', von: '2026-11-16' } })).status, 404);
+    assert.equal((await ruf(w.u, 'DELETE', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, wer) })).status, 404);
+    assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan/${e.id}/haken`, { cookies: als(w, wer), body: { erledigt: true } })).status, 404);
   }
-  assert.deepEqual((await plan(w, w.azubi)).rechte.arten, ['aufgabe', 'notiz', 'termin']);
   assert.equal((await neu(w.ben, termin, w.azubi)).status, 404, 'fremder Azubi');
 
   const geaendert = await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/plan/${e.id}`, { cookies: als(w, w.azubi), body: { art: 'termin', titel: 'JAV-Sitzung', tag: '2026-11-24' } });
@@ -515,15 +516,24 @@ test('Termine: Eingaben werden geprüft; nicht in Bausteinen und nicht in der Sa
   assert.equal((await ruf(w.u, 'POST', '/api/plan/sammel', { cookies: c, body: { azubiIds: [w.azubi.id], eintrag: { art: 'termin', titel: 'x', tag: '2026-11-18' } } })).status, 400);
 });
 
-test('Termine in der Übersicht und im Hinweis zum Bericht', async () => {
+test('Termine hinterlassen bei anderen keine Spur: Glocke, Übersicht, Bericht-Hinweis, Wochen des Plans', async () => {
   const w = await welt();
   const c = als(w, w.azubi);
-  for (const t of [{ titel: 'Später', tag: '2026-11-12', zeitVon: '15:00' }, { titel: 'JAV-Sitzung', tag: '2026-11-12', zeitVon: '09:00' }, { titel: 'Nächste Woche', tag: '2026-11-17' }]) {
+  // ein Termin weit nach dem Ende der Ausbildung würde sonst den Plan um Wochen verlängern
+  for (const t of [{ titel: 'JAV-Sitzung', tag: '2026-11-12', zeitVon: '09:00' }, { titel: 'Weit weg', tag: '2031-05-05' }]) {
     assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan`, { cookies: c, body: { art: 'termin', ...t } })).status, 201);
   }
-  const ue = koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: als(w, w.ausbilder) }));
-  const anna = ue.azubis.find((a: { id: number }) => a.id === w.azubi.id);
-  assert.deepEqual(anna.wochen[0].termine, [{ tag: '2026-11-12', zeitVon: '09:00', titel: 'JAV-Sitzung' }, { tag: '2026-11-12', zeitVon: '15:00', titel: 'Später' }], 'nach Uhrzeit sortiert');
-  assert.deepEqual(anna.wochen[1].termine.map((t: { titel: string }) => t.titel), ['Nächste Woche']);
-  assert.deepEqual(ue.azubis.find((a: { id: number }) => a.id === w.ben.id).wochen[0].termine, []);
+  const alsAusbilder = als(w, w.ausbilder);
+  assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM aktivitaet').get() as { n: number }).n, 0, 'kein Eintrag für die Glocke');
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: alsAusbilder })).neu ?? 0, 0);
+  assert.equal(JSON.stringify(koerper(await ruf(w.u, 'GET', '/api/uebersicht', { cookies: alsAusbilder }))).includes('JAV'), false);
+
+  const eigen = await plan(w, w.azubi);
+  const fremd = await plan(w, w.ausbilder);
+  assert.ok(eigen.wochen.some((x: { montag: string }) => x.montag === '2031-05-05'), 'der Azubi sieht die Woche seines Termins');
+  assert.equal(fremd.wochen.some((x: { montag: string }) => x.montag > '2029-01-01'), false, 'für den Ausbilder endet der Plan wie ohne Termin');
+
+  const bericht = (wer: BenutzerZeile) => ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichte/2026-11-09`, { cookies: als(w, wer) }).then(koerper);
+  assert.deepEqual((await bericht(w.azubi)).plan, [{ art: 'termin', titel: 'JAV-Sitzung' }], 'dem Azubi hilft der Termin beim Schreiben');
+  assert.deepEqual((await bericht(w.ausbilder)).plan, []);
 });

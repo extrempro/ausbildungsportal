@@ -1555,11 +1555,6 @@ table.uebersicht td.ausserhalb {
   color: var(--c-warn-fg);
 }
 
-.ue.termin {
-  background: var(--c-accent-soft);
-  color: var(--c-accent);
-}
-
 .legende {
   display: flex;
   gap: 6px;

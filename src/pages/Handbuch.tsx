@@ -54,7 +54,7 @@ const KALENDER = (rolle: Rolle): Kapitel => ({
         <li>Den Link kopieren und im Kalenderprogramm als Kalender-Abo eintragen. Wie das je Programm geht, steht dort unter „So trägst du den Link ein“.</li>
       </ol>
       <ul className="punkte">
-        <li>Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine, dazu die Termine, die Azubis selbst eintragen (mit Uhrzeit, wenn eine angegeben ist). Aufgaben, Notizen und Berichte stehen dort nicht.</li>
+        <li>Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine. {rolle === 'azubi' ? 'Dazu kommen deine eigenen Termine, mit Uhrzeit, wenn du eine angegeben hast. ' : 'Private Termine der Azubis stehen nicht in deinem Kalender. '}Aufgaben, Notizen und Berichte stehen dort nicht.</li>
         {rolle !== 'azubi' && <li>Vor jedem Termin steht der Name des Azubis. Du kannst den Link auch auf einen einzelnen Azubi beschränken. Du siehst nur Azubis, die du auch im Portal siehst.</li>}
         <li>Änderungen kommen mit Verzögerung an – je nach Programm nach einigen Stunden oder am nächsten Tag. Verbindlich ist der Plan im Portal.</li>
         <li>
@@ -164,15 +164,15 @@ const AZUBI: Kapitel[] = [
           <strong>Selbst etwas eintragen:</strong> Mit dem „+“ an einer Woche legst du eigene Aufgaben und Notizen an, zum Beispiel „Für die Klassenarbeit lernen“. Diese kannst du auch wieder ändern oder löschen.
         </p>
         <p>
-          <strong>Termine eintragen:</strong> Mit „+ Termin“ bei „Diese Woche“ oder „Nächste Woche“ – oder über „+“ an einer Woche und die Art „Termin“ – trägst du einzelne Tage ein, an denen du etwas anderes vorhast als sonst. Zum Beispiel eine Sitzung der JAV (Jugend- und
+          <strong>Termine eintragen:</strong> Mit „+ Termin“ bei „Diese Woche“ oder „Nächste Woche“ – oder über „+“ an einer Woche und die Art „Termin“ – trägst du einzelne Tage ein, die du dir merken willst. Zum Beispiel eine Sitzung der JAV (Jugend- und
           Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung. Du gibst den Tag an und, wenn du willst, Beginn und Ende.
         </p>
         <ul className="punkte">
-          <li>Termine trägst nur du ein. Nur du kannst sie ändern oder löschen.</li>
           <li>
-            <strong>Dein Ausbilder und deine Ausbildungsbeauftragten sehen deine Termine.</strong> So wissen sie, wann du nicht am Platz bist. Schreib nur hinein, was sie wissen dürfen.
+            <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – nicht in deinem Plan, nicht in ihrer Übersicht, nicht in der Glocke und nicht in ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
           </li>
           <li>Termine stehen oben bei „Diese Woche“ und „Nächste Woche“ und, wenn du deinen Kalender abonniert hast, auch dort.</li>
+          <li>Du kannst jeden Termin ändern oder löschen.</li>
         </ul>
         <p>Was dein Ausbilder oder deine Ausbildungsbeauftragten eingetragen haben, kannst du nicht ändern – nur abhaken.</p>
       </>
@@ -330,10 +330,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               Was immer wieder vorkommt, fügst du als <Link zu="/planung/bausteine">Planbaustein</Link> ein; was für mehrere Azubis gleich ist, trägst du in der <Link zu="/planung/sammelplanung">Sammelplanung</Link> ein. Mehr dazu im Kapitel „Planung“.
             </li>
             <li>Azubis können eigene Aufgaben und Notizen eintragen. Diese sind mit „vom Azubi eingetragen“ gekennzeichnet; du kannst sie ändern.</li>
-            <li>
-              Azubis tragen außerdem <strong>Termine</strong> ein – einzelne Tage wie eine JAV-Sitzung oder ein Gespräch mit der Personalabteilung. Du siehst sie im Plan, in der Übersicht bei „Diese Woche“ und „Nächste Woche“ und im abonnierten Kalender. Eintragen, ändern und löschen kann sie
-              nur der Azubi selbst.
-            </li>
+            <li>Azubis können sich außerdem private <strong>Termine</strong> eintragen (zum Beispiel eine JAV-Sitzung). Diese sieht nur der Azubi selbst – du siehst sie nicht, auch nicht in Übersicht, Glocke oder Kalender.</li>
           </ul>
         ) : (
           <ul className="punkte">
