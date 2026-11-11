@@ -21,6 +21,15 @@ export interface BenutzerZeile {
   letzte_anmeldung: string | null;
   /** nur Ausbilder: Gesamtsicht über alle Azubis (setzt der Super-Admin) */
   alle_azubis: number;
+  /** Profilbild aus Entra anzeigen (1) oder nicht (0) */
+  bild_zeigen: number;
+  /** Kennung des gespeicherten Profilbilds; null = keins */
+  bild_stand: string | null;
+}
+
+/** Adresse des Profilbilds eines Kontos – oder null, wenn es keins gibt oder die Person es abgeschaltet hat. */
+export function bildPfad(z: Pick<BenutzerZeile, 'id' | 'bild_zeigen' | 'bild_stand'>): string | null {
+  return z.bild_zeigen === 1 && z.bild_stand ? `/api/benutzer/${z.id}/bild?v=${z.bild_stand}` : null;
 }
 
 /** Was die API über ein Konto herausgibt (ohne Hash, ohne Objekt-ID). */
@@ -39,6 +48,10 @@ export interface Konto {
   letzteAnmeldung: string | null;
   /** Ausbilder mit Gesamtsicht: sieht und bearbeitet alle Azubis, nicht nur die eigenen */
   alleAzubis: boolean;
+  /** Adresse des Profilbilds oder null */
+  bild: string | null;
+  /** will die Person ihr Profilbild zeigen? */
+  bildZeigen: boolean;
 }
 
 export function alsKonto(z: BenutzerZeile): Konto {
@@ -55,6 +68,8 @@ export function alsKonto(z: BenutzerZeile): Konto {
     erstellt: z.erstellt,
     letzteAnmeldung: z.letzte_anmeldung,
     alleAzubis: z.rolle === 'ausbilder' && z.alle_azubis === 1,
+    bild: bildPfad(z),
+    bildZeigen: z.bild_zeigen === 1,
   };
 }
 

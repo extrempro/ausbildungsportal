@@ -55,6 +55,8 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'POST /api/auth/abmelden': 'alle',
     'GET /api/ich': 'alle',
     'PUT /api/ich/passwort': 'admin',
+    'PUT /api/ich/bild': 'alle',
+    'GET /api/benutzer/:id/bild': 'alle',
     'PUT /api/ich/theme': 'alle',
     'GET /api/konten': 'admin,ausbilder',
     'POST /api/konten': 'admin,ausbilder',
@@ -390,7 +392,7 @@ test('Kontenliste: Ausbilder sehen keinen Super-Admin; Azubis und Beauftragte se
   assert.deepEqual(beimAusbilder.rollen, ['beauftragter', 'azubi']);
   assert.deepEqual(beimAusbilder.konten.filter((k: { loeschbar: boolean }) => k.loeschbar).map((k: { rolle: string }) => k.rolle).sort(), ['azubi', 'beauftragter']);
   for (const k of beimAusbilder.konten) {
-    assert.deepEqual(Object.keys(k).sort(), ['alleAzubis', 'anmeldename', 'anmeldung', 'anzeigename', 'erstellt', 'id', 'letzteAnmeldung', 'loeschbar', 'passwortWechsel', 'rolle', 'status', 'theme', 'verknuepft', 'verwaltbar'].sort());
+    assert.deepEqual(Object.keys(k).sort(), ['alleAzubis', 'anmeldename', 'anmeldung', 'anzeigename', 'bild', 'bildZeigen', 'erstellt', 'id', 'letzteAnmeldung', 'loeschbar', 'passwortWechsel', 'rolle', 'status', 'theme', 'verknuepft', 'verwaltbar'].sort());
   }
 });
 

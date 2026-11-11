@@ -9,6 +9,7 @@ import { ausbildungsdauer, ausbildungsstand, gueltigesDatum, hoechsteVerkuerzung
 import type { Ausbildungsstand, Dauer } from './kalender';
 import { protokolliere } from './protokoll';
 import { betreuung, darfAzubiSehen, darfAzubiVerwalten } from './rechte';
+import { bildPfad } from './typen';
 import type { BenutzerZeile } from './typen';
 
 /**
@@ -176,6 +177,7 @@ export function azubiUebersicht(db: DB, z: BenutzerZeile, tag: string) {
   return {
     id: z.id,
     anzeigename: z.anzeigename,
+    bild: bildPfad(z),
     anmeldename: z.anmeldename,
     status: z.status,
     beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',

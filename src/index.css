@@ -7309,3 +7309,35 @@ ul.antrag-hinweise {
   color: inherit;
   text-decoration: none;
 }
+
+/* Profilbild aus Microsoft: füllt den runden Avatar */
+.avatar {
+  overflow: hidden;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.konto-bild {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.konto-bild > .avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+}
+
+.konto-bild > div {
+  min-width: 0;
+}
+
+.konto-bild p {
+  margin: 6px 0 0;
+}

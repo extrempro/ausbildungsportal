@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { datumOderNull, Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import { ABO_ROUTEN } from './abo';
 import { JAHR_ROUTEN } from './jahr';
+import { BILD_ROUTEN, merkeBild } from './bild';
 import { URLAUB_ROUTEN } from './urlaub';
 import type { Anfrage, Antwort, Ctx, Kontext, Route } from './api-basis';
 import { LERN_ROUTEN, paketVon } from './lernen';
@@ -254,6 +255,8 @@ export const ROUTEN: Route[] = [
         protokolliere(db, jetzt, 'konto', 'anmeldung_fehlgeschlagen', null, b, 'Konto gesperrt');
         return zurueck('gesperrt');
       }
+      if (wer.bildFehler) c.k.log(`Profilbild nicht geladen: ${wer.bildFehler}`);
+      merkeBild(db, b, wer, jetzt);
       protokolliere(db, jetzt, 'konto', 'anmeldung', b, null, 'Entra');
       return sitzungsAntwort(c.k, b, { status: 302, redirect: '/', cookies: [setzeCookie(cfg, 'anmeldung', '', 0)] });
     },
@@ -287,7 +290,7 @@ export const ROUTEN: Route[] = [
     },
   },
 
-  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null } }) },
+  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null, profilbild: c.k.cfg.entraProfilbild } }) },
 
   {
     m: 'PUT',
@@ -610,6 +613,7 @@ export const ROUTEN: Route[] = [
   ...LERN_ROUTEN,
   ...JAHR_ROUTEN,
   ...URLAUB_ROUTEN,
+  ...BILD_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

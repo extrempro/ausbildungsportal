@@ -17,6 +17,15 @@ export interface EntraKonfig {
   redirectUri: string;
   /** Mandant, aus dem Anmeldungen angenommen werden (Claim tid) */
   tenantId?: string;
+  /** Profilbild über Microsoft Graph holen – verlangt zusätzlich die Berechtigung User.Read */
+  profilbild?: boolean;
+  /** Adresse von Microsoft Graph (in Tests ein nachgestellter Dienst) */
+  graphUrl?: string;
+}
+
+export interface Profilbild {
+  typ: 'image/jpeg' | 'image/png';
+  daten: Buffer;
 }
 
 export interface EntraIdentitaet {
@@ -25,6 +34,28 @@ export interface EntraIdentitaet {
   /** Anmeldename (UPN), klein geschrieben */
   anmeldename: string;
   name: string;
+  /** Profilbild: undefined = nicht abgefragt oder Abruf fehlgeschlagen, null = die Person hat keins */
+  bild?: Profilbild | null;
+  /** warum der Abruf des Bilds fehlschlug – fürs Log */
+  bildFehler?: string;
+}
+
+const BILD_MAX = 300_000;
+
+/**
+ * Holt das kleine Profilbild (96 × 96) der angemeldeten Person aus Microsoft Graph.
+ * 404 heißt: kein Bild hinterlegt. Alles andere Unerwartete wirft – die Anmeldung läuft trotzdem weiter.
+ */
+export async function holeProfilbild(graphUrl: string, zugriffstoken: string, hole: typeof fetch = fetch): Promise<Profilbild | null> {
+  const r = await hole(`${graphUrl.replace(/\/+$/, '')}/v1.0/me/photos/96x96/$value`, { headers: { Authorization: `Bearer ${zugriffstoken}` }, redirect: 'error', signal: AbortSignal.timeout(5000) });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`Microsoft Graph antwortet mit Status ${r.status}`);
+  const daten = Buffer.from(await r.arrayBuffer());
+  if (daten.length === 0 || daten.length > BILD_MAX) throw new Error('Das Profilbild ist leer oder zu groß');
+  // nach dem Inhalt gehen, nicht nach der Angabe des Servers
+  if (daten[0] === 0xff && daten[1] === 0xd8 && daten[2] === 0xff) return { typ: 'image/jpeg', daten };
+  if (daten.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return { typ: 'image/png', daten };
+  throw new Error('Das Profilbild ist weder JPEG noch PNG');
 }
 
 export interface Entra {
@@ -91,7 +122,7 @@ export function erzeugeEntra(k: EntraKonfig): Entra {
         .buildAuthorizationUrl(cfg, {
           redirect_uri: k.redirectUri,
           response_mode: 'query',
-          scope: 'openid profile email',
+          scope: k.profilbild ? 'openid profile email User.Read' : 'openid profile email',
           state,
           nonce,
           code_challenge: challenge,
@@ -116,11 +147,21 @@ export function erzeugeEntra(k: EntraKonfig): Entra {
       if (k.tenantId && c.tid !== k.tenantId) throw new Error('ID-Token: falscher Mandant');
       if (typeof c.oid !== 'string' || !c.oid) throw new Error('ID-Token: Objekt-ID fehlt');
       if (typeof c.preferred_username !== 'string' || !c.preferred_username) throw new Error('ID-Token: Anmeldename fehlt');
-      return {
+      const wer: EntraIdentitaet = {
         oid: c.oid.toLowerCase(),
         anmeldename: c.preferred_username.trim().toLowerCase(),
         name: typeof c.name === 'string' ? c.name : '',
       };
+      if (k.profilbild) {
+        // das Bild ist Beiwerk: Schlägt der Abruf fehl, gelingt die Anmeldung trotzdem
+        try {
+          if (!tokens.access_token) throw new Error('Entra hat kein Zugriffstoken geliefert');
+          wer.bild = await holeProfilbild(k.graphUrl ?? 'https://graph.microsoft.com', tokens.access_token);
+        } catch (e) {
+          wer.bildFehler = e instanceof Error ? e.message.slice(0, 200) : 'unbekannter Fehler';
+        }
+      }
+      return wer;
     },
   };
 }
