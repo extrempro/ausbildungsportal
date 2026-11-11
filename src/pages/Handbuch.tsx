@@ -22,7 +22,48 @@ const LERN_ORDNER = `industriekaufleute/
     buchfuehrung.md     je Themenfeld eine Datei
     beschaffung.md
   bilder/               Grafiken (nur SVG), freiwillig
-  zusatz/               Abläufe Schritt für Schritt, freiwillig`;
+  zusatz/               Abläufe Schritt für Schritt, freiwillig
+  pruefung/             Übungssätze mit Auswertung, freiwillig
+    zp-grundlagen.md
+  dokumente.json        Liste der Unterlagen (PDF), freiwillig
+  dokumente/
+    zp-2024-aufgaben.pdf`;
+
+const LERN_PRUEFUNG = `---
+titel: Grundlagen und Leistung
+gruppe: Zwischenprüfung
+---
+
+Rechnen mit Strom und Leistung.
+
+## Betriebsstrom eines Scheinwerfers {#strom-par}
+quelle: ZP 2019, U1
+zu: elektrotechnik.leistung
+
+Ein Scheinwerfer mit 1000 W hängt an 230 V. Berechne den Strom.
+
+### Zahl
+- I in A: 4,35 ± 0,03 A
+
+### Lösung
+1. I = P / U = 1000 W / 230 V
+2. I ≈ 4,35 A
+
+## RCD für Personenschutz {#rcd}
+
+Welche RCD ist für den Personenschutz geeignet?
+
+### Auswahl
+- [x] 40 A / 30 mA
+- [ ] 63 A / 300 mA
+
+## Geräte zuordnen {#gewerke}
+
+Ordne die Geräte dem Gewerk zu.
+
+### Zuordnung
+- Scaler → Video
+- Switch → IT`;
 
 const LERN_THEMA = `---
 titel: Buchführung
@@ -550,6 +591,41 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'pruefung',
+    titel: 'Prüfung üben',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/lernen/pruefung">Lernen → Prüfung</Link> bereitest du dich auf Zwischen- und Abschlussprüfung vor. Dort gibt es <strong>Übungssätze</strong> mit Aufgaben wie in der echten Prüfung und <strong>Unterlagen</strong>: alte Prüfungen als PDF.
+        </p>
+        <h3>Einen Übungssatz bearbeiten</h3>
+        <ol className="schritte">
+          <li>Wähl einen Übungssatz und tipp auf „Übungssatz starten“.</li>
+          <li>Beantworte die Fragen. Rechne auf Papier mit, wie in der Prüfung. Bei Rechenaufgaben gibst du nur die Zahl ein – Komma oder Punkt geht beides.</li>
+          <li>Tipp auf „Übungssatz auswerten“. Fragen ohne Antwort zählen als falsch; das Portal fragt vorher nach.</li>
+          <li>Du siehst deine Punkte, die Prozent und die Note nach dem IHK-Notenschlüssel. Unter jeder Frage stehen deine Antwort, die richtige Lösung und der Lösungsweg.</li>
+        </ol>
+        <dl className="begriffe">
+          <Begriff wort="Auswahl">Eine oder mehrere Antworten ankreuzen. Steht „Mehrere Antworten sind richtig“, gibt es für jede richtige einen Teil der Punkte; jede falsche zieht wieder etwas ab.</Begriff>
+          <Begriff wort="Zahl">Ein Rechenergebnis eintragen. Kleine Rundungsunterschiede sind erlaubt.</Begriff>
+          <Begriff wort="Zuordnung">Zu jedem Begriff links die passende Antwort aus der Liste wählen.</Begriff>
+          <Begriff wort="Probetest">Alle Fragen aus mehreren Übungssätzen am Stück – zum Üben unter Zeitdruck.</Begriff>
+          <Begriff wort="Quelle">Aus welcher Prüfung die Aufgabe stammt, z. B. „ZP 2024, U2.1“. Die ganze Aufgabe findest du dann unter „Unterlagen“.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Eine Prüfung ist ab 50 Prozent bestanden. 92 Prozent und mehr sind „sehr gut“.</li>
+          <li>Du kannst jeden Übungssatz so oft wiederholen, wie du willst. Gespeichert werden dein letztes und dein bestes Ergebnis.</li>
+          <li>Verlässt du einen Übungssatz vor dem Auswerten, fragt das Portal nach. Ohne Auswertung zählt nichts.</li>
+          <li>Unter „Unterlagen“ lädst du alte Prüfungen als PDF herunter. Die Lösungsvorschläge hat dein Ausbilder – frag ihn, wenn du deine Lösung vergleichen willst.</li>
+          <li>Übungssätze zählen nicht für die Abzeichen.</li>
+          <li>
+            <strong>Deine Ergebnisse siehst nur du.</strong> Dein Ausbilder sieht weder deine Punkte noch, ob du geübt hast.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'abzeichen',
     titel: 'Abzeichen sammeln',
     inhalt: (
@@ -852,9 +928,11 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <Begriff wort="Cheatsheet">Klappt an jedem Unterthema auf: Begriffe, Tabellen, Befehle, Merksatz, Prüfungsfrage.</Begriff>
           <Begriff wort="Zusatzwissen">Vertiefungen am Ende eines Themenfelds.</Begriff>
           <Begriff wort="Kompendium">Alle Bausteine aus allen Cheatsheets zum Suchen und Nachschlagen.</Begriff>
+          <Begriff wort="Prüfung">Übungssätze und Unterlagen zur Prüfungsvorbereitung. Du siehst jede Frage mit der richtigen Antwort und dem Lösungsweg und lädst alle Unterlagen herunter – auch die, die mit „Nur für Ausbilder und Beauftragte“ markiert sind, z. B. Lösungsvorschläge. Azubis sehen diese nicht.</Begriff>
         </dl>
         <ul className="punkte">
-          <li>Die Ansicht ist nur zum Lesen. Ampel, Notizen und Abzeichen gibt es nur bei den Azubis.</li>
+          <li>Die Ansicht ist nur zum Lesen. Ampel, Notizen, Abzeichen und die Auswertung der Übungssätze gibt es nur bei den Azubis.</li>
+          <li>Lösungsvorschläge gibst du selbst weiter, wenn ein Azubi seine Lösung vergleichen will – zum Beispiel nach einer Probeprüfung.</li>
           <li>
             <strong>Den Lernstand einzelner Azubis siehst du nicht</strong> – auch nicht, welche Abzeichen jemand hat. Er gehört den Azubis allein; so ist es ihnen im Portal zugesagt.
           </li>
@@ -1129,6 +1207,10 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="themen/">Je Themenfeld eine Textdatei im Format Markdown – siehe unten.</Begriff>
                 <Begriff wort="bilder/">Grafiken, nur im Format SVG. Dateinamen nur mit Kleinbuchstaben, Ziffern und Bindestrich.</Begriff>
                 <Begriff wort="zusatz/">Nur für Abläufe Schritt für Schritt im Zusatzwissen. Das Format ist aufwendiger – dafür am besten Hilfe holen.</Begriff>
+                <Begriff wort="pruefung/">Übungssätze für den Reiter „Prüfung“: je Datei ein Satz Fragen, die das Portal auswertet – siehe unten.</Begriff>
+                <Begriff wort="dokumente.json und dokumente/">
+                  Unterlagen als PDF, z. B. alte Prüfungen. Je Eintrag: <code>datei</code>, <code>titel</code>, <code>gruppe</code> und bei Bedarf <code>{'"nurBetreuung": true'}</code> – dann sehen nur Ausbilder und Beauftragte die Datei. Beispiel: <code>{'[{ "datei": "zp-2024-loesungen.pdf", "titel": "Lösungsvorschläge", "gruppe": "Zwischenprüfung 2024", "nurBetreuung": true }]'}</code>
+                </Begriff>
               </dl>
               <h3>Eine Themen-Datei</h3>
               <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel einer Themen-Datei">{LERN_THEMA}</pre>
@@ -1156,6 +1238,22 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   Im Text gehen <code>**fett**</code>, <code>`Code`</code> und Links. Mehr Auszeichnung gibt es nicht.
                 </li>
               </ul>
+              <h3>Ein Übungssatz</h3>
+              <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel eines Übungssatzes">{LERN_PRUEFUNG}</pre>
+              <ul className="punkte">
+                <li>
+                  Oben stehen <code>titel</code> und freiwillig <code>gruppe</code> (z. B. „Zwischenprüfung“). Jede Frage beginnt mit <code>##</code> und einer Kennung. Darunter freiwillig <code>quelle:</code> und <code>zu: themenfeld.unterthema</code> (Link zum Nachlesen), dann der Fragetext – auch mit Liste oder Tabelle.
+                </li>
+                <li>
+                  Jede Frage hat genau eine Antwort: <code>### Auswahl</code> mit <code>- [x] richtig</code> und <code>- [ ] falsch</code> (mehrere [x] = Mehrfachauswahl), <code>### Zahl</code> mit <code>- Beschriftung: Wert ± Toleranz Einheit</code> (mehrere Zeilen = mehrere Felder; Zahlen in deutscher Schreibweise, z. B. <code>4,35</code> oder <code>1.000</code>) oder <code>### Zuordnung</code> mit <code>- links → rechts</code>.
+                </li>
+                <li>
+                  <code>### Lösung</code> ist freiwillig: Text und nummerierte Schritte. Azubis sehen sie erst nach dem Auswerten.
+                </li>
+                <li>
+                  Ein <strong>Probetest</strong> hat keine eigenen Fragen, sondern im Kopf <code>umfasst: zp-grundlagen, zp-schutz</code> – dann stehen alle Fragen dieser Sätze darin.
+                </li>
+              </ul>
               <h3>Worauf du achten solltest</h3>
               <ul className="punkte">
                 <li>
@@ -1181,6 +1279,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </dl>
               <ul className="punkte">
                 <li>Die ZIP-Datei darf den Ordner selbst enthalten oder direkt seinen Inhalt – das Portal findet das Paket an der Datei <code>themenfelder.json</code>.</li>
+                <li>Die ZIP-Datei darf höchstens 15 MB groß sein. Viele PDFs passen oft nicht hinein – gib sie dann dem Betreiber, er legt sie direkt im Ordner des Pakets ab.</li>
                 <li>Übernommen werden nur Dateien, die zu einem Inhaltspaket gehören. Was sonst in der ZIP-Datei liegt, zeigt die Einreichung unter „Nicht übernommene Dateien“.</li>
                 <li>Alle Ausbilder sehen alle Einreichungen, weil die Lernmodule für das ganze Portal gelten.</li>
                 <li>Ausbildungsbeauftragte reichen nicht selbst ein. Sie wenden sich an einen Ausbilder.</li>

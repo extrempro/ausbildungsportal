@@ -1,5 +1,25 @@
 # Änderungen
 
+## [0.40.0] – 2026-11-11
+
+### Neu
+
+- **Prüfung im Lernmodul** (neuer Reiter unter „Lernen“): Übungssätze und Unterlagen zur Vorbereitung auf Zwischen- und Abschlussprüfung. Damit lässt sich ein Moodle-Kurs zur Prüfungsvorbereitung ersetzen.
+- **Übungssätze** wie in der schriftlichen Prüfung: Auswahl (eine oder mehrere richtige Antworten), Zahl (ein oder mehrere Felder mit Toleranz, Komma oder Punkt) und Zuordnung. Der Server wertet aus – mit Teilpunkten, Prozent und Note nach dem IHK-Notenschlüssel. Erst danach sieht der Azubi zu jeder Frage die richtige Lösung, den Lösungsweg und die Quelle. Gespeichert werden letztes und bestes Ergebnis, privat wie der übrige Lernstand.
+- **Probetest:** fasst die Fragen mehrerer Übungssätze zusammen.
+- **Unterlagen als PDF**, z. B. alte Prüfungen, nach Gruppen geordnet. Als „nur für Betreuung“ markierte Unterlagen (z. B. Lösungsvorschläge) sehen und laden nur Ausbilder und Beauftragte.
+- Leseansicht für Ausbilder und Beauftragte: alle Übungssätze mit den Lösungen und alle Unterlagen.
+- Inhaltsformat: neuer Ordner `pruefung/` (je Übungssatz eine Datei) und `dokumente.json` mit dem Ordner `dokumente/`. Beides lässt sich auch als ZIP einreichen. Fehler meldet das Portal wie gewohnt mit Datei und Zeile.
+- Handbuch: Kapitel „Prüfung üben“ (Azubi); „Lerninhalte ansehen“ und „Lerninhalte für einen Beruf erstellen“ ergänzt.
+
+### Geändert
+
+- Die Kennungen `kompendium`, `ueben` und `pruefung` sind als Themenfeld nicht mehr erlaubt – sie sind Seitenadressen im Lernmodul.
+
+### Behoben
+
+- Links mit eigener Beschriftung für Vorleseprogramme (z. B. „Quiz starten: …“ unter „Üben“) gaben diese Beschriftung nicht weiter.
+
 ## [0.39.0] – 2026-11-11
 
 ### Geändert

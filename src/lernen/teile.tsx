@@ -45,6 +45,9 @@ export function LernReiter() {
           Üben
         </Link>
       )}
+      <Link zu={`${basis}/pruefung`} aktivAb={`${basis}/pruefung`}>
+        Prüfung
+      </Link>
     </nav>
   );
 }

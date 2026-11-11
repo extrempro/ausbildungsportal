@@ -109,13 +109,14 @@ window.addEventListener('popstate', (e: PopStateEvent) => {
 });
 
 /** aktivAb: der Link gilt auch auf Unterseiten als aktiv (z. B. /azubis/12 für „Azubis“). */
-export function Link({ zu, children, className, aktivAb }: { zu: string; children: ReactNode; className?: string; aktivAb?: string }) {
+export function Link({ zu, children, className, aktivAb, 'aria-label': label }: { zu: string; children: ReactNode; className?: string; aktivAb?: string; 'aria-label'?: string }) {
   const pfad = usePfad();
   const aktiv = pfad === zu || (!!aktivAb && pfad.startsWith(`${aktivAb}/`));
   return (
     <a
       href={zu}
       className={className}
+      aria-label={label}
       aria-current={aktiv ? 'page' : undefined}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;

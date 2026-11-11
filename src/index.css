@@ -7489,6 +7489,103 @@ ul.antrag-hinweise {
   margin-left: 0.35em;
 }
 
+/* ---------- Lernmodul: Prüfung (Übungssätze und Unterlagen) ---------- */
+.pruef-gruppe {
+  margin: 0 0 4px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.pruef-fragen {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.pruef-frage {
+  max-width: 860px;
+  overflow-wrap: anywhere;
+}
+
+.pruef-frage h2 {
+  font-size: 18px;
+}
+
+.pruef-optionen {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.pruef-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pruef-option input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  flex: none;
+}
+
+.pruef-option:has(input:checked) {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+}
+
+.pruef-felder {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+.pruef-feld {
+  display: grid;
+  gap: 4px;
+}
+
+.pruef-zahl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pruef-zahl input {
+  max-width: 180px;
+  min-height: 44px;
+}
+
+.pruef-feld select {
+  min-height: 44px;
+  max-width: 100%;
+}
+
+.pruef-eigene ul,
+.pruef-loesung ul {
+  margin: 0 0 8px;
+  padding-left: 22px;
+}
+
+.pruef-loesung {
+  margin-top: 12px;
+}
+
+.pruef-loesung > p + p,
+.pruef-loesung ol {
+  margin-top: 6px;
+}
+
 /* Liste der Lernmodule: Abstand zu dem, was darunter folgt (Einreichen, Hinweis) */
 .lern-pakete {
   margin-bottom: 24px;

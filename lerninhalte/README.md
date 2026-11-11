@@ -47,3 +47,17 @@ Mehr dazu im README des Portals, Abschnitt „Lernmodul“.
 ## Einreichen über das Portal
 
 Ausbilder können ein Inhaltspaket auch als ZIP-Datei im Portal einreichen (Seite „Lerninhalte“). Der Super-Admin prüft es und lädt es hoch. Solche Pakete liegen **nicht hier**, sondern im Datenordner des Portals unter `data/lerninhalte/<kennung>/` – dieser Ordner hier ist im Container nur lesend eingebunden. Gibt es dieselbe Kennung an beiden Orten, gilt das über das Portal hochgeladene Paket. Um wieder das Paket aus diesem Ordner zu verwenden, den Ordner `data/lerninhalte/<kennung>/` löschen.
+
+## Prüfung: Übungssätze und Unterlagen
+
+Freiwillig kann ein Paket den Reiter „Prüfung“ füllen:
+
+```
+lerninhalte/<paket>/
+  pruefung/<id>.md        je Übungssatz eine Datei (Format im Handbuch: „Lerninhalte für einen Beruf erstellen“)
+  dokumente.json          [{ "datei": "zp-2024-aufgaben.pdf", "titel": "Schriftliche Aufgaben", "gruppe": "Zwischenprüfung 2024" },
+                           { "datei": "zp-2024-loesungen.pdf", "titel": "Lösungsvorschläge", "gruppe": "Zwischenprüfung 2024", "nurBetreuung": true }]
+  dokumente/*.pdf         die PDFs; Dateinamen nur a–z, 0–9, Punkt, Bindestrich, Unterstrich
+```
+
+Unterlagen mit `"nurBetreuung": true` liefert das Portal nur an Ausbilder und Beauftragte aus. Viele PDFs sprengen oft die 15 MB für eine ZIP-Einreichung – dann den Ordner `dokumente/` wie oben beschrieben direkt auf den Server kopieren und `meta.json` mit neuem Stand speichern.

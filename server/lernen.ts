@@ -7,7 +7,9 @@ import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { transaktion } from './db';
 import { hoechsteVon, HOECHSTE_STUFE, naechste, OHNE_QUIZ, rangVon, STUFEN, stufeVon } from './lernen/abzeichen';
-import { FAECHER, kartenVon, MEISTER_TAGE, naechstesFach, optionenFuer, QUIZ_BESTANDEN, quizFragen, zufall } from './lernen/ueben';
+import { bewerte, frageMitLoesung, frageOhneLoesung, ihkNote } from './lernen/pruefung';
+import type { Uebungssatz } from './lernen/pruefung';
+import { FAECHER, kartenVon, MEISTER_TAGE, mische, naechstesFach, optionenFuer, QUIZ_BESTANDEN, quizFragen, zufall } from './lernen/ueben';
 import type { FeldStand } from './lernen/abzeichen';
 import { ladeInhalte, unterthemaIndex, zusatzIds } from './lernen/store';
 import type { Inhalte } from './lernen/store';
@@ -41,6 +43,8 @@ export interface Paket {
   marke: string;
   /** woher das Paket kommt: vom Betreiber als Ordner eingebunden oder über das Portal eingereicht und übernommen */
   herkunft: 'ordner' | 'portal';
+  /** Ordner des Pakets – für die Unterlagen (dokumente/) */
+  pfad: string;
 }
 
 /** Hier liegen Pakete, die über das Portal eingereicht und vom Super-Admin übernommen wurden. Sie gehen vor gleichnamige aus LERN_DIR. */
@@ -56,7 +60,7 @@ const LAGER = new Map<string, Lager>();
 
 function marke(ordner: string): string {
   // meta.json wird bei jeder Inhaltspflege angefasst (Inhaltsstand); dazu die Themenliste
-  return ['meta.json', 'themenfelder.json', 'paket.json', 'themen']
+  return ['meta.json', 'themenfelder.json', 'paket.json', 'themen', 'pruefung', 'dokumente.json', 'dokumente']
     .map((d) => {
       const p = join(ordner, d);
       return existsSync(p) ? statSync(p).mtimeMs : 0;
@@ -95,7 +99,7 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
       inhalte = ladeInhalte(pfad, alt?.inhalte);
     } catch (f) {
       // z. B. Datei ohne Leserecht: als Fehler des Pakets zeigen statt die ganze Seite scheitern zu lassen
-      inhalte = alt?.inhalte ?? { themenfelder: [], meta: { stand: '' }, umbenennungen: {}, meldungen: [] };
+      inhalte = alt?.inhalte ?? { themenfelder: [], meta: { stand: '' }, umbenennungen: {}, meldungen: [], pruefung: [], dokumente: [] };
       inhalte = { ...inhalte, meldungen: [{ level: 'fehler', datei: e.name, text: `Inhalte nicht lesbar: ${(f as Error).message}` }] };
     }
     let info: { titel?: unknown; quelle?: unknown; lizenz?: unknown } = {};
@@ -105,7 +109,7 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
       k.log(`Lernpaket „${e.name}“: paket.json nicht lesbar – ${(f as Error).message}`);
     }
     const text = (x: unknown) => (typeof x === 'string' ? x.trim().slice(0, 200) : '');
-    const paket: Paket = { id: e.name, titel: text(info.titel) || e.name, quelle: text(info.quelle), lizenz: text(info.lizenz), inhalte, marke: m, herkunft: e.herkunft };
+    const paket: Paket = { id: e.name, titel: text(info.titel) || e.name, quelle: text(info.quelle), lizenz: text(info.lizenz), inhalte, marke: m, herkunft: e.herkunft, pfad };
     lager.pakete.set(e.name, paket);
     const fehler = inhalte.meldungen.filter((x) => x.level === 'fehler');
     k.log(`Lernpaket „${paket.titel}“ (${e.name}) geladen: ${inhalte.themenfelder.length} Themenfelder, Stand ${inhalte.meta.stand || 'unbekannt'}${fehler.length ? `, ${fehler.length} Fehler` : ''}`);
@@ -406,6 +410,59 @@ function lesePaket(c: Ctx): Paket {
 }
 const BETREUUNG: ('ausbilder' | 'beauftragter')[] = ['ausbilder', 'beauftragter'];
 
+// ---------- Prüfung: Übungssätze und Unterlagen ----------
+
+interface PruefZeile {
+  satz_id: string;
+  versuche: number;
+  letzte_punkte: number;
+  letzte_gesamt: number;
+  beste_prozent: number;
+  zuletzt: string;
+}
+
+/** Übersicht „Prüfung“: Übungssätze (mit eigenem Stand des Azubis) und die Unterlagen, die diese Rolle sehen darf. */
+function pruefungAnsicht(p: Paket, betreuung: boolean, stand: Map<string, PruefZeile>) {
+  return {
+    paket: paketKopf(p),
+    saetze: p.inhalte.pruefung.map((s) => {
+      const z = stand.get(s.id);
+      return {
+        id: s.id,
+        titel: s.titel,
+        gruppe: s.gruppe,
+        beschreibung: s.beschreibung,
+        fragen: s.fragen.length,
+        probetest: s.umfasst.length > 0,
+        stand: z ? { versuche: z.versuche, punkte: z.letzte_punkte, gesamt: z.letzte_gesamt, besteProzent: z.beste_prozent, am: z.zuletzt } : null,
+      };
+    }),
+    dokumente: p.inhalte.dokumente.filter((d) => betreuung || !d.nurBetreuung).map((d) => ({ datei: d.datei, titel: d.titel, gruppe: d.gruppe, nurBetreuung: d.nurBetreuung, groesse: d.groesse })),
+  };
+}
+
+function satzVon(p: Paket, id: string): Uebungssatz {
+  const s = p.inhalte.pruefung.find((x) => x.id === id);
+  if (!s) throw new Fehler(404, 'Diesen Übungssatz gibt es nicht');
+  return s;
+}
+
+const satzKopf = (s: Uebungssatz) => ({ id: s.id, titel: s.titel, gruppe: s.gruppe, beschreibung: s.beschreibung, probetest: s.umfasst.length > 0 });
+
+/** Eine Unterlage als PDF – nur, wenn sie in dokumente.json steht und diese Rolle sie sehen darf. */
+function dokumentDatei(p: Paket, datei: string, betreuung: boolean) {
+  const d = p.inhalte.dokumente.find((x) => x.datei === datei);
+  if (!d || (d.nurBetreuung && !betreuung)) throw new Fehler(404, 'Diese Unterlage gibt es nicht');
+  let inhalt: Buffer;
+  try {
+    inhalt = readFileSync(join(p.pfad, 'dokumente', d.datei));
+  } catch {
+    throw new Fehler(404, 'Diese Unterlage ist gerade nicht lesbar');
+  }
+  const name = `${d.gruppe ? `${d.gruppe} – ` : ''}${d.titel}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
+  return { status: 200, datei: { typ: 'application/pdf', inhalt, dateiname: name } };
+}
+
 export const LERN_ROUTEN: Route[] = [
   {
     // Übersicht: alle Themenfelder mit dem eigenen Stand je Unterthema – ohne die Inhalte selbst
@@ -648,6 +705,71 @@ export const LERN_ROUTEN: Route[] = [
     },
   },
 
+  // ---------- Prüfung: Übungssätze mit Auswertung und Unterlagen – Ergebnisse privat wie der übrige Lernstand ----------
+  {
+    m: 'GET',
+    p: '/api/lernen/pruefung',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const stand = new Map((c.k.db.prepare('SELECT * FROM lern_pruefung WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as PruefZeile[]).map((z) => [z.satz_id, z]));
+      return { status: 200, body: pruefungAnsicht(p, false, stand) };
+    },
+  },
+  {
+    // ein Übungssatz zum Bearbeiten: ohne Lösungen, die Antworten einer Auswahl in neuer Reihenfolge
+    m: 'GET',
+    p: '/api/lernen/pruefung/:id',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const s = satzVon(p, c.p.id);
+      const r = zufall(c.k.jetzt().getTime());
+      return {
+        status: 200,
+        body: {
+          ...satzKopf(s),
+          fragen: s.fragen.map((f) => {
+            const q = frageOhneLoesung(f);
+            return { ...q, optionen: mische(q.optionen, r) };
+          }),
+        },
+      };
+    },
+  },
+  {
+    // Auswertung: Der Server bewertet jede Frage, speichert das Ergebnis und gibt erst jetzt die Lösungen heraus
+    m: 'POST',
+    p: '/api/lernen/pruefung/:id',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const s = satzVon(p, c.p.id);
+      const antworten = (c.a.body as { antworten?: unknown } | null)?.antworten;
+      if (!antworten || typeof antworten !== 'object' || Array.isArray(antworten)) throw new Fehler(400, 'Die Antworten fehlen');
+      const a = antworten as Record<string, unknown>;
+      const ergebnisse = s.fragen.map((f) => ({ ...frageMitLoesung(f), antwort: a[f.schluessel] ?? null, anteil: bewerte(f, a[f.schluessel]) }));
+      const punkte = Math.round(ergebnisse.reduce((n, e) => n + e.anteil, 0) * 100) / 100;
+      const gesamt = ergebnisse.length;
+      const prozent = Math.round((punkte / gesamt) * 100);
+      const heute = c.k.jetzt().toISOString().slice(0, 10);
+      c.k.db
+        .prepare(
+          `INSERT INTO lern_pruefung (azubi_id, paket, satz_id, versuche, letzte_punkte, letzte_gesamt, beste_prozent, zuletzt) VALUES (?, ?, ?, 1, ?, ?, ?, ?)
+           ON CONFLICT(azubi_id, paket, satz_id) DO UPDATE SET versuche = versuche + 1, letzte_punkte = excluded.letzte_punkte, letzte_gesamt = excluded.letzte_gesamt, beste_prozent = MAX(beste_prozent, excluded.beste_prozent), zuletzt = excluded.zuletzt`,
+        )
+        .run(c.b.id, p.id, s.id, punkte, gesamt, prozent, heute);
+      const z = c.k.db.prepare('SELECT * FROM lern_pruefung WHERE azubi_id = ? AND paket = ? AND satz_id = ?').get(c.b.id, p.id, s.id) as unknown as PruefZeile;
+      return { status: 200, body: { ...satzKopf(s), punkte, gesamt, prozent, note: ihkNote(prozent), versuche: z.versuche, besteProzent: z.beste_prozent, ergebnisse } };
+    },
+  },
+  {
+    m: 'GET',
+    p: '/api/lernen/dokument/:datei',
+    wer: ['azubi'],
+    h: (c) => dokumentDatei(meinPaket(c), c.p.datei, false),
+  },
+
   // ---------- Leseansicht für Ausbilder und Beauftragte: dieselben Inhalte, kein Lernstand ----------
   {
     // alle Lernmodule auf dem Server – auch solche, die noch an keinem Beruf eingeschaltet sind
@@ -696,5 +818,28 @@ export const LERN_ROUTEN: Route[] = [
       if (!f) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
       return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
     },
+  },
+  {
+    // Prüfung in der Leseansicht: alle Übungssätze und alle Unterlagen – auch die Lösungen
+    m: 'GET',
+    p: '/api/lerninhalte/:paket/pruefung',
+    wer: BETREUUNG,
+    h: (c) => ({ status: 200, body: pruefungAnsicht(lesePaket(c), true, new Map()) }),
+  },
+  {
+    // ein Übungssatz mit allen Lösungen – zum Vorbereiten und Besprechen
+    m: 'GET',
+    p: '/api/lerninhalte/:paket/pruefung/:id',
+    wer: BETREUUNG,
+    h: (c) => {
+      const s = satzVon(lesePaket(c), c.p.id);
+      return { status: 200, body: { ...satzKopf(s), fragen: s.fragen.map(frageMitLoesung) } };
+    },
+  },
+  {
+    m: 'GET',
+    p: '/api/lerninhalte/:paket/dokument/:datei',
+    wer: BETREUUNG,
+    h: (c) => dokumentDatei(lesePaket(c), c.p.datei, true),
   },
 ];

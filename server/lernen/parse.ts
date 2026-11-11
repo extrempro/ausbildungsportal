@@ -49,19 +49,19 @@ export interface ParsedThema {
   zusatz: Zusatz[];
 }
 
-interface Zeile {
+export interface Zeile {
   text: string;
   nr: number; // 1-basiert, bezogen auf die ganze Datei
 }
 
-interface Abschnitt {
+export interface Abschnitt {
   ueberschrift: string;
   nr: number;
   zeilen: Zeile[];
 }
 
 /** Zerlegt Zeilen an Überschriften eines bestimmten Levels ("## " oder "### "). */
-function zerlege(zeilen: Zeile[], prefix: string): { vorher: Zeile[]; abschnitte: Abschnitt[] } {
+export function zerlege(zeilen: Zeile[], prefix: string): { vorher: Zeile[]; abschnitte: Abschnitt[] } {
   const vorher: Zeile[] = [];
   const abschnitte: Abschnitt[] = [];
   let aktuell: Abschnitt | null = null;
@@ -81,7 +81,7 @@ function zerlege(zeilen: Zeile[], prefix: string): { vorher: Zeile[]; abschnitte
 }
 
 /** Listenpunkte ("- " oder "* "), eingerückte Folgezeilen werden angehängt. */
-function listenpunkte(zeilen: Zeile[]): { text: string; nr: number }[] {
+export function listenpunkte(zeilen: Zeile[]): { text: string; nr: number }[] {
   const punkte: { text: string; nr: number }[] = [];
   for (const z of zeilen) {
     const m = /^\s*[-*]\s+(.*)$/.exec(z.text);
@@ -95,7 +95,7 @@ function listenpunkte(zeilen: Zeile[]): { text: string; nr: number }[] {
 }
 
 /** Absätze: zusammenhängende, nicht leere Zeilen (ohne Kommentare), zu einem Text verbunden. */
-function absaetze(zeilen: Zeile[]): string[] {
+export function absaetze(zeilen: Zeile[]): string[] {
   const out: string[] = [];
   let akt: string[] = [];
   for (const z of zeilen) {
@@ -129,7 +129,7 @@ function hashInhalt(zeilen: Zeile[]): string {
   return createHash('sha1').update(norm).digest('hex').slice(0, 16);
 }
 
-function trenneId(ueberschrift: string): { titel: string; id: string | null } {
+export function trenneId(ueberschrift: string): { titel: string; id: string | null } {
   const m = ID_IN_UEBERSCHRIFT.exec(ueberschrift);
   if (!m) return { titel: ueberschrift.trim(), id: null };
   return { titel: ueberschrift.slice(0, m.index).trim(), id: m[1].trim() };
@@ -334,7 +334,7 @@ function parseUnterthema(
   return u;
 }
 
-function parseTabelle(titel: string, s: Abschnitt, fehler: (t: string, z?: number) => void): Tabelle | null {
+export function parseTabelle(titel: string, s: Abschnitt, fehler: (t: string, z?: number) => void): Tabelle | null {
   const zeilen = s.zeilen.filter((z) => z.text.trim().startsWith('|'));
   if (zeilen.length < 2) {
     fehler(`Tabelle "${titel}" hat keine Kopf- und Trennzeile`, s.nr);

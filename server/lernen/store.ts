@@ -3,6 +3,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BILD_DATEI, ID_MUSTER, parseThemaMarkdown } from './parse';
+import { ladeDokumente, ladeUebungssaetze } from './pruefung';
+import type { Dokument, Uebungssatz } from './pruefung';
 import type { AblaufSzenario, Bild, KatalogEintrag, Meldung, Meta, Themenfeld, Zusatz } from './typen';
 
 export interface Inhalte {
@@ -10,7 +12,14 @@ export interface Inhalte {
   meta: Meta;
   umbenennungen: Record<string, string>;
   meldungen: Meldung[];
+  /** Übungssätze zur Prüfungsvorbereitung (pruefung/<id>.md) */
+  pruefung: Uebungssatz[];
+  /** Unterlagen als PDF (dokumente.json) */
+  dokumente: Dokument[];
 }
+
+/** Diese Kennungen sind Seitenadressen im Lernmodul (/lernen/ueben …) und taugen nicht als Themenfeld. */
+const RESERVIERT = new Set(['kompendium', 'ueben', 'pruefung']);
 
 const DATUM = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -55,6 +64,10 @@ export function ladeInhalte(dir: string, vorher?: Inhalte | null): Inhalte {
     const datei = `themen/${eintrag.id}.md`;
     if (!eintrag.id || !ID_MUSTER.test(eintrag.id)) {
       meldungen.push({ level: 'fehler', datei: 'themenfelder.json', text: `Ungültige Themenfeld-ID "${eintrag.id}"` });
+      continue;
+    }
+    if (RESERVIERT.has(eintrag.id)) {
+      meldungen.push({ level: 'fehler', datei: 'themenfelder.json', text: `Die Kennung "${eintrag.id}" ist für eine Seite des Lernmoduls reserviert – bitte eine andere wählen` });
       continue;
     }
     if (katalogIds.has(eintrag.id)) {
@@ -115,7 +128,16 @@ export function ladeInhalte(dir: string, vorher?: Inhalte | null): Inhalte {
   pruefeUngenutzteBilder(dir, themenfelder, meldungen);
   pruefeZuVerweise(themenfelder, meldungen);
 
-  return { themenfelder, meta, umbenennungen, meldungen };
+  const pruefung = ladeUebungssaetze(dir, meldungen);
+  const unterthemen = new Set(themenfelder.flatMap((f) => f.unterthemen.map((u) => `${f.id}.${u.id}`)));
+  for (const s of pruefung) {
+    for (const f of s.umfasst.length ? [] : s.fragen) {
+      for (const ref of f.zu) if (!unterthemen.has(ref)) meldungen.push({ level: 'warnung', datei: `pruefung/${s.id}.md`, text: `Frage "${f.titel}": "zu: ${ref}" – dieses Unterthema gibt es nicht` });
+    }
+  }
+  const dokumente = ladeDokumente(dir, meldungen);
+
+  return { themenfelder, meta, umbenennungen, meldungen, pruefung, dokumente };
 }
 
 /**
@@ -312,5 +334,8 @@ export function inhaltsStand(inhalte: Inhalte) {
     befuellt,
     unterthemenMitInhalt: mitInhalt,
     unterthemenGeruest: geruest,
+    uebungssaetze: inhalte.pruefung.length,
+    pruefungsfragen: inhalte.pruefung.filter((x) => !x.umfasst.length).reduce((n, x) => n + x.fragen.length, 0),
+    dokumente: inhalte.dokumente.length,
   };
 }

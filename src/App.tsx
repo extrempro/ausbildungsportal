@@ -21,6 +21,7 @@ import { Leseansicht } from './lernen/basis';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
 import { LernKarten, LernQuiz, LernUeben } from './pages/LernUeben';
+import { LernPruefung, LernUebungssatz } from './pages/LernPruefung';
 import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
@@ -281,7 +282,10 @@ export function App() {
   const urlaubAzubi = /^\/azubis\/(\d{1,12})\/urlaub$/.exec(pfad)?.[1];
   // Leseansicht der Lerninhalte für Ausbilder und Beauftragte: /lerninhalte/<paket>[/kompendium|/<themenfeld>]
   const lesePfad = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})(?:\/([a-z0-9-]{1,40}))?$/.exec(pfad);
-  const lernThema = /^\/lernen\/(?!ueben$)([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
+  // Prüfung: /lernen/pruefung[/<übungssatz>] bzw. /lerninhalte/<paket>/pruefung[/<übungssatz>]
+  const lesePruefung = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})\/pruefung\/([a-z0-9-]{1,60})$/.exec(pfad);
+  const lernSatz = /^\/lernen\/pruefung\/([a-z0-9-]{1,60})$/.exec(pfad)?.[1];
+  const lernThema = /^\/lernen\/(?!ueben$|pruefung$)([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernKarten = /^\/lernen\/ueben\/karten\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernQuiz = /^\/lernen\/ueben\/quiz\/([a-z0-9-]{1,40}\.[a-z0-9-]{1,60})$/.exec(pfad)?.[1];
 
@@ -312,10 +316,22 @@ export function App() {
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
   else if (pfad === '/lerninhalte' && betreut) seite = <LerninhalteListe ausbilder={konto.rolle === 'ausbilder'} />;
   else if (lesePfad && betreut)
-    seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
+    seite = (
+      <Leseansicht paket={lesePfad[1]}>
+        {!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : lesePfad[2] === 'pruefung' ? <LernPruefung /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}
+      </Leseansicht>
+    );
+  else if (lesePruefung && betreut)
+    seite = (
+      <Leseansicht paket={lesePruefung[1]}>
+        <LernUebungssatz key={lesePruefung[2]} id={lesePruefung[2]} />
+      </Leseansicht>
+    );
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (pfad === '/lernen/ueben' && lernen) seite = <LernUeben />;
+  else if (pfad === '/lernen/pruefung' && lernen) seite = <LernPruefung />;
+  else if (lernSatz && lernen) seite = <LernUebungssatz key={lernSatz} id={lernSatz} />;
   else if (lernKarten && lernen) seite = <LernKarten key={lernKarten} feld={lernKarten} />;
   else if (lernQuiz && lernen) seite = <LernQuiz key={lernQuiz} id={lernQuiz} />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;

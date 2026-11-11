@@ -22,7 +22,7 @@ export const ZIP_MAX = 15 * 1024 * 1024;
 const GRENZEN = { maxDateien: 600, maxDatei: 5 * 1024 * 1024, maxGesamt: 40 * 1024 * 1024 };
 const KENNUNG = /^[a-z0-9][a-z0-9-]{0,30}$/;
 /** was aus dem Archiv übernommen wird – alles andere bleibt draußen */
-const ERLAUBT = [/^(paket|meta|themenfelder|umbenennungen)\.json$/, /^themen\/[a-z0-9-]+\.md$/, /^bilder\/[A-Za-z0-9._-]+\.svg$/, /^zusatz\/[A-Za-z0-9._-]+\.json$/, /^(CHANGELOG\.md|LICENSE)$/];
+const ERLAUBT = [/^(paket|meta|themenfelder|umbenennungen|dokumente)\.json$/, /^themen\/[a-z0-9-]+\.md$/, /^pruefung\/[a-z0-9-]+\.md$/, /^dokumente\/[a-z0-9][a-z0-9._-]{0,80}\.pdf$/, /^bilder\/[A-Za-z0-9._-]+\.svg$/, /^zusatz\/[A-Za-z0-9._-]+\.json$/, /^(CHANGELOG\.md|LICENSE)$/];
 
 type Status = 'eingereicht' | 'zurueck' | 'hochgeladen' | 'zurueckgezogen';
 interface Zeile {
