@@ -573,7 +573,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
                 <Begriff wort="Lernmodul">
                   Am Beruf lässt sich ein Paket mit Lerninhalten einschalten, sofern eines auf dem Server liegt. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“ mit Cheatsheets und einer Ampel zur Selbsteinschätzung. Den Lernstand sieht nur der Azubi selbst – du siehst ihn nicht, auch
-                  nicht als Zusammenfassung. Die Inhalte pflegt, wer den Server betreibt.
+                  nicht als Zusammenfassung. Die Inhalte pflegt, wer den Server betreibt. Liegen dort noch keine, ist das Feld gesperrt und die Seite sagt, was fehlt.
                 </Begriff>
                 <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
               </dl>

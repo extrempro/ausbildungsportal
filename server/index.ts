@@ -5,6 +5,7 @@ import { openDatabase } from './db';
 import { erzeugeServer } from './http';
 import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
+import { lernpakete } from './lernen';
 
 const cfg = loadConfig();
 wechsleZumBesitzer(cfg.dataDir);
@@ -29,6 +30,8 @@ server.listen(cfg.port, cfg.host, () => {
   console.log(`Anmeldung des Super-Admins: ${cfg.appUrl.replace(/\/$/, '')}/super`);
   // In Docker ist das immer der Port im Container – welcher Port außen gilt, bestimmt die Compose-Datei.
   console.log(`Lauscht auf ${cfg.host}:${cfg.port} (mit Docker ist das der Port im Container; den Port außen zeigt: docker compose ps)`);
+  // Lernmodul: gleich beim Start einlesen, damit Fehler in den Inhalten und ein leerer Ordner im Log stehen
+  if (lernpakete(k).size === 0) console.log(`Lernmodul: keine Lerninhalte gefunden in ${cfg.lernDir} – Einrichtung siehe lerninhalte/README.md`);
 });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
