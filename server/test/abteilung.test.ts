@@ -51,6 +51,10 @@ test('Einsatz in einer Abteilung: Beauftragte und Stellvertretung sind für die 
   assert.equal(r.status, 201);
   const e = koerper(r).eintrag;
   assert.deepEqual([e.titel, e.abteilungId, e.abteilung], ['IT-Betrieb', it, 'IT-Betrieb']);
+  // der Plan nennt die Ansprechpersonen der Abteilung – auch dem Azubi
+  assert.deepEqual(e.abteilungLeute, { beauftragte: ['Bea Auft'], stellvertretung: ['Bodo Zweit'] });
+  const eigener = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/plan`, { cookies: als(w, w.anna) }));
+  assert.deepEqual(eigener.eintraege.find((x: { abteilungId: number | null }) => x.abteilungId === it).abteilungLeute, { beauftragte: ['Bea Auft'], stellvertretung: ['Bodo Zweit'] });
   // die Zuweisung reicht vom Montag der ersten bis zum Sonntag der letzten Woche
   assert.deepEqual(await auto(w), ['Bea Auft 2026-11-09–2026-12-20 IT-Betrieb', 'Bodo Zweit (Stv.) 2026-11-09–2026-12-20 IT-Betrieb']);
   assert.deepEqual([await sieht(w, w.bea), await sieht(w, w.bodo), await sieht(w, w.carla), await sieht(w, w.bea, w.ben)], [200, 200, 404, 404]);

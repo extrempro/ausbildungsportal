@@ -415,6 +415,8 @@ export interface PlanEintrag {
   /** Abteilung eines Einsatzes (oder null) und ihr Name */
   abteilungId: number | null;
   abteilung: string;
+  /** Beauftragte und Stellvertretung der Abteilung (Namen) – null ohne Abteilung */
+  abteilungLeute: { beauftragte: string[]; stellvertretung: string[] } | null;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
   /** nur Termine: Tag (JJJJ-MM-TT) und freiwillige Uhrzeit (HH:MM) */

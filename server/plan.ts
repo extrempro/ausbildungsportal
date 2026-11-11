@@ -217,6 +217,8 @@ function ansicht(c: Ctx, z: EintragZeile) {
     zustaendigId: zustaendig?.id ?? null,
     zustaendig: zustaendig?.anzeigename ?? '',
     abteilungId: z.abteilung_id,
+    // wer in der Abteilung für Azubis da ist – für die Anzeige im Plan (nur aktive Konten)
+    abteilungLeute: z.abteilung_id ? abteilungLeute(db, z.abteilung_id) : null,
     abteilung: z.abteilung_id ? ((db.prepare('SELECT name FROM abteilung WHERE id = ?').get(z.abteilung_id) as { name: string } | undefined)?.name ?? '') : '',
     erledigt: z.erledigt === 1,
     unteraufgaben: json<Unteraufgabe[]>(z.unteraufgaben, []),
@@ -227,6 +229,11 @@ function ansicht(c: Ctx, z: EintragZeile) {
     vomAzubi: z.erstellt_von === z.azubi_id,
     bearbeitbar: darfPlanEintragAendern(db, c.b, z, heute(c.k.jetzt())),
   };
+}
+
+function abteilungLeute(db: DB, abteilungId: number): { beauftragte: string[]; stellvertretung: string[] } {
+  const zeilen = db.prepare("SELECT b.anzeigename AS name, p.art FROM abteilung_person p JOIN benutzer b ON b.id = p.benutzer_id AND b.status = 'aktiv' WHERE p.abteilung_id = ? ORDER BY b.anzeigename COLLATE NOCASE").all(abteilungId) as unknown as { name: string; art: string }[];
+  return { beauftragte: zeilen.filter((z) => z.art === 'beauftragt').map((z) => z.name), stellvertretung: zeilen.filter((z) => z.art === 'stellvertretung').map((z) => z.name) };
 }
 
 function holeEintrag(c: Ctx, azubiId: number): EintragZeile {

@@ -1,3 +1,5 @@
+import { Icon } from '../icons';
+import { Avatar } from '../avatar';
 import { EintragFelder } from '../eintragFelder';
 import { melde, rueckfrage } from '../dialoge';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -83,9 +85,10 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
       bis: e.bis || e.von,
       ...(e.art === 'termin' ? { tag: e.tag, zeitVon: e.zeitVon, zeitBis: e.zeitBis } : {}),
       text: e.text,
-      zustaendigId: mitPerson ? e.zustaendigId : null,
+      // mit Abteilung gibt es keine einzelne zuständige Person und keine Zuweisung von Hand
+      zustaendigId: mitPerson && !(e.art === 'einsatz' && e.abteilungId) ? e.zustaendigId : null,
       abteilungId: e.art === 'einsatz' ? e.abteilungId : null,
-      zuweisen: kannZuweisen && e.zuweisen,
+      zuweisen: kannZuweisen && e.zuweisen && !(e.art === 'einsatz' && e.abteilungId),
       erledigt: e.erledigt,
       unteraufgaben: e.unteraufgaben,
     };
@@ -242,6 +245,95 @@ function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: W
     // Termine sieht nur der Azubi selbst – das steht dabei, damit er es nicht vergisst
     e.art === 'termin' ? 'nur für dich sichtbar' : e.vomAzubi && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
   ].filter(Boolean);
+  // Einsatz in einer Abteilung: in der ersten Woche (und in den Karten oben) ausführlich mit Ansprechpersonen, danach eine Zeile
+  if (e.art === 'einsatz' && e.abteilungId !== null) {
+    const leute = e.abteilungLeute ?? { beauftragte: [], stellvertretung: [] };
+    const erste = e.von === woche.montag;
+    const zeitraum = `${tagMonat(e.von)}–${tagMonat(plusTage(e.bis, 6))}`;
+    const stand = wochen > 1 && (
+      <span className="abt-stand">
+        {wochen <= 12 ? (
+          <span className="abt-schritte" aria-hidden="true">
+            {Array.from({ length: wochen }, (_, i) => (
+              <i key={i} className={i < nr ? 'voll' : undefined} />
+            ))}
+          </span>
+        ) : (
+          <span className="abt-schritte lang" aria-hidden="true">
+            <i className="voll" style={{ width: `${Math.round((nr / wochen) * 100)}%` }} />
+          </span>
+        )}
+        Woche {nr} von {wochen}
+      </span>
+    );
+    const bearbeiten = e.bearbeitbar && (
+      <button type="button" className="link-knopf nicht-drucken" onClick={() => a.bearbeite(e)} aria-label={`„${e.titel}“ bearbeiten`}>
+        Bearbeiten
+      </button>
+    );
+    if (!ausfuehrlich)
+      return (
+        <div className="eintrag einsatz abt-kurz">
+          <div className="eintrag-kopf">
+            <span className="eintrag-art">{ART_TEXT.einsatz}</span>
+            <span className="eintrag-titel">{e.titel}</span>
+            <span className="eintrag-zusatz">
+              {stand}
+              {leute.beauftragte.length > 0 && <span> · {leute.beauftragte.join(', ')}</span>}
+            </span>
+            {bearbeiten}
+          </div>
+        </div>
+      );
+    return (
+      <>
+        {erste && (
+          <div className="abt-wechsel">
+            <strong>Neue Abteilung: {e.abteilung || e.titel}</strong>
+            <span>
+              {wochen === 1 ? '1 Woche' : `${wochen} Wochen`}, bis {tagMonat(plusTage(e.bis, 6))}
+            </span>
+          </div>
+        )}
+        <div className="eintrag einsatz">
+          <div className="eintrag-kopf">
+            <span className="eintrag-art">{ART_TEXT.einsatz}</span>
+            <span className="eintrag-titel">{e.titel}</span>
+            <span className="abt-marke">
+              <Icon name="stammdaten" groesse={14} />
+              {e.abteilung && e.abteilung !== e.titel ? e.abteilung : 'Abteilung'}
+            </span>
+            {bearbeiten}
+          </div>
+          {leute.beauftragte.length + leute.stellvertretung.length > 0 ? (
+            <ul className="abt-personen" aria-label={eigenes ? 'Deine Ansprechpersonen' : 'Zuständig in der Abteilung'}>
+              {leute.beauftragte.map((n) => (
+                <li key={n}>
+                  <Avatar name={n} />
+                  {n}
+                </li>
+              ))}
+              {leute.stellvertretung.map((n) => (
+                <li key={n} className="stv">
+                  <Avatar name={n} />
+                  {n} <span className="leise klein">(Stellvertretung)</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="eintrag-meta">In dieser Abteilung ist niemand hinterlegt.</div>
+          )}
+          <div className="eintrag-meta">
+            {stand}
+            {wochen > 1 ? ' · ' : ''}
+            {zeitraum}
+            {e.zustaendig ? ` · Zuständig: ${e.zustaendig}` : ''}
+          </div>
+          {e.text && <div className="eintrag-text mehrzeilig">{e.text}</div>}
+        </div>
+      </>
+    );
+  }
   return (
     <div className={`eintrag ${e.art}`}>
       <div className="eintrag-kopf">
@@ -406,24 +498,74 @@ function Kennzahl({ wert, einheit, text, warnung, children }: { wert: number | s
 }
 
 /** Ein schmaler Balken pro Woche: Schule violett, Ferien gelb, heute blau; die gelesene Woche ist höher. */
-function Jahresband({ wochen, schule, ferien, pruefung, heute, gelesen, onSpringe }: { wochen: Woche[]; schule: Set<string>; ferien: Set<string>; pruefung: Set<string>; heute?: string; gelesen?: string; onSpringe: (montag: string) => void }) {
+function Jahresband({ wochen, schule, abteilung, ferien, pruefung, heute, gelesen, onSpringe }: { wochen: Woche[]; schule: Set<string>; abteilung: Map<string, string>; ferien: Set<string>; pruefung: Set<string>; heute?: string; gelesen?: string; onSpringe: (montag: string) => void }) {
   const schulAnzahl = wochen.filter((w) => schule.has(w.montag)).length;
   return (
     <div role="img" aria-label={`${wochen.length} Wochen, davon ${schulAnzahl} Schulwochen`} className="jahresband">
       {wochen.map((w) => (
         <span
           key={w.montag}
-          title={`KW ${w.kw} · ${tagMonat(w.montag)}–${tagMonat(w.sonntag)}`}
+          title={`KW ${w.kw} · ${tagMonat(w.montag)}–${tagMonat(w.sonntag)}${abteilung.has(w.montag) ? ` · ${abteilung.get(w.montag)}` : ''}`}
           onClick={() => onSpringe(w.montag)}
-          className={`${pruefung.has(w.montag) ? 'pruefung' : w.montag === heute ? 'heute' : schule.has(w.montag) ? 'schule' : ferien.has(w.montag) ? 'ferien' : ''}${w.montag === gelesen ? ' gelesen' : ''}`}
+          className={`${pruefung.has(w.montag) ? 'pruefung' : w.montag === heute ? 'heute' : schule.has(w.montag) ? 'schule' : abteilung.has(w.montag) ? 'abteilung' : ferien.has(w.montag) ? 'ferien' : ''}${w.montag === gelesen ? ' gelesen' : ''}`}
         />
       ))}
     </div>
   );
 }
 
+/** Ein Stück des Abteilungsdurchlaufs: ein Einsatz in einer Abteilung oder eine Lücke („noch nicht geplant“). Montage der ersten und letzten Woche. */
+interface Abschnitt {
+  name: string | null;
+  von: string;
+  bis: string;
+  kwVon: number;
+  kwBis: number;
+}
+
+/** Die Abteilungen eines Ausbildungsjahres der Reihe nach – am PC als Liste, am Handy zum Aufklappen. */
+function Durchlauf({ abschnitte, heute, onSpringe, klappbar }: { abschnitte: Abschnitt[]; heute?: string; onSpringe: (montag: string) => void; klappbar?: boolean }) {
+  if (!abschnitte.some((x) => x.name !== null)) return null;
+  const liste = (
+    <ul className="abt-durchlauf">
+      {abschnitte.map((x) => {
+        const jetzt = !!heute && x.von <= heute && x.bis >= heute;
+        return (
+          <li key={x.von}>
+            <button type="button" onClick={() => onSpringe(x.von)} aria-current={jetzt ? 'true' : undefined} className={x.name === null ? 'offen' : undefined}>
+              <i aria-hidden="true" />
+              <span>
+                <strong>{x.name ?? 'Noch nicht geplant'}</strong>
+                <span className="leise klein">
+                  KW {x.kwVon}
+                  {x.kwBis !== x.kwVon ? `–${x.kwBis}` : ''}
+                  {jetzt && x.name !== null ? ' · läuft gerade' : ''}
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+  // schmale Bildschirme haben keine Seitenleiste – dort steht der Durchlauf zum Aufklappen über den Wochen
+  if (klappbar)
+    return (
+      <details className="klapp abt-durchlauf-schmal nicht-drucken">
+        <summary>Abteilungen</summary>
+        {liste}
+      </details>
+    );
+  return (
+    <div>
+      <span className="ueberschrift-klein abt-durchlauf-titel">Abteilungen</span>
+      {liste}
+    </div>
+  );
+}
+
 /** Seitenleiste: wo man gerade liest, Fortschritt der Ausbildung und je Jahr ein Band aller Wochen. */
-function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, pruefung, onSpringe }: { jahre: Map<number, Woche[]>; gelesen: Woche | null; heute: Woche | null; gesamt: number; schule: Set<string>; ferien: Set<string>; pruefung: Set<string>; onSpringe: (montag: string) => void }) {
+function PlanKompass({ jahre, gelesen, heute, gesamt, schule, abteilung, durchlauf, ferien, pruefung, onSpringe }: { jahre: Map<number, Woche[]>; gelesen: Woche | null; heute: Woche | null; gesamt: number; schule: Set<string>; abteilung: Map<string, string>; durchlauf: Abschnitt[]; ferien: Set<string>; pruefung: Set<string>; onSpringe: (montag: string) => void }) {
   const ort = gelesen ?? heute;
   const fortschritt = heute && heute.nummer ? Math.min(100, Math.round((heute.nummer / gesamt) * 100)) : null;
   return (
@@ -485,7 +627,7 @@ function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, pruefung, 
                   {ws[ws.length - 1].sonntag.slice(2, 4)} · {ws.filter((w) => schule.has(w.montag)).length} Schulw.
                 </span>
               </button>
-              <Jahresband wochen={ws} schule={schule} ferien={ferien} pruefung={pruefung} heute={heute?.montag} gelesen={ort?.montag} onSpringe={onSpringe} />
+              <Jahresband wochen={ws} schule={schule} abteilung={abteilung} ferien={ferien} pruefung={pruefung} heute={heute?.montag} gelesen={ort?.montag} onSpringe={onSpringe} />
               {aktiv && monate.length > 1 && (
                 <ul className="kompass-monate">
                   {monate.map((m) => (
@@ -497,6 +639,7 @@ function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, pruefung, 
                   ))}
                 </ul>
               )}
+              {aktiv && <Durchlauf abschnitte={durchlauf.filter((x) => x.bis >= ws[0].montag && x.von <= ws[ws.length - 1].montag)} heute={heute?.montag} onSpringe={onSpringe} />}
             </li>
           );
         })}
@@ -506,6 +649,11 @@ function PlanKompass({ jahre, gelesen, heute, gesamt, schule, ferien, pruefung, 
         <span>
           <i className="schule" /> Schule
         </span>
+        {abteilung.size > 0 && (
+          <span>
+            <i className="abteilung" /> Abteilung
+          </span>
+        )}
         {pruefung.size > 0 && (
           <span>
             <i className="pruefung" /> Prüfung
@@ -577,6 +725,40 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     }
     return s;
   }, [d, wochen, zeigeFrei]);
+
+  // Wochen in einer Abteilung (Montag → Name) und der Durchlauf: Abteilungen der Reihe nach, ab heute mit den Lücken dazwischen
+  const abteilungsWochen = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of d?.eintraege ?? []) if (e.art === 'einsatz' && e.abteilungId !== null) for (let w = e.von; w <= e.bis; w = plusTage(w, 7)) m.set(w, e.abteilung || e.titel);
+    return m;
+  }, [d?.eintraege]);
+  const durchlauf = useMemo(() => {
+    const aus: Abschnitt[] = [];
+    if (abteilungsWochen.size === 0) return aus;
+    // verplant ist eine Woche auch durch Berufsschule oder einen Einsatz ohne Abteilung – das ist keine Lücke
+    const verplant = new Set<string>(schule);
+    for (const e of d?.eintraege ?? []) if (e.art === 'einsatz') for (let w = e.von; w <= e.bis; w = plusTage(w, 7)) verplant.add(w);
+    const heuteMontag = d ? montagVon(d.heute) : '';
+    let jahr: number | null = null;
+    for (const w of wochen) {
+      if (w.ausbildungsjahr === null) continue;
+      const name = abteilungsWochen.get(w.montag) ?? null;
+      // Lücken nur ab der laufenden Woche – was vorbei ist, muss niemand mehr planen
+      const art = name !== null ? name : !verplant.has(w.montag) && w.montag >= heuteMontag ? null : undefined;
+      const letzter = aus[aus.length - 1];
+      if (art === undefined) {
+        jahr = null;
+        continue;
+      }
+      // ein Abschnitt endet am Wechsel der Abteilung und an der Grenze des Ausbildungsjahres
+      if (letzter && jahr === w.ausbildungsjahr && letzter.name === art && plusTage(letzter.bis, 7) === w.montag) {
+        letzter.bis = w.montag;
+        letzter.kwBis = w.kw;
+      } else aus.push({ name: art, von: w.montag, bis: w.montag, kwVon: w.kw, kwBis: w.kw });
+      jahr = w.ausbildungsjahr;
+    }
+    return aus;
+  }, [abteilungsWochen, schule, wochen, d]);
 
   const pruefungsWochen = useMemo(() => new Set((d?.pruefungen ?? []).map((p) => montagVon(p.datum))), [d?.pruefungen]);
 
@@ -792,7 +974,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
 
           <div className="plan-bereich">
             <aside className="karte plan-seite nicht-drucken">
-              <PlanKompass jahre={jahre} gelesen={gelesen} heute={aktuelle} gesamt={gesamt} schule={schule} ferien={ferienWochen} pruefung={pruefungsWochen} onSpringe={zeige} />
+              <PlanKompass jahre={jahre} gelesen={gelesen} heute={aktuelle} gesamt={gesamt} schule={schule} abteilung={abteilungsWochen} durchlauf={durchlauf} ferien={ferienWochen} pruefung={pruefungsWochen} onSpringe={zeige} />
             </aside>
 
             <div className="plan-wochen">
@@ -828,6 +1010,8 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
                   </button>
                 )}
               </nav>
+
+              <Durchlauf abschnitte={durchlauf} heute={aktuelle?.montag} onSpringe={zeige} klappbar />
 
               {d.vorlagen.length > 0 && !d.beginnFehlt && (
                 <div className="filter nicht-drucken baustein-leiste">

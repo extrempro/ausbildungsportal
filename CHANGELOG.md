@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.39.0] – 2026-11-11
+
+### Geändert
+
+- **Ausbildungsplan: Einsätze in einer Abteilung sind besser zu erkennen.**
+  - In der ersten Woche steht über dem Einsatz ein gelber Streifen „Neue Abteilung“ mit der Dauer. Die Karte zeigt die Marke „Abteilung“, die Beauftragten und die Stellvertretung (heller Kreis, zusätzlich als Text) und den Fortschritt („Woche 1 von 4“).
+  - In den Folgewochen steht der Einsatz als eine Zeile mit Fortschritt und Beauftragten – der Plan wird kürzer und ruhiger.
+  - Das Jahresband links zeigt Wochen in einer Abteilung grün; darunter steht beim aufgeklappten Ausbildungsjahr die Liste „Abteilungen“ in zeitlicher Reihenfolge, mit „Noch nicht geplant“ für freie Wochen ab heute. Ein Klick springt zur Woche.
+  - Am Handy und Tablet (dort gibt es keine Seitenleiste) steht die Liste zum Aufklappen über den Wochen.
+  - Azubis sehen dieselbe Darstellung mit „Deine Ansprechpersonen“.
+- **Einsatz anlegen:** Sobald eine Abteilung gewählt ist, verschwinden das Feld „Zuständig“ und der Haken „dem Azubi zuweisen“ – zuständig sind die Beauftragten der Abteilung.
+- Einsätze ohne Abteilung sehen aus wie bisher.
+
 ## [0.38.0] – 2026-11-11
 
 ### Neu
