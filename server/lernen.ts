@@ -38,6 +38,13 @@ export interface Paket {
   inhalte: Inhalte;
   /** zum Erkennen von Änderungen */
   marke: string;
+  /** woher das Paket kommt: vom Betreiber als Ordner eingebunden oder über das Portal eingereicht und übernommen */
+  herkunft: 'ordner' | 'portal';
+}
+
+/** Hier liegen Pakete, die über das Portal eingereicht und vom Super-Admin übernommen wurden. Sie gehen vor gleichnamige aus LERN_DIR. */
+export function portalLernDir(cfg: Pick<Kontext['cfg'], 'dataDir'>): string {
+  return join(cfg.dataDir, 'lerninhalte');
 }
 
 interface Lager {
@@ -56,9 +63,9 @@ function marke(ordner: string): string {
     .join(':');
 }
 
-/** Alle Inhaltspakete aus LERN_DIR; liest neu ein, wenn sich Dateien geändert haben. */
+/** Alle Inhaltspakete aus LERN_DIR und aus dem Portal-Ordner; liest neu ein, wenn sich Dateien geändert haben. */
 export function lernpakete(k: Kontext): Map<string, Paket> {
-  const dir = k.cfg.lernDir;
+  const dir = `${k.cfg.lernDir}|${portalLernDir(k.cfg)}`;
   let lager = LAGER.get(dir);
   const jetzt = Date.now();
   if (lager && jetzt - lager.geprueft < PRUEF_ABSTAND_MS) return lager.pakete;
@@ -66,13 +73,20 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
   lager.geprueft = jetzt;
   LAGER.set(dir, lager);
 
-  const ordner = existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).filter((e) => (e.isDirectory() || e.isSymbolicLink()) && PAKET_ID.test(e.name)) : [];
+  // erst die Ordner des Betreibers, dann die über das Portal übernommenen – bei gleichem Namen gilt das übernommene Paket
+  const ordner = new Map<string, { name: string; pfad: string; herkunft: Paket['herkunft'] }>();
+  for (const [wurzel, herkunft] of [[k.cfg.lernDir, 'ordner'], [portalLernDir(k.cfg), 'portal']] as const) {
+    if (!existsSync(wurzel)) continue;
+    for (const e of readdirSync(wurzel, { withFileTypes: true })) {
+      if (!(e.isDirectory() || e.isSymbolicLink()) || !PAKET_ID.test(e.name) || !existsSync(join(wurzel, e.name, 'themenfelder.json'))) continue;
+      ordner.set(e.name, { name: e.name, pfad: join(wurzel, e.name), herkunft });
+    }
+  }
   const gefunden = new Set<string>();
-  for (const e of ordner) {
-    const pfad = join(dir, e.name);
-    if (!existsSync(join(pfad, 'themenfelder.json'))) continue;
+  for (const e of ordner.values()) {
+    const pfad = e.pfad;
     gefunden.add(e.name);
-    const m = marke(pfad);
+    const m = `${e.herkunft}:${marke(pfad)}`;
     const alt = lager.pakete.get(e.name);
     if (alt && alt.marke === m) continue;
     let inhalte: Inhalte;
@@ -90,7 +104,7 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
       k.log(`Lernpaket „${e.name}“: paket.json nicht lesbar – ${(f as Error).message}`);
     }
     const text = (x: unknown) => (typeof x === 'string' ? x.trim().slice(0, 200) : '');
-    const paket: Paket = { id: e.name, titel: text(info.titel) || e.name, quelle: text(info.quelle), lizenz: text(info.lizenz), inhalte, marke: m };
+    const paket: Paket = { id: e.name, titel: text(info.titel) || e.name, quelle: text(info.quelle), lizenz: text(info.lizenz), inhalte, marke: m, herkunft: e.herkunft };
     lager.pakete.set(e.name, paket);
     const fehler = inhalte.meldungen.filter((x) => x.level === 'fehler');
     k.log(`Lernpaket „${paket.titel}“ (${e.name}) geladen: ${inhalte.themenfelder.length} Themenfelder, Stand ${inhalte.meta.stand || 'unbekannt'}${fehler.length ? `, ${fehler.length} Fehler` : ''}`);
@@ -99,6 +113,11 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
   }
   for (const id of [...lager.pakete.keys()]) if (!gefunden.has(id)) lager.pakete.delete(id);
   return lager.pakete;
+}
+
+/** Beim nächsten Zugriff sofort nach geänderten Paketen sehen (nach einer Übernahme über das Portal). */
+export function pruefeLernpaketeSofort(): void {
+  for (const l of LAGER.values()) l.geprueft = 0;
 }
 
 /** Nur für Tests: vergisst den Zwischenspeicher. */
@@ -153,6 +172,7 @@ export function paketListe(k: Kontext) {
       id: p.id,
       titel: p.titel,
       stand: p.inhalte.meta.stand,
+      herkunft: p.herkunft,
       themenfelder: p.inhalte.themenfelder.length,
       unterthemen: p.inhalte.themenfelder.reduce((n, f) => n + f.unterthemen.length, 0),
       fehler: p.inhalte.meldungen.filter((m) => m.level === 'fehler').length,

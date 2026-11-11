@@ -16,6 +16,7 @@ import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Jahreskalender } from './pages/Jahreskalender';
 import { Lernen } from './pages/Lernen';
 import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
+import { LernEinreichungen } from './pages/LernEinreichungen';
 import { Leseansicht } from './lernen/basis';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
@@ -79,6 +80,8 @@ export function App() {
   // holt das Portal Profilbilder aus Microsoft? (Schalter unter „Konto“)
   const [profilbild, setProfilbild] = useState(false);
   const [offeneMeldungen, setOffeneMeldungen] = useState(0);
+  // Super-Admin: eingereichte Lerninhalte, die auf die Prüfung warten
+  const [offeneEinreichungen, setOffeneEinreichungen] = useState(0);
   const schliesseMelden = useCallback(() => setMelden(false), []);
   // Ausbilder und Beauftragte: Urlaubsanträge, bei denen sie selbst etwas tun müssen
   const [urlaubZuTun, setUrlaubZuTun] = useState(0);
@@ -159,6 +162,7 @@ export function App() {
   useEffect(() => {
     if (konto?.rolle !== 'admin' || konto.passwortWechsel) return;
     api<{ offen: number }>('GET', '/api/fehlermeldungen').then((r) => setOffeneMeldungen(r.offen), () => {});
+    api<{ offen: number }>('GET', '/api/lernpakete/einreichungen').then((r) => setOffeneEinreichungen(r.offen), () => {});
   }, [konto?.rolle, konto?.passwortWechsel, pfad]);
   useEffect(() => {
     if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
@@ -301,8 +305,9 @@ export function App() {
   else if (pfad === '/verwaltung/stammdaten' && konto.rolle === 'ausbilder') seite = <Stammdaten />;
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
+  else if (pfad === '/verwaltung/lerninhalte' && konto.rolle === 'admin') seite = <LernEinreichungen onGeaendert={setOffeneEinreichungen} />;
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
-  else if (pfad === '/lerninhalte' && betreut) seite = <LerninhalteListe />;
+  else if (pfad === '/lerninhalte' && betreut) seite = <LerninhalteListe ausbilder={konto.rolle === 'ausbilder'} />;
   else if (lesePfad && betreut)
     seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
@@ -327,6 +332,7 @@ export function App() {
           { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
           { zu: '/verwaltung/meldungen', text: 'Fehlermeldungen', kurz: 'Meldungen', icon: 'kaefer', zahl: offeneMeldungen },
           { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'bild' },
+          { zu: '/verwaltung/lerninhalte', text: 'Lerninhalte', icon: 'lernen', mehr: true, zahl: offeneEinreichungen },
         ]
       : konto.rolle === 'azubi'
         ? [

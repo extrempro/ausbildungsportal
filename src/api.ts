@@ -44,6 +44,8 @@ export class ApiFehler extends Error {
     public status: number,
     text: string,
     public code = '',
+    /** was der Server sonst noch mitgeschickt hat (z. B. die Fehlerliste eines Inhaltspakets) */
+    public daten: Record<string, unknown> = {},
   ) {
     super(text);
   }
@@ -132,6 +134,23 @@ export async function ladeDatei(pfad: string): Promise<void> {
   a.remove();
   // der Browser braucht die Adresse noch einen Augenblick, um die Datei abzuholen
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** Lädt eine Datei zum Server hoch (der Körper ist die Datei selbst) und gibt die Antwort als JSON zurück. */
+export async function ladeHoch<T>(pfad: string, datei: Blob, typ: string): Promise<T> {
+  let r: Response;
+  try {
+    r = await fetch(pfad, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': typ }, body: datei });
+  } catch {
+    throw new ApiFehler(0, 'Der Server ist nicht erreichbar');
+  }
+  pruefeVersion(r.headers.get('X-App-Version'));
+  const daten = (await r.json().catch(() => ({}))) as { fehler?: string; code?: string };
+  if (!r.ok) {
+    if (r.status === 401 && daten.code === 'anmeldung') beiAbmeldung();
+    throw new ApiFehler(r.status, daten.fehler ?? (r.status === 413 ? 'Die Datei ist zu groß' : `Fehler ${r.status}`), daten.code, daten as Record<string, unknown>);
+  }
+  return daten as T;
 }
 
 export function zeit(iso: string | null): string {

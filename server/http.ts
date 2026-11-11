@@ -10,6 +10,9 @@ import type { Anfrage, Kontext } from './api';
  * Alle Pfade außerhalb von /api und den Dateien in dist liefern index.html (für die Seitenadressen der Oberfläche).
  */
 const MAX_BODY = 256 * 1024;
+/** nur hier darf eine Datei hochgeladen werden (Lerninhalte als ZIP) – etwas Luft über der Grenze, damit die API den Grund nennen kann */
+const UPLOAD_PFAD = '/api/lernpakete/einreichungen';
+const MAX_UPLOAD = 16 * 1024 * 1024;
 
 const TYPEN: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -60,17 +63,20 @@ function clientIp(k: Kontext, req: IncomingMessage): string {
   return req.socket.remoteAddress ?? '';
 }
 
-async function leseBody(req: IncomingMessage): Promise<unknown> {
+async function leseBody(req: IncomingMessage, pfad: string): Promise<unknown> {
   if (req.method === 'GET' || req.method === 'HEAD') return undefined;
   const typ = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+  const upload = req.method === 'POST' && pfad === UPLOAD_PFAD && typ === 'application/zip';
+  const grenze = upload ? MAX_UPLOAD : MAX_BODY;
   const teile: Buffer[] = [];
   let groesse = 0;
   for await (const stueck of req) {
     groesse += (stueck as Buffer).length;
-    if (groesse > MAX_BODY) throw new Error('zu_gross');
+    if (groesse > grenze) throw new Error('zu_gross');
     teile.push(stueck as Buffer);
   }
   if (groesse === 0) return undefined;
+  if (upload) return Buffer.concat(teile);
   if (typ !== 'application/json') throw new Error('kein_json');
   return JSON.parse(Buffer.concat(teile).toString('utf8'));
 }
@@ -85,7 +91,7 @@ async function api(k: Kontext, req: IncomingMessage, res: ServerResponse, url: U
   const kopf = { ...basis, 'Cache-Control': 'no-store', 'Content-Type': 'application/json; charset=utf-8', 'X-App-Version': k.version };
   let body: unknown;
   try {
-    body = await leseBody(req);
+    body = await leseBody(req, url.pathname);
   } catch (e) {
     const zuGross = e instanceof Error && e.message === 'zu_gross';
     return sende(res, zuGross ? 413 : 400, kopf, JSON.stringify({ fehler: zuGross ? 'Anfrage zu groß' : 'Anfrage muss gültiges JSON sein' }));

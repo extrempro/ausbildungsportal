@@ -250,7 +250,7 @@ const PROFILBILD = (rolle: Rolle): Kapitel => ({
   inhalt: (
     <>
       <p>
-        Hat der Betreiber des Portals es eingeschaltet, zeigt das Portal dein Profilbild aus Microsoft 365 – dort, wo sonst deine Anfangsbuchstaben stehen. Unter <Link zu="/konto">Konto</Link> steht dann der Abschnitt „Profilbild“. Fehlt er, ist die Funktion nicht eingeschaltet.
+        Hat der Betreiber des Portals es eingeschaltet, zeigt das Portal dein Profilbild aus Microsoft 365 – dort, wo sonst deine Anfangsbuchstaben stehen. Unter <Link zu="/konto">Konto</Link> steht der Abschnitt „Profilbild“. Ist der Haken dort gesperrt, ist die Funktion nicht eingeschaltet – dann gibt es im Portal kein Bild von dir.
       </p>
       <ul className="punkte">
         <li>Das Portal holt das Bild bei jeder Anmeldung. Ein neues Bild in Microsoft 365 erscheint also nach deiner nächsten Anmeldung.</li>
@@ -762,7 +762,11 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>
             <strong>Den Lernstand einzelner Azubis siehst du nicht</strong> – auch nicht, welche Abzeichen jemand hat. Er gehört den Azubis allein; so ist es ihnen im Portal zugesagt.
           </li>
-          <li>Fällt dir ein Fehler im Stoff auf: Die Inhalte liegen als Dateien beim Betreiber des Portals und werden dort geändert.{rolle === 'ausbilder' ? ' Wie die Dateien aufgebaut sind, steht im Kapitel „Lerninhalte für einen Beruf erstellen“.' : ''}</li>
+          <li>
+            {rolle === 'ausbilder'
+              ? 'Fällt dir ein Fehler im Stoff auf oder willst du Inhalte ergänzen: Ändere die Dateien und reiche das Paket auf dieser Seite neu ein. Wie das geht, steht im Kapitel „Lerninhalte für einen Beruf erstellen“.'
+              : 'Fällt dir ein Fehler im Stoff auf oder willst du Inhalte ergänzen: Wende dich an den zuständigen Ausbilder. Ausbilder können Lerninhalte im Portal einreichen.'}
+          </li>
           {rolle === 'ausbilder' && <li>Für welchen Beruf ein Lernmodul gilt, stellst du in den Stammdaten am Beruf ein.</li>}
         </ul>
       </>
@@ -991,7 +995,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 Für jeden Ausbildungsberuf kann es ein eigenes <strong>Lernmodul</strong> geben – Cheatsheets, Kompendium und Zusatzwissen wie beim Fachinformatiker. Dafür muss niemand programmieren: Ein Lernmodul ist ein Ordner mit Textdateien in einem festen Aufbau. Die eigentliche Arbeit ist, die Inhalte zu schreiben.
               </p>
               <p className="hinweis">
-                <strong>Wichtig:</strong> Du kannst die Dateien nicht selbst ins Portal hochladen. Den fertigen Ordner <strong>gibst du dem Betreiber des Portals</strong> (der Person, die den Server betreut – meist der Super-Admin). Er legt ihn auf dem Server ab. Danach erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Dasselbe gilt für jede spätere Änderung: geänderte Dateien wieder an den Betreiber geben.
+                <strong>So kommen die Inhalte ins Portal:</strong> Du packst den fertigen Ordner als ZIP-Datei und reichst ihn unter <Link zu="/lerninhalte">Lerninhalte</Link> ein. Das Portal prüft den Aufbau sofort. Danach sieht der Betreiber des Portals (Super-Admin) die Einreichung und lädt sie hoch oder gibt sie dir mit einer Rückmeldung zurück. Nach dem Hochladen erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Für jede spätere Änderung reichst du das ganze Paket noch einmal mit derselben Kennung ein.
               </p>
               <h3>So gehst du vor</h3>
               <ol className="schritte">
@@ -1005,7 +1009,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   <strong>Cheatsheets schreiben.</strong> Unterthema für Unterthema füllen: Kernbegriffe, Tabellen, ein Merksatz, eine typische Prüfungsfrage mit Lösungsweg.
                 </li>
                 <li>
-                  <strong>Ordner an den Betreiber geben</strong> – zum Beispiel als ZIP-Datei.
+                  <strong>Als ZIP-Datei einreichen.</strong> Den Ordner packen und unter „Lerninhalte“ bei „Lerninhalte einreichen“ hochladen: Kennung eintragen (der Ordnername, z. B. <code>kaufleute-buero</code>), Datei wählen, auf Wunsch eine Notiz.
                 </li>
                 <li>
                   <strong>Prüfen und einschalten.</strong> Unter Stammdaten steht das Paket mit der Zahl der Themenfelder. Stimmt in einer Datei etwas nicht, zeigt die Seite den Fehler mit Datei und Zeile. Dann am Beruf einschalten.
@@ -1072,8 +1076,21 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
                 <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>
               </ul>
+              <h3>Einreichen und Status</h3>
+              <dl className="begriffe">
+                <Begriff wort="Sofort-Prüfung">Beim Hochladen liest das Portal das Paket ein. Findet es Fehler, nimmt es nichts an und zeigt sie mit Datei und Zeile. Behebe sie und lade neu hoch.</Begriff>
+                <Begriff wort="Eingereicht – wird geprüft">Die Einreichung liegt beim Betreiber des Portals. Solange kannst du sie zurückziehen. Für dieselbe Kennung geht in dieser Zeit keine zweite Einreichung.</Begriff>
+                <Begriff wort="Zurückgegeben">Der Betreiber möchte Änderungen. Seine Rückmeldung steht an der Einreichung. Ändere die Dateien und reiche neu ein.</Begriff>
+                <Begriff wort="Hochgeladen">Die Inhalte sind im Portal. Ein neues Lernmodul schaltest du jetzt am Beruf ein; eine neue Fassung eines vorhandenen Lernmoduls gilt sofort. Der Lernstand der Azubis bleibt erhalten.</Begriff>
+              </dl>
+              <ul className="punkte">
+                <li>Die ZIP-Datei darf den Ordner selbst enthalten oder direkt seinen Inhalt – das Portal findet das Paket an der Datei <code>themenfelder.json</code>.</li>
+                <li>Übernommen werden nur Dateien, die zu einem Inhaltspaket gehören. Was sonst in der ZIP-Datei liegt, zeigt die Einreichung unter „Nicht übernommene Dateien“.</li>
+                <li>Alle Ausbilder sehen alle Einreichungen, weil die Lernmodule für das ganze Portal gelten.</li>
+                <li>Ausbildungsbeauftragte reichen nicht selbst ein. Sie wenden sich an einen Ausbilder.</li>
+              </ul>
               <p>
-                Für den Betreiber: Wo der Ordner hingehört und wie er eingebunden wird, steht in der Datei <code>lerninhalte/README.md</code> des Portals.
+                Für den Betreiber: Er kann Pakete weiterhin auch als Ordner auf dem Server einbinden; wie, steht in der Datei <code>lerninhalte/README.md</code> des Portals.
               </p>
             </>
           ),
@@ -1165,6 +1182,29 @@ const ADMIN: Kapitel[] = [
       <p>
         Das <Link zu="/verwaltung/protokoll">Protokoll</Link> zeigt Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen dort nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Nur du kannst das Protokoll einsehen.
       </p>
+    ),
+  },
+  {
+    id: 'lernpruefung',
+    titel: 'Lerninhalte prüfen und hochladen',
+    inhalt: (
+      <>
+        <p>
+          Ausbilder reichen Lerninhalte für das Lernmodul als ZIP-Datei ein. Unter <Link zu="/verwaltung/lerninhalte">Lerninhalte</Link> (am Handy unter „Mehr“) stehen die Einreichungen; eine Zahl am Menüpunkt zeigt, wie viele warten.
+        </p>
+        <dl className="begriffe">
+          <Begriff wort="Was das Portal schon geprüft hat">Den Aufbau: Jede Einreichung wurde mit dem Einleser des Lernmoduls gelesen. Pakete mit Fehlern kommen gar nicht erst bei dir an. Hinweise (zum Beispiel ein Unterthema ohne Inhalt) stehen an der Einreichung.</Begriff>
+          <Begriff wort="Was du prüfst">Den Inhalt: Stimmt er fachlich, ist er eigener Text (Urheberrecht), stehen keine Namen oder Daten realer Personen darin? Mit „ZIP-Datei herunterladen“ siehst du dir die Dateien an.</Begriff>
+          <Begriff wort="Einreichung zurückgeben …">Mit Rückmeldung, was zu ändern ist. Der Ausbilder liest sie und reicht neu ein.</Begriff>
+          <Begriff wort="Lerninhalte hochladen …">Übernimmt das Paket ins Portal, auf Wunsch mit einem Kommentar. Gibt es schon ein Lernmodul mit dieser Kennung, wird es ersetzt und gilt sofort für alle Azubis, deren Beruf es nutzt. Ihr Lernstand bleibt erhalten.</Begriff>
+        </dl>
+        <ul className="punkte">
+          <li>Ein neues Lernmodul sehen Azubis erst, wenn ein Ausbilder es in den Stammdaten an einem Beruf einschaltet.</li>
+          <li>Hochgeladene Pakete liegen im Datenordner des Portals unter <code>lerninhalte/</code> und sind damit in der Datensicherung. Sie gehen vor ein gleichnamiges Paket, das als Ordner auf dem Server eingebunden ist.</li>
+          <li>Nach der Entscheidung löscht das Portal die eingereichte ZIP-Datei.</li>
+          <li>Lerninhalte sind keine Daten über Personen. Den Lernstand der Azubis siehst du weiterhin nicht.</li>
+        </ul>
+      </>
     ),
   },
   {

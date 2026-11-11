@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, datum } from '../api';
 import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { useLern } from '../lernen/basis';
+import { EinreichenFormular, EinreichungKarte } from '../lernen/einreichung';
+import type { Einreichung } from '../lernen/einreichung';
 import { LernReiter } from '../lernen/teile';
 import { Link } from '../router';
 import { PaketFuss } from './Lernen';
@@ -20,12 +22,19 @@ interface PaketZeile extends LernPaket {
 }
 
 /** Alle Lernmodule, die auf dem Server liegen. */
-export function LerninhalteListe() {
+export function LerninhalteListe({ ausbilder }: { ausbilder: boolean }) {
   const [pakete, setPakete] = useState<PaketZeile[] | null>(null);
   const [fehler, setFehler] = useState('');
-  useEffect(() => {
-    api<{ pakete: PaketZeile[] }>('GET', '/api/lerninhalte').then((r) => setPakete(r.pakete), (e: Error) => setFehler(e.message));
-  }, []);
+  const [einr, setEinr] = useState<{ maxMb: number; einreichungen: Einreichung[] } | null>(null);
+  const lade = useCallback(async () => {
+    try {
+      setPakete((await api<{ pakete: PaketZeile[] }>('GET', '/api/lerninhalte')).pakete);
+      if (ausbilder) setEinr(await api('GET', '/api/lernpakete/einreichungen'));
+    } catch (e) {
+      setFehler(e instanceof Error ? e.message : 'Fehler');
+    }
+  }, [ausbilder]);
+  useEffect(() => void lade(), [lade]);
   if (fehler) return <Ladefehler titel="Lerninhalte" text={fehler} />;
   if (!pakete) return <p className="leise">Lädt …</p>;
   return (
@@ -51,6 +60,27 @@ export function LerninhalteListe() {
             </li>
           ))}
         </ul>
+      )}
+
+      {ausbilder && einr && (
+        <>
+          <EinreichenFormular maxMb={einr.maxMb} onEingereicht={lade} />
+          {einr.einreichungen.length > 0 && (
+            <section>
+              <h2 className="abschnitt-titel">Einreichungen</h2>
+              <ul className="antrag-liste">
+                {einr.einreichungen.map((e) => (
+                  <EinreichungKarte key={e.id} e={e} onGeaendert={lade} />
+                ))}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
+      {!ausbilder && (
+        <p className="hinweis" role="note">
+          <strong>Du möchtest Inhalte ergänzen oder hast einen Fehler gefunden?</strong> Wende dich an den zuständigen Ausbilder. Ausbilder können Lerninhalte im Portal einreichen.
+        </p>
       )}
     </>
   );

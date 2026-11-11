@@ -3,6 +3,7 @@ import { datumOderNull, Fehler, holeBenutzer, idAus, istObjekt, koerper, text } 
 import { ABO_ROUTEN } from './abo';
 import { JAHR_ROUTEN } from './jahr';
 import { BILD_ROUTEN, merkeBild } from './bild';
+import { EINREICHUNG_ROUTEN } from './lern-einreichung';
 import { URLAUB_ROUTEN } from './urlaub';
 import type { Anfrage, Antwort, Ctx, Kontext, Route } from './api-basis';
 import { LERN_ROUTEN, paketVon } from './lernen';
@@ -614,6 +615,7 @@ export const ROUTEN: Route[] = [
   ...JAHR_ROUTEN,
   ...URLAUB_ROUTEN,
   ...BILD_ROUTEN,
+  ...EINREICHUNG_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

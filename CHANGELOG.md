@@ -1,5 +1,28 @@
 # Änderungen
 
+## [0.36.0] – 2026-11-11
+
+### Neu
+
+- **Lerninhalte einreichen.** Ausbilder laden ein Inhaltspaket als ZIP-Datei im Portal hoch (Seite „Lerninhalte“): Kennung, Datei, auf Wunsch eine Notiz. Das Portal liest das Paket sofort ein; mit Fehlern nimmt es nichts an und zeigt sie mit Datei und Zeile.
+- **Status der Einreichung:** „Eingereicht – wird geprüft“ → „Zurückgegeben“ (mit Rückmeldung des Super-Admins) oder „Hochgeladen“ (mit freiwilligem Kommentar). Solange sie offen ist, kann der Ausbilder sie zurückziehen.
+- **Super-Admin:** neue Seite „Lerninhalte“ mit Zahl am Menüpunkt. Er lädt die ZIP-Datei zur Durchsicht herunter, gibt die Einreichung zurück oder lädt sie hoch. Hochgeladene Pakete gelten sofort; ein vorhandenes Lernmodul mit derselben Kennung wird ersetzt, der Lernstand der Azubis bleibt.
+- Hochgeladene Pakete liegen im Datenordner unter `lerninhalte/` (beschreibbar und in der Datensicherung). Der Ordner `LERN_DIR` bleibt nur lesend; bei gleicher Kennung gilt das hochgeladene Paket.
+- Ausbildungsbeauftragte sehen auf der Seite „Lerninhalte“ den Hinweis, sich für Ergänzungen an einen Ausbilder zu wenden.
+- Handbuch: „Lerninhalte für einen Beruf erstellen“ beschreibt das Einreichen; neues Kapitel „Lerninhalte prüfen und hochladen“ für den Super-Admin.
+
+### Geändert
+
+- Konto: Der Abschnitt „Profilbild“ steht jetzt bei allen Konten, die sich über Microsoft anmelden. Sind Profilbilder im Portal nicht eingeschaltet, ist der Haken gesperrt und der Text sagt, warum. Bisher fehlte der Abschnitt dann ganz.
+
+### Behoben
+
+- Urlaub: Die Knöpfe „Antrag ablehnen“ und „Urlaub stornieren“ im Begründungsfeld hatten rote Schrift auf blauem Grund und waren schlecht lesbar. Sie sind jetzt rot mit weißer Schrift.
+
+### Sicherheit
+
+- ZIP-Dateien liest das Portal mit einem eigenen, engen Leser: höchstens 15 MB, 600 Dateien und 40 MB entpackt; keine verschlüsselten Archive; Dateinamen mit „..“ oder absolutem Pfad werden abgelehnt; es wird nie mehr entpackt, als das Archiv ankündigt. Übernommen werden nur die Dateiarten eines Inhaltspakets.
+
 ## [0.35.0] – 2026-11-11
 
 ### Neu

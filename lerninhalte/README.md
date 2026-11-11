@@ -43,3 +43,7 @@ Danach schaltet ein Ausbilder das Paket unter **Verwaltung → Stammdaten** am A
 Inhalte aktualisieren: Dateien ändern (z. B. `git pull` im Lernkompass) und `meta.json` mit neuem Stand speichern – das Portal liest das Paket innerhalb weniger Sekunden neu ein, ohne Neustart. Fehler in den Dateien stehen im Log des Portals; eine fehlerhafte Datei ersetzt die zuletzt gültige Fassung nicht.
 
 Mehr dazu im README des Portals, Abschnitt „Lernmodul“.
+
+## Einreichen über das Portal
+
+Ausbilder können ein Inhaltspaket auch als ZIP-Datei im Portal einreichen (Seite „Lerninhalte“). Der Super-Admin prüft es und lädt es hoch. Solche Pakete liegen **nicht hier**, sondern im Datenordner des Portals unter `data/lerninhalte/<kennung>/` – dieser Ordner hier ist im Container nur lesend eingebunden. Gibt es dieselbe Kennung an beiden Orten, gilt das über das Portal hochgeladene Paket. Um wieder das Paket aus diesem Ordner zu verwenden, den Ordner `data/lerninhalte/<kennung>/` löschen.
