@@ -16,6 +16,7 @@ interface Entwurf {
   bis: string;
   text: string;
   zustaendigId: number | null;
+  abteilungId: number | null;
   zuweisen: boolean;
   erledigt: boolean;
   unteraufgaben: Unteraufgabe[];
@@ -83,6 +84,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
       ...(e.art === 'termin' ? { tag: e.tag, zeitVon: e.zeitVon, zeitBis: e.zeitBis } : {}),
       text: e.text,
       zustaendigId: mitPerson ? e.zustaendigId : null,
+      abteilungId: e.art === 'einsatz' ? e.abteilungId : null,
       zuweisen: kannZuweisen && e.zuweisen,
       erledigt: e.erledigt,
       unteraufgaben: e.unteraufgaben,
@@ -615,7 +617,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const pruefung = d.pruefungen.find((p) => p.datum >= d.heute) ?? null;
   const bisPruefung = pruefung ? Math.round((Date.parse(montagVon(pruefung.datum)) - Date.parse(montagVon(d.heute))) / 604800000) : 0;
 
-  const neu = (w: Woche | null, art?: PlanArt): Entwurf => ({ id: null, art: art ?? (d.rechte.arten.includes('einsatz') ? 'einsatz' : 'aufgabe'), titel: '', von: w?.montag ?? d.heute, bis: '', text: '', zustaendigId: null, zuweisen: true, erledigt: false, unteraufgaben: [], tag: w && !(w.montag <= d.heute && w.sonntag >= d.heute) ? w.montag : d.heute, zeitVon: '', zeitBis: '' });
+  const neu = (w: Woche | null, art?: PlanArt): Entwurf => ({ id: null, art: art ?? (d.rechte.arten.includes('einsatz') ? 'einsatz' : 'aufgabe'), titel: '', von: w?.montag ?? d.heute, bis: '', text: '', zustaendigId: null, abteilungId: null, zuweisen: true, erledigt: false, unteraufgaben: [], tag: w && !(w.montag <= d.heute && w.sonntag >= d.heute) ? w.montag : d.heute, zeitVon: '', zeitBis: '' });
   const oeffne = (e: Entwurf) => {
     setMeldung(null);
     setEntwurf(e);
@@ -644,7 +646,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     }
   };
   const a: Aktionen = {
-    bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben, tag: e.tag ?? e.von, zeitVon: e.zeitVon, zeitBis: e.zeitBis }),
+    bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, abteilungId: e.abteilungId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben, tag: e.tag ?? e.von, zeitVon: e.zeitVon, zeitBis: e.zeitBis }),
     hake: (e, body) => void hake(e, body),
   };
   const uebernimm = async () => {

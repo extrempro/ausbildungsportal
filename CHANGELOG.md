@@ -1,5 +1,21 @@
 # Änderungen
 
+## [0.38.0] – 2026-11-11
+
+### Neu
+
+- **Abteilungen.** In den Stammdaten legen Ausbilder Abteilungen an – mit Beauftragten (Ausbildungsbeauftragte oder Ausbilder) und freiwilliger Stellvertretung.
+- **Einsatz in einer Abteilung:** Im Ausbildungsplan und in der Sammelplanung lässt sich bei einem Einsatz die Abteilung wählen; der Titel wird vorgeschlagen. Einsätze ohne Abteilung (freier Text) bleiben möglich.
+- **Automatisch zuständig:** Für die Dauer des Einsatzes sind die Beauftragten und die Stellvertretung der Abteilung dem Azubi zugewiesen – mit denselben Rechten wie eine Zuweisung von Hand (Plan und Berichte sehen, Berichte dieser Wochen abzeichnen, Urlaub bestätigen). Die Stellvertretung ist immer mit zuständig.
+- Die Zuweisungen folgen dem Plan: Zeitraum, Abteilung oder Personen geändert – sie ändern sich sofort mit; Einsatz gelöscht – sie enden. Im Profil des Azubis stehen sie unter „Aus Einsätzen in Abteilungen (automatisch)“. Zuweisungen von Hand bleiben daneben bestehen.
+- **Urlaub:** Aus einer Abteilung genügt eine Bestätigung, von einem Beauftragten oder der Stellvertretung. Wer von Hand zugewiesen ist, bestätigt weiterhin selbst. Der zuständige Ausbilder steht nicht mehr unter den Bestätigenden – er entscheidet ohnehin.
+- Handbuch (Ausbilder, Beauftragte): Kapitel „Abteilungen und Einsätze“; Urlaubskapitel ergänzt.
+- **Teams:** Reicht ein Ausbilder Lerninhalte ein, erscheint ein Hinweis im selben Teams-Kanal wie die Fehlermeldungen (`FEHLER_WEBHOOK_URL`) – mit Lernmodul, Umfang und Link zur Prüfung, ohne Namen.
+
+### Behoben
+
+- Seite „Lerninhalte“: Zwischen der Liste der Lernmodule und dem Kasten „Lerninhalte einreichen“ fehlte der Abstand.
+
 ## [0.37.0] – 2026-11-11
 
 ### Neu

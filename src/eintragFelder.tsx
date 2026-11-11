@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ART_TEXT, ROLLE_TEXT } from './api';
+import { useAbteilungen } from './abteilungen';
 import { HandbuchLink } from './handbuchLink';
 import type { PlanArt, Rolle, Unteraufgabe } from './api';
 
@@ -14,6 +15,8 @@ export interface EintragWerte {
   bis: string;
   text: string;
   zustaendigId: number | null;
+  /** nur Einsätze: Abteilung, deren Beauftragte für die Dauer automatisch zuständig sind */
+  abteilungId?: number | null;
   unteraufgaben: Unteraufgabe[];
   /** nur Termine */
   tag?: string;
@@ -40,6 +43,10 @@ export function EintragFelder({
   autoFokus?: boolean;
 }) {
   const termin = wert.art === 'termin';
+  // Abteilungen gibt es nur für Einsätze – und Einsätze plant nur, wer diese Art anlegen darf
+  const abteilungen = useAbteilungen(arten.includes('einsatz'));
+  const mitAbteilung = wert.art === 'einsatz' && abteilungen.length > 0;
+  const abteilung = mitAbteilung ? abteilungen.find((a) => a.id === wert.abteilungId) : undefined;
   const mitPerson = (wert.art === 'einsatz' || wert.art === 'aufgabe') && personen.length > 0;
   return (
     <>
@@ -53,10 +60,42 @@ export function EintragFelder({
           ))}
         </select>
       </label>
+      {mitAbteilung && (
+        <label>
+          Abteilung
+          <select
+            value={wert.abteilungId ?? ''}
+            onChange={(ev) => {
+              const neu = abteilungen.find((a) => a.id === Number(ev.target.value));
+              // der Titel folgt der Abteilung, solange er leer ist oder noch der alten Abteilung entspricht
+              setze({ abteilungId: neu?.id ?? null, ...(neu && (wert.titel.trim() === '' || wert.titel === abteilung?.name) ? { titel: neu.name } : {}) });
+            }}
+          >
+            <option value="">– ohne Abteilung –</option>
+            {abteilungen.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="ganz">
         Titel
         <input value={wert.titel} maxLength={120} required autoFocus={autoFokus} onChange={(ev) => setze({ titel: ev.target.value })} placeholder={BEISPIEL[wert.art]} />
       </label>
+      {abteilung && (
+        <p className="ganz hilfe-zeile">
+          {abteilung.beauftragte.length + abteilung.stellvertretung.length === 0 ? (
+            <>In dieser Abteilung ist niemand hinterlegt – es wird niemand zugewiesen.</>
+          ) : (
+            <>
+              <strong>Für diese Zeit automatisch zuständig:</strong> {[...abteilung.beauftragte, ...abteilung.stellvertretung].map((p) => p.anzeigename).join(', ')}.
+            </>
+          )}{' '}
+          <HandbuchLink kapitel="abteilungen">Abteilungen und Einsätze</HandbuchLink>
+        </p>
+      )}
       {termin ? (
         <>
           <p className="ganz hilfe-zeile">

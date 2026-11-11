@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { datumOderNull, Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import { ABO_ROUTEN } from './abo';
 import { JAHR_ROUTEN } from './jahr';
+import { ABTEILUNG_ROUTEN } from './abteilung';
 import { BILD_ROUTEN, merkeBild } from './bild';
 import { EINREICHUNG_ROUTEN } from './lern-einreichung';
 import { URLAUB_ROUTEN } from './urlaub';
@@ -522,7 +523,7 @@ export const ROUTEN: Route[] = [
         transaktion(db, () => {
           setzeZustaendig(db, c.k.jetzt(), id, c.b.id);
           // eine eigene Vertretungs-Zuweisung ist damit überflüssig
-          db.prepare('DELETE FROM zuweisung WHERE azubi_id = ? AND beauftragter_id = ?').run(id, c.b.id);
+          db.prepare('DELETE FROM zuweisung WHERE azubi_id = ? AND beauftragter_id = ? AND einsatz_id IS NULL').run(id, c.b.id);
           protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi, `zuständig jetzt ${c.b.anzeigename}`);
         });
       }
@@ -541,15 +542,27 @@ export const ROUTEN: Route[] = [
       const zeilen = c.k.db
         .prepare(
           `SELECT z.id, z.azubi_id, z.beauftragter_id, z.von, z.bis, b.anzeigename AS beauftragter, b.rolle
-             FROM zuweisung z JOIN benutzer b ON b.id = z.beauftragter_id WHERE z.azubi_id = ? ORDER BY z.von IS NOT NULL, z.von`,
+             FROM zuweisung z JOIN benutzer b ON b.id = z.beauftragter_id WHERE z.azubi_id = ? AND z.einsatz_id IS NULL ORDER BY z.von IS NOT NULL, z.von`,
         )
         .all(id) as unknown as (Zuweisung & { beauftragter: string })[];
+      // Zuweisungen, die aus einem Einsatz in einer Abteilung entstanden sind – nur zur Ansicht, geändert wird im Plan oder an der Abteilung
+      const automatisch = (
+        c.k.db
+          .prepare(
+            `SELECT z.beauftragter_id, z.von, z.bis, b.anzeigename AS beauftragter, a.name AS abteilung, p.art
+               FROM zuweisung z JOIN benutzer b ON b.id = z.beauftragter_id JOIN plan_eintrag e ON e.id = z.einsatz_id
+               LEFT JOIN abteilung a ON a.id = e.abteilung_id LEFT JOIN abteilung_person p ON p.abteilung_id = e.abteilung_id AND p.benutzer_id = z.beauftragter_id
+              WHERE z.azubi_id = ? ORDER BY z.von, b.anzeigename COLLATE NOCASE`,
+          )
+          .all(id) as unknown as { beauftragter_id: number; von: string; bis: string; beauftragter: string; abteilung: string | null; art: string | null }[]
+      ).map((z) => ({ beauftragterId: z.beauftragter_id, beauftragter: z.beauftragter, von: z.von, bis: z.bis, abteilung: z.abteilung ?? '', stellvertretung: z.art === 'stellvertretung' }));
       // Beauftragte und vertretende Ausbilder sehen nur ihre eigene Zuweisung
       const alles = c.b.rolle === 'azubi' || darfAzubiVerwalten(c.k.db, c.b, id);
       return {
         status: 200,
         body: {
           zuweisungen: alles ? zeilen : zeilen.filter((z) => z.beauftragter_id === c.b.id),
+          ausAbteilungen: alles ? automatisch : automatisch.filter((z) => z.beauftragterId === c.b.id),
           // wer sich zuweisen lässt: Ausbildungsbeauftragte, dazu andere Ausbilder als Vertretung
           ...(c.b.rolle === 'ausbilder' && alles
             ? {
@@ -586,7 +599,8 @@ export const ROUTEN: Route[] = [
       });
       const azubi = holeBenutzer(db, id)!;
       transaktion(db, () => {
-        db.prepare('DELETE FROM zuweisung WHERE azubi_id = ?').run(id);
+        // nur die von Hand angelegten – Zuweisungen aus Abteilungen gehören zu ihrem Einsatz
+        db.prepare('DELETE FROM zuweisung WHERE azubi_id = ? AND einsatz_id IS NULL').run(id);
         const einfuegen = db.prepare('INSERT INTO zuweisung (azubi_id, beauftragter_id, von, bis) VALUES (?, ?, ?, ?)');
         for (const z of neu) einfuegen.run(id, z.b.id, z.von, z.bis);
         protokolliere(db, c.k.jetzt(), 'fach', 'zuweisung_geaendert', c.b, azubi, neu.map((z) => `${z.b.anzeigename} ${z.von ?? '…'}–${z.bis ?? '…'}`).join('; '));
@@ -615,6 +629,7 @@ export const ROUTEN: Route[] = [
   ...JAHR_ROUTEN,
   ...URLAUB_ROUTEN,
   ...BILD_ROUTEN,
+  ...ABTEILUNG_ROUTEN,
   ...EINREICHUNG_ROUTEN,
 ];
 

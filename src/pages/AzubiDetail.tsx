@@ -199,9 +199,18 @@ interface Person {
   anzeigename: string;
   rolle: Rolle;
 }
+interface AusAbteilung {
+  beauftragter: string;
+  von: string;
+  bis: string;
+  abteilung: string;
+  stellvertretung: boolean;
+}
 
 function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: boolean }) {
   const [zeilen, setZeilen] = useState<ZuweisungZeile[] | null>(null);
+  // Zuweisungen aus Einsätzen in Abteilungen – nur zur Ansicht
+  const [auto, setAuto] = useState<AusAbteilung[]>([]);
   const [personen, setPersonen] = useState<Person[]>([]);
   const [meldung, setMeldung] = useState<Meldung>(null);
   // Stand vom Server zum Vergleich – was davon abweicht, ist noch nicht gespeichert
@@ -209,8 +218,9 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
   useUngespeichert(zeilen !== null && geladen !== '' && JSON.stringify(zeilen) !== geladen);
 
   const lade = useCallback(async () => {
-    const r = await api<{ zuweisungen: ZuweisungZeile[]; personen?: Person[] }>('GET', `/api/azubis/${azubiId}/zuweisungen`);
+    const r = await api<{ zuweisungen: ZuweisungZeile[]; ausAbteilungen?: AusAbteilung[]; personen?: Person[] }>('GET', `/api/azubis/${azubiId}/zuweisungen`);
     setPersonen(r.personen ?? []);
+    setAuto(r.ausAbteilungen ?? []);
     setZeilen(r.zuweisungen);
     setGeladen(JSON.stringify(r.zuweisungen));
   }, [azubiId]);
@@ -239,10 +249,28 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
 
   if (zeilen === null) return <p className="leise">Lädt …</p>;
 
+  const ausAbteilungen = auto.length > 0 && (
+    <div className="abt-auto">
+      <strong className="klein">Aus Einsätzen in Abteilungen (automatisch)</strong>
+      <ul className="liste">
+        {auto.map((z, i) => (
+          <li key={i}>
+            <strong>{z.beauftragter}</strong>
+            {z.stellvertretung && ' (Stellvertretung)'} <span className="leise">{z.abteilung ? `${z.abteilung} · ` : ''}{datum(z.von)} bis {datum(z.bis)}</span>
+          </li>
+        ))}
+      </ul>
+      {darfAendern && <p className="leise klein">Diese Zuweisungen änderst du im Ausbildungsplan am Einsatz oder in den Stammdaten an der Abteilung.</p>}
+    </div>
+  );
+
   if (!darfAendern) {
-    return zeilen.length === 0 ? (
+    return zeilen.length === 0 && auto.length === 0 ? (
       <p className="leise">Keine Zuweisung eingetragen.</p>
+    ) : zeilen.length === 0 ? (
+      <>{ausAbteilungen}</>
     ) : (
+      <>
       <ul className="liste">
         {zeilen.map((z, i) => (
           <li key={z.id ?? i}>
@@ -251,11 +279,14 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
           </li>
         ))}
       </ul>
+        {ausAbteilungen}
+      </>
     );
   }
 
   return (
     <>
+      {ausAbteilungen}
       <p className="leise klein">
         Wer zugewiesen ist, sieht den Azubi ab dem Beginn und zeichnet Berichte der Wochen in seinem Zeitraum ab. Ohne Datum gilt die Zuweisung für die ganze Ausbildung.{' '}
         <HandbuchLink kapitel="zustaendig">Zuweisen und Vertretung</HandbuchLink>
