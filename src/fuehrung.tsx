@@ -49,7 +49,7 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     ziel: ['.start-azubis .azubi-karte', '.start-azubis'],
   },
   { titel: 'Berichte abzeichnen', text: 'Hier stehen alle eingereichten Berichte, nach Azubi geordnet. „Lesen“ klappt einen Bericht auf; darunter zeichnest du ab oder gibst ihn mit einem Kommentar zurück.', pfad: '/abzeichnen', ziel: ['.abz-gruppe', 'main h1'] },
-  { titel: 'Wer ist wann wo?', text: 'Die Übersicht zeigt diese und die nächste Woche und darunter den Zeitstrahl: Schule, Einsätze und Urlaub deiner Azubis.', pfad: '/uebersicht', ziel: ['.ue-oben', 'main h1'] },
+  { titel: 'Wer ist wann wo?', text: 'Der Jahreskalender zeigt das ganze Jahr: je Azubi eine Zeile mit Schule, Einsätzen und Urlaub. Ein Klick auf den Namen zeigt das Jahr dieses Azubis Tag für Tag.', pfad: '/jahreskalender', ziel: ['.jk-rahmen', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Unterschreibe hier einmal.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
   GLOCKE('Die Glocke zeigt, wenn ein Bericht eingereicht wurde oder ein Azubi etwas in seinen Plan eingetragen hat. Ein Klick führt direkt dorthin.'),
   ...(rolle === 'ausbilder'
@@ -86,8 +86,8 @@ function seitenName(pfad: string | undefined, rolle: Rolle): string {
       return 'Mein Konto';
     case '/abzeichnen':
       return 'Abzeichnen';
-    case '/uebersicht':
-      return 'Übersicht';
+    case '/jahreskalender':
+      return 'Jahreskalender';
     case '/verwaltung/konten':
       return 'Konten';
     case '/verwaltung/protokoll':

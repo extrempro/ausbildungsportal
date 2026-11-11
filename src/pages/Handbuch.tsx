@@ -283,7 +283,7 @@ const AZUBI: Kapitel[] = [
         </p>
         <ul className="punkte">
           <li>
-            <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – nicht in deinem Plan, nicht in ihrer Übersicht, nicht in der Glocke und nicht in ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
+            <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – nicht in deinem Plan, nicht in ihrem Jahreskalender, nicht in der Glocke und nicht in ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
           </li>
           <li>Termine stehen oben bei „Diese Woche“ und „Nächste Woche“ und, wenn du deinen Kalender abonniert hast, auch dort.</li>
           <li>Du kannst jeden Termin ändern oder löschen.</li>
@@ -550,7 +550,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               Was immer wieder vorkommt, fügst du als <Link zu="/planung/bausteine">Planbaustein</Link> ein; was für mehrere Azubis gleich ist, trägst du in der <Link zu="/planung/sammelplanung">Sammelplanung</Link> ein. Mehr dazu im Kapitel „Planung“.
             </li>
             <li>Azubis können eigene Aufgaben und Notizen eintragen. Diese sind mit „vom Azubi eingetragen“ gekennzeichnet; du kannst sie ändern.</li>
-            <li>Azubis können sich außerdem private <strong>Termine</strong> eintragen (zum Beispiel eine JAV-Sitzung). Diese sieht nur der Azubi selbst – du siehst sie nicht, auch nicht in Übersicht, Glocke oder Kalender.</li>
+            <li>Azubis können sich außerdem private <strong>Termine</strong> eintragen (zum Beispiel eine JAV-Sitzung). Diese sieht nur der Azubi selbst – du siehst sie nicht, auch nicht in Jahreskalender, Glocke oder Kalender-Abo.</li>
           </ul>
         ) : (
           <ul className="punkte">
@@ -559,7 +559,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </ul>
         )}
         <p>
-          Die <Link zu="/uebersicht">Übersicht</Link> zeigt {rolle === 'ausbilder' ? 'deine' : 'alle dir zugewiesenen'} Azubis nebeneinander über 26 Wochen: Schule, Einsätze und Urlaub laut Bericht.
+          Der <Link zu="/jahreskalender">Jahreskalender</Link> zeigt {rolle === 'ausbilder' ? 'deine' : 'alle dir zugewiesenen'} Azubis untereinander über ein ganzes Jahr: Schule, Einsätze und Urlaub laut Bericht.
         </p>
       </>
     ),
@@ -570,12 +570,12 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     inhalt: (
       <>
         <p>
-          Der <Link zu="/jahreskalender">Jahreskalender</Link> (eigener Menüpunkt, am Handy unter „Mehr“) zeigt ein ganzes Kalenderjahr für alle {rolle === 'ausbilder' ? 'deine' : 'dir zugewiesenen'} Azubis: Die Monate stehen nebeneinander, jeder Azubi hat eine Zeile. Die Übersicht zeigt dagegen die nächsten 26 Wochen genauer.
+          Der <Link zu="/jahreskalender">Jahreskalender</Link> (eigener Menüpunkt, am Handy „Jahr“) beantwortet: Wer ist wann wo? Er zeigt ein ganzes Kalenderjahr für alle {rolle === 'ausbilder' ? 'deine' : 'dir zugewiesenen'} Azubis: Die Monate stehen nebeneinander, jeder Azubi hat eine Zeile.
         </p>
         <dl className="begriffe">
           <Begriff wort="Obere Balken (violett)">Berufsschule.</Begriff>
           <Begriff wort="Mittlere Balken (grün)">Einsätze, mit Namen. Ist der Balken zu kurz für den Namen: mit der Maus darauf zeigen.</Begriff>
-          <Begriff wort="Schmale Balken unten (gelb)">Urlaub – laut Berichtsheft des Azubis, wie in der Übersicht.</Begriff>
+          <Begriff wort="Schmale Balken unten (gelb)">Urlaub – laut Berichtsheft. Er erscheint erst, wenn der Azubi ihn im Bericht der Woche unter „Abwesenheit“ eingetragen hat. Krankheit erscheint im Jahreskalender nicht.</Begriff>
           <Begriff wort="Rote Linie mit Raute">Prüfungstermin.</Begriff>
           <Begriff wort="Türkiser Strich ganz unten">Schulferien (nach dem Bundesland der Berufsschule).</Begriff>
           <Begriff wort="Schraffiert">Der Azubi ist in dieser Zeit nicht in der Ausbildung.</Begriff>
@@ -588,27 +588,6 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>Private Termine der Azubis stehen nicht im Kalender.</li>
           <li>Der Kalender ist nur zum Lesen. Geplant wird im Ausbildungsplan{rolle === 'ausbilder' ? ' oder in der Sammelplanung' : ''}.</li>
           <li>Am Handy seitlich wischen; die Spalte mit den Namen bleibt stehen.</li>
-        </ul>
-      </>
-    ),
-  },
-  {
-    id: 'uebersicht',
-    titel: 'Die Übersicht lesen',
-    inhalt: (
-      <>
-        <p>
-          Die <Link zu="/uebersicht">Übersicht</Link> beantwortet: Wer ist wann wo? Oben stehen „Diese Woche“ und „Nächste Woche“ mit allen {rolle === 'ausbilder' ? 'deinen' : 'dir zugewiesenen'} Azubis, darunter die nächsten 26 Wochen nebeneinander – am Handy als Liste der Wochen.
-        </p>
-        <dl className="begriffe">
-          <Begriff wort="Berufsschule, Einsatz">Kommen aus den Ausbildungsplänen.</Begriff>
-          <Begriff wort="Urlaub">Kommt aus den Berichten. Er erscheint erst, wenn der Azubi ihn im Bericht der Woche unter „Abwesenheit“ eingetragen hat. Krankheit erscheint in der Übersicht nicht.</Begriff>
-          <Begriff wort="Graue Felder">Die Woche liegt außerhalb der Ausbildung dieses Azubis.</Begriff>
-        </dl>
-        <ul className="punkte">
-          <li>Die Azubis sind nach Ausbildungsjahr geordnet. Ein Klick auf den Namen öffnet den Ausbildungsplan.</li>
-          <li>Private Termine der Azubis (zum Beispiel eine JAV-Sitzung) stehen hier nicht.</li>
-          {rolle === 'ausbilder' && <li>Über „Für mehrere Azubis planen“ kommst du zur Sammelplanung.</li>}
         </ul>
       </>
     ),
@@ -687,7 +666,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   Pflicht. Eines von: <code>"schule"</code> (Berufsschule), <code>"einsatz"</code> (Einsatz in einer Abteilung), <code>"aufgabe"</code>, <code>"notiz"</code>. Klein geschrieben. Termine gibt es in Bausteinen nicht.
                 </Begriff>
                 <Begriff wort="abWoche">
-                  Pflicht. In welcher Woche des Bausteins der Eintrag beginnt: <code>1</code> ist die Woche, die du beim Einfügen als Startwoche wählst, <code>3</code> zwei Wochen später. Ganze Zahl von 1 bis 260, ohne Anführungszeichen.
+                  In welcher Woche des Bausteins der Eintrag beginnt: <code>1</code> ist die Woche, die du beim Einfügen als Startwoche wählst, <code>3</code> zwei Wochen später. Ganze Zahl von 1 bis 260, ohne Anführungszeichen. Fehlt die Angabe, gilt <code>1</code>. Im Formular heißt sie „Beginnt in Woche“ und erscheint dort nur, wenn ein Baustein mehrere Einträge hat oder ein Eintrag später beginnt – in der Datei steht sie nach einem Export trotzdem immer.
                 </Begriff>
                 <Begriff wort="wochen">
                   Dauer in Wochen, ganze Zahl von 1 bis 160. Fehlt die Angabe, gilt <code>1</code>.
@@ -731,7 +710,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <>
               <ul className="punkte">
                 <li>
-                  <strong>Zuständig</strong> bist du für Azubis, bei denen du im Profil unter „Zuständiger Ausbilder“ stehst. Legst du selbst ein Azubi-Konto an, trägt das Portal dich gleich ein. Nur diese Azubis siehst du in Listen, Übersicht, Abzeichnen und Glocke.
+                  <strong>Zuständig</strong> bist du für Azubis, bei denen du im Profil unter „Zuständiger Ausbilder“ stehst. Legst du selbst ein Azubi-Konto an, trägt das Portal dich gleich ein. Nur diese Azubis siehst du in Listen, Jahreskalender, Abzeichnen und Glocke.
                 </li>
                 <li>
                   <strong>Ohne Ausbilder</strong> (gelbe Marke): Solange niemand zuständig ist, sehen und bearbeiten alle Ausbilder den Azubi. Im Profil übernimmst du ihn mit „Azubi übernehmen“. Das gilt auch, solange das Konto des zuständigen Ausbilders gesperrt ist.

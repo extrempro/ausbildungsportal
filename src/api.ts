@@ -408,11 +408,6 @@ export interface Planvorlage {
   eintraege: VorlageEintrag[];
 }
 
-export interface Uebersicht {
-  heute: string;
-  wochen: { montag: string; kw: number; jahr: number }[];
-  azubis: { id: number; anzeigename: string; beruf: string; ausbildungsjahr: number | null; wochen: { inAusbildung: boolean; schule: boolean; einsatz: string[]; urlaubstage: number }[] }[];
-}
 
 export interface Versionshinweis {
   version: string;

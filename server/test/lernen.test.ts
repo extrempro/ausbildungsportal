@@ -215,7 +215,7 @@ test('Der Lernstand ist privat: andere Azubis, Ausbilder, Beauftragte und Super-
       assert.equal((await ruf(w.u, m, pfad, { cookies: als(w, wer), body: { status: 'rot' } })).status, 403, `${wer.rolle} ${m} ${pfad}`);
     }
     // und nirgends sonst taucht er auf: Profil, Liste, Übersicht, Plan, Berichte
-    for (const pfad of [`/api/azubis/${w.anna.id}/profil`, '/api/azubis', '/api/uebersicht', `/api/azubis/${w.anna.id}/plan`, `/api/azubis/${w.anna.id}/berichte`]) {
+    for (const pfad of [`/api/azubis/${w.anna.id}/profil`, '/api/azubis', '/api/jahreskalender', `/api/azubis/${w.anna.id}/plan`, `/api/azubis/${w.anna.id}/berichte`]) {
       const r = await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) });
       assert.equal(JSON.stringify(r.body ?? '').includes('Annas Geheimnis'), false, `${wer.rolle} ${pfad}`);
     }

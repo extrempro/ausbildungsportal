@@ -30,10 +30,10 @@ export function Start({ konto }: { konto: Konto }) {
             <span className="kachel-text">{azubis?.length === 1 ? 'Azubi' : 'Azubis'}</span>
             <span className="kachel-zusatz">{konto.rolle === 'ausbilder' ? 'im Betrieb' : 'dir zugewiesen'}</span>
           </Link>
-          <Link zu="/uebersicht" className="kachel">
-            <span className="kachel-wert">26</span>
-            <span className="kachel-text">Wochen im Blick</span>
-            <span className="kachel-zusatz">Schule, Einsätze, Urlaub</span>
+          <Link zu="/jahreskalender" className="kachel">
+            <span className="kachel-wert">12</span>
+            <span className="kachel-text">Monate im Blick</span>
+            <span className="kachel-zusatz">Jahreskalender: Schule, Einsätze, Urlaub</span>
           </Link>
         </div>
       )}

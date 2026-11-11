@@ -1496,72 +1496,9 @@ a.bericht-link:hover {
   }
 }
 
-/* ---------- Übersicht aller Azubis ---------- */
-table.uebersicht th,
-table.uebersicht td {
-  padding: 6px;
-  vertical-align: top;
-  border-right: 1px solid var(--c-border);
-  font-size: 13px;
-}
-
-table.uebersicht thead th {
-  white-space: nowrap;
-  text-align: center;
-  font-weight: 600;
-}
-
-table.uebersicht td {
-  min-width: 5.5rem;
-  max-width: 7rem;
-}
-
-table.uebersicht .fest {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  min-width: 9rem;
-  background: var(--c-card);
-  text-align: left;
-}
-
-table.uebersicht td.ausserhalb {
-  background: var(--c-chip);
-}
-
-.ue {
-  display: block;
-  overflow: hidden;
-  margin-bottom: 2px;
-  padding: 1px 6px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.ue.schule {
-  background: var(--c-schule-soft);
-  color: var(--c-schule);
-}
-
-.ue.einsatz {
-  background: var(--c-gruen-bg);
-  color: var(--c-gruen-fg);
-}
-
-.ue.urlaub {
-  background: var(--c-warn-bg);
-  color: var(--c-warn-fg);
-}
-
 .legende {
   display: flex;
   gap: 6px;
-}
-
-.legende .ue {
-  margin: 0;
 }
 
 /* ---------- Versionshinweise, Schalter hell/dunkel ---------- */
@@ -2263,104 +2200,6 @@ td.aktion {
   border-top: 1px solid var(--c-border);
 }
 
-/* ---------- Übersicht: diese und nächste Woche, Zeitstrahl nach Monaten und Ausbildungsjahren ---------- */
-.ue-oben {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.ue-karte {
-  margin: 0;
-}
-
-.ue-karte.hervor {
-  border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px var(--c-accent-soft);
-}
-
-.ue-karte h2 {
-  margin: 0;
-}
-
-.ue-karte p {
-  margin: 0 0 8px;
-}
-
-.ue-liste {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ue-liste li {
-  display: grid;
-  grid-template-columns: minmax(8rem, 12rem) 1fr;
-  align-items: center;
-  gap: 4px 12px;
-  padding: 6px 0;
-  border-top: 1px solid var(--c-border);
-}
-
-.ue-liste a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  font-weight: 600;
-}
-
-.ue-lage {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.ue-lage .ue {
-  margin: 0;
-  font-size: 13px;
-}
-
-table.uebersicht tr.monate th {
-  padding: 8px 6px;
-  border-bottom: 1px solid var(--c-border);
-  color: var(--c-muted);
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-/* deutlichere Linie, wo ein neuer Monat beginnt */
-table.uebersicht .monat-start,
-table.uebersicht tr.monate th + th {
-  border-left: 2px solid var(--c-rand-feld);
-}
-
-table.uebersicht tr.gruppe th,
-table.uebersicht tr.gruppe td {
-  padding: 6px 8px;
-  background: var(--c-chip);
-  color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-table.uebersicht tr.gruppe td {
-  max-width: none;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-table.uebersicht tbody tr:not(.gruppe):hover td,
-table.uebersicht tbody tr:not(.gruppe):hover th {
-  background-image: linear-gradient(var(--c-accent-soft), var(--c-accent-soft));
-}
-
 /* ---------- Schriftzug: klar von der Navigation abgesetzt (kein Menüpunkt, sondern der Name des Portals) ---------- */
 .marke {
   font-size: 12px;
@@ -2513,56 +2352,6 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
 /* ---------- Übersicht auf dem Handy: Wochen untereinander ---------- */
 .nur-schmal {
   display: none;
-}
-
-.ue-blaettern {
-  display: flex;
-  gap: 8px;
-}
-
-.ue-wochen {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ue-monat {
-  padding: 16px 4px 6px;
-}
-
-.ue-woche {
-  margin: 0 0 8px;
-  padding: 10px 14px;
-}
-
-.ue-woche.hervor {
-  border-color: var(--c-accent);
-  box-shadow: 0 0 0 3px var(--c-accent-soft);
-}
-
-.ue-woche.leer {
-  background: none;
-  box-shadow: none;
-}
-
-.ue-woche-kopf {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 8px;
-  min-height: 28px;
-}
-
-.ue-woche-kopf .pille {
-  margin-left: 0;
-}
-
-.ue-nichts {
-  margin-left: auto;
-}
-
-.ue-woche .ue-liste {
-  margin-top: 6px;
 }
 
 /* ---------- Ausbildungsplan: Legende bleibt beim Scrollen sichtbar ---------- */
@@ -2978,11 +2767,6 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .ue-oben {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
   /* breite Tabelle und Karten weichen der Wochenliste */
   .nur-breit {
     display: none !important;
@@ -2990,33 +2774,6 @@ table.uebersicht tbody tr:not(.gruppe):hover th {
 
   .nur-schmal {
     display: block;
-  }
-
-  .ue-leiste {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .ue-blaettern .knopf {
-    flex: 1;
-    padding-right: 8px;
-    padding-left: 8px;
-  }
-
-  .ue-leiste .umschalter button {
-    flex: 1;
-    padding-right: 6px;
-    padding-left: 6px;
-  }
-
-  .ue-woche .ue-liste li {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-    padding: 4px 0 8px;
-  }
-
-  .ue-liste li {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .anleitung-schalter {
@@ -3956,19 +3713,6 @@ fieldset.vorlage-eintrag legend + * {
   .baustein-ab {
     justify-content: space-between;
   }
-}
-
-.ue-planen {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-}
-
-.ue-planen a.knopf {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
 }
 
 /* ---------- Sammelplanung: zuletzt eingetragen ---------- */
