@@ -1,3 +1,4 @@
+import { melde, rueckfrage } from '../dialoge';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
@@ -16,7 +17,8 @@ export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<
     try {
       await api('PUT', '/api/ich/passwort', { alt: f.get('alt'), neu: f.get('neu') });
       form.reset();
-      setMeldung({ text: 'Passwort geändert. Andere Geräte wurden abgemeldet.', fehler: false });
+      setMeldung(null);
+      melde('Passwort geändert. Andere Geräte wurden abgemeldet.');
       await onFertig();
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
@@ -69,7 +71,7 @@ function Unterschrift({ konto }: { konto: Konto }) {
     }
   };
   const loesche = async () => {
-    if (!window.confirm('Hinterlegte Unterschrift löschen? Bereits unterschriebene Berichte bleiben unverändert.')) return;
+    if (!(await rueckfrage('Hinterlegte Unterschrift löschen?\n\nBereits unterschriebene Berichte bleiben unverändert. Zum Einreichen oder Abzeichnen brauchst du danach eine neue Unterschrift.', { ja: 'Unterschrift löschen', gefahr: true }))) return;
     await api('DELETE', '/api/ich/unterschrift');
     setGespeichert(null);
   };
@@ -92,7 +94,7 @@ function Unterschrift({ konto }: { konto: Konto }) {
               Neu unterschreiben
             </button>
             <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
-              Löschen
+              Unterschrift löschen
             </button>
           </div>
         </>
@@ -145,6 +147,7 @@ export function KontoSeite({ konto, onGeaendert }: { konto: Konto; onGeaendert: 
   return (
     <>
       <h1>Konto</h1>
+      <p className="leise">Deine Angaben, deine Unterschrift und die Darstellung des Portals. Was du hier änderst, gilt nur für dich.</p>
       <section className="karte">
         <dl className="daten">
           <dt>Name</dt>

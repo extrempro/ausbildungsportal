@@ -20,6 +20,7 @@ import { Start } from './pages/Start';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
+import { Dialoge } from './dialoge';
 import { FehlerMelden } from './fehler';
 import { Glocke } from './glocke';
 import { Meldungen } from './pages/Meldungen';
@@ -37,7 +38,7 @@ interface Punkt {
   /** Zahl am Menüpunkt, z. B. offene Fehlermeldungen */
   zahl?: number;
 }
-type Menue = 'verwaltung' | 'ich' | 'mehr' | 'glocke' | null;
+type Menue = 'verwaltung' | 'planung' | 'ich' | 'mehr' | 'glocke' | null;
 
 function wendeThemeAn(theme: Theme): boolean {
   const dunkel = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -242,8 +243,9 @@ export function App() {
   const plan = /^\/azubis\/(\d{1,12})\/plan$/.exec(pfad);
   const planAzubi = plan && betreut ? Number(plan[1]) : null;
   // alte Adressen
-  if ((pfad === '/plan' && konto.rolle === 'azubi') || pfad === '/hilfe') {
-    queueMicrotask(() => geheZu(pfad === '/hilfe' ? '/handbuch' : '/'));
+  const ALT: Record<string, string> = { '/hilfe': '/handbuch', '/sammelplanung': '/planung/sammelplanung', '/verwaltung/vorlagen': '/planung/bausteine' };
+  if ((pfad === '/plan' && konto.rolle === 'azubi') || ALT[pfad]) {
+    queueMicrotask(() => geheZu(ALT[pfad] ?? '/'));
     return null;
   }
 
@@ -255,8 +257,8 @@ export function App() {
   else if (heft && heftAzubi !== null) seite = <Berichtsheft key={heftAzubi} azubiId={heftAzubi} />;
   else if (plan && planAzubi !== null) seite = <PlanSeite key={planAzubi} azubiId={planAzubi} />;
   else if (pfad === '/uebersicht' && betreut) seite = <UebersichtSeite darfPlanen={konto.rolle === 'ausbilder'} />;
-  else if (pfad === '/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
-  else if (pfad === '/verwaltung/vorlagen' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
+  else if (pfad === '/planung/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
+  else if (pfad === '/planung/bausteine' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
   else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} onFuehrung={starteFuehrung} />;
   else if (pfad === '/verwaltung/erscheinungsbild' && konto.rolle === 'admin') seite = <Erscheinungsbild logos={logos} onGeaendert={setLogos} />;
@@ -285,7 +287,7 @@ export function App() {
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
           { zu: '/verwaltung/meldungen', text: 'Fehlermeldungen', kurz: 'Meldungen', icon: 'kaefer', zahl: offeneMeldungen },
-          { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'vorlagen' },
+          { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'bild' },
         ]
       : konto.rolle === 'azubi'
         ? [
@@ -297,14 +299,13 @@ export function App() {
             { zu: '/', text: 'Start', icon: 'start' },
             { zu: '/azubis', text: 'Azubis', icon: 'azubis', aktivAb: '/azubis' },
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
-            { zu: '/uebersicht', text: 'Übersicht', icon: 'uebersicht', aktivAb: konto.rolle === 'ausbilder' && pfad === '/sammelplanung' ? '/sammelplanung' : undefined },
+            { zu: '/uebersicht', text: 'Übersicht', icon: 'uebersicht' },
           ];
   const verwaltung: Punkt[] =
     konto.rolle === 'ausbilder'
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/stammdaten', text: 'Stammdaten', icon: 'stammdaten' },
-          { zu: '/verwaltung/vorlagen', text: 'Planbausteine', icon: 'vorlagen' },
         ]
       : [];
   const persoenlich: Punkt[] = [
@@ -312,8 +313,20 @@ export function App() {
     { zu: '/handbuch', text: 'Handbuch', icon: 'hilfe' },
     { zu: '/versionen', text: 'Versionshinweise', icon: 'versionen' },
   ];
-  const inVerwaltung = verwaltung.some((p) => p.zu === pfad);
-  const inMehr = inVerwaltung || persoenlich.some((p) => p.zu === pfad);
+  // Planung: was zum Planen über einzelne Azubis hinaus gehört
+  const planung: Punkt[] =
+    konto.rolle === 'ausbilder'
+      ? [
+          { zu: '/planung/sammelplanung', text: 'Sammelplanung', icon: 'sammel' },
+          { zu: '/planung/bausteine', text: 'Planbausteine', icon: 'baustein' },
+        ]
+      : [];
+  const gruppen: { id: 'planung' | 'verwaltung'; text: string; punkte: Punkt[] }[] = [
+    { id: 'planung' as const, text: 'Planung', punkte: planung },
+    { id: 'verwaltung' as const, text: 'Verwaltung', punkte: verwaltung },
+  ].filter((g) => g.punkte.length > 0);
+  const inGruppe = (g: { punkte: Punkt[] }) => g.punkte.some((p) => p.zu === pfad);
+  const inMehr = gruppen.some(inGruppe) || persoenlich.some((p) => p.zu === pfad);
   const initialen = konto.anzeigename
     .split(/\s+/)
     .map((t) => t[0])
@@ -413,19 +426,19 @@ export function App() {
                 )}
               </Link>
             ))}
-            {verwaltung.length > 0 && (
-              <div className="menue">
-                <button type="button" className={`menue-knopf${inVerwaltung ? ' aktiv' : ''}`} aria-expanded={menue === 'verwaltung'} aria-controls="menue-verwaltung" onClick={() => schalte('verwaltung')}>
-                  Verwaltung
+            {gruppen.map((g) => (
+              <div className="menue" key={g.id}>
+                <button type="button" className={`menue-knopf${inGruppe(g) ? ' aktiv' : ''}`} aria-expanded={menue === g.id} aria-controls={`menue-${g.id}`} onClick={() => schalte(g.id)}>
+                  {g.text}
                   <Icon name="unten" groesse={16} />
                 </button>
-                {menue === 'verwaltung' && (
-                  <ul id="menue-verwaltung" className="menue-flaeche">
-                    {liste(verwaltung)}
+                {menue === g.id && (
+                  <ul id={`menue-${g.id}`} className="menue-flaeche">
+                    {liste(g.punkte)}
                   </ul>
                 )}
               </div>
-            )}
+            ))}
           </nav>
           {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
           <div className="menue ich">
@@ -484,6 +497,7 @@ export function App() {
       )}
       {fuehrung && <Fuehrung rolle={konto.rolle} onEnde={beendeFuehrung} />}
       {melden && <FehlerMelden version={version} onZu={schliesseMelden} />}
+      <Dialoge />
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}
         <span className="fuss-links">
@@ -527,12 +541,12 @@ export function App() {
                 <Icon name="zu" />
               </button>
             </div>
-            {verwaltung.length > 0 && (
-              <>
-                <span className="ueberschrift-klein">Verwaltung</span>
-                <ul className="bogen-liste">{liste(verwaltung)}</ul>
-              </>
-            )}
+            {gruppen.map((g) => (
+              <div key={g.id}>
+                <span className="ueberschrift-klein">{g.text}</span>
+                <ul className="bogen-liste">{liste(g.punkte)}</ul>
+              </div>
+            ))}
             <span className="ueberschrift-klein">Persönlich</span>
             <ul className="bogen-liste">
               {liste(persoenlich)}

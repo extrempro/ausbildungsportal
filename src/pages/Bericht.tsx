@@ -1,3 +1,4 @@
+import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiFehler, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
 import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund } from '../api';
@@ -257,7 +258,8 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const speichere = async (): Promise<boolean> => {
     try {
       uebernimm(await api<Bericht>('PUT', pfad, { inhalt }));
-      setMeldung({ text: 'Gespeichert.', fehler: false });
+      setMeldung(null);
+      melde('Gespeichert.');
       return true;
     } catch (e) {
       fehler(e);
@@ -267,7 +269,8 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const tue = async (aktion: string, body?: unknown, erfolg?: string) => {
     try {
       uebernimm(await api<Bericht>('POST', `${pfad}/${aktion}`, body));
-      setMeldung(erfolg ? { text: erfolg, fehler: false } : null);
+      setMeldung(null);
+      if (erfolg) melde(erfolg);
       setGrund(null);
       setKommentar('');
     } catch (e) {
@@ -283,13 +286,14 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
     try {
       await api('POST', '/api/berichte/abzeichnen', { berichte: [{ azubiId, montag }] });
       uebernimm(await api<Bericht>('GET', pfad));
-      setMeldung({ text: 'Abgezeichnet.', fehler: false });
+      setMeldung(null);
+      melde('Abgezeichnet.');
     } catch (e) {
       fehler(e);
     }
   };
   const loesche = async () => {
-    if (!window.confirm('Diesen Entwurf löschen?')) return;
+    if (!(await rueckfrage('Diesen Entwurf löschen?\n\nDer Text dieser Woche ist danach weg. Die Woche gilt wieder als „fehlt“.', { ja: 'Entwurf löschen', gefahr: true }))) return;
     try {
       await api('DELETE', pfad);
       geheZu(zurListe);
@@ -363,7 +367,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           </p>
           <div className="aktionen links">
             <button type="button" className="knopf schlicht" onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
-              {b.status === 'fehlt' || b.status === 'entwurf' ? 'Als Entwurf speichern' : 'Speichern'}
+              {b.status === 'fehlt' || b.status === 'entwurf' ? 'Als Entwurf speichern' : 'Bericht speichern'}
             </button>
             <button type="button" className="knopf" onClick={() => void reicheEin()}>
               Einreichen

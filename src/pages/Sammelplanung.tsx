@@ -1,8 +1,11 @@
+import { Ladefehler, rueckfrage } from '../dialoge';
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { api, ART_TEXT, datum, PLAN_ARTEN, ROLLE_TEXT, zeit } from '../api';
-import type { PlanArt, Planvorlage, Rolle } from '../api';
-import { Link } from '../router';
+import { api, datum, PLAN_ARTEN, zeit } from '../api';
+import type { Planvorlage, Rolle } from '../api';
+import { EintragFelder } from '../eintragFelder';
+import type { EintragWerte } from '../eintragFelder';
+import { Link, useUngespeichert } from '../router';
 
 /**
  * Sammelplanung: ein Eintrag oder ein Baustein für mehrere Azubis auf einmal –
@@ -55,18 +58,16 @@ export function Sammelplanung() {
   const [fehler, setFehler] = useState('');
   const [gewaehlt, setGewaehlt] = useState<Set<number>>(new Set());
   const [weise, setWeise] = useState<'eintrag' | 'baustein'>('eintrag');
-  const [art, setArt] = useState<PlanArt>('schule');
-  const [von, setVon] = useState('');
-  const [bis, setBis] = useState('');
-  const [titel, setTitel] = useState('');
-  const [text, setText] = useState('');
-  const [zustaendigId, setZustaendigId] = useState('');
+  const [eintrag, setEintrag] = useState<EintragWerte>({ art: 'schule', titel: '', von: '', bis: '', text: '', zustaendigId: null, unteraufgaben: [] });
+  const { art, von, bis, titel, text } = eintrag;
   const [baustein, setBaustein] = useState('');
   const [ab, setAb] = useState('');
   const [laeuft, setLaeuft] = useState(false);
   const [ergebnis, setErgebnis] = useState<Ergebnis | null>(null);
   const [letzte, setLetzte] = useState<Lauf[]>([]);
   const [zurueck, setZurueck] = useState<{ titel: string; r: Zurueck } | null>(null);
+  // was zuletzt eingetragen wurde – solange sich daran nichts ändert, bleibt der Knopf gesperrt (kein doppeltes Eintragen)
+  const [eingetragen, setEingetragen] = useState('');
 
   useEffect(() => {
     api<Daten>('GET', '/api/plan/sammel').then(
@@ -98,7 +99,12 @@ export function Sammelplanung() {
     return liste;
   }, [d]);
 
-  if (fehler && !d) return <p className="hinweis fehler">{fehler}</p>;
+  // vor den frühen Ausstiegen: Hooks müssen bei jedem Rendern in derselben Reihenfolge laufen
+  const auftrag = JSON.stringify(weise === 'eintrag' ? [[...gewaehlt].sort(), eintrag] : [[...gewaehlt].sort(), baustein, ab]);
+  const schonEingetragen = auftrag === eingetragen;
+  useUngespeichert(!schonEingetragen && (weise === 'eintrag' ? titel.trim() !== '' || text.trim() !== '' : baustein !== '' && gewaehlt.size > 0));
+
+  if (fehler && !d) return <Ladefehler titel="Sammelplanung" text={fehler} />;
   if (!d) return <p className="leise">Lädt …</p>;
 
   const schalte = (ids: number[]) => {
@@ -122,9 +128,10 @@ export function Sammelplanung() {
     setErgebnis(null);
     try {
       const azubiIds = [...gewaehlt];
-      const body = weise === 'eintrag' ? { azubiIds, eintrag: { art, von, bis: bis || von, titel, text, zustaendigId: mitPerson && zustaendigId ? Number(zustaendigId) : null } } : { azubiIds, vorlageId: Number(baustein), ab };
+      const body = weise === 'eintrag' ? { azubiIds, eintrag: { ...eintrag, bis: bis || von, zustaendigId: mitPerson ? eintrag.zustaendigId : null, unteraufgaben: art === 'aufgabe' ? eintrag.unteraufgaben.filter((u) => u.text.trim()) : [] } } : { azubiIds, vorlageId: Number(baustein), ab };
       const r = await api<Ergebnis>('POST', '/api/plan/sammel', body);
       setErgebnis(r);
+      if (r.eingetragen > 0) setEingetragen(auftrag);
       setLetzte(r.letzte);
       setZurueck(null);
     } catch (err) {
@@ -136,17 +143,20 @@ export function Sammelplanung() {
 
   const nimmZurueck = async (l: Lauf) => {
     const bleibt = l.vorhanden - l.unveraendert;
-    const frage =
+    const text =
       `Sammelplanung „${l.titel.replace(/[„“]/g, '')}“ vom ${zeit(l.zeit)} zurücknehmen?\n\n` +
       (l.unveraendert === 0 ? 'Alle Einträge wurden seitdem geändert – es wird nichts entfernt.' : `${l.unveraendert === 1 ? '1 Eintrag wird' : `${l.unveraendert} Einträge werden`} aus den Plänen entfernt.`) +
       (bleibt > 0 ? `\n${bleibt === 1 ? '1 Eintrag wurde' : `${bleibt} Einträge wurden`} seitdem geändert oder abgehakt und ${bleibt === 1 ? 'bleibt' : 'bleiben'} stehen.` : '');
-    if (!window.confirm(frage)) return;
+    if (!(await rueckfrage(text, { ja: 'Zurücknehmen', gefahr: true }))) return;
     setFehler('');
     try {
       const r = await api<Zurueck>('DELETE', `/api/plan/sammel/${l.id}`);
       setLetzte(r.letzte);
       setZurueck({ titel: l.titel, r });
-      if (ergebnis?.laufId === l.id) setErgebnis(null);
+      if (ergebnis?.laufId === l.id) {
+        setErgebnis(null);
+        setEingetragen('');
+      }
     } catch (err) {
       setFehler(err instanceof Error ? err.message : 'Fehler');
     }
@@ -155,9 +165,6 @@ export function Sammelplanung() {
 
   return (
     <>
-      <p className="klein">
-        <Link zu="/uebersicht">← Übersicht</Link>
-      </p>
       <h1>Sammelplanung</h1>
       <p className="leise">
         Trage etwas in die Pläne mehrerer Azubis auf einmal ein – zum Beispiel einen Schulblock für eine Klasse oder die Einführungswoche für den neuen Jahrgang. Danach ist es in jedem Plan ein eigener Eintrag, den du dort einzeln ändern oder löschen kannst.
@@ -214,51 +221,13 @@ export function Sammelplanung() {
               </button>
             </div>
             {weise === 'eintrag' ? (
-              <div className="sammel-felder">
-                <label>
-                  Art
-                  <select value={art} onChange={(e) => setArt(e.target.value as PlanArt)}>
-                    {PLAN_ARTEN.map((a) => (
-                      <option key={a} value={a}>
-                        {ART_TEXT[a]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Von (Tag in der ersten Woche)
-                  <input type="date" value={von} required onChange={(e) => setVon(e.target.value)} />
-                </label>
-                <label>
-                  Bis (leer = nur diese Woche)
-                  <input type="date" value={bis} min={von || undefined} onChange={(e) => setBis(e.target.value)} />
-                </label>
-                <label className="ganz">
-                  Titel
-                  <input value={titel} maxLength={120} required placeholder={art === 'schule' ? 'z. B. Berufsschule Block 2' : 'z. B. Einführungswoche'} onChange={(e) => setTitel(e.target.value)} />
-                </label>
-                <label className="ganz">
-                  Beschreibung (freiwillig)
-                  <textarea rows={2} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} />
-                </label>
-                {mitPerson && (
-                  <label>
-                    Zuständig (freiwillig)
-                    <select value={zustaendigId} onChange={(e) => setZustaendigId(e.target.value)}>
-                      <option value="">niemand</option>
-                      {d.personen.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.anzeigename} ({ROLLE_TEXT[p.rolle]})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
+              <div className="reihe sammel-eintrag">
+                <EintragFelder wert={eintrag} setze={(teil) => setEintrag((alt) => ({ ...alt, ...teil }))} arten={PLAN_ARTEN} personen={d.personen} />
                 <p className="leise klein ganz">Einträge gelten immer für ganze Wochen. Wer in dem Zeitraum nicht in der Ausbildung ist, wird ausgelassen.</p>
               </div>
             ) : d.bausteine.length === 0 ? (
               <p className="leise">
-                Es gibt noch keine Bausteine. <Link zu="/verwaltung/vorlagen">Baustein anlegen</Link>
+                Es gibt noch keine Bausteine. <Link zu="/planung/bausteine">Baustein anlegen</Link>
               </p>
             ) : (
               <div className="sammel-felder">
@@ -295,7 +264,7 @@ export function Sammelplanung() {
                 {fehler}
               </p>
             )}
-            <button type="submit" className="knopf" disabled={!bereit || laeuft}>
+            <button type="submit" className="knopf" disabled={!bereit || laeuft || schonEingetragen}>
               {laeuft ? 'Trägt ein …' : gewaehlt.size === 1 ? 'Bei 1 Azubi eintragen' : `Bei ${gewaehlt.size} Azubis eintragen`}
             </button>
             {!bereit && <p className="leise klein">Wähle mindestens einen Azubi und fülle Schritt 2 aus.</p>}
@@ -303,7 +272,7 @@ export function Sammelplanung() {
               <div role="status" className="sammel-ergebnis">
                 <p className={`hinweis ${ergebnis.eingetragen > 0 ? 'gut' : 'fehler'}`}>
                   {ergebnis.eingetragen === 0 ? 'Bei niemandem eingetragen.' : `Bei ${ergebnis.eingetragen} von ${ergebnis.ergebnis.length} eingetragen.`}
-                  {ergebnis.eingetragen > 0 && ' Ein zweiter Klick würde alles noch einmal eintragen.'}
+                  {schonEingetragen && ' Der Knopf ist gesperrt, bis du an Auswahl oder Angaben etwas änderst – so wird nichts doppelt eingetragen.'}
                 </p>
                 {laufVonEben && (
                   <p>

@@ -1,7 +1,8 @@
+import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api } from '../api';
-import { Link } from '../router';
+import { useEingaben } from '../router';
 import type { Beruf, Berufsschule, Stammdaten as Daten } from '../api';
 
 type Meldung = { text: string; fehler: boolean } | null;
@@ -16,6 +17,7 @@ function Zeile({ m }: { m: Meldung }) {
 }
 
 function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: string) => Promise<void> }) {
+  const eingaben = useEingaben();
   const [fehler, setFehler] = useState('');
   const sende = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,6 +28,7 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
       if (beruf) await api('PATCH', `/api/stammdaten/berufe/${beruf.id}`, body);
       else await api('POST', '/api/stammdaten/berufe', body);
       if (!beruf) form.reset();
+      eingaben.gespeichert();
       setFehler('');
       await onFertig(beruf ? 'Beruf gespeichert.' : 'Beruf angelegt.');
     } catch (err) {
@@ -33,7 +36,7 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
     }
   };
   const loesche = async () => {
-    if (!beruf || !window.confirm(`Beruf „${beruf.bezeichnung}“ für das ganze Portal löschen?\n\nEr steht dann auch anderen Ausbildern nicht mehr zur Auswahl.`)) return;
+    if (!beruf || !(await rueckfrage(`Beruf „${beruf.bezeichnung}“ für das ganze Portal löschen?\n\nEr steht dann auch anderen Ausbildern nicht mehr zur Auswahl.`, { ja: 'Beruf löschen', gefahr: true }))) return;
     try {
       await api('DELETE', `/api/stammdaten/berufe/${beruf.id}`);
       await onFertig('Beruf gelöscht.');
@@ -42,7 +45,7 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
     }
   };
   return (
-    <form className="reihe" onSubmit={sende}>
+    <form className="reihe" onSubmit={sende} onInput={eingaben.merke}>
       <label>
         Bezeichnung
         <input name="bezeichnung" defaultValue={beruf?.bezeichnung} maxLength={150} placeholder="z. B. Fachinformatiker/-in" required />
@@ -56,10 +59,10 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
         <input name="regeldauer" type="number" min={12} max={60} step={1} defaultValue={beruf?.regeldauer_monate ?? 36} list="regeldauern" required />
       </label>
       <div className="aktionen links">
-        <button className={beruf ? 'knopf schlicht' : 'knopf'}>{beruf ? 'Speichern' : 'Beruf anlegen'}</button>
+        <button className={beruf ? 'knopf schlicht' : 'knopf'}>{beruf ? 'Beruf speichern' : 'Beruf anlegen'}</button>
         {beruf && (
           <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
-            Löschen
+            Beruf löschen
           </button>
         )}
       </div>
@@ -73,6 +76,7 @@ function BerufFormular({ beruf, onFertig }: { beruf?: Beruf; onFertig: (text: st
 }
 
 function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; daten: Daten; onFertig: (text: string) => Promise<void> }) {
+  const eingaben = useEingaben();
   const [fehler, setFehler] = useState('');
   const sende = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -83,6 +87,7 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
       if (schule) await api('PATCH', `/api/stammdaten/berufsschulen/${schule.id}`, body);
       else await api('POST', '/api/stammdaten/berufsschulen', body);
       if (!schule) form.reset();
+      eingaben.gespeichert();
       setFehler('');
       await onFertig(schule ? 'Berufsschule gespeichert.' : 'Berufsschule angelegt.');
     } catch (err) {
@@ -90,7 +95,7 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
     }
   };
   const loesche = async () => {
-    if (!schule || !window.confirm(`Berufsschule „${schule.name}“ für das ganze Portal löschen?\n\nSie steht dann auch anderen Ausbildern nicht mehr zur Auswahl.`)) return;
+    if (!schule || !(await rueckfrage(`Berufsschule „${schule.name}“ für das ganze Portal löschen?\n\nSie steht dann auch anderen Ausbildern nicht mehr zur Auswahl.`, { ja: 'Berufsschule löschen', gefahr: true }))) return;
     try {
       await api('DELETE', `/api/stammdaten/berufsschulen/${schule.id}`);
       await onFertig('Berufsschule gelöscht.');
@@ -99,7 +104,7 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
     }
   };
   return (
-    <form className="reihe" onSubmit={sende}>
+    <form className="reihe" onSubmit={sende} onInput={eingaben.merke}>
       <label>
         Name
         <input name="name" defaultValue={schule?.name} maxLength={150} required />
@@ -127,10 +132,10 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
         </select>
       </label>
       <div className="aktionen links">
-        <button className={schule ? 'knopf schlicht' : 'knopf'}>{schule ? 'Speichern' : 'Berufsschule anlegen'}</button>
+        <button className={schule ? 'knopf schlicht' : 'knopf'}>{schule ? 'Berufsschule speichern' : 'Berufsschule anlegen'}</button>
         {schule && (
           <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
-            Löschen
+            Berufsschule löschen
           </button>
         )}
       </div>
@@ -144,6 +149,7 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
 }
 
 export function Stammdaten() {
+  const eingaben = useEingaben();
   const [daten, setDaten] = useState<Daten | null>(null);
   const [meldung, setMeldung] = useState<Meldung>(null);
 
@@ -154,7 +160,8 @@ export function Stammdaten() {
 
   const fertig = async (text: string) => {
     await lade();
-    setMeldung({ text, fehler: false });
+    setMeldung(null);
+    melde(text);
   };
 
   const speichereBetrieb = async (e: FormEvent<HTMLFormElement>) => {
@@ -162,6 +169,7 @@ export function Stammdaten() {
     const f = new FormData(e.currentTarget);
     try {
       await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland') });
+      eingaben.gespeichert();
       await fertig('Angaben zum Betrieb gespeichert.');
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
@@ -173,10 +181,7 @@ export function Stammdaten() {
   return (
     <>
       <h1>Stammdaten</h1>
-      <p className="klein">
-        <Link zu="/verwaltung/vorlagen">Planbausteine für den Ausbildungsplan verwalten</Link>
-      </p>
-      <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Ausbildungsnachweise und bestimmen Dauer, Feiertage und Ferien.</p>
+      <p className="leise">Betrieb, Ausbildungsberufe und Berufsschulen. Sie stehen später im Kopf der Berichte und bestimmen Dauer, Feiertage und Ferien.</p>
       <p className="hinweis" role="note">
         <strong>Diese Stammdaten gelten für das ganze Portal</strong> – für alle Azubis und alle Ausbilder, nicht nur für deine eigenen. Bitte nichts ändern oder löschen, nur weil du es selbst gerade nicht brauchst: Andere Ausbilder
         arbeiten mit denselben Berufen und Berufsschulen.
@@ -190,7 +195,7 @@ export function Stammdaten() {
 
       <section className="karte">
         <h2>Betrieb</h2>
-        <form className="reihe" onSubmit={speichereBetrieb}>
+        <form className="reihe" onSubmit={speichereBetrieb} onInput={eingaben.merke}>
           <label>
             Name
             <input name="name" defaultValue={daten.betrieb.name} maxLength={150} />
@@ -211,7 +216,7 @@ export function Stammdaten() {
             </select>
           </label>
           <div>
-            <button className="knopf">Speichern</button>
+            <button className="knopf">Betrieb speichern</button>
           </div>
         </form>
       </section>

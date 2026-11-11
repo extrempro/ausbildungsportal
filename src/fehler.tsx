@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClipboardEvent, FormEvent } from 'react';
 import { api } from './api';
+import { rueckfrage } from './dialoge';
+import { useUngespeichert } from './router';
 
 /**
  * „Fehler melden“: kurzer Text vom Menschen, dazu automatisch ein paar technische Angaben,
@@ -91,6 +93,14 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
   const flaeche = useRef<HTMLElement>(null);
   // wohin der Fokus nach dem Schließen zurückgeht – beim ersten Rendern gemerkt, bevor das Textfeld ihn bekommt
   const vorher = useRef<HTMLElement | null>(document.activeElement as HTMLElement | null);
+  // Schließen fragt nach, sobald Text oder Bild da sind – ein versehentliches Escape kostet sonst die ganze Beschreibung
+  const hatEingabe = useRef(false);
+  hatEingabe.current = !fertig && (text.trim() !== '' || bild !== null);
+  useUngespeichert(hatEingabe.current);
+  const schliesse = useCallback(() => {
+    if (!hatEingabe.current) onZu();
+    else void rueckfrage('Meldung verwerfen?\n\nDein Text und das Bild sind noch nicht gesendet.', { ja: 'Verwerfen', gefahr: true }).then((ja) => ja && onZu());
+  }, [onZu]);
   const seite = window.location.pathname;
   const fenster = `${window.innerWidth} × ${window.innerHeight}`;
   const technik = letzteFehler.join('\n');
@@ -99,7 +109,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
     document.body.classList.add('dialog-offen');
     const zurueck = vorher.current;
     const taste = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onZu();
+      if (e.key === 'Escape') schliesse();
       if (e.key !== 'Tab' || !flaeche.current) return;
       const ziele = [...flaeche.current.querySelectorAll<HTMLElement>('button, textarea, summary, a[href]')].filter((el) => !el.hasAttribute('disabled') && !el.hidden);
       const erstes = ziele[0];
@@ -118,7 +128,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
       document.body.classList.remove('dialog-offen');
       zurueck?.focus?.();
     };
-  }, [onZu]);
+  }, [schliesse]);
 
   const sende = async (e: FormEvent) => {
     e.preventDefault();
@@ -160,7 +170,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
   };
 
   return (
-    <div className={`dialog-hintergrund${nimmtAuf ? ' unsichtbar' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && onZu()}>
+    <div className={`dialog-hintergrund${nimmtAuf ? ' unsichtbar' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && schliesse()}>
       <section ref={flaeche} className="karte dialog melden" role="dialog" aria-modal="true" aria-labelledby="melden-titel" onPaste={fertig ? undefined : einfuegen}>
         <h2 id="melden-titel">Fehler melden</h2>
         {fertig ? (
@@ -169,7 +179,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
               Danke! Deine Meldung ist angekommen.
             </p>
             <p className="leise">Der Betreiber des Portals sieht sie und kümmert sich darum. Eine Antwort bekommst du hier im Portal nicht – wenn es eilt, sprich bitte zusätzlich deinen Ausbilder an.</p>
-            <div className="knopfzeile">
+            <div className="aktionen links">
               <button type="button" className="knopf" autoFocus onClick={onZu}>
                 Schließen
               </button>
@@ -209,7 +219,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
               ) : (
                 <>
                   <p className="leise klein">Ein Bild zeigt oft schneller als Worte, was nicht stimmt. Du siehst es vor dem Senden und kannst es wieder entfernen.</p>
-                  <div className="knopfzeile">
+                  <div className="aktionen links">
                     {kannAufnehmen() && (
                       <button type="button" className="knopf schlicht klein" onClick={() => void aufnehmen()}>
                         Bildschirmfoto aufnehmen
@@ -259,11 +269,11 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
                 {fehler}
               </p>
             )}
-            <div className="knopfzeile">
+            <div className="aktionen links">
               <button type="submit" className="knopf" disabled={laeuft || text.trim().length < 10}>
                 {laeuft ? 'Sendet …' : 'Meldung senden'}
               </button>
-              <button type="button" className="knopf schlicht" onClick={onZu}>
+              <button type="button" className="knopf schlicht" onClick={schliesse}>
                 Abbrechen
               </button>
             </div>

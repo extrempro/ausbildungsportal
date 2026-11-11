@@ -1,3 +1,4 @@
+import { Ladefehler } from '../dialoge';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, datum } from '../api';
@@ -45,7 +46,7 @@ export function Versionen() {
     api<{ version: string; eintraege: Versionshinweis[] }>('GET', '/api/versionshinweise').then(setD, (e: Error) => setFehler(e.message));
   }, []);
 
-  if (fehler) return <p className="hinweis fehler">{fehler}</p>;
+  if (fehler) return <Ladefehler titel="Versionshinweise" text={fehler} />;
   if (!d) return <p className="leise">Lädt …</p>;
   const aeltere = d.eintraege.slice(NEUESTE);
   return (

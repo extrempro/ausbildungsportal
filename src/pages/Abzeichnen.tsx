@@ -1,3 +1,4 @@
+import { melde } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import { api, h, wocheText, zeit } from '../api';
 import type { Bericht, OffenerBericht } from '../api';
@@ -113,7 +114,8 @@ export function Abzeichnen() {
 
   const erledigt = async (text: string) => {
     await lade();
-    setMeldung({ text, fehler: false });
+    setMeldung(null);
+    melde(text);
   };
   const zeichneAb = async () => {
     const berichte = (offen ?? []).filter((o) => gewaehlt.has(schluessel(o))).map((o) => ({ azubiId: o.azubiId, montag: o.montag }));

@@ -1,3 +1,4 @@
+import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
@@ -71,25 +72,29 @@ export function Konten({ ich }: { ich: Konto }) {
     setStartpasswort(r.startpasswort ? { name: r.konto.anmeldename, passwort: r.startpasswort } : null);
   };
 
-  const loeschen = (k: Konto) => {
-    const frage =
+  const loeschen = async (k: Konto) => {
+    const text =
       k.rolle === 'azubi'
         ? `Konto „${k.anzeigename}“ mit allen Daten dieses Azubis endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Wenn die Berichte noch gebraucht werden, vorher exportieren – oder das Konto nur sperren.`
         : `Konto „${k.anzeigename}“ endgültig löschen?\n\nDas lässt sich nicht rückgängig machen. Zuweisungen zu Azubis entfallen. Bereits abgezeichnete Berichte bleiben mit Name und Unterschrift gültig.`;
-    if (window.confirm(frage)) void tue(() => api('DELETE', `/api/konten/${k.id}`)).then((r) => r !== undefined && setMeldung(`Konto „${k.anzeigename}“ gelöscht.`));
+    if (!(await rueckfrage(text, { ja: 'Konto endgültig löschen', gefahr: true }))) return;
+    if ((await tue(() => api('DELETE', `/api/konten/${k.id}`))) !== undefined) melde(`Konto „${k.anzeigename}“ gelöscht.`);
   };
 
   const zuruecksetzen = async (k: Konto) => {
-    if (!window.confirm(`Passwort von „${k.anzeigename}“ zurücksetzen?\n\nDas bisherige Passwort gilt sofort nicht mehr und die Person wird überall abgemeldet. Du bekommst ein Startpasswort angezeigt, das du ihr weitergibst.`)) return;
+    if (!(await rueckfrage(`Passwort von „${k.anzeigename}“ zurücksetzen?\n\nDas bisherige Passwort gilt sofort nicht mehr und die Person wird überall abgemeldet. Du bekommst ein Startpasswort angezeigt, das du ihr weitergibst.`, { ja: 'Passwort zurücksetzen' }))) return;
     const r = await tue(() => api<{ startpasswort: string }>('POST', `/api/konten/${k.id}/passwort-zuruecksetzen`));
     if (r) setStartpasswort({ name: k.anmeldename, passwort: r.startpasswort });
   };
 
-  const loesen = (k: Konto) => {
-    if (window.confirm(`Verknüpfung von „${k.anzeigename}“ mit dem Microsoft-Konto lösen?\n\nNur nötig, wenn das Microsoft-Konto neu angelegt wurde oder sich beim ersten Mal die falsche Person angemeldet hat. Es gehen keine Daten verloren. Die Person wird abgemeldet; die nächste Anmeldung mit ${k.anmeldename} verknüpft das Konto neu.`)) {
-      void tue(() => api('POST', `/api/konten/${k.id}/entra-loesen`)).then((r) => r !== undefined && setMeldung(`Verknüpfung von „${k.anzeigename}“ gelöst. Das Konto wartet jetzt wieder auf die erste Anmeldung.`));
-    }
+  const loesen = async (k: Konto) => {
+    const ja = await rueckfrage(
+      `Verknüpfung von „${k.anzeigename}“ mit dem Microsoft-Konto lösen?\n\nNur nötig, wenn das Microsoft-Konto neu angelegt wurde oder sich beim ersten Mal die falsche Person angemeldet hat. Es gehen keine Daten verloren.\n\nDie Person wird abgemeldet; die nächste Anmeldung mit ${k.anmeldename} verknüpft das Konto neu.`,
+      { ja: 'Verknüpfung lösen' },
+    );
+    if (ja && (await tue(() => api('POST', `/api/konten/${k.id}/entra-loesen`))) !== undefined) melde(`Verknüpfung von „${k.anzeigename}“ gelöst. Das Konto wartet jetzt wieder auf die erste Anmeldung.`);
   };
+
 
   const lokal = rolle === 'admin';
 
@@ -233,7 +238,7 @@ export function Konten({ ich }: { ich: Konto }) {
             Anzeigename
             <input name="anzeigename" placeholder="Vorname Nachname" maxLength={120} required />
           </label>
-          <button className="knopf">Anlegen</button>
+          <button className="knopf">Konto anlegen</button>
         </form>
         <p className="leise klein">
           {lokal
@@ -271,9 +276,9 @@ export function Konten({ ich }: { ich: Konto }) {
                       value={k.rolle}
                       onChange={(e) => {
                         const neu = e.target.value as Rolle;
-                        if (window.confirm(`„${k.anzeigename}“ wird ${ROLLE_TEXT[neu]}.\n\nDie Person wird abgemeldet und sieht danach die neue Ansicht. Alle Zuweisungen dieses Kontos entfallen und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert.\n\nFortfahren?`)) {
-                          void tue(() => api('PATCH', `/api/konten/${k.id}`, { rolle: neu }));
-                        }
+                        void rueckfrage(`„${k.anzeigename}“ wird ${ROLLE_TEXT[neu]}. Fortfahren?\n\nDie Person wird abgemeldet und sieht danach die neue Ansicht.\n\nAlle Zuweisungen dieses Kontos entfallen und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert.`, { ja: 'Rolle ändern' }).then(async (ja) => {
+                          if (ja && (await tue(() => api('PATCH', `/api/konten/${k.id}`, { rolle: neu }))) !== undefined) melde(`„${k.anzeigename}“ ist jetzt ${ROLLE_TEXT[neu]}.`);
+                        });
                       }}
                     >
                       {(daten?.rollen ?? []).filter((r) => r !== 'admin').map((r) => (
@@ -304,7 +309,7 @@ export function Konten({ ich }: { ich: Konto }) {
                         title={k.status === 'aktiv' ? 'Meldet die Person ab und verhindert die Anmeldung. Daten bleiben erhalten.' : 'Erlaubt die Anmeldung wieder.'}
                         onClick={() =>
                           void tue(() => api('PATCH', `/api/konten/${k.id}`, { status: k.status === 'aktiv' ? 'gesperrt' : 'aktiv' })).then(
-                            (r) => r !== undefined && setMeldung(k.status === 'aktiv' ? `„${k.anzeigename}“ ist gesperrt und wurde abgemeldet. Alle Daten bleiben erhalten.` : `„${k.anzeigename}“ kann sich wieder anmelden.`),
+                            (r) => r !== undefined && melde(k.status === 'aktiv' ? `„${k.anzeigename}“ ist gesperrt und wurde abgemeldet. Alle Daten bleiben erhalten.` : `„${k.anzeigename}“ kann sich wieder anmelden.`),
                           )
                         }
                       >
@@ -322,7 +327,7 @@ export function Konten({ ich }: { ich: Konto }) {
                       )}
                       {k.loeschbar && (
                         <button className="knopf schlicht gefahr" title={k.rolle === 'azubi' ? 'Endgültig – löscht auch alle Berichte und den Plan dieses Azubis.' : 'Endgültig. Abgezeichnete Berichte bleiben gültig.'} onClick={() => loeschen(k)}>
-                          Löschen
+                          Konto löschen
                         </button>
                       )}
                     </div>

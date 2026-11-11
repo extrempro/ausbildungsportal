@@ -1,7 +1,8 @@
+import { Ladefehler, melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ART_TEXT, berufName, PLAN_ARTEN } from '../api';
 import type { PlanArt, Planvorlage, VorlageEintrag } from '../api';
-import { Link } from '../router';
+import { Link, useUngespeichert } from '../router';
 
 interface Berufe {
   id: number;
@@ -115,6 +116,10 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
   const [berufId, setBerufId] = useState<number | null>(vorlage?.berufId ?? null);
   const [zeilen, setZeilen] = useState<Zeile[]>(sortiert(vorlage?.eintraege ?? []).map((e) => ({ ...e, unteraufgaben: e.unteraufgaben.join('\n') })));
   const [meldung, setMeldung] = useState<Meldung>(null);
+  // Vergleichsstand: was davon abweicht, ist noch nicht gespeichert
+  const stand = () => JSON.stringify([titel, berufId, zeilen]);
+  const [gespeichert, setGespeichert] = useState(stand);
+  useUngespeichert(stand() !== gespeichert);
   // „Beginnt in Woche“ braucht es erst, wenn ein Baustein mehrere Einträge hat (oder einer nicht in Woche 1 beginnt)
   const mitVersatz = zeilen.length > 1 || zeilen.some((z) => z.abWoche !== 1);
   const aendere = (i: number, teil: Partial<Zeile>) => setZeilen(zeilen.map((z, j) => (j === i ? { ...z, ...teil } : z)));
@@ -128,11 +133,15 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
       await onFertig();
       if (vorlage) {
         setZeilen(geordnet);
-        setMeldung({ text: 'Gespeichert. Pläne, in die dieser Baustein schon eingefügt wurde, ändern sich dadurch nicht.', fehler: false });
+        setGespeichert(JSON.stringify([titel, berufId, geordnet]));
+        setMeldung(null);
+        melde('Gespeichert. Pläne, in die dieser Baustein schon eingefügt wurde, ändern sich dadurch nicht.');
       } else {
         setTitel('');
         setZeilen([]);
-        setMeldung({ text: 'Baustein angelegt.', fehler: false });
+        setGespeichert(JSON.stringify(['', berufId, []]));
+        setMeldung(null);
+        melde('Baustein angelegt.');
       }
     } catch (e) {
       setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
@@ -211,12 +220,7 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
           </button>
         </fieldset>
       ))}
-      {meldung && (
-        <p className={`hinweis ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
-          {meldung.text}
-        </p>
-      )}
-      <div className="aktionen links">
+      <p className="vorlage-mehr">
         <button
           type="button"
           className="knopf schlicht"
@@ -228,6 +232,13 @@ function VorlageFormular({ vorlage, berufe, onFertig }: { vorlage: Planvorlage |
         >
           Eintrag hinzufügen
         </button>
+      </p>
+      {meldung && (
+        <p className={`hinweis ${meldung.fehler ? 'fehler' : 'gut'}`} role={meldung.fehler ? 'alert' : 'status'}>
+          {meldung.text}
+        </p>
+      )}
+      <div className="aktionen links">
         <button type="button" className="knopf" disabled={!titel.trim()} onClick={() => void speichere()}>
           {vorlage ? 'Baustein speichern' : 'Baustein anlegen'}
         </button>
@@ -245,13 +256,13 @@ export function Vorlagen() {
   const datei = useRef<HTMLInputElement>(null);
   const lade = useCallback(async (text?: string) => {
     setD(await api('GET', '/api/planvorlagen'));
-    if (text) setMeldung({ text, fehler: false });
+    if (text) melde(text);
   }, []);
   useEffect(() => {
     lade().catch((e: Error) => setFehler(e.message));
   }, [lade]);
 
-  if (fehler) return <p className="hinweis fehler">{fehler}</p>;
+  if (fehler) return <Ladefehler titel="Planbausteine" text={fehler} />;
   if (!d) return <p className="leise">Lädt …</p>;
 
   const zeigeFehler = (e: unknown) => setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
@@ -274,7 +285,7 @@ export function Vorlagen() {
     }
   };
   const loesche = async (v: Planvorlage) => {
-    if (!window.confirm(`Baustein „${v.titel}“ löschen?\n\nSchon eingefügte Einträge in Plänen bleiben erhalten. Tipp: vorher exportieren, falls du ihn später noch einmal brauchst.`)) return;
+    if (!(await rueckfrage(`Baustein „${v.titel}“ löschen?\n\nSchon eingefügte Einträge in Plänen bleiben erhalten.\n\nTipp: vorher exportieren, falls du ihn später noch einmal brauchst.`, { ja: 'Baustein löschen', gefahr: true }))) return;
     try {
       await api('DELETE', `/api/planvorlagen/${v.id}`);
       await lade(`Baustein „${v.titel}“ gelöscht.`);
@@ -314,9 +325,6 @@ export function Vorlagen() {
 
   return (
     <>
-      <p className="klein">
-        <Link zu="/verwaltung/stammdaten">← Stammdaten</Link>
-      </p>
       <h1>Planbausteine</h1>
       <p className="leise">
         Ein Baustein ist ein Stück Ausbildung, das immer wieder vorkommt – zum Beispiel die Station „IT-Support“ mit 8 Wochen Einsatz und den Aufgaben dazu. Du legst ihn einmal an und fügst ihn in jeden Plan dort ein, wo er für diesen Azubi hingehört. So bleibt jeder Plan
@@ -345,7 +353,7 @@ export function Vorlagen() {
             <strong>In Pläne einfügen</strong>
             <br />
             <span className="leise klein">
-              Im Ausbildungsplan eines Azubis unter „Baustein einfügen“ mit der Startwoche – oder für mehrere Azubis auf einmal in der <Link zu="/sammelplanung">Sammelplanung</Link>.
+              Im Ausbildungsplan eines Azubis unter „Baustein einfügen“ mit der Startwoche – oder für mehrere Azubis auf einmal in der <Link zu="/planung/sammelplanung">Sammelplanung</Link>.
             </span>
           </span>
         </li>

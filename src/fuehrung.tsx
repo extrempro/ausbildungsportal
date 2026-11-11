@@ -20,9 +20,11 @@ interface Schritt {
 const MENUE = ['.menue.ich .menue-knopf', '.tabs button'];
 const ENDE: Schritt = {
   titel: 'Das war es schon',
-  text: 'Handbuch, Konto und diese Führung findest du jederzeit hier im Menü – am PC an deinem Namen, auf dem Handy unter „Mehr“.',
+  text: 'Handbuch, Konto und diese Führung findest du jederzeit hier im Menü – am PC an deinem Namen, auf dem Handy unter „Mehr“. Dort steht auch „Fehler melden“, falls einmal etwas nicht funktioniert.',
   ziel: MENUE,
 };
+
+const GLOCKE = (text: string): Schritt => ({ titel: 'Was gibt es Neues?', text, pfad: '/', ziel: ['.glocke-knopf'] });
 
 const AZUBI: Schritt[] = [
   { titel: 'Willkommen im Ausbildungsportal', text: 'Ich zeige dir in einer Minute das Wichtigste: deinen Ausbildungsplan und das Berichtsheft. Du kannst jederzeit abbrechen.', pfad: '/' },
@@ -32,6 +34,7 @@ const AZUBI: Schritt[] = [
   { titel: 'Das Berichtsheft', text: 'Für jede Woche schreibst du einen Bericht: Was hast du gemacht, und wie viele Stunden? Hier geht es dorthin.', pfad: '/', ziel: ['.haupt-nav a[href="/berichtsheft"]', '.tabs a[href="/berichtsheft"]'] },
   { titel: 'Einen Bericht schreiben', text: 'Bei jeder Woche steht ein Knopf. „Schreiben“ öffnet die Woche. Dort trägst du ein, speicherst als Entwurf oder reichst ein.', pfad: '/berichtsheft', ziel: ['table.stapel tbody tr td.aktion a', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Unterschreibe hier einmal mit Finger, Stift oder Maus. Die Unterschrift kommt unter jeden Bericht, den du einreichst.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
+  GLOCKE('Die Glocke zeigt, wenn jemand etwas in deinen Plan eingetragen hat oder ein Bericht abgezeichnet oder zurückgegeben wurde. Die Zahl sagt, wie viel neu ist.'),
   ENDE,
 ];
 
@@ -44,19 +47,29 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     pfad: '/',
     ziel: ['.azubi-karte', 'main h1'],
   },
-  { titel: 'Berichte abzeichnen', text: 'Hier stehen alle eingereichten Berichte. Zum Lesen die Woche öffnen; dann abzeichnen oder mit einem Kommentar zurückgeben.', pfad: '/abzeichnen', ziel: ['main table', 'main h1'] },
+  { titel: 'Berichte abzeichnen', text: 'Hier stehen alle eingereichten Berichte, nach Azubi geordnet. „Lesen“ klappt einen Bericht auf; darunter zeichnest du ab oder gibst ihn mit einem Kommentar zurück.', pfad: '/abzeichnen', ziel: ['.abz-gruppe', 'main h1'] },
   { titel: 'Wer ist wann wo?', text: 'Die Übersicht zeigt diese und die nächste Woche und darunter den Zeitstrahl: Schule, Einsätze und Urlaub aller Azubis.', pfad: '/uebersicht', ziel: ['.ue-oben', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Unterschreibe hier einmal.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
+  GLOCKE('Die Glocke zeigt, wenn ein Bericht eingereicht wurde oder ein Azubi etwas in seinen Plan eingetragen hat. Ein Klick führt direkt dorthin.'),
   ...(rolle === 'ausbilder'
-    ? [{ titel: 'Verwaltung', text: 'Konten anlegen, Stammdaten (Betrieb, Berufe, Berufsschulen) und Planbausteine pflegen – alles unter „Verwaltung“ bzw. „Mehr“.', pfad: '/', ziel: ['button[aria-controls="menue-verwaltung"]', '.tabs button'] }]
+    ? [
+        {
+          titel: 'Planung',
+          text: 'Was mehrere Azubis betrifft: In der Sammelplanung trägst du etwa einen Schulblock für alle auf einmal ein. Planbausteine sind Stationen, die du in jeden Plan ab der passenden Woche einfügst.',
+          pfad: '/',
+          ziel: ['button[aria-controls="menue-planung"]', '.tabs button'],
+        },
+        { titel: 'Verwaltung', text: 'Konten anlegen und Stammdaten pflegen (Betrieb, Berufe, Berufsschulen) – unter „Verwaltung“ bzw. „Mehr“.', pfad: '/', ziel: ['button[aria-controls="menue-verwaltung"]', '.tabs button'] },
+      ]
     : []),
   ENDE,
 ];
 
 const ADMIN: Schritt[] = [
-  { titel: 'Willkommen', text: 'Als Super-Admin verwaltest du Konten, siehst das Protokoll und stellst das Logo ein. Eine kurze Führung.', pfad: '/verwaltung/konten' },
+  { titel: 'Willkommen', text: 'Als Super-Admin betreibst du das Portal: Konten, Protokoll, Fehlermeldungen und Logo. Eine kurze Führung.', pfad: '/verwaltung/konten' },
   { titel: 'Konten', text: 'Hier legst du Konten an, sperrst oder löschst sie. Die Anmeldung der anderen läuft über Microsoft.', pfad: '/verwaltung/konten', ziel: ['main form', 'main h1'] },
   { titel: 'Protokoll', text: 'Anmeldungen und Änderungen – ohne Inhalte von Berichten und Plänen. Nur du siehst es.', pfad: '/verwaltung/protokoll', ziel: ['main table', 'main h1'] },
+  { titel: 'Fehlermeldungen', text: 'Was Nutzer über „Fehler melden“ schicken, landet hier. Die Zahl am Menüpunkt zeigt die offenen Meldungen.', pfad: '/verwaltung/meldungen', ziel: ['.meldung', '.meldung-teams', 'main h1'] },
   { titel: 'Erscheinungsbild', text: 'Das Logo des Betriebs, je eines für die helle und die dunkle Darstellung.', pfad: '/verwaltung/erscheinungsbild', ziel: ['.logo-vorschau', 'main h1'] },
   ENDE,
 ];

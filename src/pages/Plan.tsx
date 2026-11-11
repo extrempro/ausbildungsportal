@@ -1,9 +1,11 @@
+import { EintragFelder } from '../eintragFelder';
+import { melde, rueckfrage } from '../dialoge';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { FormEvent } from 'react';
-import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT } from '../api';
+import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, STATUS_FARBE, STATUS_TEXT } from '../api';
 import type { BerichtListe, BerichtStatus, PlanAntwort, PlanArt, PlanEintrag, PlanWoche, Unteraufgabe } from '../api';
-import { Link } from '../router';
+import { Link, useUngespeichert } from '../router';
 
 interface Entwurf {
   id: number | null;
@@ -35,8 +37,10 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
   const vorher = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const geaendert = useRef(false);
   geaendert.current = JSON.stringify(e) !== JSON.stringify(start);
+  useUngespeichert(geaendert.current);
   const schliesse = useCallback(() => {
-    if (!geaendert.current || window.confirm('Die Eingaben verwerfen?')) onAbbruch();
+    if (!geaendert.current) onAbbruch();
+    else void rueckfrage('Eingaben verwerfen?\n\nWas du in diesem Fenster eingetragen hast, ist noch nicht gespeichert.', { ja: 'Verwerfen', gefahr: true }).then((ja) => ja && onAbbruch());
   }, [onAbbruch]);
 
   // Dialog: Escape schließt, Tab bleibt im Dialog, die Seite dahinter scrollt nicht mit,
@@ -86,7 +90,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
     }
   };
   const loesche = async () => {
-    if (e.id === null || !window.confirm(`„${e.titel}“ aus dem Plan löschen?`)) return;
+    if (e.id === null || !(await rueckfrage(`„${e.titel}“ aus dem Plan löschen?\n\nDer Eintrag verschwindet aus allen Wochen, in denen er steht.`, { ja: 'Eintrag löschen', gefahr: true }))) return;
     try {
       await api('DELETE', `${basis}/${e.id}`);
       await onFertig('Eintrag gelöscht.');
@@ -100,82 +104,34 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
     <section ref={flaeche} className="karte dialog" id="plan-formular" role="dialog" aria-modal="true" aria-labelledby="plan-formular-titel">
       <h2 id="plan-formular-titel">{e.id === null ? 'Neuer Eintrag' : 'Eintrag bearbeiten'}</h2>
       <form className="reihe" onSubmit={(ev) => void sende(ev)}>
-        <label>
-          Art
-          <select value={e.art} onChange={(ev) => setze({ art: ev.target.value as PlanArt })}>
-            {daten.rechte.arten.map((a) => (
-              <option key={a} value={a}>
-                {ART_TEXT[a]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="ganz">
-          Titel
-          <input value={e.titel} maxLength={120} required autoFocus onChange={(ev) => setze({ titel: ev.target.value })} placeholder={e.art === 'einsatz' ? 'z. B. IT-Support' : e.art === 'schule' ? 'z. B. Blockunterricht' : ''} />
-        </label>
-        <label>
-          Von (Woche mit diesem Tag)
-          <input type="date" value={e.von} required onChange={(ev) => setze({ von: ev.target.value })} />
-        </label>
-        <label>
-          Bis (leer = eine Woche)
-          <input type="date" value={e.bis} min={e.von} onChange={(ev) => setze({ bis: ev.target.value })} />
-        </label>
-        {mitPerson && (
-          <label>
-            Zuständig
-            <select value={e.zustaendigId ?? ''} onChange={(ev) => setze({ zustaendigId: ev.target.value ? Number(ev.target.value) : null })}>
-              <option value="">– niemand –</option>
-              {daten.personen.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.anzeigename} ({ROLLE_TEXT[p.rolle]})
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        {kannZuweisen && (
-          <label className="haken ganz">
-            <input type="checkbox" checked={e.zuweisen} onChange={(ev) => setze({ zuweisen: ev.target.checked })} />
-            {person?.anzeigename} dem Azubi für diesen Zeitraum zuweisen (darf dann Berichte dieser Wochen abzeichnen)
-          </label>
-        )}
-        <label className="ganz">
-          Beschreibung
-          <textarea rows={3} maxLength={2000} value={e.text} onChange={(ev) => setze({ text: ev.target.value })} />
-        </label>
-        {e.art === 'aufgabe' && (
-          <div className="ganz">
-            <strong className="klein">Unteraufgaben</strong>
-            {e.unteraufgaben.map((u, i) => (
-              <div className="zeile zwei" key={i}>
-                <input aria-label={`Unteraufgabe ${i + 1}`} value={u.text} maxLength={200} onChange={(ev) => setze({ unteraufgaben: e.unteraufgaben.map((x, j) => (j === i ? { ...x, text: ev.target.value } : x)) })} />
-                <button type="button" className="knopf schlicht" onClick={() => setze({ unteraufgaben: e.unteraufgaben.filter((_, j) => j !== i) })}>
-                  Entfernen
-                </button>
-              </div>
-            ))}
-            <div>
-              <button type="button" className="knopf schlicht" disabled={e.unteraufgaben.length >= 30} onClick={() => setze({ unteraufgaben: [...e.unteraufgaben, { text: '', erledigt: false }] })}>
-                Unteraufgabe hinzufügen
-              </button>
-            </div>
-          </div>
-        )}
+        <EintragFelder
+          wert={e}
+          setze={setze}
+          arten={daten.rechte.arten}
+          personen={daten.personen}
+          autoFokus
+          nachZustaendig={
+            kannZuweisen && (
+              <label className="haken ganz">
+                <input type="checkbox" checked={e.zuweisen} onChange={(ev) => setze({ zuweisen: ev.target.checked })} />
+                {person?.anzeigename} dem Azubi für diesen Zeitraum zuweisen (darf dann Berichte dieser Wochen abzeichnen)
+              </label>
+            )
+          }
+        />
         {fehler && (
           <p className="hinweis fehler ganz" role="alert">
             {fehler}
           </p>
         )}
         <div className="aktionen links ganz">
-          <button className="knopf">Speichern</button>
+          <button className="knopf">Eintrag speichern</button>
           <button type="button" className="knopf schlicht" onClick={schliesse}>
             Abbrechen
           </button>
           {e.id !== null && (
             <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
-              Löschen
+              Eintrag löschen
             </button>
           )}
         </div>
@@ -678,11 +634,12 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     const ab = bausteinAb || bausteinVorschlag;
     if (!v || !ab) return;
     const kw = d.wochen.find((w) => w.montag <= ab && plusTage(w.montag, 6) >= ab);
-    if (!window.confirm(`Baustein „${v.titel}“ ab ${kw ? `KW ${kw.kw}/${kw.jahr}` : datum(ab)} in diesen Plan einfügen?\n\nDie Einträge kommen zu den vorhandenen dazu.`)) return;
+    if (!(await rueckfrage(`Baustein „${v.titel}“ ab ${kw ? `KW ${kw.kw}/${kw.jahr}` : datum(ab)} in diesen Plan einfügen?\n\nDie Einträge kommen zu den vorhandenen dazu.`, { ja: 'Baustein einfügen' }))) return;
     try {
       const r = await api<{ uebernommen: number }>('POST', `/api/azubis/${azubiId}/plan/vorlage`, { vorlageId: v.id, ab });
       await lade();
-      setMeldung({ text: `${r.uebernommen === 1 ? '1 Eintrag' : `${r.uebernommen} Einträge`} aus dem Baustein eingefügt.`, fehler: false });
+      setMeldung(null);
+      melde(`${r.uebernommen === 1 ? '1 Eintrag' : `${r.uebernommen} Einträge`} aus dem Baustein eingefügt.`);
       if (kw) zeige(kw.montag);
     } catch (err) {
       setMeldung({ text: err instanceof Error ? err.message : 'Fehler', fehler: true });
@@ -728,7 +685,8 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
           onFertig={async (text) => {
             await lade();
             setEntwurf(null);
-            setMeldung({ text, fehler: false });
+            setMeldung(null);
+            melde(text);
           }}
         />
       )}
@@ -860,14 +818,14 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
                   <button type="button" className="knopf schlicht" disabled={!vorlage} onClick={() => void uebernimm()}>
                     Baustein einfügen
                   </button>
-                  <Link zu="/verwaltung/vorlagen" className="klein">
+                  <Link zu="/planung/bausteine" className="klein">
                     Bausteine verwalten
                   </Link>
                 </div>
               )}
               {d.vorlagen.length === 0 && d.rechte.zuweisen && (
                 <p className="leise klein nicht-drucken">
-                  Was immer wieder vorkommt, lässt sich als <Link zu="/verwaltung/vorlagen">Planbaustein</Link> anlegen und hier ab einer Woche deiner Wahl einfügen.
+                  Was immer wieder vorkommt, lässt sich als <Link zu="/planung/bausteine">Planbaustein</Link> anlegen und hier ab einer Woche deiner Wahl einfügen.
                 </p>
               )}
 

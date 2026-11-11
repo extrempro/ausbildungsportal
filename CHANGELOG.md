@@ -1,5 +1,21 @@
 # Änderungen
 
+## [0.16.0] – 2026-11-10
+
+Einheitliche Bedienung: Die Anwendung wurde Seite für Seite auf gleiche Abläufe, Beschriftungen und Rückmeldungen durchgesehen (Maßstab: ISO 9241-110).
+
+### Geändert
+
+- Menü: Für Ausbilder gibt es den neuen Punkt „Planung“ mit Sammelplanung und Planbausteinen. „Verwaltung“ enthält nur noch Konten und Stammdaten. Die alten Adressen leiten weiter.
+- Rückfragen sehen überall gleich aus: ein eigenes Fenster, das die Folgen nennt und dessen Knopf sagt, was passiert („Konto endgültig löschen“ statt „OK“). Bei Endgültigem ist der Knopf rot und „Abbrechen“ vorausgewählt.
+- Bestätigungen erscheinen immer an derselben Stelle unten auf der Seite, bleiben einige Sekunden und lassen sich schließen. Fehlermeldungen stehen weiter direkt an der betroffenen Stelle.
+- Ungespeicherte Eingaben: Alle Formulare fragen jetzt nach, bevor Eingaben beim Seitenwechsel verloren gehen (Azubi-Profil, Zuweisungen, Stammdaten, Bausteine, Sammelplanung). „Fehler melden“ fragt nach, bevor ein begonnener Text verworfen wird. Die Rückfrage kommt auch bei der Zurück- und Vor-Taste des Browsers.
+- Sammelplanung: Der Knopf „Eintragen“ ist nach dem Eintragen gesperrt, bis sich an Auswahl oder Angaben etwas ändert – so wird nichts doppelt eingetragen. Der einzelne Eintrag hat dieselben Felder wie im Ausbildungsplan, jetzt auch mit Unteraufgaben.
+- Knöpfe nennen Tätigkeit und Gegenstand („Eintrag speichern“, „Beruf löschen“, „Konto anlegen“). „Entfernen“ steht für noch nicht Gespeichertes, „Löschen“ für Endgültiges.
+- Aufklappbare Bereiche haben überall denselben Kopf mit „Anzeigen“ und „Einklappen“.
+- Lässt sich eine Seite nicht laden, bleibt die Überschrift stehen; der Fehler wird vorgelesen und es gibt „Erneut versuchen“.
+- Führung und Handbuch kennen jetzt Glocke, „Fehler melden“, Planung und die Fehlermeldungen des Super-Admins. „Erscheinungsbild“ und „Planbausteine“ haben eigene Symbole.
+
 ## [0.15.0] – 2026-11-10
 
 ### Neu
