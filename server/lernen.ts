@@ -6,7 +6,7 @@ import { Fehler } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { transaktion } from './db';
-import { ladeInhalte, unterthemaIndex } from './lernen/store';
+import { ladeInhalte, unterthemaIndex, zusatzIds } from './lernen/store';
 import type { Inhalte } from './lernen/store';
 import type { BenutzerZeile } from './typen';
 
@@ -116,6 +116,11 @@ function uebernimmAenderungen(db: DB, p: Paket): void {
           WHERE paket = ? AND unterthema_id = ?
             AND NOT EXISTS (SELECT 1 FROM lern_status n WHERE n.azubi_id = lern_status.azubi_id AND n.paket = lern_status.paket AND n.unterthema_id = ?)`,
       ).run(neu, p.id, alt, neu);
+      db.prepare(
+        `UPDATE lern_zusatz SET zusatz_id = ?
+          WHERE paket = ? AND zusatz_id = ?
+            AND NOT EXISTS (SELECT 1 FROM lern_zusatz n WHERE n.azubi_id = lern_zusatz.azubi_id AND n.paket = lern_zusatz.paket AND n.zusatz_id = ?)`,
+      ).run(neu, p.id, alt, neu);
     }
     for (const [id, info] of unterthemaIndex(p.inhalte)) {
       if (info.keinHinweis) db.prepare('UPDATE lern_status SET inhalt_hash = ? WHERE paket = ? AND unterthema_id = ? AND inhalt_hash IS NOT NULL').run(info.hash, p.id, id);
@@ -176,6 +181,37 @@ function standVon(db: DB, azubiId: number, paket: string): Map<string, StatusZei
   return new Map(zeilen.map((z) => [z.unterthema_id, z]));
 }
 
+/** Kennungen ('themenfeld.zusatz') des Zusatzwissens, das dieser Azubi als gelesen abgehakt hat. */
+function gelesenVon(db: DB, azubiId: number, paket: string): Set<string> {
+  return new Set((db.prepare('SELECT zusatz_id FROM lern_zusatz WHERE azubi_id = ? AND paket = ?').all(azubiId, paket) as { zusatz_id: string }[]).map((z) => z.zusatz_id));
+}
+
+interface Verweis {
+  feld: string;
+  feldTitel: string;
+  id: string;
+  titel: string;
+}
+
+/** Unterthema ('themenfeld.unterthema') → Zusatzwissen, das es vertieft. Je Inhaltsstand einmal berechnet. */
+const VERTIEFUNG = new WeakMap<Inhalte, Map<string, Verweis[]>>();
+function vertiefungen(inhalte: Inhalte): Map<string, Verweis[]> {
+  let m = VERTIEFUNG.get(inhalte);
+  if (m) return m;
+  m = new Map();
+  for (const f of inhalte.themenfelder) for (const z of f.zusatz) for (const ref of z.zu) m.set(ref, [...(m.get(ref) ?? []), { feld: f.id, feldTitel: f.titel, id: z.id, titel: z.titel }]);
+  VERTIEFUNG.set(inhalte, m);
+  return m;
+}
+
+/** 'themenfeld.unterthema' → Titel und Ziel des Unterthemas (für „Vertieft: …“ am Zusatzwissen). */
+function unterthemaVerweis(inhalte: Inhalte, ref: string): Verweis | null {
+  const [feld, id] = ref.split('.');
+  const f = inhalte.themenfelder.find((x) => x.id === feld);
+  const u = f?.unterthemen.find((x) => x.id === id);
+  return f && u ? { feld: f.id, feldTitel: f.titel, id: u.id, titel: u.titel } : null;
+}
+
 function meinPaket(c: Ctx): Paket {
   const p = paketVon(c.k, c.b);
   if (!p) throw new Fehler(404, 'Für deinen Ausbildungsberuf ist kein Lernmodul eingeschaltet');
@@ -200,11 +236,13 @@ export const LERN_ROUTEN: Route[] = [
     h: (c) => {
       const p = meinPaket(c);
       const stand = standVon(c.k.db, c.b.id, p.id);
+      const gelesen = gelesenVon(c.k.db, c.b.id, p.id);
       return {
         status: 200,
         body: {
           paket: paketKopf(p),
           themenfelder: p.inhalte.themenfelder.map((f) => ({
+            zusatz: f.zusatz.map((z) => ({ id: z.id, titel: z.titel, gelesen: gelesen.has(`${f.id}.${z.id}`) })),
             id: f.id,
             titel: f.titel,
             icon: f.icon,
@@ -243,11 +281,19 @@ export const LERN_ROUTEN: Route[] = [
       const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
       if (!f) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
       const stand = standVon(c.k.db, c.b.id, p.id);
+      const gelesen = gelesenVon(c.k.db, c.b.id, p.id);
+      const vertieft = vertiefungen(p.inhalte);
       return {
         status: 200,
         body: {
           paket: paketKopf(p),
           thema: {
+            // Zusatzwissen: zählt nicht zur Ampel, nur ein Haken „gelesen“
+            zusatz: f.zusatz.map(({ ablaufDatei: _a, zu, ...z }) => ({
+              ...z,
+              zu: zu.map((ref) => unterthemaVerweis(p.inhalte, ref)).filter((v): v is Verweis => v !== null),
+              gelesen: gelesen.has(`${f.id}.${z.id}`),
+            })),
             id: f.id,
             titel: f.titel,
             icon: f.icon,
@@ -259,7 +305,7 @@ export const LERN_ROUTEN: Route[] = [
             unterthemen: f.unterthemen.map((u) => {
               const s = stand.get(`${f.id}.${u.id}`);
               const { hash: _hash, keinHinweis: _k, ...inhalt } = u;
-              return { ...inhalt, status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash) };
+              return { ...inhalt, vertiefung: vertieft.get(`${f.id}.${u.id}`) ?? [], status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash) };
             }),
           },
         },
@@ -312,6 +358,23 @@ export const LERN_ROUTEN: Route[] = [
          ON CONFLICT(azubi_id, paket, unterthema_id) DO UPDATE SET status = excluded.status, luecke = excluded.luecke, notiz = excluded.notiz, inhalt_hash = excluded.inhalt_hash, geaendert = excluded.geaendert`,
       ).run(c.b.id, p.id, id, neu.status, neu.luecke, neu.notiz, neu.inhalt_hash, neu.geaendert);
       return { status: 200, body: { id, status: neu.status, luecke: neu.luecke, notiz: neu.notiz, geaendert: neu.geaendert, inhaltAktualisiert: false } };
+    },
+  },
+
+  {
+    // Zusatzwissen als gelesen abhaken oder den Haken wieder entfernen
+    m: 'PATCH',
+    p: '/api/lernen/zusatz/:id',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = meinPaket(c);
+      const id = c.p.id;
+      if (!UNTERTHEMA_ID.test(id) || !zusatzIds(p.inhalte).has(id)) throw new Fehler(404, 'Dieses Zusatzwissen gibt es nicht');
+      const gelesen = (c.a.body as { gelesen?: unknown } | null)?.gelesen;
+      if (typeof gelesen !== 'boolean') throw new Fehler(400, 'gelesen muss wahr oder falsch sein');
+      if (gelesen) c.k.db.prepare('INSERT INTO lern_zusatz (azubi_id, paket, zusatz_id, geaendert) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING').run(c.b.id, p.id, id, c.k.jetzt().toISOString().slice(0, 10));
+      else c.k.db.prepare('DELETE FROM lern_zusatz WHERE azubi_id = ? AND paket = ? AND zusatz_id = ?').run(c.b.id, p.id, id);
+      return { status: 200, body: { id, gelesen } };
     },
   },
 ];
