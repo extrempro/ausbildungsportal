@@ -4813,3 +4813,89 @@ details.klapp.schmal[open] > summary::after {
   border-color: var(--c-accent);
   box-shadow: 0 0 0 2px var(--c-accent-soft);
 }
+
+/* ---------- Einklappen: deutlich erkennbar ----------
+   Eingeklappt ist der Kasten leicht blau getönt und blau umrandet, rechts steht ein richtiger Knopf „Anzeigen“.
+   So sieht man auf einen Blick, dass hier noch Inhalt steckt. Aufgeklappt ist der Kasten weiß,
+   der Kopf ist durch eine Linie vom Inhalt getrennt, der Knopf heißt „Einklappen“. */
+details.karte:not([open]),
+details.klapp:not([open]):not(.frei),
+.anleitung.zu {
+  border-color: color-mix(in srgb, var(--c-accent) 35%, var(--c-border));
+  background: var(--c-accent-soft);
+  box-shadow: none;
+}
+
+/* der ganze Kopf reagiert, nicht nur der Knopf */
+details.karte:not([open]):hover,
+details.klapp:not([open]):not(.frei):hover,
+.anleitung.zu:hover {
+  border-color: var(--c-accent);
+}
+
+/* rechts: ein Knopf statt eines Wortes */
+details.karte > summary::after,
+details.klapp > summary::after,
+.anleitung-schalter {
+  min-height: 32px;
+  padding: 0 32px 0 12px;
+  border: 1px solid color-mix(in srgb, var(--c-accent) 45%, var(--c-border));
+  border-radius: 999px;
+  background-color: var(--c-card);
+  background-position: right 9px center;
+  line-height: 30px;
+}
+
+details.karte > summary:hover::after,
+details.klapp > summary:hover::after,
+.anleitung-kopf:hover .anleitung-schalter {
+  border-color: var(--c-accent);
+  background-color: var(--c-accent-soft);
+}
+
+/* aufgeklappt: Linie zwischen Kopf und Inhalt */
+details.karte[open] > summary,
+details.klapp[open]:not(.frei) > summary,
+.anleitung:not(.zu) .anleitung-kopf {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.anleitung:not(.zu) #anleitung-inhalt,
+.anleitung:not(.zu) > .konten-hilfe {
+  margin-top: 0;
+}
+
+/* Gruppe ohne Rahmen (z. B. „Erledigt“): eingeklappt als getönte Leiste */
+details.klapp.frei:not([open]) > summary {
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--c-accent) 35%, var(--c-border));
+  border-radius: 10px;
+  background: var(--c-accent-soft);
+}
+
+/* schmale Spalten: nur der runde Knopf mit Pfeil */
+details.klapp.schmal > summary::after,
+details.klapp.schmal[open] > summary::after {
+  width: 32px;
+  padding: 0;
+  background-position: center;
+}
+
+/* Tastatur: der Fokus umrandet den ganzen Kopf */
+details.karte > summary:focus-visible,
+details.klapp > summary:focus-visible,
+.anleitung-kopf:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+@media print {
+  details.karte:not([open]),
+  details.klapp:not([open]),
+  .anleitung.zu {
+    background: none;
+  }
+}

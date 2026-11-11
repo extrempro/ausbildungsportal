@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.22.1] – 2026-11-11
+
+### Geändert
+
+- Eingeklappte Bereiche sind jetzt deutlich zu erkennen: Sie sind leicht blau getönt und umrandet, und rechts steht ein richtiger Knopf „Anzeigen“. Aufgeklappt ist der Bereich weiß, der Kopf ist durch eine Linie vom Inhalt getrennt, der Knopf heißt „Einklappen“. Das gilt überall: Anleitung im Berichtsheft, „Was bewirkt was?“, Planbausteine, ältere Versionen, technische Angaben beim Fehler-Melden, erledigte Fehlermeldungen.
+
 ## [0.22.0] – 2026-11-11
 
 ### Neu
