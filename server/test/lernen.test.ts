@@ -148,7 +148,7 @@ test('Lernmodul ist je Beruf schaltbar; /api/ich sagt, ob es das Menü gibt', as
 
   // Auswahl in den Stammdaten: nur gültige Pakete, nur für Ausbilder sichtbar
   const sd = koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.ausbilder) }));
-  assert.deepEqual(sd.lernpakete, [{ id: 'fisi', titel: 'Fachinformatiker Systemintegration', stand: '2026-11-01', themenfelder: 2, unterthemen: 3, fehler: 0, meldungen: [] }]);
+  assert.deepEqual(sd.lernpakete, [{ id: 'fisi', titel: 'Fachinformatiker Systemintegration', stand: '2026-11-01', herkunft: 'ordner', themenfelder: 2, unterthemen: 3, fehler: 0, meldungen: [] }]);
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.bea) })).lernpakete, []);
   const aendere = (body: object) => ruf(w.u, 'PATCH', `/api/stammdaten/berufe/${w.malerBeruf}`, { cookies: als(w, w.ausbilder), body: { bezeichnung: 'Maler', fachrichtung: '', regeldauerMonate: 36, ...body } });
   assert.equal((await aendere({ lernpaket: 'gibt-es-nicht' })).status, 400);

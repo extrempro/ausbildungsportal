@@ -183,18 +183,20 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
         </dl>
       </section>
 
-      {profilbild && konto.anmeldung === 'entra' && (
+      {konto.anmeldung === 'entra' && (
         <section className="karte">
           <h2>Profilbild</h2>
           <div className="konto-bild">
             <Avatar name={konto.anzeigename} bild={konto.bild} />
             <div>
               <label className="haken">
-                <input type="checkbox" checked={konto.bildZeigen} disabled={bildLaeuft} onChange={(e) => void setzeBild(e.target.checked)} />
+                <input type="checkbox" checked={profilbild && konto.bildZeigen} disabled={bildLaeuft || !profilbild} onChange={(e) => void setzeBild(e.target.checked)} />
                 Mein Profilbild aus Microsoft 365 anzeigen
               </label>
               <p className="leise klein">
-                {konto.bildZeigen
+                {!profilbild
+                  ? 'Profilbilder sind in diesem Portal nicht eingeschaltet. Das Portal holt und speichert kein Bild von dir. Einschalten kann das der Betreiber des Portals.'
+                  : konto.bildZeigen
                   ? konto.bild
                     ? 'Das Portal holt dein Bild bei jeder Anmeldung aus Microsoft 365.'
                     : 'Im Moment gibt es kein Bild: Entweder hast du in Microsoft 365 keins hinterlegt, oder es kommt mit deiner nächsten Anmeldung.'

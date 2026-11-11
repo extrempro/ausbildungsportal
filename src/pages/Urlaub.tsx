@@ -159,7 +159,7 @@ function AntragKarte({ a, mitName, onGeaendert }: { a: UrlaubAntrag; mitName: bo
             {a.azubi.anzeigename} liest diese Begründung.{grundFuer === 'stornieren' ? ' Die Personalstelle bekommt eine Mail über die Stornierung, ohne die Begründung.' : ''}
           </p>
           <p className="aktionen links">
-            <button className="knopf gefahr" disabled={laeuft || grund.trim() === ''}>
+            <button className="knopf rot" disabled={laeuft || grund.trim() === ''}>
               {grundFuer === 'ablehnen' ? 'Antrag ablehnen' : 'Urlaub stornieren'}
             </button>
             <button
