@@ -1,5 +1,21 @@
 # Änderungen
 
+## [0.19.0] – 2026-11-11
+
+### Geändert
+
+- **Ausbilder sehen nur noch ihre eigenen Azubis.** Eigene Azubis sind die, bei denen der Ausbilder im Profil als „Zuständiger Ausbilder“ eingetragen ist. Das gilt überall: Azubi-Liste, Startseite, Übersicht, Abzeichnen, Glocke, Sammelplanung und Kontenliste. **Nach dem Update bitte prüfen, ob bei jedem Azubi der richtige Ausbilder im Profil steht.**
+- Azubis ohne zuständigen Ausbilder sehen und bearbeiten weiterhin alle Ausbilder – so bleibt niemand unbetreut. Sie tragen die Marke „ohne Ausbilder“. Das gilt auch, solange das Konto des zuständigen Ausbilders gesperrt ist.
+- Wer als Ausbilder ein Azubi-Konto anlegt, ist gleich als zuständiger Ausbilder eingetragen.
+- Eine Sammelplanung nimmt nur zurück, wer sie eingetragen hat (oder ein Ausbilder mit Gesamtsicht).
+- Wechselt ein Ausbilder die Rolle, haben seine Azubis danach keinen zuständigen Ausbilder mehr.
+
+### Neu
+
+- „Azubi übernehmen“ im Profil eines Azubis ohne Ausbilder. Beim Abgeben an einen anderen Ausbilder fragt das Portal nach, weil der Azubi danach nicht mehr sichtbar ist.
+- Vertretung: Im Profil lässt sich neben Ausbildungsbeauftragten auch ein anderer Ausbilder für einen Zeitraum zuweisen. Die Vertretung hat die Rechte von Ausbildungsbeauftragten: Plan und Berichte lesen, Berichte der Wochen im Zeitraum abzeichnen, Aufgaben und Notizen eintragen.
+- Gesamtsicht: Der Super-Admin kann bei einem Ausbilder-Konto „sieht alle Azubis“ anhaken, zum Beispiel für die Ausbildungsleitung. Das Ein- und Ausschalten steht im Protokoll.
+
 ## [0.18.0] – 2026-11-11
 
 ### Neu

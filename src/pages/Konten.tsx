@@ -151,7 +151,10 @@ export function Konten({ ich }: { ich: Konto }) {
               {ich.rolle === 'admin' && (
                 <>
                   <dt>Ausbilder</dt>
-                  <dd>Sieht alle Azubis, plant die Ausbildung, zeichnet Berichte ab, pflegt Stammdaten und verwaltet die Konten von Azubis und Ausbildungsbeauftragten.</dd>
+                  <dd>
+                    Plant die Ausbildung, zeichnet Berichte ab, pflegt Stammdaten und verwaltet die Konten seiner Azubis und der Ausbildungsbeauftragten. Sieht <strong>nur die eigenen Azubis</strong> (im Profil als zuständiger Ausbilder eingetragen), Azubis ohne
+                    Ausbilder und Azubis, die er für einen Zeitraum vertritt.
+                  </dd>
                   <dt>Super-Admin</dt>
                   <dd>Betreibt das Portal: Konten, Protokoll, Fehlermeldungen und Logo. Sieht keine Pläne, Berichte oder Stammdaten. Meldet sich als Einziger mit Benutzername und Passwort an.</dd>
                 </>
@@ -166,12 +169,21 @@ export function Konten({ ich }: { ich: Konto }) {
               </dd>
               <dt>Rolle ändern</dt>
               <dd>
-                Wirkt sofort; die Person wird abgemeldet und sieht nach der nächsten Anmeldung die neue Ansicht. <strong>Alle Zuweisungen dieses Kontos entfallen</strong> und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert. Gedacht für echte Wechsel, zum Beispiel wenn ein
+                Wirkt sofort; die Person wird abgemeldet und sieht nach der nächsten Anmeldung die neue Ansicht. <strong>Alle Zuweisungen dieses Kontos entfallen</strong> und müssen neu gesetzt werden; war die Person Ausbilder, haben ihre Azubis danach keinen zuständigen Ausbilder mehr. Berichte und Plan bleiben gespeichert. Gedacht für echte Wechsel, zum Beispiel wenn ein
                 früherer Azubi Ausbildungsbeauftragter wird.
               </dd>
+              {ich.rolle === 'admin' && (
+                <>
+                  <dt>Sieht alle Azubis (Gesamtsicht)</dt>
+                  <dd>
+                    Nur bei Ausbildern. Mit Haken sieht und bearbeitet die Person <strong>alle Azubis des Betriebs</strong>, nicht nur die eigenen – gedacht für die Ausbildungsleitung. Wirkt sofort und lässt sich jederzeit wieder ausschalten. Ohne Haken bleibt es bei den eigenen
+                    Azubis.
+                  </dd>
+                </>
+              )}
               <dt>Sperren / Entsperren</dt>
               <dd>
-                Sperren meldet die Person sofort ab und verhindert jede weitere Anmeldung. Alle Daten bleiben erhalten, Entsperren macht es rückgängig. Gedacht für Pausen und fürs Ausscheiden, solange die Berichte noch gebraucht werden – im Zweifel sperren statt löschen.
+                Sperren meldet die Person sofort ab und verhindert jede weitere Anmeldung. Alle Daten bleiben erhalten, Entsperren macht es rückgängig. Solange ein Ausbilder gesperrt ist, gelten seine Azubis als „ohne Ausbilder“ und sind für alle Ausbilder sichtbar. Gedacht für Pausen und fürs Ausscheiden, solange die Berichte noch gebraucht werden – im Zweifel sperren statt löschen.
               </dd>
               <dt>Verknüpfung lösen</dt>
               <dd>
@@ -290,6 +302,29 @@ export function Konten({ ich }: { ich: Konto }) {
                   ) : (
                     ROLLE_TEXT[k.rolle]
                   )}
+                  {k.rolle === 'ausbilder' &&
+                    (ich.rolle === 'admin' ? (
+                      <label className="haken klein">
+                        <input
+                          type="checkbox"
+                          checked={k.alleAzubis}
+                          onChange={() => {
+                            const an = !k.alleAzubis;
+                            void rueckfrage(
+                              an
+                                ? `„${k.anzeigename}“ die Gesamtsicht geben?\n\nDie Person sieht und bearbeitet dann alle Azubis des Betriebs – Profile, Pläne und Berichte –, nicht nur die eigenen.`
+                                : `„${k.anzeigename}“ die Gesamtsicht nehmen?\n\nDie Person sieht dann nur noch die eigenen Azubis, Azubis ohne Ausbilder und Vertretungen.`,
+                              { ja: an ? 'Gesamtsicht geben' : 'Gesamtsicht nehmen' },
+                            ).then(async (ja) => {
+                              if (ja && (await tue(() => api('PATCH', `/api/konten/${k.id}`, { alleAzubis: an }))) !== undefined) melde(an ? `„${k.anzeigename}“ sieht jetzt alle Azubis.` : `„${k.anzeigename}“ sieht jetzt nur noch die eigenen Azubis.`);
+                            });
+                          }}
+                        />
+                        sieht alle Azubis
+                      </label>
+                    ) : (
+                      k.alleAzubis && <span className="leise klein"> · sieht alle Azubis</span>
+                    ))}
                 </td>
                 <td data-label="Stand">
                   {k.status === 'gesperrt' ? (

@@ -7,7 +7,7 @@ import { heute } from './datum';
 import { feiertageZwischen, istBundesland } from './feiertage';
 import { ausbildungsjahrAm, gueltigesDatum, istMontag, kalenderwoche, montagVon, plusTage } from './kalender';
 import { planDerWoche } from './plan';
-import { darfAbzeichnen, sichtbareAzubis } from './rechte';
+import { darfAbzeichnen, darfAzubiVerwalten, sichtbareAzubis } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import type { BenutzerZeile } from './typen';
 
@@ -227,7 +227,7 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
       zurueckziehen: eigener && status === 'eingereicht',
       loeschen: eigener && status === 'entwurf',
       abzeichnen: zeichnet && status === 'eingereicht',
-      oeffnen: c.b.rolle === 'ausbilder' && status === 'abgezeichnet',
+      oeffnen: status === 'abgezeichnet' && darfAzubiVerwalten(db, c.b, azubi.id),
     },
   };
 }
@@ -507,7 +507,7 @@ export const BERICHT_ROUTEN: Route[] = [
   },
 
   {
-    // Abzeichnung aufheben: nur Ausbilder; der Bericht geht mit Begründung zurück an den Azubi
+    // Abzeichnung aufheben: nur Ausbilder mit vollen Rechten (nicht die Vertretung); der Bericht geht mit Begründung zurück an den Azubi
     m: 'POST',
     p: '/api/azubis/:id/berichte/:montag/oeffnen',
     wer: ['ausbilder'],
@@ -515,7 +515,7 @@ export const BERICHT_ROUTEN: Route[] = [
       const { db } = c.k;
       const montag = montagAus(c);
       const id = idAus(c.p.id);
-      if (!darfAbzeichnen(db, c.b, id, montag)) throw new Fehler(404, 'Nicht gefunden');
+      if (!darfAzubiVerwalten(db, c.b, id)) throw new Fehler(404, 'Nicht gefunden');
       const azubi = holeBenutzer(db, id)!;
       const z = holeBericht(db, id, montag);
       if (!z) throw new Fehler(404, 'Nicht gefunden');

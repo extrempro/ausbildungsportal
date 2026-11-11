@@ -264,7 +264,7 @@ export function App() {
   else if (pfad === '/verwaltung/erscheinungsbild' && konto.rolle === 'admin') seite = <Erscheinungsbild logos={logos} onGeaendert={setLogos} />;
   else if (pfad === '/abzeichnen' && betreut) seite = <Abzeichnen />;
   else if (pfad === '/azubis' && betreut) seite = <Azubis ich={konto} />;
-  else if (azubiId && betreut) seite = <AzubiDetail key={azubiId} id={Number(azubiId)} />;
+  else if (azubiId && betreut) seite = <AzubiDetail key={azubiId} id={Number(azubiId)} ich={konto} />;
   else if (pfad === '/verwaltung/stammdaten' && konto.rolle === 'ausbilder') seite = <Stammdaten />;
   else if (pfad === '/verwaltung/konten' && verwaltet) seite = <Konten ich={konto} />;
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;

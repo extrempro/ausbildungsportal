@@ -40,14 +40,14 @@ export function Start({ konto }: { konto: Konto }) {
 
       {betreut && (
         <>
-          <h2 className="abschnitt-titel">{konto.rolle === 'ausbilder' ? 'Alle Azubis' : 'Mir zugewiesene Azubis'}</h2>
+          <h2 className="abschnitt-titel">{konto.rolle !== 'ausbilder' ? 'Mir zugewiesene Azubis' : konto.alleAzubis ? 'Alle Azubis' : 'Meine Azubis'}</h2>
           {azubis === null ? (
             <p className="leise">Lädt …</p>
           ) : azubis.length === 0 ? (
             <p className="karte leise">
               {konto.rolle === 'ausbilder' ? (
                 <>
-                  Noch keine Azubis. Unter <Link zu="/verwaltung/konten">Konten</Link> lassen sich welche anlegen.
+                  {konto.alleAzubis ? 'Noch keine Azubis.' : 'Du bist noch für keinen Azubi zuständig.'} Unter <Link zu="/verwaltung/konten">Konten</Link> lassen sich Azubis anlegen.
                 </>
               ) : (
                 'Dir ist noch kein Azubi zugewiesen.'

@@ -48,7 +48,7 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     ziel: ['.azubi-karte', 'main h1'],
   },
   { titel: 'Berichte abzeichnen', text: 'Hier stehen alle eingereichten Berichte, nach Azubi geordnet. „Lesen“ klappt einen Bericht auf; darunter zeichnest du ab oder gibst ihn mit einem Kommentar zurück.', pfad: '/abzeichnen', ziel: ['.abz-gruppe', 'main h1'] },
-  { titel: 'Wer ist wann wo?', text: 'Die Übersicht zeigt diese und die nächste Woche und darunter den Zeitstrahl: Schule, Einsätze und Urlaub aller Azubis.', pfad: '/uebersicht', ziel: ['.ue-oben', 'main h1'] },
+  { titel: 'Wer ist wann wo?', text: 'Die Übersicht zeigt diese und die nächste Woche und darunter den Zeitstrahl: Schule, Einsätze und Urlaub deiner Azubis.', pfad: '/uebersicht', ziel: ['.ue-oben', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Unterschreibe hier einmal.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
   GLOCKE('Die Glocke zeigt, wenn ein Bericht eingereicht wurde oder ein Azubi etwas in seinen Plan eingetragen hat. Ein Klick führt direkt dorthin.'),
   ...(rolle === 'ausbilder'

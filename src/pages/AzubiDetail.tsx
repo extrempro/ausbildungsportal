@@ -1,9 +1,9 @@
-import { melde } from '../dialoge';
+import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, berufName, datum, standText } from '../api';
-import type { Konto, Profil, ProfilAntwort, Stammdaten, ZuweisungZeile } from '../api';
-import { Link, useUngespeichert } from '../router';
+import type { Konto, Profil, ProfilAntwort, Rolle, Stammdaten, ZuweisungZeile } from '../api';
+import { geheZu, Link, useUngespeichert } from '../router';
 
 type Meldung = { text: string; fehler: boolean } | null;
 
@@ -59,7 +59,7 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
   );
 }
 
-function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; stammdaten: Stammdaten; onGespeichert: () => Promise<void> }) {
+function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwort; stammdaten: Stammdaten; ich: Konto; onGespeichert: () => Promise<void> }) {
   const [wert, setWert] = useState<Profil>(p.profil);
   const [meldung, setMeldung] = useState<Meldung>(null);
   useUngespeichert(JSON.stringify(wert) !== JSON.stringify(p.profil));
@@ -68,8 +68,17 @@ function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; st
 
   const speichere = async (e: FormEvent) => {
     e.preventDefault();
+    // Wer den Azubi an jemand anderen abgibt, sieht ihn danach nicht mehr – außer mit Gesamtsicht
+    const neuer = stammdaten.ausbilder.find((a) => a.id === wert.ausbilderId);
+    const gibtAb = !ich.alleAzubis && !!neuer && neuer.id !== ich.id && wert.ausbilderId !== p.profil.ausbilderId;
+    if (gibtAb && !(await rueckfrage(`„${p.azubi.anzeigename}“ an ${neuer.anzeigename} abgeben?\n\nDanach ist ${neuer.anzeigename} zuständig. Du siehst diesen Azubi dann nicht mehr und kannst die Abgabe nicht selbst zurücknehmen.`, { ja: 'Azubi abgeben' }))) return;
     try {
       await api('PUT', `/api/azubis/${p.azubi.id}/profil`, wert);
+      if (gibtAb) {
+        melde(`${neuer.anzeigename} ist jetzt für „${p.azubi.anzeigename}“ zuständig.`);
+        geheZu('/azubis', true);
+        return;
+      }
       await onGespeichert();
       setMeldung(null);
       melde('Gespeichert.');
@@ -106,7 +115,7 @@ function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; st
         <label>
           Zuständiger Ausbilder
           <select value={wert.ausbilderId ?? ''} onChange={(e) => setze('ausbilderId', idOderNull(e.target.value))}>
-            <option value="">– noch nicht festgelegt –</option>
+            <option value="">– niemand –</option>
             {stammdaten.ausbilder.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.anzeigename}
@@ -179,26 +188,30 @@ function ProfilFormular({ p, stammdaten, onGespeichert }: { p: ProfilAntwort; st
   );
 }
 
+interface Person {
+  id: number;
+  anzeigename: string;
+  rolle: Rolle;
+}
+
 function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: boolean }) {
   const [zeilen, setZeilen] = useState<ZuweisungZeile[] | null>(null);
-  const [beauftragte, setBeauftragte] = useState<Konto[]>([]);
+  const [personen, setPersonen] = useState<Person[]>([]);
   const [meldung, setMeldung] = useState<Meldung>(null);
   // Stand vom Server zum Vergleich – was davon abweicht, ist noch nicht gespeichert
   const [geladen, setGeladen] = useState('');
   useUngespeichert(zeilen !== null && geladen !== '' && JSON.stringify(zeilen) !== geladen);
 
   const lade = useCallback(async () => {
-    const r = await api<{ zuweisungen: ZuweisungZeile[] }>('GET', `/api/azubis/${azubiId}/zuweisungen`);
+    const r = await api<{ zuweisungen: ZuweisungZeile[]; personen?: Person[] }>('GET', `/api/azubis/${azubiId}/zuweisungen`);
+    setPersonen(r.personen ?? []);
     setZeilen(r.zuweisungen);
     setGeladen(JSON.stringify(r.zuweisungen));
   }, [azubiId]);
 
   useEffect(() => {
     lade().catch((e: Error) => setMeldung({ text: e.message, fehler: true }));
-    if (darfAendern) {
-      api<{ konten: Konto[] }>('GET', '/api/konten').then((r) => setBeauftragte(r.konten.filter((k) => k.rolle === 'beauftragter')), () => {});
-    }
-  }, [lade, darfAendern]);
+  }, [lade]);
 
   const aendere = (i: number, teil: Partial<ZuweisungZeile>) => {
     setZeilen((alt) => (alt ?? []).map((z, j) => (j === i ? { ...z, ...teil } : z)));
@@ -227,7 +240,8 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
       <ul className="liste">
         {zeilen.map((z, i) => (
           <li key={z.id ?? i}>
-            <strong>{z.beauftragter}</strong> <span className="leise">{z.von || z.bis ? `${z.von ? datum(z.von) : 'Beginn'} bis ${z.bis ? datum(z.bis) : 'Ende'}` : 'ganze Ausbildung'}</span>
+            <strong>{z.beauftragter}</strong>
+            {z.rolle === 'ausbilder' && ' (Vertretung)'} <span className="leise">{z.von || z.bis ? `${z.von ? datum(z.von) : 'Beginn'} bis ${z.bis ? datum(z.bis) : 'Ende'}` : 'ganze Ausbildung'}</span>
           </li>
         ))}
       </ul>
@@ -237,21 +251,31 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
   return (
     <>
       <p className="leise klein">
-        Ausbildungsbeauftragte sehen den Azubi ab dem Beginn der Zuweisung und zeichnen nur Wochen in ihrem Zeitraum ab. Ohne Datum gilt die Zuweisung für die ganze
-        Ausbildung.
+        Wer zugewiesen ist, sieht den Azubi ab dem Beginn der Zuweisung, zeichnet Berichte der Wochen in seinem Zeitraum ab und trägt Aufgaben und Notizen ein. Ohne Datum
+        gilt die Zuweisung für die ganze Ausbildung. Für eine <strong>Vertretung</strong> (Urlaub, Krankheit) weist du einen anderen Ausbilder für den Zeitraum zu –
+        zuständig bleibst du.
       </p>
-      {beauftragte.length === 0 && <p className="hinweis">Es gibt noch kein Konto mit der Rolle Ausbildungsbeauftragte.</p>}
+      {personen.length === 0 && <p className="hinweis">Es gibt noch kein Konto, das sich zuweisen lässt (Ausbildungsbeauftragte oder ein weiterer Ausbilder).</p>}
       {zeilen.map((z, i) => (
         <div className="reihe zuweisung" key={i}>
           <label>
-            Ausbildungsbeauftragte
+            Person
             <select value={z.beauftragter_id || ''} onChange={(e) => aendere(i, { beauftragter_id: Number(e.target.value) })}>
               <option value="">– bitte wählen –</option>
-              {beauftragte.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.anzeigename}
-                </option>
-              ))}
+              {(['beauftragter', 'ausbilder'] as const).map((rolle) => {
+                const gruppe = personen.filter((b) => b.rolle === rolle);
+                return (
+                  gruppe.length > 0 && (
+                    <optgroup key={rolle} label={rolle === 'beauftragter' ? 'Ausbildungsbeauftragte' : 'Ausbilder (als Vertretung)'}>
+                      {gruppe.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.anzeigename}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )
+                );
+              })}
             </select>
           </label>
           <label>
@@ -280,10 +304,11 @@ function Zuweisungen({ azubiId, darfAendern }: { azubiId: number; darfAendern: b
   );
 }
 
-export function AzubiDetail({ id }: { id: number }) {
+export function AzubiDetail({ id, ich }: { id: number; ich: Konto }) {
   const [p, setP] = useState<ProfilAntwort | null>(null);
   const [stammdaten, setStammdaten] = useState<Stammdaten | null>(null);
   const [fehler, setFehler] = useState('');
+  const [meldung, setMeldung] = useState<Meldung>(null);
 
   const lade = useCallback(async () => {
     setP(await api<ProfilAntwort>('GET', `/api/azubis/${id}/profil`));
@@ -293,6 +318,19 @@ export function AzubiDetail({ id }: { id: number }) {
     lade().catch((e: Error) => setFehler(e.message));
     api<Stammdaten>('GET', '/api/stammdaten').then(setStammdaten, () => {});
   }, [lade]);
+
+  const uebernimm = async () => {
+    if (!p) return;
+    if (!(await rueckfrage(`„${p.azubi.anzeigename}“ übernehmen?\n\nDu bist dann zuständig. Andere Ausbilder sehen diesen Azubi nicht mehr – außer als Vertretung oder mit Gesamtsicht.`, { ja: 'Azubi übernehmen' }))) return;
+    try {
+      await api('POST', `/api/azubis/${id}/uebernehmen`);
+      await lade();
+      setMeldung(null);
+      melde(`Du bist jetzt für „${p.azubi.anzeigename}“ zuständig.`);
+    } catch (e) {
+      setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
+    }
+  };
 
   if (fehler) {
     return (
@@ -317,6 +355,31 @@ export function AzubiDetail({ id }: { id: number }) {
         {p.azubi.status === 'gesperrt' && <span className="pille grau">gesperrt</span>}
       </p>
 
+      {p.betreuung === 'ohne' && (
+        <div className="hinweis">
+          <p>
+            <strong>Dieser Azubi hat noch keinen zuständigen Ausbilder.</strong> Bis jemand übernimmt, sehen und bearbeiten ihn alle Ausbilder.
+          </p>
+          <div className="aktionen links">
+            <button type="button" className="knopf" onClick={() => void uebernimm()}>
+              Azubi übernehmen
+            </button>
+          </div>
+          <MeldungZeile m={meldung} />
+        </div>
+      )}
+      {p.betreuung === 'gesamt' && (
+        <p className="hinweis">
+          Zuständig ist {p.ausbilder?.anzeigename ?? 'ein anderer Ausbilder'}. Du siehst diesen Azubi, weil dein Konto die Gesamtsicht über alle Azubis hat.
+        </p>
+      )}
+      {p.betreuung === 'vertretung' && (
+        <p className="hinweis">
+          <strong>Vertretung:</strong> Zuständig ist {p.ausbilder?.anzeigename ?? 'ein anderer Ausbilder'}. Du zeichnest Berichte der Wochen in deinem Zeitraum ab und trägst Aufgaben und Notizen ein. Profil, Einsätze
+          und Zuweisungen ändert der zuständige Ausbilder.
+        </p>
+      )}
+
       <section className="karte">
         <h2>Ausbildung</h2>
         <ProfilUebersicht p={p} />
@@ -333,12 +396,12 @@ export function AzubiDetail({ id }: { id: number }) {
       {p.bearbeitbar && stammdaten && (
         <section className="karte">
           <h2>Profil bearbeiten</h2>
-          <ProfilFormular key={p.azubi.id} p={p} stammdaten={stammdaten} onGespeichert={lade} />
+          <ProfilFormular key={p.azubi.id + ':' + (p.profil.ausbilderId ?? 0)} p={p} stammdaten={stammdaten} ich={ich} onGespeichert={lade} />
         </section>
       )}
 
       <section className="karte">
-        <h2>Ausbildungsbeauftragte</h2>
+        <h2>Ausbildungsbeauftragte und Vertretung</h2>
         <Zuweisungen azubiId={p.azubi.id} darfAendern={p.bearbeitbar} />
       </section>
     </>

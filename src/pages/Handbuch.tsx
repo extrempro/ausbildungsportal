@@ -231,7 +231,12 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     titel: rolle === 'ausbilder' ? 'Deine Aufgaben im Portal' : 'Deine Aufgaben als Ausbildungsbeauftragte/r',
     inhalt:
       rolle === 'ausbilder' ? (
-        <p>Du richtest Azubis ein, planst ihre Ausbildung, liest ihre Berichte und zeichnest sie ab. Du siehst alle Azubis des Betriebs.</p>
+        <>
+          <p>Du richtest Azubis ein, planst ihre Ausbildung, liest ihre Berichte und zeichnest sie ab.</p>
+          <p>
+            <strong>Du siehst deine Azubis</strong> – also die, bei denen du im Profil als zuständiger Ausbilder eingetragen bist. Dazu kommen Azubis ohne Ausbilder und Azubis, die du für einen Zeitraum vertrittst. Mehr dazu im Kapitel „Meine Azubis, Übernehmen, Vertretung“.
+          </p>
+        </>
       ) : (
         <>
           <p>Du betreust Azubis, solange sie in deinem Bereich sind. Du liest ihre Berichte, zeichnest sie ab oder gibst sie zurück und kannst ihnen Aufgaben und Notizen in den Plan schreiben.</p>
@@ -294,7 +299,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </ul>
         )}
         <p>
-          Die <Link zu="/uebersicht">Übersicht</Link> zeigt alle {rolle === 'ausbilder' ? '' : 'dir zugewiesenen '}Azubis nebeneinander über 26 Wochen: Schule, Einsätze und Urlaub laut Bericht.
+          Die <Link zu="/uebersicht">Übersicht</Link> zeigt {rolle === 'ausbilder' ? 'deine' : 'alle dir zugewiesenen'} Azubis nebeneinander über 26 Wochen: Schule, Einsätze und Urlaub laut Bericht.
         </p>
       </>
     ),
@@ -330,6 +335,33 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           ),
         },
         {
+          id: 'zustaendig',
+          titel: 'Meine Azubis, Übernehmen, Vertretung',
+          inhalt: (
+            <>
+              <ul className="punkte">
+                <li>
+                  <strong>Zuständig</strong> bist du für Azubis, bei denen du im Profil unter „Zuständiger Ausbilder“ stehst. Legst du selbst ein Azubi-Konto an, trägt das Portal dich gleich ein. Nur diese Azubis siehst du in Listen, Übersicht, Abzeichnen und Glocke.
+                </li>
+                <li>
+                  <strong>Ohne Ausbilder</strong> (gelbe Marke): Solange niemand zuständig ist, sehen und bearbeiten alle Ausbilder den Azubi. Im Profil übernimmst du ihn mit „Azubi übernehmen“. Das gilt auch, solange das Konto des zuständigen Ausbilders gesperrt ist.
+                </li>
+                <li>
+                  <strong>Abgeben:</strong> Im Profil einen anderen Ausbilder als zuständig eintragen und speichern. Danach siehst du den Azubi nicht mehr – das Portal fragt vorher nach.
+                </li>
+                <li>
+                  <strong>Vertretung</strong> (Urlaub, Krankheit): Im Profil unter „Ausbildungsbeauftragte und Vertretung“ einen anderen Ausbilder mit Zeitraum zuweisen. Die Vertretung liest Plan und Berichte, zeichnet Berichte der Wochen in ihrem Zeitraum ab und trägt Aufgaben und Notizen
+                  ein. Profil, Einsätze, Schulblöcke und Zuweisungen bleiben bei dir. Eine Abzeichnung aufheben kann die Vertretung nicht.
+                </li>
+                <li>
+                  <strong>Gesamtsicht:</strong> Der Super-Admin kann einem Ausbilder-Konto erlauben, alle Azubis zu sehen und zu bearbeiten – gedacht für die Ausbildungsleitung.
+                </li>
+              </ul>
+              <p className="leise klein">Stammdaten und Planbausteine gelten weiter für das ganze Portal. In der Sammelplanung stehen nur Azubis zur Wahl, die du voll bearbeiten darfst; zurücknehmen lässt sich ein Lauf nur von der Person, die ihn eingetragen hat (oder mit Gesamtsicht).</p>
+            </>
+          ),
+        },
+        {
           id: 'einrichten',
           titel: 'Einen neuen Azubi einrichten',
           inhalt: (
@@ -338,12 +370,12 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 Einmalig unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> Betrieb (mit Bundesland für die Feiertage), Ausbildungsberuf und Berufsschule anlegen.
               </li>
               <li>
-                Unter <Link zu="/verwaltung/konten">Konten</Link> das Konto anlegen: Rolle „Azubi“, Microsoft-Anmeldename, Anzeigename. Die Anmeldung läuft über Microsoft; beim ersten Anmelden wird das Konto fest verknüpft.
+                Unter <Link zu="/verwaltung/konten">Konten</Link> das Konto anlegen: Rolle „Azubi“, Microsoft-Anmeldename, Anzeigename. Die Anmeldung läuft über Microsoft; beim ersten Anmelden wird das Konto fest verknüpft. Du bist damit gleich als zuständiger Ausbilder eingetragen.
               </li>
               <li>
                 Unter <Link zu="/azubis">Azubis</Link> das Profil ausfüllen: Beruf, Berufsschule, Ausbildungsbeginn, Wochenstunden, Prüfungstermine. <strong>Erst mit einem Ausbildungsbeginn</strong> gibt es Berichtsheft und Plan.
               </li>
-              <li>Bei Bedarf Ausbildungsbeauftragte mit Zeitraum zuweisen.</li>
+              <li>Bei Bedarf Ausbildungsbeauftragte – oder einen anderen Ausbilder als Vertretung – mit Zeitraum zuweisen.</li>
               <li>Im Ausbildungsplan Bausteine einfügen oder die Einträge von Hand anlegen.</li>
               <li>Dem Azubi das Handbuch zeigen (Reiter „Azubi“ oben auf dieser Seite) und beim ersten Bericht helfen.</li>
             </ol>
@@ -354,7 +386,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           titel: 'Konten verwalten',
           inhalt: (
             <ul className="punkte">
-              <li>Du legst Konten für Azubis und Ausbildungsbeauftragte an, sperrst oder löschst sie. Konten von Ausbildern verwaltet der Super-Admin.</li>
+              <li>Du legst Konten für Azubis und Ausbildungsbeauftragte an, sperrst oder löschst sie. Von den Azubi-Konten siehst du nur die deiner Azubis (und die ohne Ausbilder). Konten von Ausbildern verwaltet der Super-Admin.</li>
               <li>
                 <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf alle Berichte drucken oder als PDF speichern.
               </li>
@@ -395,6 +427,10 @@ const ADMIN: Kapitel[] = [
       <ul className="punkte">
         <li>
           Unter <Link zu="/verwaltung/konten">Konten</Link> legst du Konten an, sperrst oder löschst sie – auch die der Ausbilder.
+        </li>
+        <li>
+          Ausbilder sehen nur ihre eigenen Azubis, Azubis ohne Ausbilder und Vertretungen. Mit dem Haken <strong>„sieht alle Azubis“</strong> an einem Ausbilder-Konto gibst du die Gesamtsicht über alle Azubis des Betriebs – gedacht für die Ausbildungsleitung. Legst du selbst ein
+          Azubi-Konto an, hat der Azubi zunächst keinen Ausbilder; alle Ausbilder sehen ihn, bis einer ihn übernimmt.
         </li>
         <li>Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto an. Beim Anlegen genügt der Microsoft-Anmeldename.</li>
         <li>Nur der Super-Admin meldet sich lokal mit Passwort an (mindestens 14 Zeichen) – unter der Adresse des Portals mit <code>/super</code> am Ende.</li>

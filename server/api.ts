@@ -8,15 +8,7 @@ import { heute } from './datum';
 import { fehlerText, pkceChallenge, zufall } from './entra';
 import { hashePasswort, pruefePasswort, pruefeRegeln, zufallsPasswort } from './passwort';
 import { leseProtokoll, protokolliere } from './protokoll';
-import {
-  darfAzubiSehen,
-  darfAzubiVerwalten,
-  darfKontoLoeschen,
-  darfKontoSehen,
-  darfKontoVerwalten,
-  darfRolleVergeben,
-  sichtbareAzubis,
-} from './rechte';
+import { betreuung, darfAzubiSehen, darfAzubiVerwalten, darfKontoLoeschen, darfKontoSehen, darfKontoVerwalten, darfRolleVergeben, sichtbareAzubis, zustaendiger } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BERICHT_ROUTEN } from './berichte';
@@ -95,11 +87,19 @@ function pruefeRolle(x: unknown): Rolle {
   return x as Rolle;
 }
 
+/** Trägt den zuständigen Ausbilder ein; legt das Profil an, wenn es noch keins gibt. */
+function setzeZustaendig(db: Kontext['db'], jetzt: Date, azubiId: number, ausbilderId: number): void {
+  db.prepare(
+    `INSERT INTO azubi_profil (benutzer_id, ausbilder_id, geaendert, geaendert_von) VALUES (?, ?, ?, ?)
+     ON CONFLICT(benutzer_id) DO UPDATE SET ausbilder_id = excluded.ausbilder_id, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von`,
+  ).run(azubiId, ausbilderId, jetzt.toISOString(), ausbilderId);
+}
+
 /** Konto, das der Aufrufer verwalten darf – sonst 404 (nicht sichtbar) bzw. 403 (sichtbar, aber nicht verwaltbar). */
 function verwaltbaresKonto(c: Ctx): BenutzerZeile {
   const ziel = holeBenutzer(c.k.db, idAus(c.p.id));
-  if (!ziel || !darfKontoSehen(c.b, ziel)) throw new Fehler(404, 'Konto nicht gefunden');
-  if (!darfKontoVerwalten(c.b, ziel)) throw new Fehler(403, 'Dieses Konto darf nur der Super-Admin ändern');
+  if (!ziel || !darfKontoSehen(c.k.db, c.b, ziel)) throw new Fehler(404, 'Konto nicht gefunden');
+  if (!darfKontoVerwalten(c.k.db, c.b, ziel)) throw new Fehler(403, 'Dieses Konto darf nur der Super-Admin ändern');
   return ziel;
 }
 
@@ -337,8 +337,8 @@ export const ROUTEN: Route[] = [
         status: 200,
         body: {
           konten: alle
-            .filter((z) => darfKontoSehen(c.b, z))
-            .map((z) => ({ ...alsKonto(z), verwaltbar: darfKontoVerwalten(c.b, z) && z.id !== c.b.id, loeschbar: darfKontoLoeschen(c.b, z) && z.id !== c.b.id })),
+            .filter((z) => darfKontoSehen(c.k.db, c.b, z))
+            .map((z) => ({ ...alsKonto(z), verwaltbar: darfKontoVerwalten(c.k.db, c.b, z) && z.id !== c.b.id, loeschbar: darfKontoLoeschen(c.k.db, c.b, z) && z.id !== c.b.id })),
           rollen: ROLLEN.filter((r) => darfRolleVergeben(c.b, r)),
         },
       };
@@ -368,6 +368,8 @@ export const ROUTEN: Route[] = [
         )
         .run(lokal ? 'lokal' : 'entra', anmeldename, anzeigename, rolle, hash, lokal ? 1 : 0, jetzt.toISOString(), c.b.id);
       const neu = holeBenutzer(c.k.db, Number(r.lastInsertRowid))!;
+      // Wer als Ausbilder einen Azubi anlegt, ist gleich für ihn zuständig – sonst sähen ihn zunächst alle Ausbilder
+      if (rolle === 'azubi' && c.b.rolle === 'ausbilder') setzeZustaendig(c.k.db, jetzt, neu.id, c.b.id);
       protokolliere(c.k.db, jetzt, 'konto', 'konto_angelegt', c.b, neu, `Rolle ${rolle}`);
       return { status: 201, body: { konto: alsKonto(neu), ...(startpasswort ? { startpasswort } : {}) } };
     },
@@ -407,11 +409,23 @@ export const ROUTEN: Route[] = [
             if (selbst) throw new Fehler(400, 'Die eigene Rolle lässt sich nicht ändern');
             if (rolle === 'admin' || ziel.rolle === 'admin') throw new Fehler(400, 'Super-Admin-Konten sind lokal; ein Wechsel von oder zu dieser Rolle ist nicht möglich');
             if (!darfRolleVergeben(c.b, rolle)) throw new Fehler(403, 'Diese Rolle vergibt nur der Super-Admin');
-            db.prepare('UPDATE benutzer SET rolle = ? WHERE id = ?').run(rolle, ziel.id);
-            // Zuweisungen passen nur zur alten Rolle
+            db.prepare('UPDATE benutzer SET rolle = ?, alle_azubis = 0 WHERE id = ?').run(rolle, ziel.id);
+            // Zuweisungen und Zuständigkeit passen nur zur alten Rolle
             db.prepare('DELETE FROM zuweisung WHERE azubi_id = ? OR beauftragter_id = ?').run(ziel.id, ziel.id);
+            db.prepare('UPDATE azubi_profil SET ausbilder_id = NULL WHERE ausbilder_id = ?').run(ziel.id);
             beendeAlleSitzungen(db, ziel.id);
             protokolliere(db, jetzt, 'konto', 'rolle_geaendert', c.b, ziel, `${ziel.rolle} → ${rolle}`);
+          }
+        }
+        if (body.alleAzubis !== undefined) {
+          // Gesamtsicht: nur der Super-Admin, nur für Ausbilder
+          if (c.b.rolle !== 'admin') throw new Fehler(403, 'Die Gesamtsicht vergibt nur der Super-Admin');
+          if (typeof body.alleAzubis !== 'boolean') throw new Fehler(400, 'Ungültige Angabe zur Gesamtsicht');
+          const jetztRolle = holeBenutzer(db, ziel.id)!.rolle;
+          if (body.alleAzubis && jetztRolle !== 'ausbilder') throw new Fehler(400, 'Die Gesamtsicht gibt es nur für Konten mit der Rolle Ausbilder');
+          if (jetztRolle === 'ausbilder' && body.alleAzubis !== (ziel.alle_azubis === 1)) {
+            db.prepare('UPDATE benutzer SET alle_azubis = ? WHERE id = ?').run(body.alleAzubis ? 1 : 0, ziel.id);
+            protokolliere(db, jetzt, 'konto', 'konto_geaendert', c.b, ziel, body.alleAzubis ? 'Gesamtsicht über alle Azubis eingeschaltet' : 'Gesamtsicht über alle Azubis ausgeschaltet');
           }
         }
         if (body.status !== undefined) {
@@ -465,7 +479,7 @@ export const ROUTEN: Route[] = [
     wer: ['admin', 'ausbilder'],
     h: (c) => {
       const ziel = verwaltbaresKonto(c);
-      if (!darfKontoLoeschen(c.b, ziel)) throw new Fehler(403, 'Dieses Konto darf nur der Super-Admin löschen');
+      if (!darfKontoLoeschen(c.k.db, c.b, ziel)) throw new Fehler(403, 'Dieses Konto darf nur der Super-Admin löschen');
       if (ziel.id === c.b.id) throw new Fehler(400, 'Das eigene Konto lässt sich nicht löschen');
       // Sitzungen und Zuweisungen fallen über ON DELETE CASCADE weg; das Protokoll behält die Namen
       c.k.db.prepare('DELETE FROM benutzer WHERE id = ?').run(ziel.id);
@@ -481,8 +495,30 @@ export const ROUTEN: Route[] = [
     h: (c) => {
       const ids = sichtbareAzubis(c.k.db, c.b, heute(c.k.jetzt()));
       const tag = heute(c.k.jetzt());
-      const azubis = ids.map((id) => azubiUebersicht(c.k.db, holeBenutzer(c.k.db, id)!, tag));
+      const azubis = ids.map((id) => ({ ...azubiUebersicht(c.k.db, holeBenutzer(c.k.db, id)!, tag), betreuung: betreuung(c.k.db, c.b, id) }));
       return { status: 200, body: { azubis } };
+    },
+  },
+
+  {
+    // Einen Azubi ohne zuständigen Ausbilder übernehmen (mit Gesamtsicht auch von einem anderen Ausbilder)
+    m: 'POST',
+    p: '/api/azubis/:id/uebernehmen',
+    wer: ['ausbilder'],
+    h: (c) => {
+      const { db } = c.k;
+      const id = idAus(c.p.id);
+      if (!darfAzubiVerwalten(db, c.b, id)) throw new Fehler(404, 'Nicht gefunden');
+      const azubi = holeBenutzer(db, id)!;
+      if (zustaendiger(db, id) !== c.b.id) {
+        transaktion(db, () => {
+          setzeZustaendig(db, c.k.jetzt(), id, c.b.id);
+          // eine eigene Vertretungs-Zuweisung ist damit überflüssig
+          db.prepare('DELETE FROM zuweisung WHERE azubi_id = ? AND beauftragter_id = ?').run(id, c.b.id);
+          protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi, `zuständig jetzt ${c.b.anzeigename}`);
+        });
+      }
+      return { status: 200, body: { ok: true } };
     },
   },
 
@@ -496,12 +532,26 @@ export const ROUTEN: Route[] = [
       if (!darfAzubiSehen(c.k.db, c.b, id, heute(c.k.jetzt()))) throw new Fehler(404, 'Nicht gefunden');
       const zeilen = c.k.db
         .prepare(
-          `SELECT z.id, z.azubi_id, z.beauftragter_id, z.von, z.bis, b.anzeigename AS beauftragter
+          `SELECT z.id, z.azubi_id, z.beauftragter_id, z.von, z.bis, b.anzeigename AS beauftragter, b.rolle
              FROM zuweisung z JOIN benutzer b ON b.id = z.beauftragter_id WHERE z.azubi_id = ? ORDER BY z.von IS NOT NULL, z.von`,
         )
         .all(id) as unknown as (Zuweisung & { beauftragter: string })[];
-      // Beauftragte sehen nur ihre eigene Zuweisung
-      return { status: 200, body: { zuweisungen: c.b.rolle === 'beauftragter' ? zeilen.filter((z) => z.beauftragter_id === c.b.id) : zeilen } };
+      // Beauftragte und vertretende Ausbilder sehen nur ihre eigene Zuweisung
+      const alles = c.b.rolle === 'azubi' || darfAzubiVerwalten(c.k.db, c.b, id);
+      return {
+        status: 200,
+        body: {
+          zuweisungen: alles ? zeilen : zeilen.filter((z) => z.beauftragter_id === c.b.id),
+          // wer sich zuweisen lässt: Ausbildungsbeauftragte, dazu andere Ausbilder als Vertretung
+          ...(c.b.rolle === 'ausbilder' && alles
+            ? {
+                personen: (c.k.db.prepare("SELECT id, anzeigename, rolle FROM benutzer WHERE rolle IN ('ausbilder', 'beauftragter') AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown as { id: number; anzeigename: string; rolle: Rolle }[]).filter(
+                  (p) => p.id !== zustaendiger(c.k.db, id),
+                ),
+              }
+            : {}),
+        },
+      };
     },
   },
 
@@ -518,7 +568,9 @@ export const ROUTEN: Route[] = [
       const neu = liste.map((x) => {
         if (!istObjekt(x)) throw new Fehler(400, 'Ungültige Zuweisung');
         const b = holeBenutzer(db, Number(x.beauftragterId));
-        if (!b || b.rolle !== 'beauftragter') throw new Fehler(400, 'Zuweisen lassen sich nur Konten mit der Rolle Ausbildungsbeauftragte');
+        if (!b || (b.rolle !== 'beauftragter' && b.rolle !== 'ausbilder')) throw new Fehler(400, 'Zuweisen lassen sich nur Ausbildungsbeauftragte und – als Vertretung – Ausbilder');
+        if (b.id === c.b.id) throw new Fehler(400, 'Du hast bei diesem Azubi schon alle Rechte und brauchst keine Zuweisung');
+        if (b.id === zustaendiger(db, id)) throw new Fehler(400, `${b.anzeigename} ist für diesen Azubi schon zuständig und braucht keine Zuweisung`);
         const von = datumOderNull(x.von, 'Beginn');
         const bis = datumOderNull(x.bis, 'Ende');
         if (von && bis && bis < von) throw new Fehler(400, 'Das Ende einer Zuweisung liegt vor dem Beginn');

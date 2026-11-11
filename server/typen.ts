@@ -19,6 +19,8 @@ export interface BenutzerZeile {
   erstellt: string;
   erstellt_von: number | null;
   letzte_anmeldung: string | null;
+  /** nur Ausbilder: Gesamtsicht über alle Azubis (setzt der Super-Admin) */
+  alle_azubis: number;
 }
 
 /** Was die API über ein Konto herausgibt (ohne Hash, ohne Objekt-ID). */
@@ -35,6 +37,8 @@ export interface Konto {
   theme: Theme;
   erstellt: string;
   letzteAnmeldung: string | null;
+  /** Ausbilder mit Gesamtsicht: sieht und bearbeitet alle Azubis, nicht nur die eigenen */
+  alleAzubis: boolean;
 }
 
 export function alsKonto(z: BenutzerZeile): Konto {
@@ -50,6 +54,7 @@ export function alsKonto(z: BenutzerZeile): Konto {
     theme: z.theme,
     erstellt: z.erstellt,
     letzteAnmeldung: z.letzte_anmeldung,
+    alleAzubis: z.rolle === 'ausbilder' && z.alle_azubis === 1,
   };
 }
 

@@ -7,7 +7,7 @@ import { ferienZwischen, ladeFerien } from './ferien';
 import { ausbildungsdauer, ausbildungsstand, gueltigesDatum, hoechsteVerkuerzung, montagVon, plusTage } from './kalender';
 import type { Ausbildungsstand, Dauer } from './kalender';
 import { protokolliere } from './protokoll';
-import { darfAzubiSehen, darfAzubiVerwalten } from './rechte';
+import { betreuung, darfAzubiSehen, darfAzubiVerwalten } from './rechte';
 import type { BenutzerZeile } from './typen';
 
 /**
@@ -248,7 +248,7 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         // nur Ausbilder brauchen die Liste, um den zuständigen Ausbilder auszuwählen
         ausbilder:
           c.b.rolle === 'ausbilder'
-            ? (c.k.db.prepare("SELECT id, anzeigename FROM benutzer WHERE rolle = 'ausbilder' ORDER BY anzeigename COLLATE NOCASE").all() as unknown as { id: number; anzeigename: string }[])
+            ? (c.k.db.prepare("SELECT id, anzeigename FROM benutzer WHERE rolle = 'ausbilder' AND status = 'aktiv' ORDER BY anzeigename COLLATE NOCASE").all() as unknown as { id: number; anzeigename: string }[])
             : [],
       },
     }),
@@ -379,6 +379,7 @@ export const STAMMDATEN_ROUTEN: Route[] = [
           stand,
           hoechsteVerkuerzung: hoechsteVerkuerzung(beruf?.regeldauer_monate ?? STANDARD_REGELDAUER),
           bearbeitbar: darfAzubiVerwalten(c.k.db, c.b, azubi.id),
+          betreuung: betreuung(c.k.db, c.b, azubi.id),
         },
       };
     },

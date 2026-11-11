@@ -13,6 +13,8 @@ export interface Konto {
   theme: Theme;
   erstellt: string;
   letzteAnmeldung: string | null;
+  /** Ausbilder mit Gesamtsicht: sieht und bearbeitet alle Azubis */
+  alleAzubis: boolean;
   verwaltbar?: boolean;
   loeschbar?: boolean;
 }
@@ -157,6 +159,12 @@ export interface Stand {
   tage: number | null;
 }
 
+/**
+ * Wie ein Ausbilder zu einem Azubi steht: eigen = zuständig, ohne = niemand zuständig (alle Ausbilder sehen ihn),
+ * gesamt = sichtbar über die Gesamtsicht, vertretung = für einen Zeitraum zugewiesen. Für andere Rollen null.
+ */
+export type Betreuung = 'eigen' | 'ohne' | 'gesamt' | 'vertretung' | null;
+
 export interface ProfilAntwort {
   azubi: { id: number; anzeigename: string; anmeldename: string; status: string };
   profil: Profil;
@@ -166,6 +174,7 @@ export interface ProfilAntwort {
   stand: Stand;
   hoechsteVerkuerzung: number;
   bearbeitbar: boolean;
+  betreuung: Betreuung;
 }
 
 export interface AzubiKurz {
@@ -181,12 +190,14 @@ export interface AzubiKurz {
   tage: number | null;
   /** eingereichte (wartende), zurückgegebene und für vergangene Wochen fehlende Berichte */
   berichte: { wartend: number; zurueck: number; fehlend: number };
+  betreuung?: Betreuung;
 }
 
 export interface ZuweisungZeile {
   id?: number;
   beauftragter_id: number;
   beauftragter?: string;
+  rolle?: Rolle;
   von: string | null;
   bis: string | null;
 }
