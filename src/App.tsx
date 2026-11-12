@@ -18,6 +18,7 @@ import { Lernen } from './pages/Lernen';
 import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
 import { LernEinreichungen } from './pages/LernEinreichungen';
 import { Leseansicht } from './lernen/basis';
+import { Planer } from './pages/Planer';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
 import { LernKarten, LernQuiz, LernUeben } from './pages/LernUeben';
@@ -70,6 +71,8 @@ export function App() {
   const [konto, setKonto] = useState<Konto | null | undefined>(undefined); // undefined = lädt
   // Lernmodul: nur für Azubis, deren Ausbildungsberuf ein Inhaltspaket hat
   const [lernen, setLernen] = useState(false);
+  // Titel des Planers für das Prüfungsvorhaben (z. B. „Abschlussprojekt“) – null, solange er für den Azubi nicht freigeschaltet ist
+  const [planer, setPlaner] = useState<string | null>(null);
   const [version, setVersion] = useState('');
   const [dunkel, setDunkel] = useState(false);
   const [menue, setMenue] = useState<Menue>(null);
@@ -116,10 +119,11 @@ export function App() {
 
   const lade = useCallback(async () => {
     try {
-      const r = await api<{ konto: Konto; version: string; lernen?: boolean; profilbild?: boolean }>('GET', '/api/ich');
+      const r = await api<{ konto: Konto; version: string; lernen?: boolean; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
       setKonto(r.konto);
       setProfilbild(r.profilbild === true);
       setLernen(r.lernen === true);
+      setPlaner(r.planer ?? null);
       setVersion(r.version);
     } catch {
       setKonto(null);
@@ -313,6 +317,7 @@ export function App() {
   else if (pfad === '/lerninhalte' && betreut) seite = <LerninhalteListe ausbilder={konto.rolle === 'ausbilder'} />;
   else if (lesePfad && betreut)
     seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
+  else if (pfad === '/planer' && planer) seite = <Planer />;
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (pfad === '/lernen/ueben' && lernen) seite = <LernUeben />;
@@ -346,6 +351,7 @@ export function App() {
             { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
             { zu: '/berichtsheft', text: 'Berichtsheft', icon: 'heft', aktivAb: '/berichtsheft' },
             ...(lernen ? [{ zu: '/lernen', text: 'Lernen', icon: 'lernen', aktivAb: '/lernen' } as Punkt] : []),
+            ...(planer ? [{ zu: '/planer', text: planer, icon: 'haken', mehr: true } as Punkt] : []),
             { zu: '/urlaub', text: 'Urlaub', icon: 'urlaub' },
           ]
         : [

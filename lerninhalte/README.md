@@ -11,6 +11,7 @@ lerninhalte/
     themen/<id>.md         ein Cheatsheet je Themenfeld
     bilder/*.svg           Grafiken
     umbenennungen.json     freiwillig: alte → neue Kennungen
+    planer.md              freiwillig: Planer für die Prüfung (z. B. Abschlussprojekt)
 ```
 
 Das Format ist das des [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass) (dort der Ordner `content/`). Dessen Inhalte für Fachinformatiker Systemintegration lassen sich so einbinden:
@@ -47,3 +48,11 @@ Mehr dazu im README des Portals, Abschnitt „Lernmodul“.
 ## Einreichen über das Portal
 
 Ausbilder können ein Inhaltspaket auch als ZIP-Datei im Portal einreichen (Seite „Lerninhalte“). Der Super-Admin prüft es und lädt es hoch. Solche Pakete liegen **nicht hier**, sondern im Datenordner des Portals unter `data/lerninhalte/<kennung>/` – dieser Ordner hier ist im Container nur lesend eingebunden. Gibt es dieselbe Kennung an beiden Orten, gilt das über das Portal hochgeladene Paket. Um wieder das Paket aus diesem Ordner zu verwenden, den Ordner `data/lerninhalte/<kennung>/` löschen.
+
+## Planer für die Prüfung
+
+Mit der Datei `planer.md` bekommt ein Beruf einen Planer für das Prüfungsvorhaben (Abschlussprojekt, Gesellenstück, Fachaufgabe …): Termine, Checklisten, Zeitplanung, Fragen zum Üben, Links. Azubis sehen ihn, sobald ein Ausbilder ihn in ihrem Profil freischaltet. Der Aufbau der Datei steht im Handbuch des Portals (Rolle Ausbilder, Kapitel „Planer für einen Beruf erstellen: Aufbau der Datei“).
+
+Die Datei gehört nicht zum Format des FISI-Lernkompass; der Lernkompass liest sie nicht.
+
+**Kennungen nicht ändern:** Was Azubis eintragen, hängt an den Kennungen (`{#…}`) der Termine, Punkte und Fragen. Texte dürfen sich ändern, Kennungen nicht – sonst gehören umbenannte Kennungen in den Abschnitt `## Umbenennungen` der Datei.

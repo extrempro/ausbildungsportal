@@ -1,5 +1,19 @@
 # Änderungen
 
+## [0.48.0] – 2026-11-12
+
+### Neu
+
+- **Planer für die Prüfung:** Azubis können ihr Prüfungsvorhaben im Portal planen – zum Beispiel das Abschlussprojekt oder das Gesellenstück. Der Planer zeigt den nächsten Termin, Checklisten zum Abhaken, eine Zeitplanung mit geplanten und tatsächlichen Stunden, Fragen zum Üben für das Prüfungsgespräch mit einer Uhr für den Vortrag und ein Feld für Notizen.
+- **Für jeden Beruf einstellbar:** Was der Planer enthält, steht im Inhaltspaket des Berufs in der Datei `planer.md` – Name, Termine, Checklisten, Höchststunden, Fragen und Links. Ausbilder reichen sie mit den Lerninhalten ein. Hat ein Beruf keine solche Datei, gibt es für ihn keinen Planer. Das Handbuch erklärt den Aufbau mit Beispiel.
+- **Freischalten je Azubi:** Ausbilder schalten den Planer im Profil des Azubis frei. Der Azubi bekommt eine Nachricht und findet den Planer im Menü. Gibt es für den Beruf keinen Planer, ist der Haken gesperrt und sagt, was fehlt.
+- **Privat für den Azubi:** Was der Azubi im Planer einträgt, sieht nur er selbst – nicht Ausbilder, Ausbildungsbeauftragte oder der Betreiber des Portals. Ausnahme sind die Termine: Sie stehen im Ausbildungsplan, im Jahreskalender und im abonnierten Kalender. Ändert der Azubi Termine, erfahren es seine Ausbilder und Ausbildungsbeauftragten über die Glocke (und per Teams oder E-Mail, wenn eingeschaltet) – ohne Datum und Inhalt.
+- **Aktualisierungen ohne Verlust:** Wird ein Planer überarbeitet, bleiben Haken, Termine und Stichworte der Azubis erhalten, solange die Kennungen der Punkte gleich bleiben. Für umbenannte Kennungen gibt es in der Datei den Abschnitt „Umbenennungen“.
+
+### Geändert
+
+- **Handbuch:** Bei „Lerninhalte für einen Beruf erstellen“ steht jetzt, wie eine Aktualisierung abläuft und warum es je Paket nur einen Weg geben soll (Ordner auf dem Server oder Einreichung im Portal).
+
 ## [0.47.0] – 2026-11-12
 
 ### Geändert

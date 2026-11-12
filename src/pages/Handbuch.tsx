@@ -18,6 +18,7 @@ const LERN_ORDNER = `industriekaufleute/
   paket.json            Titel, Quelle, Lizenz
   meta.json             Stand der Inhalte
   themenfelder.json     Liste und Reihenfolge der Themenfelder
+  planer.md             Planer für die Prüfung, freiwillig
   themen/
     buchfuehrung.md     je Themenfeld eine Datei
     beschaffung.md
@@ -59,6 +60,60 @@ Ein Kunde bezahlt eine Rechnung über 1.190 € per Überweisung. Bilde den Buch
 
 ## Links
 - [Beispiel-Seite](https://www.example.org/) – Erklärungen zum Nachlesen`;
+
+const PLANER_BEISPIEL = `---
+titel: Gesellenstück
+untertitel: Gesellenprüfung Teil 2
+name-feld: Titel des Gesellenstücks
+name-beispiel: z. B. Sideboard in Eiche
+auftraggeber-feld: Auftraggeber
+---
+
+Dein Gesellenstück von der Idee bis zur Abgabe.
+
+## Termine
+
+Die Fristen nennt dir der Prüfungsausschuss.
+
+- Entwurf einreichen bis {#entwurf} – Erst nach der Genehmigung anfangen.
+- Abgabe am {#abgabe}
+
+## Checkliste: Entwurf {#entwurf}
+
+### Unterlagen
+- Zeichnung mit Maßen {#zeichnung} – Maßstab und Material angeben.
+- Stückliste {#stueckliste}
+
+### Abgabe
+- Vom Betrieb unterschrieben {#unterschrift}
+
+## Zeitplanung
+
+hoechststunden: 80
+
+Die Zeit für die Mappe zählt nicht mit.
+
+- Planung: 10
+- Fertigung: 60
+- Oberfläche: 10
+
+## Fragen: Fachgespräch {#gespraech}
+
+timer: 10
+
+Notier dir Stichworte und übe laut.
+
+- Warum hast du dieses Material gewählt? {#material}
+- Was würdest du heute anders machen? {#anders}
+
+## Links
+
+- [Merkblatt der Innung](https://www.example.org/merkblatt.pdf) – Fristen und Form`;
+
+const PLANER_UMBENENNEN = `## Umbenennungen
+
+- entwurf.stueckliste → entwurf.materialliste
+- termine.abgabe → termine.uebergabe`;
 
 const IMPORT_BEISPIEL = `{
   "format": "ausbildungsportal-planvorlagen",
@@ -222,7 +277,7 @@ const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
       <dl className="begriffe">
         <Begriff wort="Berichtsheft">{rolle === 'azubi' ? 'Dein Bericht wurde abgezeichnet, zurückgegeben oder wieder geöffnet.' : 'Ein Azubi hat einen Bericht eingereicht – oder an einem Bericht hat sich etwas getan.'}</Begriff>
         <Begriff wort="Urlaub">{rolle === 'azubi' ? 'Dein Urlaubsantrag wurde bestätigt, genehmigt, abgelehnt oder storniert.' : 'Ein Azubi hat Urlaub beantragt – oder an einem Antrag hat sich etwas getan.'}</Begriff>
-        <Begriff wort="Ausbildungsplan">{rolle === 'azubi' ? 'In deinem Plan gibt es neue Einträge.' : 'Im Plan eines deiner Azubis gibt es neue Einträge von jemand anderem.'}</Begriff>
+        <Begriff wort="Ausbildungsplan">{rolle === 'azubi' ? 'In deinem Plan gibt es neue Einträge – oder für dich wurde der Planer für deine Prüfung freigeschaltet.' : 'Im Plan eines deiner Azubis gibt es neue Einträge von jemand anderem – oder ein Azubi hat Termine für seine Prüfung eingetragen oder geändert.'}</Begriff>
       </dl>
       <ul className="punkte">
         <li>Für jeden der drei Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
@@ -255,12 +310,14 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
             <Begriff wort="Bericht abgezeichnet">Der Bericht ist unterschrieben und damit fertig.</Begriff>
             <Begriff wort="Bericht zurückgegeben">Du sollst etwas ändern. Ein Tipp auf die Zeile öffnet den Bericht, dort steht der Grund.</Begriff>
             <Begriff wort="Urlaub bestätigt, genehmigt, abgelehnt, storniert">Es hat sich etwas an deinem Urlaubsantrag getan. Die Zeile führt zu „Urlaub“.</Begriff>
+            <Begriff wort="Neu für dich: Planer für deine Prüfung">Dein Ausbilder hat für dich den Planer freigeschaltet, zum Beispiel für dein Abschlussprojekt. Die Zeile führt dorthin. Mehr im Kapitel „Planer für deine Prüfung“.</Begriff>
           </>
         ) : (
           <>
             <Begriff wort="Bericht wartet auf Abzeichnung">Ein Azubi hat einen Bericht eingereicht. Die Zeile führt zu „Abzeichnen“.</Begriff>
             <Begriff wort="Neuer Eintrag im Ausbildungsplan">Ein Azubi hat eine eigene Aufgabe oder Notiz eingetragen – oder eine andere betreuende Person hat etwas geplant.</Begriff>
             <Begriff wort="Urlaub beantragt, bestätigt, zurückgezogen">Ein Azubi hat Urlaub beantragt oder an einem Antrag hat sich etwas getan. Die Zeile führt zu „Urlaub“.</Begriff>
+            <Begriff wort="Termine für die Prüfung eingetragen oder geändert">Ein Azubi hat in seinem Planer (zum Beispiel für das Abschlussprojekt) Termine eingetragen oder geändert. Die Zeile führt zu seinem Ausbildungsplan – dort stehen die Termine. Was er sonst im Planer einträgt, siehst du nicht.</Begriff>
           </>
         )}
       </dl>
@@ -668,6 +725,49 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'planer',
+    titel: 'Planer für deine Prüfung (zum Beispiel Abschlussprojekt)',
+    inhalt: (
+      <>
+        <p>
+          Viele Berufe haben in der Prüfung etwas, das du über Wochen selbst planst: ein Abschlussprojekt, ein Gesellenstück, eine Fachaufgabe. Der Planer hilft dir, dabei nichts zu vergessen. Er steht im Menü unter dem Namen deines Vorhabens, zum Beispiel „Abschlussprojekt“ (am Handy unter „Mehr“) – aber erst, wenn dein Ausbilder ihn für dich freigeschaltet hat.
+        </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Trag oben ein, wie dein Vorhaben heißt, und wähle „Angaben speichern“.</li>
+          <li>Trag unter „Termine“ die Fristen ein, die dir die Kammer oder der Prüfungsausschuss nennt, und wähle „Termine speichern“.</li>
+          <li>Geh die Checklisten durch und setz einen Haken, wenn ein Punkt erledigt ist. Ein Haken wird sofort gespeichert.</li>
+          <li>Plane unter „Zeitplanung“ deine Stunden je Phase. Später trägst du daneben ein, wie lange du wirklich gebraucht hast.</li>
+          <li>Übe mit den Fragen und der Uhr für deinen Vortrag und das Gespräch.</li>
+        </ol>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Als Nächstes">Der nächste Termin, den du eingetragen hast, und wie viele Tage es noch sind.</Begriff>
+          <Begriff wort="Termine">Sie stehen auch in deinem Ausbildungsplan, im Jahreskalender und im abonnierten Kalender. Liegt ein Urlaubsantrag auf einem Termin, weist dich das Portal darauf hin.</Begriff>
+          <Begriff wort="Checkliste">Die Punkte kommen von deinen Ausbildern. Unter einem Punkt steht oft ein Tipp. „1 von 16 erledigt“ zeigt, wie weit du bist.</Begriff>
+          <Begriff wort="Zeitplanung">Am Anfang steht dort ein Vorschlag. Ändere Namen und Stunden, füge Phasen hinzu oder entferne sie, und wähle „Zeitplanung speichern“. Gibt es eine Höchstzahl an Stunden, warnt dich der Planer, wenn du darüber liegst.</Begriff>
+          <Begriff wort="Fragen">Typische Fragen aus dem Prüfungsgespräch. Klapp eine Frage auf und notier dir Stichworte. „Zufällige Frage öffnen“ sucht eine für dich aus.</Begriff>
+          <Begriff wort="Uhr">Zählt die Zeit für deinen Vortrag herunter. In den letzten zwei Minuten wird sie gelb, danach rot und zeigt, wie lange du überzogen hast.</Begriff>
+          <Begriff wort="Notizen">Platz für alles andere: Ideen, offene Fragen, Links.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Was du einträgst, siehst nur du.</strong> Dein Ausbilder, die Ausbildungsbeauftragten und der Betreiber des Portals sehen weder Titel noch Haken, Stunden, Stichworte oder Notizen.
+          </li>
+          <li>
+            <strong>Die Ausnahme sind die Termine.</strong> Sie stehen in deinem Ausbildungsplan, und den sehen auch deine Ausbilder und Ausbildungsbeauftragten. Änderst du Termine, bekommen sie eine Nachricht – darin steht nur, dass sich Termine geändert haben.
+          </li>
+          <li>Texte und Termine speicherst du mit dem Knopf im jeweiligen Abschnitt. Verlässt du die Seite vorher, fragt das Portal nach.</li>
+          <li>Der Planer ersetzt nicht das Merkblatt deiner Kammer. Dort stehen die Regeln, die für deine Prüfung gelten. Den Link findest du oben rechts im Planer, wenn deine Ausbilder einen hinterlegt haben.</li>
+          <li>Deine Ausbilder können den Planer ergänzen. Dann kommt zum Beispiel ein Punkt in einer Checkliste dazu, und „16 von 16“ wird zu „16 von 17“. Deine Haken und Texte bleiben.</li>
+          <li>Nimmt dein Ausbilder die Freischaltung zurück, verschwindet der Planer aus dem Menü. Deine Eintragungen bleiben gespeichert und sind wieder da, wenn er ihn erneut freischaltet.</li>
+          <li>Dein Beruf hat keinen Planer im Menü? Dann gibt es für ihn noch keinen, oder er ist für dich nicht freigeschaltet. Frag deinen Ausbilder.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'stand',
     titel: 'Was bedeutet der Stand eines Berichts?',
     inhalt: (
@@ -936,6 +1036,45 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     ),
   },
   {
+    id: 'planer-freischalten',
+    titel: 'Planer für die Prüfung freischalten',
+    inhalt: (
+      <>
+        <p>
+          Mit dem Planer plant ein Azubi sein Prüfungsvorhaben selbst – zum Beispiel das Abschlussprojekt oder das Gesellenstück: Termine, Checklisten, Zeitplanung, Fragen für das Prüfungsgespräch. Den Planer gibt es je Beruf; was er enthält, steht im Inhaltspaket des Berufs.{' '}
+          {rolle === 'ausbilder' ? 'Du schaltest ihn je Azubi frei.' : 'Freischalten kann ihn nur ein Ausbilder.'}
+        </p>
+        {rolle === 'ausbilder' && (
+          <>
+            <h3>So geht's</h3>
+            <ol className="schritte">
+              <li>
+                Öffne über <Link zu="/azubis">Azubis</Link> das Profil des Azubis.
+              </li>
+              <li>Setz unter „Profil bearbeiten“ bei „Planer für die Prüfung“ den Haken „Planer … freischalten“.</li>
+              <li>Wähle „Profil speichern“. Der Azubi bekommt eine Nachricht in der Glocke und findet den Planer im Menü.</li>
+            </ol>
+          </>
+        )}
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Gesperrter Haken">Für den Beruf des Azubis gibt es noch keinen Planer. Er gehört als Datei <code>planer.md</code> ins Inhaltspaket des Berufs{rolle === 'ausbilder' ? ' – wie, steht im Kapitel „Planer für einen Beruf erstellen“' : ''}. Außerdem muss am Beruf in den Stammdaten ein Lernmodul eingeschaltet sein.</Begriff>
+          <Begriff wort="Prüfungstermin im Plan">Termine, die der Azubi im Planer einträgt, stehen in seinem Ausbildungsplan, im Jahreskalender und im abonnierten Kalender – zum Beispiel „Abschlussprojekt: Projektantrag abgeben bis“. Ändern kann sie nur der Azubi.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Der Inhalt ist privat für den Azubi.</strong> Du siehst nicht, was er einträgt – keinen Titel, keine Haken, keine Stunden, keine Notizen. Auch eine Zusammenfassung gibt es nicht. Sichtbar sind für dich nur die Termine im Plan.
+          </li>
+          <li>Trägt der Azubi Termine ein oder ändert sie, steht das in deiner Glocke (und kommt per Teams oder E-Mail, wenn du das für „Ausbildungsplan“ eingeschaltet hast). Die Nachricht nennt weder Datum noch Inhalt.</li>
+          {rolle === 'ausbilder' && <li>Nimmst du den Haken wieder heraus, verschwindet der Planer beim Azubi aus dem Menü und seine Termine aus dem Plan. Seine Eintragungen bleiben gespeichert und sind nach erneutem Freischalten wieder da.</li>}
+          {rolle === 'ausbilder' && <li>Wechselt der Azubi den Beruf, gilt der Planer des neuen Berufs. Die Eintragungen zum alten bleiben gespeichert, werden aber nicht mehr gezeigt.</li>}
+          <li>Wann der richtige Zeitpunkt ist, entscheidet ihr: Der Planer nützt, sobald der Azubi anfängt, über sein Vorhaben nachzudenken – nicht erst zur Anmeldung.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'jahreskalender',
     titel: 'Den Jahreskalender lesen',
     inhalt: (
@@ -1118,6 +1257,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Wochenstunden">Daran misst der Bericht, ob die eingetragenen Stunden zur Woche passen.</Begriff>
                 <Begriff wort="Form des Berichtshefts">Ob dieser Azubi die Woche im Ganzen beschreibt oder Tag für Tag. „Wie im Betrieb eingestellt“ übernimmt, was in den Stammdaten steht. Gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form.</Begriff>
                 <Begriff wort="Urlaubstage im Jahr">Der Urlaubsanspruch in Arbeitstagen je Kalenderjahr. Daraus rechnet das Urlaubskonto, was noch frei ist. Bleibt das Feld leer, lässt sich Urlaub trotzdem beantragen – nur ohne Rechnung.</Begriff>
+                <Begriff wort="Planer für die Prüfung">Schaltet für diesen Azubi den Planer seines Berufs frei, zum Beispiel für das Abschlussprojekt. Gesperrt, solange es für den Beruf keinen gibt. Mehr im Kapitel „Planer für die Prüfung freischalten“.</Begriff>
                 <Begriff wort="Prüfungstermine">Bis zu acht, mit freier Bezeichnung. Sie erscheinen im Plan des Azubis, in der Kachel „Wochen bis zur Prüfung“ und im abonnierten Kalender.</Begriff>
               </dl>
               <p className="leise klein">Der Azubi sieht diese Angaben unter „Konto“ bei „Meine Ausbildung“, kann sie aber nicht ändern.</p>
@@ -1266,6 +1406,13 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt.</li>
                 <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
                 <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>
+                <li>
+                  <strong>Aktualisieren:</strong> Ändere die Dateien und reich den ganzen Ordner noch einmal ein – unter derselben Kennung des Pakets (dem Ordnernamen). Die neue Fassung ersetzt die alte. Unter einer anderen Kennung entsteht ein zweites Lernmodul.
+                </li>
+                <li>
+                  <strong>Je Paket nur ein Weg:</strong> Bindet der Betreiber ein Paket als Ordner auf dem Server ein (zum Beispiel aus einem Git-Repository), reich unter derselben Kennung nichts im Portal ein. Sonst gilt ab dann die Einreichung, und Änderungen im Ordner kommen nicht mehr an.
+                </li>
+                <li>Zum Paket kann ein Planer für die Prüfung gehören (Datei <code>planer.md</code>). Wie sie aufgebaut ist, steht im Kapitel „Planer für einen Beruf erstellen: Aufbau der Datei“.</li>
               </ul>
               <h3>Einreichen und Status</h3>
               <dl className="begriffe">
@@ -1283,6 +1430,88 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <p>
                 Für den Betreiber: Er kann Pakete weiterhin auch als Ordner auf dem Server einbinden; wie, steht in der Datei <code>lerninhalte/README.md</code> des Portals.
               </p>
+            </>
+          ),
+        },
+        {
+          id: 'planer-datei',
+          titel: 'Planer für einen Beruf erstellen: Aufbau der Datei',
+          inhalt: (
+            <>
+              <p>
+                Der Planer für die Prüfung (Abschlussprojekt, Gesellenstück, Fachaufgabe …) ist für jeden Beruf anders. Was er enthält, legst du in einer Textdatei fest: <code>planer.md</code>. Sie liegt im Inhaltspaket des Berufs direkt neben <code>themenfelder.json</code> und wird mit dem Paket eingereicht – siehe Kapitel „Lerninhalte für einen Beruf erstellen“. Ohne diese Datei gibt es für den Beruf keinen Planer.
+              </p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>Schlag in der Ausbildungsordnung und im Merkblatt der Kammer oder Innung nach, was für das Prüfungsvorhaben gilt: Fristen, Höchststunden, Pflichtangaben, Form der Abgabe.</li>
+                <li>Leg im Ordner des Inhaltspakets die Datei <code>planer.md</code> an – nach dem Beispiel unten. Nimm nur die Abschnitte, die zu deinem Beruf passen.</li>
+                <li>
+                  Gib jedem Termin, jedem Punkt einer Checkliste und jeder Frage eine <strong>Kennung</strong> in geschweiften Klammern, zum Beispiel <code>{'{#zeichnung}'}</code>.
+                </li>
+                <li>
+                  Pack den ganzen Ordner als ZIP-Datei und reich ihn unter <Link zu="/lerninhalte">Lerninhalte</Link> ein. Das Portal prüft die Datei sofort und nennt Fehler mit Zeile.
+                </li>
+                <li>Ist das Paket hochgeladen, schaltest du den Planer im Profil der Azubis frei (Kapitel „Planer für die Prüfung freischalten“).</li>
+              </ol>
+              <h3>Beispiel</h3>
+              <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel einer Planer-Datei">{PLANER_BEISPIEL}</pre>
+              <h3>Die Abschnitte</h3>
+              <dl className="begriffe">
+                <Begriff wort="Kopf (zwischen den Zeilen ---)">
+                  <code>titel</code> ist Pflicht und steht beim Azubi im Menü (höchstens 40 Zeichen). <code>untertitel</code> steht klein über dem Namensfeld. <code>name-feld</code> und <code>name-beispiel</code> beschriften das erste Eingabefeld. Mit <code>auftraggeber-feld</code> gibt es ein zweites Feld; ohne die Zeile entfällt es.
+                </Begriff>
+                <Begriff wort="Text vor dem ersten Abschnitt">Ein Satz, wozu der Planer dient. Er steht beim Azubi unter der Überschrift.</Begriff>
+                <Begriff wort="## Termine">
+                  Je Zeile ein Termin: <code>- Beschriftung {'{#kennung}'} – Hinweis</code>. Der Hinweis ist freiwillig. Der Azubi trägt zu jedem Termin ein Datum ein. Höchstens 12 Termine.
+                </Begriff>
+                <Begriff wort="## Checkliste: Titel {#kennung}">
+                  Beliebig viele Checklisten. Mit <code>###</code> teilst du sie in Gruppen. Je Zeile ein Punkt: <code>- Text {'{#kennung}'} – Tipp</code>. Höchstens 60 Punkte je Checkliste.
+                </Begriff>
+                <Begriff wort="## Zeitplanung">
+                  <code>hoechststunden: 40</code> setzt eine Obergrenze; ohne die Zeile gibt es keine. Die Liste darunter ist ein Vorschlag für die Phasen: <code>- Name: Stunden</code>. Ein Absatz dazwischen steht als Hinweis über der Tabelle.
+                </Begriff>
+                <Begriff wort="## Fragen: Titel {#kennung}">
+                  Fragen zum Üben: <code>- Frage {'{#kennung}'}</code>. Der Azubi notiert sich zu jeder Frage Stichworte. <code>timer: 15</code> zeigt eine Uhr, die 15 Minuten herunterzählt – für den Vortrag.
+                </Begriff>
+                <Begriff wort="## Links">
+                  <code>- [Titel](https://…) – Beschreibung</code>. Zum Beispiel das Merkblatt der Kammer. Nur Adressen mit https.
+                </Begriff>
+              </dl>
+              <p>Checklisten, Zeitplanung und Fragen stehen beim Azubi in der Reihenfolge der Datei. Die Termine stehen immer oben, die Links rechts im Kopf, ein Feld für Notizen immer unten.</p>
+              <h3>Kennungen – das Wichtigste</h3>
+              <p>
+                Eine Kennung ist der feste Name eines Punktes. Das Portal merkt sich nicht „Anna hat ‚Zeichnung mit Maßen‘ abgehakt“, sondern „Anna hat <code>entwurf.zeichnung</code> abgehakt“ – also Kennung der Checkliste, Punkt, Kennung des Punktes. Der Text daneben ist nur die Beschriftung.
+              </p>
+              <dl className="begriffe">
+                <Begriff wort="Du änderst den Text, die Kennung bleibt">Haken, Datum und Stichworte der Azubis bleiben. Texte darfst du jederzeit verbessern.</Begriff>
+                <Begriff wort="Du änderst die Kennung">Für das Portal ist das ein neuer Punkt. Die Eintragungen der Azubis zu diesem Punkt sind nicht mehr zu sehen – als hätte niemand etwas eingetragen.</Begriff>
+                <Begriff wort="Du löschst einen Punkt">Er verschwindet bei den Azubis. Ihre Eintragung bleibt gespeichert und ist wieder da, wenn die Kennung zurückkommt.</Begriff>
+                <Begriff wort="Du fügst einen Punkt hinzu">Er erscheint bei allen Azubis leer. Wer „16 von 16“ hatte, hat danach „16 von 17“.</Begriff>
+              </dl>
+              <ul className="punkte">
+                <li>
+                  <strong>Merksatz: Texte darfst du ändern, Kennungen nicht.</strong>
+                </li>
+                <li>Kennungen bestehen nur aus Kleinbuchstaben, Ziffern und Bindestrich. Wähle sie kurz und nach dem Inhalt (<code>zeichnung</code>), nicht nach der Reihenfolge (<code>punkt3</code>) – dann stimmen sie auch noch, wenn du Punkte umstellst.</li>
+                <li>Innerhalb einer Checkliste darf jede Kennung nur einmal vorkommen, ebenso innerhalb der Termine und innerhalb eines Fragen-Abschnitts. Checklisten und Fragen-Abschnitte brauchen untereinander verschiedene Kennungen. Das Portal prüft das beim Einreichen.</li>
+                <li>
+                  Muss eine Kennung doch einmal anders heißen, trag alt und neu am Ende der Datei ein. Dann nimmt das Portal die Eintragungen der Azubis mit:
+                  <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel für Umbenennungen">{PLANER_UMBENENNEN}</pre>
+                  Vorn steht bei Checklisten und Fragen die Kennung des Abschnitts, bei Terminen das Wort <code>termine</code>. Die Zeilen bleiben dauerhaft in der Datei stehen.
+                </li>
+              </ul>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>
+                  <strong>Aktualisieren heißt: das ganze Paket neu einreichen</strong> – unter derselben Kennung des Pakets (dem Ordnernamen). Einzelne Dateien nachreichen geht nicht. Nach dem Hochladen gilt die neue Fassung sofort für alle Azubis.
+                </li>
+                <li>Die vorgeschlagenen Phasen der Zeitplanung wirken nur bei Azubis, die ihre Zeitplanung noch nicht gespeichert haben. Danach gehört die Planung dem Azubi; eine neue Fassung überschreibt sie nicht. Geänderte Höchststunden gelten sofort für alle.</li>
+                <li>Was die Azubis eintragen, siehst du nicht – auch nicht als Verfasser der Datei.</li>
+                <li>Mehr als diese Bausteine kann der Planer nicht: keine eigenen Eingabefelder, keine Rechnungen, keine Datei-Anhänge, nur ein Planer je Beruf.</li>
+                <li>Das Portal prüft nur den Aufbau. Ob Fristen, Stunden und Pflichtangaben stimmen, kann es nicht wissen. Nenn im Planer die Quelle (Link zum Merkblatt) und prüfe die Angaben, wenn die Kammer ihr Merkblatt ändert.</li>
+                <li>Eigene Texte verwenden: nichts aus Merkblättern, Lehrbüchern oder Prüfungen abschreiben. Sinngemäß wiedergeben und verlinken ist in Ordnung.</li>
+                <li>Bearbeiten mit einem Texteditor, nicht mit Word. Zeichensatz UTF-8.</li>
+              </ul>
             </>
           ),
         },
@@ -1394,6 +1623,8 @@ const ADMIN: Kapitel[] = [
           <li>Ist die Benachrichtigung in Teams eingerichtet (siehe „Fehlermeldungen“), erscheint dort ein Hinweis, sobald jemand Lerninhalte einreicht.</li>
           <li>Ein neues Lernmodul sehen Azubis erst, wenn ein Ausbilder es in den Stammdaten an einem Beruf einschaltet.</li>
           <li>Hochgeladene Pakete liegen im Datenordner des Portals unter <code>lerninhalte/</code> und sind damit in der Datensicherung. Sie gehen vor ein gleichnamiges Paket, das als Ordner auf dem Server eingebunden ist.</li>
+          <li>Zu einem Paket kann ein Planer für die Prüfung gehören (Datei <code>planer.md</code>, z. B. für das Abschlussprojekt). Die Einreichung zeigt dann „Planer: …“. Prüfe ihn wie die Cheatsheets: eigener Text, keine Personen, Links nur zu vertrauenswürdigen Seiten.</li>
+          <li>Eine neue Fassung ersetzt das ganze Paket. Was Azubis im Planer eingetragen haben, hängt an den Kennungen der Punkte und bleibt erhalten, solange die Kennungen gleich bleiben. Was sie eintragen, siehst du nicht.</li>
           <li>Nach der Entscheidung löscht das Portal die eingereichte ZIP-Datei.</li>
           <li>Lerninhalte sind keine Daten über Personen. Den Lernstand der Azubis siehst du weiterhin nicht.</li>
         </ul>

@@ -22,7 +22,7 @@ export const ZIP_MAX = 15 * 1024 * 1024;
 const GRENZEN = { maxDateien: 600, maxDatei: 5 * 1024 * 1024, maxGesamt: 40 * 1024 * 1024 };
 const KENNUNG = /^[a-z0-9][a-z0-9-]{0,30}$/;
 /** was aus dem Archiv übernommen wird – alles andere bleibt draußen */
-const ERLAUBT = [/^(paket|meta|themenfelder|umbenennungen)\.json$/, /^themen\/[a-z0-9-]+\.md$/, /^bilder\/[A-Za-z0-9._-]+\.svg$/, /^zusatz\/[A-Za-z0-9._-]+\.json$/, /^(CHANGELOG\.md|LICENSE)$/];
+const ERLAUBT = [/^(paket|meta|themenfelder|umbenennungen)\.json$/, /^planer\.md$/, /^themen\/[a-z0-9-]+\.md$/, /^bilder\/[A-Za-z0-9._-]+\.svg$/, /^zusatz\/[A-Za-z0-9._-]+\.json$/, /^(CHANGELOG\.md|LICENSE)$/];
 
 type Status = 'eingereicht' | 'zurueck' | 'hochgeladen' | 'zurueckgezogen';
 interface Zeile {
@@ -48,6 +48,8 @@ interface Pruefung {
   themenfelder: number;
   unterthemen: number;
   dateien: number;
+  /** Titel des Planers aus planer.md; leer oder fehlend = das Paket hat keinen */
+  planer?: string;
   fehler: string[];
   warnungen: string[];
   /** Dateien im Archiv, die nicht zu einem Inhaltspaket gehören und nicht übernommen werden */
@@ -107,6 +109,8 @@ function pruefe(zip: Buffer): { pruefung: Pruefung; dateien: ZipDatei[] } {
         themenfelder: inhalte.themenfelder.length,
         unterthemen: inhalte.themenfelder.reduce((n, f) => n + f.unterthemen.length, 0),
         dateien: dateien.length,
+        // Titel des Planers (planer.md) – leer, wenn das Paket keinen hat
+        planer: inhalte.planer?.titel ?? '',
         fehler: inhalte.meldungen.filter((m) => m.level === 'fehler').map(zeile),
         warnungen: inhalte.meldungen
           .filter((m) => m.level !== 'fehler')

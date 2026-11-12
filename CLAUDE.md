@@ -34,6 +34,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/mail-gestalt.ts` | das gemeinsame Aussehen aller Mails (`gestalteMail`) – neue Mails nicht von Hand gestalten |
 | `server/aktivitaet.ts`, `server/benachrichtigung.ts` | Glocke und – daran angehängt – Benachrichtigungen per Teams und E-Mail (ohne Namen, nur für Berechtigte) |
 | `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben) |
+| `server/planer.ts`, `server/lernen/planer.ts` | Planer für das Prüfungsvorhaben (z. B. Abschlussprojekt): Inhalt aus `planer.md` im Inhaltspaket, Freischaltung je Azubi im Profil, Eintragungen privat – nur die Termine stehen im Plan |
 | `src/App.tsx`, `src/router.tsx` | Seiten und eigener Router (`geheZu`, `<Link>`, `useUngespeichert`) |
 | `src/pages/` | je Seite eine Datei; `Handbuch.tsx` ist das Handbuch für alle Rollen |
 | `src/dialoge.tsx` | `rueckfrage()`, `melde()`, `<Ladefehler>` |
@@ -74,7 +75,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 
 ## Datenschutz und Recht – nicht verhandelbar
 
-- Lernstand, Abzeichen, Übungsergebnisse, private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
+- Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung (außer seinen Terminen), private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
 - Teams-Karten ohne Namen. Benachrichtigungen nennen nur die Person, an die sie gehen (Anrede mit Vornamen) – keine anderen Namen, keine Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
 - Geheimnisse (Webhook-Adressen, SMTP-Zugang, Kalender-Link) stehen nur in `.env` und werden nie protokolliert.
 - Das Repository ist **öffentlich**: keine privaten Daten, keine echten Namen oder Mailadressen, kein `data/`, keine `.env` – auch nicht in Tests, Commits und Pull-Request-Texten.

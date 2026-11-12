@@ -1,5 +1,7 @@
 import { alleFirmentermine } from './firmentermin';
+import { merkeAktivitaet } from './aktivitaet';
 import { lernpakete, paketListe } from './lernen';
+import { planerDesBerufs, planerDesPakets } from './planer';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
@@ -61,6 +63,7 @@ interface ProfilZeile {
   pruefungen: string;
   urlaubstage: number | null;
   bericht_form: 'woche' | 'tag' | null;
+  planer_frei: number;
 }
 
 export interface Pruefung {
@@ -84,6 +87,8 @@ export interface Profil {
   urlaubstage: number | null;
   /** Form des Berichtshefts für diesen Azubi; null = wie im Betrieb eingestellt */
   berichtForm: 'woche' | 'tag' | null;
+  /** Planer für das Prüfungsvorhaben freigeschaltet (durch den Ausbilder) */
+  planerFrei: boolean;
 }
 
 const STANDARD_REGELDAUER = 36;
@@ -101,6 +106,7 @@ const LEERES_PROFIL: Profil = {
   pruefungen: [],
   urlaubstage: null,
   berichtForm: null,
+  planerFrei: false,
 };
 
 // ---------- Lesen ----------
@@ -146,6 +152,7 @@ export function leseProfil(db: DB, azubiId: number): Profil {
     urlaubstage: z.urlaubstage ?? null,
     pruefungen,
     berichtForm: z.bericht_form === 'tag' || z.bericht_form === 'woche' ? z.bericht_form : null,
+    planerFrei: z.planer_frei === 1,
   };
 }
 
@@ -439,6 +446,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
           hoechsteVerkuerzung: hoechsteVerkuerzung(beruf?.regeldauer_monate ?? STANDARD_REGELDAUER),
           // welche Form für neue Berichte dieses Azubis gilt – die eigene Einstellung oder die des Betriebs
           berichtFormGilt: berichtFormVon(c.k.db, azubi.id),
+          // Titel des Planers aus dem Inhaltspaket des Berufs – null, wenn es für den Beruf keinen gibt (dann lässt er sich nicht freischalten)
+          planerTitel: planerDesBerufs(c.k, azubi.id)?.planer.titel ?? null,
           bearbeitbar: darfAzubiVerwalten(c.k.db, c.b, azubi.id),
           betreuung: betreuung(c.k.db, c.b, azubi.id),
         },
@@ -487,6 +496,12 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       const formRoh = body.berichtForm;
       const berichtForm = formRoh === undefined ? leseProfil(db, id).berichtForm : formRoh === null || formRoh === '' ? null : formRoh === 'tag' || formRoh === 'woche' ? formRoh : ungueltigeForm();
 
+      // Planer freischalten: nur möglich, wenn das Inhaltspaket des (neuen) Berufs einen Planer enthält
+      const vorher = leseProfil(db, id);
+      const planer = planerDesPakets(c.k, beruf?.lernpaket ?? null);
+      const planerFrei = body.planerFrei === undefined ? vorher.planerFrei : body.planerFrei === true;
+      if (planerFrei && !vorher.planerFrei && !planer) throw new Fehler(400, 'Für den Beruf dieses Azubis gibt es keinen Planer. Er gehört ins Inhaltspaket des Berufs (Datei planer.md).');
+
       const roh = body.pruefungen ?? [];
       if (!Array.isArray(roh) || roh.length > 8) throw new Fehler(400, 'Höchstens acht Prüfungstermine');
       const pruefungen: Pruefung[] = roh
@@ -502,17 +517,19 @@ export const STAMMDATEN_ROUTEN: Route[] = [
 
       db.prepare(
         `INSERT INTO azubi_profil (benutzer_id, beruf_id, berufsschule_id, ausbilder_id, ausbildungsbeginn, vertragsende, verkuerzung_monate,
-                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form, planer_frei)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(benutzer_id) DO UPDATE SET
            beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id,
            ausbildungsbeginn = excluded.ausbildungsbeginn, vertragsende = excluded.vertragsende,
            verkuerzung_monate = excluded.verkuerzung_monate, verkuerzung_art = excluded.verkuerzung_art,
            verkuerzung_grund = excluded.verkuerzung_grund, vorzeitige_zulassung = excluded.vorzeitige_zulassung,
            wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von,
-           urlaubstage = excluded.urlaubstage, bericht_form = excluded.bericht_form`,
-      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm);
-      protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi);
+           urlaubstage = excluded.urlaubstage, bericht_form = excluded.bericht_form, planer_frei = excluded.planer_frei`,
+      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm, planerFrei ? 1 : 0);
+      protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi, planerFrei !== vorher.planerFrei ? (planerFrei ? 'Planer freigeschaltet' : 'Planer gesperrt') : undefined);
+      // der Azubi erfährt, dass es für ihn einen neuen Bereich gibt
+      if (planerFrei && !vorher.planerFrei && planer) merkeAktivitaet(db, c.k.jetzt(), 'planer_frei', id, c.b, null, planer.titel);
       const profil = leseProfil(db, id);
       return { status: 200, body: { profil, stand: standAus(db, profil, heute(c.k.jetzt())).stand } };
     },
