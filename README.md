@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.40.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.41.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -133,7 +133,10 @@ Gut zu wissen:
 - Der Absender in Teams heißt „Workflows“. Das lässt sich auf diesem Weg nicht ändern.
 - Der Workflow gehört dem Konto, das ihn anlegt. Wird dieses Konto gelöscht oder der Flow abgeschaltet, kommen keine Nachrichten mehr an.
 - Empfänger ist der Anmeldename (UPN) der Person; E-Mails gehen an dieselbe Adresse. Weicht die Mail-Adresse bei euch vom Anmeldenamen ab, kommen E-Mails nicht an.
-- **In den Nachrichten stehen keine Namen und keine Inhalte** – nur, was passiert ist („Ein Bericht für KW 46 wurde eingereicht“), und ein Link ins Portal. Verschickt wird nur, was die Person auch in der Glocke sieht.
+- **In den Nachrichten stehen keine anderen Namen und keine Inhalte.** Sie sprechen die Person mit ihrem Vornamen an („Hallo Petra,“) und sagen nur, was passiert ist („Ein Bericht für KW 46 wurde eingereicht“); der Knopf führt zur passenden Seite. Verschickt wird nur, was die Person auch in der Glocke sieht.
+- Der Vorname kommt aus dem Anzeigenamen des Kontos („Petra Lang“ oder „Lang, Petra“). Lässt er sich nicht sicher erkennen – etwa bei „Dr. Petra Lang“ –, heißt es nur „Hallo,“.
+- **Gestaltung:** Karte und Mail tragen „Ausbildungsportal“, den Namen des Betriebs aus den Stammdaten und das Logo aus „Erscheinungsbild“ (helle Fassung). Für die Karte lädt Teams das Logo selbst von `<APP_URL>/api/branding/logo` – das Portal muss dafür aus dem Internet erreichbar sein, sonst fehlt das Bild. In der Mail hängt das Logo an; ein Logo im Format WebP lässt das Portal dort weg, weil Outlook es nicht zeigt. Manche Mailprogramme zeigen Bilder erst nach einem Klick.
+- Die Mail geht in zwei Fassungen hinaus: gestaltet und als reiner Text.
 - Was kurz nacheinander passiert, sammelt das Portal etwa drei Minuten und schickt es als eine Nachricht je Person.
 - Gespeichert wird die Auswahl je Person und – bis zum Versand – was noch zu verschicken ist. Einen Verlauf verschickter Nachrichten gibt es nicht.
 - Scheitert der Versand, steht der Grund im Log (`docker compose logs app`, ohne Adresse und ohne Empfänger); die Nachricht wird nicht wiederholt, die Glocke zeigt das Ereignis weiterhin.

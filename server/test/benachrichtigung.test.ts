@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { SAMMEL_MS, verschickeFaellige, zeilenAus } from '../benachrichtigung';
+import { SAMMEL_MS, verschickeFaellige, vorname, zeilenAus } from '../benachrichtigung';
+import { baueMail } from '../smtp';
 import type { Mail } from '../smtp';
 import type { BenutzerZeile } from '../typen';
 import { admin, koerper, konto, ohneWechsel, ruf, sitzung, umgebung, zuweisen } from './hilfe';
@@ -109,9 +110,22 @@ test('Benachrichtigungen: je Bereich und Weg wählbar; verschickt wird gebündel
   assert.match(mailBea?.text ?? '', /Ein Bericht für KW 45 wurde eingereicht/);
   assert.equal(w.mails.length, 2);
 
-  // keine Namen, keine Titel, keine Inhalte – in keiner Nachricht
-  const alles = JSON.stringify(w.teams.map((t) => t.body.karte)) + JSON.stringify(w.mails.map((m) => [m.betreff, m.text]));
-  for (const verboten of ['Anna', 'Azubi', 'Beispiel', 'Petra', 'Lang', 'Auft', 'Geheimer Titel', 'Serverraum', 'Switch']) assert.ok(!alles.includes(verboten), `„${verboten}“ darf in keiner Nachricht stehen`);
+  // jede Nachricht spricht nur die Person an, an die sie geht – keine anderen Namen, keine Nachnamen, keine Titel, keine Inhalte
+  const nachrichten = [...w.teams.map((t) => ({ an: t.body.empfaenger as string, inhalt: JSON.stringify(t.body.karte) })), ...w.mails.map((m) => ({ an: m.an, inhalt: [m.betreff, m.text, m.html].join('\n') }))];
+  const vornamen: Record<string, string> = { [w.anna.anmeldename]: 'Anna', [w.petra.anmeldename]: 'Petra', [w.bea.anmeldename]: 'Bea' };
+  for (const n of nachrichten) {
+    assert.ok(n.inhalt.includes(`Hallo ${vornamen[n.an]},`), 'Anrede mit dem eigenen Vornamen');
+    for (const verboten of ['Anna', 'Petra', 'Bea', 'Ben ', 'Azubi', 'Beispiel', 'Lang', 'Auft', 'Geheimer Titel', 'Serverraum', 'Switch']) {
+      if (verboten === vornamen[n.an]) continue;
+      assert.ok(!n.inhalt.includes(verboten), `„${verboten}“ darf nicht in der Nachricht an ${vornamen[n.an]} stehen`);
+    }
+  }
+  // Betrieb im Kopf, Knopf führt zur passenden Seite, die Mail hat eine Text- und eine gestaltete Fassung
+  assert.match(JSON.stringify(anPetra?.body.karte), /Muster GmbH/);
+  assert.equal(anPetra?.body.karte.actions[0].url, 'https://portal.test/abzeichnen');
+  assert.equal(anAnna.body.karte.actions[0].url, 'https://portal.test/');
+  assert.match(mailBea?.html ?? '', /<a href="https:\/\/portal\.test\/abzeichnen"/);
+  assert.match(mailBea?.text ?? '', /Zum Portal: https:\/\/portal\.test\/abzeichnen/);
   // die Adresse des Workflows steht nicht im Log
   assert.ok(!w.u.logs.join('\n').includes('geheim'));
 
@@ -183,13 +197,63 @@ test('Benachrichtigungen: ungültige Angaben, fremde Rollen und zurückgenommene
 });
 
 test('Benachrichtigungen: Texte fassen zusammen und unterscheiden „dein“ von „ein“', () => {
-  assert.deepEqual(zeilenAus([{ art: 'bericht_abgezeichnet', eigenes: true, montag: '2026-11-09', anzahl: 1 }]), ['Dein Bericht für KW 46 wurde abgezeichnet.']);
+  assert.deepEqual(zeilenAus([{ art: 'bericht_abgezeichnet', eigenes: true, montag: '2026-11-09', anzahl: 1 }]), [{ text: 'Dein Bericht für KW 46 wurde abgezeichnet.', ton: 'gut', bereich: 'berichtsheft' }]);
   assert.deepEqual(
     zeilenAus([
       { art: 'urlaub_beantragt', eigenes: false, montag: '2026-12-21', anzahl: 1 },
       { art: 'urlaub_beantragt', eigenes: false, montag: '2026-12-28', anzahl: 1 },
       { art: 'plan_neu', eigenes: false, montag: '2026-11-16', anzahl: 5 },
+      { art: 'urlaub_abgelehnt', eigenes: true, montag: '2026-12-21', anzahl: 1 },
     ]),
-    ['2 Urlaubsanträge warten auf dich.', 'In Ausbildungsplänen deiner Azubis gibt es 5 neue Einträge.'],
+    [
+      { text: '2 Urlaubsanträge warten auf dich.', ton: 'wartet', bereich: 'urlaub' },
+      { text: 'In Ausbildungsplänen deiner Azubis gibt es 5 neue Einträge.', ton: 'neutral', bereich: 'plan' },
+      { text: 'Dein Urlaubsantrag wurde abgelehnt. Den Grund findest du im Portal.', ton: 'achtung', bereich: 'urlaub' },
+    ],
   );
+});
+
+test('Benachrichtigungen: Anrede mit dem Vornamen – nur wenn er sicher zu erkennen ist', () => {
+  assert.equal(vorname('Petra Lang'), 'Petra');
+  assert.equal(vorname('Lang, Petra'), 'Petra');
+  assert.equal(vorname('  Jean-Luc   Picard '), 'Jean-Luc');
+  assert.equal(vorname('Özlem Yılmaz'), 'Özlem');
+  assert.equal(vorname('Dr. Petra Lang'), '');
+  assert.equal(vorname('P. Lang'), '');
+  assert.equal(vorname(''), '');
+});
+
+test('Benachrichtigungen: Logo in Karte und Mail; die Mail geht als Text und gestaltet hinaus', async () => {
+  const w = await welt();
+  // ohne Logo: keine Bildadresse, kein Anhang, die Adresse des Logos antwortet mit 404
+  assert.equal((await ruf(w.u, 'GET', '/api/branding/logo')).status, 404);
+  await ruf(w.u, 'POST', '/api/ich/benachrichtigungen/test', { cookies: als(w, w.petra), body: { weg: 'teams' } });
+  assert.ok(!JSON.stringify(w.teams[0].body.karte).includes('/api/branding/logo'));
+
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(40, 7)]);
+  assert.equal((await ruf(w.u, 'PUT', '/api/branding/logo', { cookies: sitzung(w.u, admin(w.u.db)), body: { daten: `data:image/png;base64,${png.toString('base64')}` } })).status, 200);
+  // das Logo ist ohne Anmeldung abrufbar – Teams lädt es selbst
+  const bild = await ruf(w.u, 'GET', '/api/branding/logo');
+  assert.equal(bild.status, 200);
+  assert.equal(bild.bild?.typ, 'image/png');
+  assert.ok(bild.bild?.inhalt.equals(png));
+
+  await ruf(w.u, 'POST', '/api/ich/benachrichtigungen/test', { cookies: als(w, w.petra), body: { weg: 'teams' } });
+  assert.match(JSON.stringify(w.teams[1].body.karte), /https:\/\/portal\.test\/api\/branding\/logo\?v=[0-9a-f]{10}/);
+  await ruf(w.u, 'POST', '/api/ich/benachrichtigungen/test', { cookies: als(w, w.petra), body: { weg: 'mail' } });
+  const mail = w.mails[0];
+  assert.match(mail.html ?? '', /<img src="cid:logo@ausbildungsportal"/);
+  assert.ok(mail.bild?.inhalt.equals(png));
+
+  // so geht sie über die Leitung: Text und HTML als Alternativen, das Logo hängt an der HTML-Fassung
+  const roh = baueMail({ absender: 'portal@firma.test' }, mail, new Date('2026-11-12T08:00:00Z'));
+  assert.match(roh, /Content-Type: multipart\/alternative; boundary="/);
+  assert.match(roh, /Content-Type: multipart\/related; boundary="[^"]+"; type="text\/html"/);
+  assert.match(roh, /Content-Type: text\/plain; charset=utf-8/);
+  assert.match(roh, /Content-Type: text\/html; charset=utf-8/);
+  assert.match(roh, /Content-Type: image\/png\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <logo@ausbildungsportal>\r\nContent-Disposition: inline/);
+  assert.ok(roh.indexOf('text/plain') < roh.indexOf('text/html'), 'die Textfassung steht zuerst');
+  for (const zeile of roh.split('\r\n')) assert.ok(zeile.length <= 998, 'keine überlange Zeile');
+  // eine Mail ohne gestaltete Fassung bleibt, wie sie war
+  assert.match(baueMail({ absender: 'portal@firma.test' }, { an: 'x@firma.test', betreff: 'Test', text: 'Hallo' }, new Date()), /MIME-Version: 1\.0\r\nAuto-Submitted: auto-generated\r\nContent-Type: text\/plain; charset=utf-8\r\nContent-Transfer-Encoding: base64\r\n\r\nSGFsbG8=$/);
 });

@@ -71,7 +71,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 ## Datenschutz und Recht – nicht verhandelbar
 
 - Lernstand, Abzeichen, Übungsergebnisse, private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
-- Teams-Karten und Benachrichtigungen ohne Namen und ohne Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
+- Teams-Karten ohne Namen. Benachrichtigungen nennen nur die Person, an die sie gehen (Anrede mit Vornamen) – keine anderen Namen, keine Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
 - Geheimnisse (Webhook-Adressen, SMTP-Zugang, Kalender-Link) stehen nur in `.env` und werden nie protokolliert.
 - Das Repository ist **öffentlich**: keine privaten Daten, keine echten Namen oder Mailadressen, kein `data/`, keine `.env` – auch nicht in Tests, Commits und Pull-Request-Texten.
 - Keine fremden Bilder, Grafiken oder Texte ohne Lizenz; keine Original-Prüfungsaufgaben. Grafiken selbst als SVG zeichnen.

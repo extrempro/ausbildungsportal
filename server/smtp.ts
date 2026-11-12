@@ -29,6 +29,10 @@ export interface Mail {
   an: string;
   betreff: string;
   text: string;
+  /** gestaltete Fassung; die Textfassung geht immer mit, für Mailprogramme, die kein HTML zeigen */
+  html?: string;
+  /** Bild, das die gestaltete Fassung als <img src="cid:…"> zeigt (Logo) */
+  bild?: { cid: string; typ: string; inhalt: Buffer };
 }
 
 /** Fehler mit einem Text, der so beim Ausbilder angezeigt werden kann */
@@ -61,22 +65,30 @@ function kopfwort(s: string): string {
 /** Baut die Mail, wie sie nach DATA gesendet wird (ohne den abschließenden Punkt). */
 export function baueMail(cfg: Pick<SmtpEinstellung, 'absender'>, mail: Mail, jetzt: Date): string {
   const domain = cfg.absender.split('@')[1] ?? 'localhost';
-  const koerper = b64(mail.text.replace(/\r?\n/g, '\r\n'))
-    .match(/.{1,76}/g)!
-    .join('\r\n');
-  return [
+  const zeilen = (base64: string) => base64.match(/.{1,76}/g)!.join('\r\n');
+  const teil = (typ: string, inhalt: string, weitere: string[] = []) => [`Content-Type: ${typ}`, 'Content-Transfer-Encoding: base64', ...weitere, '', zeilen(inhalt)].join('\r\n');
+  const text = teil('text/plain; charset=utf-8', b64(mail.text.replace(/\r?\n/g, '\r\n')));
+  const kopf = [
     `From: Ausbildungsportal <${einzeilig(cfg.absender)}>`,
     `To: <${einzeilig(mail.an)}>`,
     `Subject: ${kopfwort(mail.betreff)}`,
     `Date: ${jetzt.toUTCString().replace('GMT', '+0000')}`,
     `Message-ID: <${randomBytes(12).toString('hex')}@${domain}>`,
     'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=utf-8',
-    'Content-Transfer-Encoding: base64',
     'Auto-Submitted: auto-generated',
-    '',
-    koerper,
-  ].join('\r\n');
+  ];
+  if (!mail.html) return [...kopf, text].join('\r\n');
+
+  // Text und gestaltete Fassung als Alternativen; das Logo hängt an der gestalteten Fassung (multipart/related)
+  const grenze = (art: string) => `=_${art}_${randomBytes(12).toString('hex')}`;
+  const mehrteilig = (art: string, g: string, teile: string[], zusatz = '') => [`Content-Type: multipart/${art}; boundary="${g}"${zusatz}`, '', ...teile.map((t) => `--${g}\r\n${t}`), `--${g}--`].join('\r\n');
+  let html = teil('text/html; charset=utf-8', b64(mail.html.replace(/\r?\n/g, '\r\n')));
+  if (mail.bild) {
+    const cid = mail.bild.cid.replace(/[^A-Za-z0-9.@_-]/g, '');
+    const typ = /^image\/(png|jpeg)$/.test(mail.bild.typ) ? mail.bild.typ : 'application/octet-stream';
+    html = mehrteilig('related', grenze('rel'), [html, teil(typ, mail.bild.inhalt.toString('base64'), [`Content-ID: <${cid}>`, 'Content-Disposition: inline'])], '; type="text/html"');
+  }
+  return [...kopf, mehrteilig('alternative', grenze('alt'), [text, html])].join('\r\n');
 }
 
 /** Liest Antworten des Servers zeilenweise; eine Antwort endet mit „250 …“ (Leerzeichen statt Bindestrich). */

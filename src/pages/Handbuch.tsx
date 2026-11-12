@@ -228,9 +228,10 @@ const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
         <li>Für jeden der drei Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
         <li>Du bekommst nur Nachrichten zu dem, was du auch in der Glocke siehst. Was du selbst gemacht hast, wird dir nicht gemeldet.</li>
         <li>
-          <strong>In der Nachricht stehen keine Namen und keine Inhalte.</strong> Sie sagt nur, was passiert ist – zum Beispiel „Ein Bericht für KW 46 wurde eingereicht“ – und führt mit einem Link ins Portal. Dort siehst du alles Weitere.
+          <strong>In der Nachricht stehen keine anderen Namen und keine Inhalte.</strong> Sie spricht dich mit deinem Vornamen an und sagt nur, was passiert ist – zum Beispiel „Ein Bericht für KW 46 wurde eingereicht“. Der Knopf „Im Portal öffnen“ führt zur passenden Seite. Dort siehst du alles Weitere.
         </li>
         <li>Passiert mehreres kurz nacheinander, kommt es nach wenigen Minuten als eine Nachricht. Es dauert also etwas, bis sie da ist.</li>
+        <li>Die Nachricht trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Ein farbiger Punkt vor jeder Zeile hilft beim Überfliegen: grün für erledigt, gelb für „wartet auf dich“, rot für „bitte ansehen“.</li>
         <li>In Teams kommt die Nachricht als Chat vom Absender „Workflows“. E-Mails gehen an die Adresse, mit der du dich anmeldest.</li>
         <li>Mit „Testnachricht senden“ probierst du aus, ob und wie die Nachricht bei dir ankommt.</li>
         <li>Ist ein Haken grau, ist dieser Weg in eurem Portal nicht eingerichtet. Darunter steht der Grund. Einrichten kann das nur, wer das Portal betreibt.</li>

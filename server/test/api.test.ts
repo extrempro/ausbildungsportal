@@ -97,6 +97,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'PUT /api/azubis/:id/zuweisungen': 'ausbilder',
     'GET /api/protokoll': 'admin',
     'GET /api/branding': 'offen',
+    'GET /api/branding/logo': 'offen',
     'PUT /api/branding/logo': 'admin',
     'DELETE /api/branding/logo': 'admin',
     'GET /api/stammdaten': 'ausbilder,beauftragter,azubi',
