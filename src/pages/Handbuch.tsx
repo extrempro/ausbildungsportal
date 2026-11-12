@@ -435,7 +435,7 @@ const AZUBI: Kapitel[] = [
           <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte und Berichtsheft: PDF herunterladen oder drucken“.
         </p>
         <h3>Wenn dein Betrieb Einträge je Tag möchte</h3>
-        <p>Dein Betrieb legt fest, ob du die Woche im Ganzen beschreibst oder Tag für Tag. Bei „je Tag“ sieht die Seite etwas anders aus:</p>
+        <p>Dein Betrieb legt fest, ob du die Woche im Ganzen beschreibst oder Tag für Tag – das kann für jeden Azubi anders sein. Was für dich gilt, steht unter „Konto“ bei „Meine Ausbildung“. Bei „je Tag“ sieht die Seite etwas anders aus:</p>
         <ul className="punkte">
           <li>Statt der drei Teile steht für jeden Tag von Montag bis Freitag ein eigener Kasten. Oben rechts im Kasten siehst du die Stunden dieses Tages.</li>
           <li>
@@ -670,7 +670,7 @@ const AZUBI: Kapitel[] = [
           Unter <Link zu="/konto">Konto</Link> (im Menü an deinem Namen, am Handy unter „Mehr“) steht alles, was nur dich betrifft:
         </p>
         <dl className="begriffe">
-          <Begriff wort="Meine Ausbildung">Beruf, Berufsschule, Ausbildungszeit, Wochenstunden und Prüfungstermine. Das trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</Begriff>
+          <Begriff wort="Meine Ausbildung">Beruf, Berufsschule, Ausbildungszeit, Wochenstunden, die Form deines Berichtshefts und Prüfungstermine. Das trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</Begriff>
           <Begriff wort="Unterschrift">Du unterschreibst einmal mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie kannst du nicht einreichen. Änderst du sie später, behalten alte Berichte die alte Unterschrift.</Begriff>
           <Begriff wort="Kalender abonnieren">Dein Plan im eigenen Kalender. Mehr dazu im Kapitel „Kalender abonnieren“.</Begriff>
           <Begriff wort="Benachrichtigungen">Ob du zusätzlich zur Glocke eine Nachricht per Teams oder E-Mail bekommst. Mehr dazu im Kapitel „Benachrichtigungen per Teams und E-Mail“.</Begriff>
@@ -1096,6 +1096,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Vertragsende">Nur eintragen, wenn es vom berechneten Ende abweicht.</Begriff>
                 <Begriff wort="Verkürzung">Monate und Art: „Ausbildung endet früher“ oder „am Anfang angerechnet“ (Start in einem höheren Ausbildungsjahr). Das Portal rechnet nur mit den Monaten – ob eine Verkürzung zulässig ist, entscheidet die Kammer.</Begriff>
                 <Begriff wort="Wochenstunden">Daran misst der Bericht, ob die eingetragenen Stunden zur Woche passen.</Begriff>
+                <Begriff wort="Form des Berichtshefts">Ob dieser Azubi die Woche im Ganzen beschreibt oder Tag für Tag. „Wie im Betrieb eingestellt“ übernimmt, was in den Stammdaten steht. Gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form.</Begriff>
                 <Begriff wort="Urlaubstage im Jahr">Der Urlaubsanspruch in Arbeitstagen je Kalenderjahr. Daraus rechnet das Urlaubskonto, was noch frei ist. Bleibt das Feld leer, lässt sich Urlaub trotzdem beantragen – nur ohne Rechnung.</Begriff>
                 <Begriff wort="Prüfungstermine">Bis zu acht, mit freier Bezeichnung. Sie erscheinen im Plan des Azubis, in der Kachel „Wochen bis zur Prüfung“ und im abonnierten Kalender.</Begriff>
               </dl>
@@ -1113,7 +1114,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </p>
               <dl className="begriffe">
                 <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
-                <Begriff wort="Form des Berichtshefts">Entweder beschreiben Azubis die Woche im Ganzen (drei Teile: Betrieb, Unterweisung, Berufsschule) oder Tag für Tag (für jeden Tag ein Kasten mit eigenen Zeilen). In beiden Fällen ist es ein Bericht je Woche, der einmal eingereicht und abgezeichnet wird. Die Wahl gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form. Welche Form eure Kammer verlangt, klärt ihr am besten mit ihr.</Begriff>
+                <Begriff wort="Form des Berichtshefts">Entweder beschreiben Azubis die Woche im Ganzen (drei Teile: Betrieb, Unterweisung, Berufsschule) oder Tag für Tag (für jeden Tag ein Kasten mit eigenen Zeilen). In beiden Fällen ist es ein Bericht je Woche, der einmal eingereicht und abgezeichnet wird. Die Wahl gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form. Für einzelne Azubis lässt sich die Form im Profil des Azubis abweichend einstellen (Feld „Form des Berichtshefts“) – zum Beispiel, wenn nur ein Beruf oder ein Ausbildungsjahr Tag für Tag schreiben soll. Welche Form eure Kammer verlangt, klärt ihr am besten mit ihr.</Begriff>
                 <Begriff wort="Mail-Adresse der Personalstelle">Dorthin schickt das Portal eine kurze Mail, sobald ein Urlaub genehmigt oder storniert wurde. Genau eine Adresse, am besten ein Sammelpostfach. Mit „Testmail an die Personalstelle senden“ prüfst du, ob Mails ankommen. Der Knopf ist gesperrt, solange der Betreiber des Portals keinen Mailserver eingerichtet hat oder die Adresse fehlt.</Begriff>
                 <Begriff wort="Anrede in der Mail an die Personalstelle">So beginnt die Mail, zum Beispiel „Hallo Kim“ oder „Guten Tag Frau Beispiel“. Das Komma dahinter setzt das Portal. Lässt du das Feld leer, heißt es „Guten Tag“. Die Anrede sehen nur Ausbilder.</Begriff>
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>

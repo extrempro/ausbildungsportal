@@ -202,6 +202,8 @@ export interface Profil {
   wochenstunden: number;
   /** Urlaubsanspruch in Arbeitstagen je Kalenderjahr – null, solange nichts eingetragen ist */
   urlaubstage: number | null;
+  /** Form des Berichtshefts für diesen Azubi; null = wie im Betrieb eingestellt */
+  berichtForm: 'woche' | 'tag' | null;
   pruefungen: Pruefung[];
 }
 
@@ -234,6 +236,8 @@ export interface ProfilAntwort {
   ausbilder: { id: number; anzeigename: string } | null;
   stand: Stand;
   hoechsteVerkuerzung: number;
+  /** welche Form für neue Berichte gilt (eigene Einstellung oder die des Betriebs) */
+  berichtFormGilt: 'woche' | 'tag';
   bearbeitbar: boolean;
   betreuung: Betreuung;
 }

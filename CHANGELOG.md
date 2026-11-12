@@ -4,13 +4,14 @@
 
 ### Neu
 
-- **Berichtsheft mit Einträgen je Tag.** Ausbilder wählen unter „Stammdaten → Betrieb“ die Form des Berichtshefts: wie bisher die Woche im Ganzen – oder Tag für Tag.
+- **Berichtsheft mit Einträgen je Tag.** Ausbilder wählen die Form des Berichtshefts: wie bisher die Woche im Ganzen – oder Tag für Tag. Das geht für den ganzen Betrieb unter „Stammdaten → Betrieb“ und für einzelne Azubis abweichend im Profil des Azubis.
   - In der Tagesform hat jeder Tag von Montag bis Freitag einen eigenen Kasten. Darin trägt der Azubi Zeilen für Betrieb, Unterweisung oder Berufsschule ein, jeweils mit Stunden.
   - Jeder Tag zeigt seine Stunden; „Deine Woche“ zeigt zusätzlich, welche Tage noch leer sind.
   - Samstag und Sonntag lassen sich bei Bedarf einblenden. Abwesenheit steht als Hinweis am Tag.
   - Ansicht, Ausdruck und PDF sind in der Tagesform ebenfalls nach Tagen geordnet.
   - Es bleibt ein Bericht je Woche mit einer Unterschrift und einer Abzeichnung.
 - Die Wahl gilt für Berichte, die ab dann begonnen werden. Schon gespeicherte Berichte behalten ihre Form. Vorgabe ist die bisherige Wochenform – ohne Umstellen ändert sich nichts.
+- Azubis sehen unter „Konto → Meine Ausbildung“, welche Form für sie gilt.
 - Stunden lassen sich wie bisher in Viertelstunden eintragen (0,25).
 
 ## [0.43.0] – 2026-11-12

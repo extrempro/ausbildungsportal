@@ -18,6 +18,9 @@ function MeldungZeile({ m }: { m: Meldung }) {
 }
 
 /** Kopf mit dem Wichtigsten zur Ausbildung – auch auf der Startseite des Azubis. */
+/** Form des Berichtshefts in Worten */
+const BERICHT_FORM: Record<'woche' | 'tag', string> = { woche: 'Woche im Ganzen', tag: 'Einträge je Tag' };
+
 export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
   return (
     <dl className="daten">
@@ -46,6 +49,11 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
       <dd>{String(p.profil.wochenstunden).replace('.', ',')}</dd>
       <dt>Urlaubstage im Jahr</dt>
       <dd>{p.profil.urlaubstage ?? 'nicht eingetragen'}</dd>
+      <dt>Berichtsheft</dt>
+      <dd>
+        {BERICHT_FORM[p.berichtFormGilt]}
+        {p.profil.berichtForm === null ? ' (wie im Betrieb eingestellt)' : ''}
+      </dd>
       {p.profil.pruefungen.length > 0 && (
         <>
           <dt>Prüfungen</dt>
@@ -133,6 +141,14 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
         <label>
           Urlaubstage im Jahr
           <input type="number" min={0} max={60} step={1} value={wert.urlaubstage ?? ''} onChange={(e) => setze('urlaubstage', e.target.value === '' ? null : Number(e.target.value))} placeholder="z. B. 30" />
+        </label>
+        <label>
+          Form des Berichtshefts
+          <select value={wert.berichtForm ?? ''} onChange={(e) => setze('berichtForm', e.target.value === 'tag' || e.target.value === 'woche' ? e.target.value : null)}>
+            <option value="">Wie im Betrieb eingestellt (zurzeit: {BERICHT_FORM[stammdaten.betrieb.berichtForm]})</option>
+            <option value="woche">{BERICHT_FORM.woche}</option>
+            <option value="tag">{BERICHT_FORM.tag}</option>
+          </select>
         </label>
         <label>
           Ausbildungsbeginn
