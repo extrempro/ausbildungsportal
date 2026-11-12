@@ -1,7 +1,9 @@
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { api, ApiFehler, ladeDatei, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
-import type { Bericht, BerichtAbwesenheit, BerichtEintrag, BerichtInhalt, Grund, Logos } from '../api';
+import type { Bericht, BerichtAbwesenheit, BerichtAnhang, BerichtEintrag, BerichtInhalt, Grund, Logos } from '../api';
+import { Anhaenge } from '../berichtAnhaenge';
 import { HandbuchLink } from '../handbuchLink';
 import { Icon } from '../icons';
 import { geheZu, Link, useUngespeichert } from '../router';
@@ -13,6 +15,8 @@ const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: st
   { schluessel: 'unterweisung', titel: 'Unterweisungen und Schulungen', frage: 'Wurde dir etwas erklärt oder warst du auf einem Lehrgang?', hilfe: 'Wurde dir etwas erklärt oder warst du auf einem Lehrgang? Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Unterweisung Arbeitssicherheit' },
   { schluessel: 'schule', titel: 'Berufsschule', frage: 'Warst du in dieser Woche in der Berufsschule?', hilfe: 'Warst du in der Berufsschule? Schreib die Themen aus dem Unterricht auf. Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Mathe: Prozentrechnung' },
 ];
+
+const ANHANG_HILFE = 'Du kannst Fotos, PDF und Office-Dateien anhängen, je Datei bis 5 MB. Sie werden sofort gespeichert. Achte darauf, dass keine anderen Personen und nichts Vertrauliches zu sehen ist.';
 
 type Art = (typeof ABSCHNITTE)[number]['schluessel'];
 const ART_KURZ: Record<Art, string> = { betrieb: 'Betrieb', unterweisung: 'Unterweisung', schule: 'Berufsschule' };
@@ -349,7 +353,7 @@ function EintragListe({ nr, art, titel, hilfe, beispiel, liste, onAendern }: { n
 }
 
 /** Tagesform: je Tag eine Karte mit den Zeilen des Tages. Jede Zeile gehört zu Betrieb, Unterweisung oder Berufsschule. */
-function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAendern }: { montag: string; inhalt: BerichtInhalt; tagSoll: number; wochenende: boolean; onWochenende: () => void; onAendern: (teil: Partial<BerichtInhalt>) => void }) {
+function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAendern, anhaenge }: { montag: string; inhalt: BerichtInhalt; tagSoll: number; wochenende: boolean; onWochenende: () => void; onAendern: (teil: Partial<BerichtInhalt>) => void; /** zeichnet die Anhänge eines Tages */ anhaenge: (tag: string, name: string) => ReactNode }) {
   const tage = tageDerWoche(montag, inhalt, wochenende);
   const setze = (z: TagZeile, teil: Partial<BerichtEintrag>) => onAendern({ [z.art]: inhalt[z.art].map((e, j) => (j === z.index ? { ...e, ...teil } : e)) });
   const entferne = (z: TagZeile) => onAendern({ [z.art]: inhalt[z.art].filter((_, j) => j !== z.index) });
@@ -405,6 +409,7 @@ function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAen
               Berufsschule eintragen
             </button>
           </div>
+          {anhaenge(t.tag, t.name)}
         </fieldset>
       ))}
       {!wochenende && tage.length < 7 && (
@@ -542,6 +547,10 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
       return false;
     }
   };
+  // Anhänge hängen am gespeicherten Bericht: vor dem ersten Hochladen wird deshalb gespeichert, was gerade im Formular steht
+  const vorAnhang = async (): Promise<boolean> => (geaendert || b.status === 'fehlt' ? speichere() : true);
+  // nur die Liste der Anhänge erneuern – was im Formular steht, bleibt unberührt
+  const setzeAnhaenge = (anhaenge: BerichtAnhang[]) => setB((alt) => alt && { ...alt, anhaenge });
   const tue = async (aktion: string, body?: unknown, erfolg?: string) => {
     try {
       uebernimm(await api<Bericht>('POST', `${pfad}/${aktion}`, body));
@@ -672,7 +681,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
                 ))}
               </p>
             )}
-            {inhalt.form === 'tag' && <TagesEingabe montag={b.montag} inhalt={inhalt} tagSoll={tagSoll} wochenende={wochenende} onWochenende={() => setWochenende(true)} onAendern={aendere} />}
+            {inhalt.form === 'tag' && <TagesEingabe montag={b.montag} inhalt={inhalt} tagSoll={tagSoll} wochenende={wochenende} onWochenende={() => setWochenende(true)} onAendern={aendere} anhaenge={(tag, name) => <Anhaenge pfad={pfad} liste={b.anhaenge} tag={tag} schreibbar wo={name} vorher={vorAnhang} onGeaendert={setzeAnhaenge} />} />}
             {inhalt.form !== 'tag' && ABSCHNITTE.map((a, i) =>
               a.schluessel === 'betrieb' || inhalt[a.schluessel].length > 0 || auf.has(a.schluessel) || (a.schluessel === 'schule' && inSchule) ? (
                 <EintragListe key={a.schluessel} nr={i + 1} art={a.schluessel} titel={a.titel} hilfe={a.hilfe} beispiel={a.beispiel} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />
@@ -704,6 +713,20 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
                 }}
               />
             )}
+            {inhalt.form !== 'tag' && (
+              <fieldset className="abschnitt karte teil anhang">
+                <legend>
+                  <span className="ablauf-nr" aria-hidden="true">
+                    5
+                  </span>
+                  <span className="teil-titel">Fotos und Dateien</span>
+                  <span className={`pille ${b.anhaenge.length > 0 ? 'blau' : 'grau'}`}>{b.anhaenge.length}</span>
+                </legend>
+                <p className="leise klein abschnitt-hilfe">{ANHANG_HILFE}</p>
+                <Anhaenge pfad={pfad} liste={b.anhaenge} tag={null} schreibbar wo="diesem Bericht" vorher={vorAnhang} onGeaendert={setzeAnhaenge} />
+              </fieldset>
+            )}
+            {inhalt.form === 'tag' && <p className="leise klein bericht-anhang-hinweis">{ANHANG_HILFE}</p>}
           </div>
 
           <aside className="karte bericht-rand" aria-label="Zusammenfassung der Woche">
@@ -772,9 +795,31 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           </div>
         </div>
       ) : (
-        <section className="karte druckseite">
-          <BerichtBlatt b={b} />
-        </section>
+        <>
+          <section className="karte druckseite">
+            <BerichtBlatt b={b} />
+          </section>
+          {b.anhaenge.length > 0 && (
+            <section className="karte nicht-drucken" aria-labelledby="anhaenge-titel">
+              <h2 id="anhaenge-titel">Fotos und Dateien</h2>
+              <p className="leise klein">Anhänge zum Bericht. Im Ausdruck und im PDF des Berichtshefts stehen sie nicht.</p>
+              {b.inhalt.form === 'tag' ? (
+                tageDerWoche(b.montag, b.inhalt, true)
+                  .filter((t) => b.anhaenge.some((a) => a.tag === t.tag))
+                  .map((t) => (
+                    <div key={t.tag} className="anhang-tag">
+                      <h3>
+                        {t.name}, {datum(t.tag)}
+                      </h3>
+                      <Anhaenge pfad={pfad} liste={b.anhaenge} tag={t.tag} schreibbar={false} wo={t.name} />
+                    </div>
+                  ))
+              ) : (
+                <Anhaenge pfad={pfad} liste={b.anhaenge} tag={null} schreibbar={false} wo="diesem Bericht" />
+              )}
+            </section>
+          )}
+        </>
       )}
 
       {!b.rechte.schreiben && (

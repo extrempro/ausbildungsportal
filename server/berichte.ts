@@ -1,4 +1,5 @@
 import { genehmigteTage } from './urlaub';
+import { anhaengeVon } from './bericht-anhang';
 import { berichtsheftPdf } from './bericht-pdf';
 import type { BerichtFuerPdf } from './bericht-pdf';
 import { leseLogo } from './branding';
@@ -139,6 +140,9 @@ export function summe(i: Inhalt) {
   return { ...teile, gesamt: teile.betrieb + teile.unterweisung + teile.schule + teile.abwesenheit };
 }
 
+/** Die Form eines gespeicherten Berichts. */
+export const formVon = (z: BerichtZeile): BerichtForm => inhaltAus(z).form;
+
 function inhaltAus(z: BerichtZeile): Inhalt {
   try {
     const i = JSON.parse(z.inhalt) as Partial<Inhalt>;
@@ -171,21 +175,21 @@ function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: num
  * Was jemand von einem Bericht sehen darf: Ein Entwurf gehört dem Azubi allein. Erst mit dem Einreichen sehen ihn
  * Ausbilder und Beauftragte; ein zurückgegebener Bericht bleibt für sie sichtbar (sie haben ihn schon gelesen).
  */
-function sichtbar<T extends { status: string }>(z: T | undefined, eigener: boolean): T | undefined {
+export function sichtbar<T extends { status: string }>(z: T | undefined, eigener: boolean): T | undefined {
   return z && (eigener || z.status !== 'entwurf') ? z : undefined;
 }
 
-function holeBericht(db: DB, azubiId: number, montag: string): BerichtZeile | undefined {
+export function holeBericht(db: DB, azubiId: number, montag: string): BerichtZeile | undefined {
   return db.prepare('SELECT * FROM bericht WHERE azubi_id = ? AND montag = ?').get(azubiId, montag) as BerichtZeile | undefined;
 }
 
-function montagAus(c: Ctx): string {
+export function montagAus(c: Ctx): string {
   if (!istMontag(c.p.montag)) throw new Fehler(404, 'Nicht gefunden');
   return c.p.montag;
 }
 
 /** Der Azubi selbst – nur er schreibt und reicht ein. Fremde IDs sehen aus wie unbekannte. */
-function eigenerAzubi(c: Ctx): BenutzerZeile {
+export function eigenerAzubi(c: Ctx): BenutzerZeile {
   if (c.b.rolle !== 'azubi' || idAus(c.p.id) !== c.b.id) throw new Fehler(404, 'Nicht gefunden');
   return c.b;
 }
@@ -248,6 +252,8 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
     summe: summe(inhalt),
     soll: profil.wochenstunden,
     kommentar: z?.kommentar ?? '',
+    // Fotos und Dateien zum Bericht (ohne die Dateien selbst); z ist nur gesetzt, wenn der Bericht für diese Person sichtbar ist
+    anhaenge: z ? anhaengeVon(db, azubi.id, montag) : [],
     // was laut Ausbildungsplan in dieser Woche ansteht – als Gedankenstütze beim Schreiben
     plan: planDerWoche(db, azubi.id, montag, eigener),
     eingereichtAm: z?.eingereicht_am ?? null,

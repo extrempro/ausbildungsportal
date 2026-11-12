@@ -19,6 +19,7 @@ import { betreuung, darfAzubiSehen, darfAzubiVerwalten, darfKontoLoeschen, darfK
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
+import { ANHANG_ROUTEN } from './bericht-anhang';
 import { BERICHT_ROUTEN } from './berichte';
 import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
@@ -633,6 +634,7 @@ export const ROUTEN: Route[] = [
   ...ABTEILUNG_ROUTEN,
   ...EINREICHUNG_ROUTEN,
   ...BENACHRICHTIGUNG_ROUTEN,
+  ...ANHANG_ROUTEN,
 ];
 
 // ---------- Verteiler ----------
