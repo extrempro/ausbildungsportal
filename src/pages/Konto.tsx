@@ -8,6 +8,7 @@ import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 import { HandbuchLink } from '../handbuchLink';
 import { Avatar } from '../avatar';
+import { Benachrichtigungen } from '../benachrichtigungen';
 
 export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<void> }) {
   const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
@@ -231,6 +232,8 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
           </select>
         </label>
       </section>
+
+      {konto.rolle !== 'admin' && <Benachrichtigungen rolle={konto.rolle} />}
 
       {konto.rolle !== 'admin' && (
         <section className="karte" id="kalender-abo">

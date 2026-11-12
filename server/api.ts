@@ -18,6 +18,7 @@ import { leseProtokoll, protokolliere } from './protokoll';
 import { betreuung, darfAzubiSehen, darfAzubiVerwalten, darfKontoLoeschen, darfKontoSehen, darfKontoVerwalten, darfRolleVergeben, sichtbareAzubis, zustaendiger } from './rechte';
 import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
+import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
 import { BERICHT_ROUTEN } from './berichte';
 import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
@@ -631,6 +632,7 @@ export const ROUTEN: Route[] = [
   ...BILD_ROUTEN,
   ...ABTEILUNG_ROUTEN,
   ...EINREICHUNG_ROUTEN,
+  ...BENACHRICHTIGUNG_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

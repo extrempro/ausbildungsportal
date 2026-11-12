@@ -211,6 +211,36 @@ const KALENDER = (rolle: Rolle): Kapitel => ({
   ),
 });
 
+const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
+  id: 'benachrichtigungen',
+  titel: 'Benachrichtigungen per Teams und E-Mail',
+  inhalt: (
+    <>
+      <p>
+        Die Glocke zeigt dir immer, was es Neues gibt. Zusätzlich kann dir das Portal eine Nachricht schicken – per Teams, per E-Mail oder beides. Das ist freiwillig und am Anfang ausgeschaltet. Du stellst es unter <Link zu="/konto">Konto</Link> bei „Benachrichtigungen“ ein.
+      </p>
+      <dl className="begriffe">
+        <Begriff wort="Berichtsheft">{rolle === 'azubi' ? 'Dein Bericht wurde abgezeichnet, zurückgegeben oder wieder geöffnet.' : 'Ein Azubi hat einen Bericht eingereicht – oder an einem Bericht hat sich etwas getan.'}</Begriff>
+        <Begriff wort="Urlaub">{rolle === 'azubi' ? 'Dein Urlaubsantrag wurde bestätigt, genehmigt, abgelehnt oder storniert.' : 'Ein Azubi hat Urlaub beantragt – oder an einem Antrag hat sich etwas getan.'}</Begriff>
+        <Begriff wort="Ausbildungsplan">{rolle === 'azubi' ? 'In deinem Plan gibt es neue Einträge.' : 'Im Plan eines deiner Azubis gibt es neue Einträge von jemand anderem.'}</Begriff>
+      </dl>
+      <ul className="punkte">
+        <li>Für jeden der drei Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
+        <li>Du bekommst nur Nachrichten zu dem, was du auch in der Glocke siehst. Was du selbst gemacht hast, wird dir nicht gemeldet.</li>
+        <li>
+          <strong>In der Nachricht stehen keine Namen und keine Inhalte.</strong> Sie sagt nur, was passiert ist – zum Beispiel „Ein Bericht für KW 46 wurde eingereicht“ – und führt mit einem Link ins Portal. Dort siehst du alles Weitere.
+        </li>
+        <li>Passiert mehreres kurz nacheinander, kommt es nach wenigen Minuten als eine Nachricht. Es dauert also etwas, bis sie da ist.</li>
+        <li>In Teams kommt die Nachricht als Chat vom Absender „Workflows“. E-Mails gehen an die Adresse, mit der du dich anmeldest.</li>
+        <li>Mit „Testnachricht senden“ probierst du aus, ob und wie die Nachricht bei dir ankommt.</li>
+        <li>Ist ein Haken grau, ist dieser Weg in eurem Portal nicht eingerichtet. Darunter steht der Grund. Einrichten kann das nur, wer das Portal betreibt.</li>
+        <li>Verlass dich nicht allein darauf: Kommt eine Nachricht einmal nicht an, steht es trotzdem in der Glocke.</li>
+        <li>Gespeichert wird nur deine Auswahl. Welche Nachrichten du bekommen hast, merkt sich das Portal nicht.</li>
+      </ul>
+    </>
+  ),
+});
+
 const GLOCKE = (rolle: Rolle): Kapitel => ({
   id: 'glocke',
   titel: 'Die Glocke: Was gibt es Neues?',
@@ -238,7 +268,7 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
         <li>Sobald du die Glocke öffnest, verschwindet die Zahl. Die Zeilen bleiben stehen, damit du später noch einmal nachsehen kannst.</li>
         <li>Mehrere gleiche Dinge an einem Tag stehen in einer Zeile, zum Beispiel „3 Berichte abgezeichnet“.</li>
         <li>Was du selbst gemacht hast, steht nicht in der Glocke. Nach 60 Tagen werden die Zeilen gelöscht.</li>
-        <li>Eine E-Mail oder Mitteilung aufs Handy schickt das Portal nicht – sieh also regelmäßig hinein.</li>
+        <li>Wer mag, bekommt zusätzlich eine Nachricht per Teams oder E-Mail. Das stellst du selbst ein – siehe Kapitel „Benachrichtigungen per Teams und E-Mail“. Ohne das schickt das Portal nichts; sieh dann regelmäßig hinein.</li>
       </ul>
     </>
   ),
@@ -628,6 +658,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Meine Ausbildung">Beruf, Berufsschule, Ausbildungszeit, Wochenstunden und Prüfungstermine. Das trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</Begriff>
           <Begriff wort="Unterschrift">Du unterschreibst einmal mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie kannst du nicht einreichen. Änderst du sie später, behalten alte Berichte die alte Unterschrift.</Begriff>
           <Begriff wort="Kalender abonnieren">Dein Plan im eigenen Kalender. Mehr dazu im Kapitel „Kalender abonnieren“.</Begriff>
+          <Begriff wort="Benachrichtigungen">Ob du zusätzlich zur Glocke eine Nachricht per Teams oder E-Mail bekommst. Mehr dazu im Kapitel „Benachrichtigungen per Teams und E-Mail“.</Begriff>
           <Begriff wort="Darstellung">Hell, dunkel oder automatisch wie dein Gerät.</Begriff>
         </dl>
         <p>Angemeldet wirst du mit deinem Microsoft-Konto. Ein eigenes Passwort für das Portal gibt es nicht.</p>
@@ -652,6 +683,7 @@ const AZUBI: Kapitel[] = [
   },
   KALENDER('azubi'),
   GLOCKE('azubi'),
+  BENACHRICHTIGUNGEN('azubi'),
   PROFILBILD('azubi'),
   FEHLER,
   APP,
@@ -1237,6 +1269,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   DRUCKEN(rolle),
   KALENDER(rolle),
   GLOCKE(rolle),
+  BENACHRICHTIGUNGEN(rolle),
   PROFILBILD(rolle),
   FEHLER,
   APP,
@@ -1315,6 +1348,7 @@ const ADMIN: Kapitel[] = [
         <li>Ein Bildschirmfoto erscheint erst nach einem Klick. Es kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</li>
         <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig.</li>
         <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
+        <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
       </ul>
     ),
   },

@@ -7764,3 +7764,32 @@ details.abt-durchlauf-schmal {
     margin-left: 0;
   }
 }
+
+/* ---------- Konto: Benachrichtigungen per Teams und E-Mail ---------- */
+.benach-liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 0 0 16px;
+}
+
+fieldset.benach-bereich {
+  margin: 0;
+  padding: 12px 16px;
+  min-width: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+}
+
+fieldset.benach-bereich legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+fieldset.benach-bereich p {
+  margin: 0 0 4px;
+}
+
+.benach-grund {
+  margin: 0 0 8px;
+}

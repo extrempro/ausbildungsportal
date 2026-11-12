@@ -29,6 +29,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/rechte.ts` | Rechte zentral – wer darf welchen Azubi sehen |
 | `server/migrations/` | Datenbank, fortlaufend nummerierte SQL-Dateien |
 | `server/test/` | Tests; `api.test.ts` enthält die Rechte-Tabelle aller Routen, `handbuch.test.ts` prüft die Handbuch-Verweise |
+| `server/aktivitaet.ts`, `server/benachrichtigung.ts` | Glocke und – daran angehängt – Benachrichtigungen per Teams und E-Mail (ohne Namen, nur für Berechtigte) |
 | `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben) |
 | `src/App.tsx`, `src/router.tsx` | Seiten und eigener Router (`geheZu`, `<Link>`, `useUngespeichert`) |
 | `src/pages/` | je Seite eine Datei; `Handbuch.tsx` ist das Handbuch für alle Rollen |
@@ -70,7 +71,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 ## Datenschutz und Recht – nicht verhandelbar
 
 - Lernstand, Abzeichen, Übungsergebnisse, private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
-- Teams-Karten ohne Namen. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
+- Teams-Karten und Benachrichtigungen ohne Namen und ohne Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
 - Geheimnisse (Webhook-Adressen, SMTP-Zugang, Kalender-Link) stehen nur in `.env` und werden nie protokolliert.
 - Das Repository ist **öffentlich**: keine privaten Daten, keine echten Namen oder Mailadressen, kein `data/`, keine `.env` – auch nicht in Tests, Commits und Pull-Request-Texten.
 - Keine fremden Bilder, Grafiken oder Texte ohne Lizenz; keine Original-Prüfungsaufgaben. Grafiken selbst als SVG zeichnen.

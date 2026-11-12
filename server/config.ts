@@ -32,7 +32,9 @@ export interface Config {
   fehlerWebhook: string | null;
   /** auch den Text der Meldung an Teams schicken (sonst nur: dass eine Meldung da ist) */
   fehlerWebhookMitText: boolean;
-  /** Mailserver für die Mail an die Personalstelle (Urlaub); null = kein Mailversand */
+  /** Adresse eines Teams-Workflows, der eine Karte als Chat an eine einzelne Person schickt (Benachrichtigungen); null = nicht eingerichtet */
+  teamsChatWebhook: string | null;
+  /** Mailserver für die Mail an die Personalstelle (Urlaub) und für Benachrichtigungen; null = kein Mailversand */
   smtp: SmtpEinstellung | null;
   adminBenutzer: string;
   adminPasswort: string;
@@ -74,6 +76,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     if (!ziel || ziel.protocol !== 'https:') throw new Error('FEHLER_WEBHOOK_URL muss eine vollständige https-Adresse sein');
   }
 
+  const teamsChatWebhook = (env.TEAMS_CHAT_WEBHOOK_URL || '').trim() || null;
+  if (teamsChatWebhook) {
+    let ziel: URL | null = null;
+    try {
+      ziel = new URL(teamsChatWebhook);
+    } catch {
+      // unten gemeldet
+    }
+    if (!ziel || ziel.protocol !== 'https:') throw new Error('TEAMS_CHAT_WEBHOOK_URL muss eine vollständige https-Adresse sein');
+  }
+
   let smtp: SmtpEinstellung | null = null;
   const smtpHost = (env.SMTP_HOST || '').trim();
   if (smtpHost) {
@@ -106,6 +119,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, argv: string[] 
     devAnmeldung: !production && env.DEV_ANMELDUNG === 'true',
     fehlerWebhook,
     fehlerWebhookMitText: env.FEHLER_WEBHOOK_MIT_TEXT === 'true',
+    teamsChatWebhook,
     smtp,
     adminBenutzer: (env.ADMIN_BENUTZER || '').trim().toLowerCase(),
     adminPasswort: env.ADMIN_PASSWORT || '',
