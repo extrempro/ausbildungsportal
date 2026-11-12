@@ -18,6 +18,58 @@ function Zeile({ m }: { m: Meldung }) {
   );
 }
 
+/** Lerninhalte für alle Berufe: ein Paket, das jeder Azubi unter „Lernen“ zum Lesen sieht (z. B. Anleitungen zum Arbeiten und zur Prüfung). */
+function LernAllgemein({ pakete, gewaehlt, onFertig }: { pakete: Daten['lernpakete']; gewaehlt: string | null; onFertig: (text: string) => Promise<void> }) {
+  const [fehler, setFehler] = useState('');
+  const [laeuft, setLaeuft] = useState(false);
+  const fehlt = !!gewaehlt && !pakete.some((p) => p.id === gewaehlt);
+  async function speichere(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const paket = String(new FormData(e.currentTarget).get('paket') ?? '') || null;
+    setFehler('');
+    setLaeuft(true);
+    try {
+      await api('PUT', '/api/stammdaten/lern-allgemein', { paket });
+      await onFertig(paket ? 'Lerninhalte für alle Berufe gespeichert.' : 'Lerninhalte für alle Berufe ausgeschaltet.');
+    } catch (f) {
+      setFehler(f instanceof Error ? f.message : 'Das hat nicht geklappt.');
+    } finally {
+      setLaeuft(false);
+    }
+  }
+  return (
+    <form className="reihe lern-allgemein" key={gewaehlt ?? ''} onSubmit={speichere}>
+      <label className="ganz">
+        Lerninhalte für alle Berufe
+        <select name="paket" defaultValue={gewaehlt ?? ''} disabled={pakete.length === 0 && !gewaehlt}>
+          <option value="">{pakete.length === 0 && !gewaehlt ? '– nicht verfügbar –' : '– aus –'}</option>
+          {pakete.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.titel}
+            </option>
+          ))}
+          {fehlt && <option value={gewaehlt!}>{gewaehlt} (Inhalte fehlen auf dem Server)</option>}
+        </select>
+        <span className="leise klein">
+          Dieses Lernmodul sehen <strong>alle Azubis</strong> unter „Lernen“ – zusätzlich zum Lernmodul ihres Berufs und nur zum Lesen, ohne Ampel und Abzeichen. Gedacht für Anleitungen, die für jeden Beruf gelten, zum Beispiel zum Arbeiten und zur Prüfung.{' '}
+          {pakete.length === 0 && !gewaehlt && 'Auswählen lässt es sich, sobald Lerninhalte auf dem Server liegen. '}
+          <HandbuchLink kapitel="lern-allgemein">Lerninhalte für alle Berufe</HandbuchLink>
+        </span>
+      </label>
+      {fehler && (
+        <p className="hinweis fehler ganz" role="alert">
+          {fehler}
+        </p>
+      )}
+      <p className="aktionen ganz">
+        <button className="knopf schlicht" disabled={laeuft || (pakete.length === 0 && !gewaehlt)}>
+          Auswahl speichern
+        </button>
+      </p>
+    </form>
+  );
+}
+
 function BerufFormular({ beruf, pakete, onFertig }: { beruf?: Beruf; pakete: Daten['lernpakete']; onFertig: (text: string) => Promise<void> }) {
   const eingaben = useEingaben();
   const [fehler, setFehler] = useState('');
@@ -394,6 +446,7 @@ export function Stammdaten() {
               ))}
           </>
         )}
+        <LernAllgemein pakete={daten.lernpakete} gewaehlt={daten.lernAllgemein} onFertig={fertig} />
         {daten.berufe.length === 0 && <p className="leise">Noch kein Beruf angelegt.</p>}
         {daten.berufe.map((b) => (
           <BerufFormular key={`${b.id}-${b.bezeichnung}-${b.fachrichtung}-${b.regeldauer_monate}-${b.lernpaket}`} beruf={b} pakete={daten.lernpakete} onFertig={fertig} />

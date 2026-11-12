@@ -49,6 +49,10 @@ Mehr dazu im README des Portals, Abschnitt „Lernmodul“.
 
 Ausbilder können ein Inhaltspaket auch als ZIP-Datei im Portal einreichen (Seite „Lerninhalte“). Der Super-Admin prüft es und lädt es hoch. Solche Pakete liegen **nicht hier**, sondern im Datenordner des Portals unter `data/lerninhalte/<kennung>/` – dieser Ordner hier ist im Container nur lesend eingebunden. Gibt es dieselbe Kennung an beiden Orten, gilt das über das Portal hochgeladene Paket. Um wieder das Paket aus diesem Ordner zu verwenden, den Ordner `data/lerninhalte/<kennung>/` löschen.
 
+## Lerninhalte für alle Berufe
+
+Ein Paket kann zusätzlich für alle Azubis gelten – gedacht für Anleitungen, die in jedem Beruf passen (zum Beispiel „Arbeiten und Prüfung“). Es hat dasselbe Format wie jedes andere Paket und kommt auf demselben Weg auf den Server. Ein Ausbilder legt es unter Verwaltung → Stammdaten im Feld „Lerninhalte für alle Berufe“ fest. Azubis lesen es dann unter „Lernen“ – ohne Ampel, Üben und Abzeichen.
+
 ## Planer für die Prüfung
 
 Mit der Datei `planer.md` bekommt ein Beruf einen Planer für das Prüfungsvorhaben (Abschlussprojekt, Gesellenstück, Fachaufgabe …): Termine, Checklisten, Zeitplanung, Fragen zum Üben, Links. Azubis sehen ihn, sobald ein Ausbilder ihn in ihrem Profil freischaltet. Der Aufbau der Datei steht im Handbuch des Portals (Rolle Ausbilder, Kapitel „Planer für einen Beruf erstellen: Aufbau der Datei“).

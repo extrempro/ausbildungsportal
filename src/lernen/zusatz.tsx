@@ -81,14 +81,15 @@ export interface Zusatz {
 
 /** Zusatzwissen eines Themenfelds – freiwillig, zählt nicht zur Ampel; nur ein Haken „Gelesen“. */
 export function ZusatzBereich({ feld, zusatz, setzeGelesen }: { feld: string; zusatz: Zusatz[]; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
+  const { anleitungen } = useLern();
   if (!zusatz.length) return null;
   return (
     <section className="zusatz-bereich" aria-labelledby="zusatz-titel">
       <div className="zusatz-kopf">
         <h2 id="zusatz-titel">
-          <Icon name="stern" /> Zusatzwissen
+          <Icon name="stern" /> {anleitungen ? 'Zum Vertiefen' : 'Zusatzwissen'}
         </h2>
-        <span className="pille grau">Freiwillig · zählt nicht zur Ampel</span>
+        {!anleitungen && <span className="pille grau">Freiwillig · zählt nicht zur Ampel</span>}
       </div>
       {zusatz.map((z) => (
         <ZusatzKarte key={`${feld}.${z.id}`} feld={feld} z={z} setzeGelesen={setzeGelesen} />
@@ -100,7 +101,7 @@ export function ZusatzBereich({ feld, zusatz, setzeGelesen }: { feld: string; zu
 function ZusatzKarte({ feld, z, setzeGelesen }: { feld: string; z: Zusatz; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
-  const { basis, lesen } = useLern();
+  const { basis, lesen, anleitungen } = useLern();
   return (
     <article id={`z-${z.id}`} className={`karte zusatz ${z.gelesen ? 'gelesen' : ''}`}>
       <div className="zusatz-titelzeile">
@@ -150,7 +151,7 @@ function ZusatzKarte({ feld, z, setzeGelesen }: { feld: string; z: Zusatz; setze
         </p>
       )}
       <details className="klapp lern-zusatz-inhalt">
-        <summary>{z.typ === 'ablauf' ? 'Ablauf Schritt für Schritt' : 'Zusatzwissen lesen'}</summary>
+        <summary>{z.typ === 'ablauf' ? 'Ablauf Schritt für Schritt' : anleitungen ? 'Weiterlesen' : 'Zusatzwissen lesen'}</summary>
         <div className="zusatz-inhalt">
           {z.absaetze.map((a, i) => (
             <p key={i}>

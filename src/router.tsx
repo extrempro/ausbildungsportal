@@ -109,9 +109,9 @@ window.addEventListener('popstate', (e: PopStateEvent) => {
 });
 
 /** aktivAb: der Link gilt auch auf Unterseiten als aktiv (z. B. /azubis/12 für „Azubis“). */
-export function Link({ zu, children, className, aktivAb }: { zu: string; children: ReactNode; className?: string; aktivAb?: string }) {
+export function Link({ zu, children, className, aktivAb, auch }: { zu: string; children: ReactNode; className?: string; aktivAb?: string; /** zweiter Bereich, in dem der Link ebenfalls als aktiv gilt */ auch?: string }) {
   const pfad = usePfad();
-  const aktiv = pfad === zu || (!!aktivAb && pfad.startsWith(`${aktivAb}/`));
+  const aktiv = pfad === zu || (!!aktivAb && pfad.startsWith(`${aktivAb}/`)) || (!!auch && (pfad === auch || pfad.startsWith(`${auch}/`)));
   return (
     <a
       href={zu}

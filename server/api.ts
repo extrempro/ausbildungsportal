@@ -7,7 +7,7 @@ import { BILD_ROUTEN, merkeBild } from './bild';
 import { EINREICHUNG_ROUTEN } from './lern-einreichung';
 import { URLAUB_ROUTEN } from './urlaub';
 import type { Anfrage, Antwort, Ctx, Kontext, Route } from './api-basis';
-import { LERN_ROUTEN, paketVon } from './lernen';
+import { LERN_ROUTEN, paketVon, allgemeinesPaket } from './lernen';
 import type { Config } from './config';
 import type { DB } from './db';
 import { transaktion } from './db';
@@ -297,7 +297,7 @@ export const ROUTEN: Route[] = [
     },
   },
 
-  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
+  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null, anleitungen: c.b.rolle === 'azubi' ? (allgemeinesPaket(c.k)?.titel ?? null) : null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
 
   {
     m: 'PUT',

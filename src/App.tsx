@@ -18,7 +18,7 @@ import { Lernen } from './pages/Lernen';
 import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
 import { LernEinreichungen } from './pages/LernEinreichungen';
 import { useBegleiter } from './begleiter';
-import { Leseansicht } from './lernen/basis';
+import { Anleitungen, LernAzubi, Leseansicht } from './lernen/basis';
 import { Planer } from './pages/Planer';
 import { LernKompendium } from './pages/LernKompendium';
 import { LernThema } from './pages/LernThema';
@@ -46,6 +46,8 @@ interface Punkt {
   kurz?: string;
   icon: IconName;
   aktivAb?: string;
+  /** zweiter Bereich, der zu diesem Menüpunkt gehört (z. B. die Anleitungen unter „Lernen“) */
+  auch?: string;
   /** auf dem Handy nicht in der Leiste unten, sondern unter „Mehr“ – die Leiste fasst nur fünf Punkte */
   mehr?: boolean;
   /** Zahl am Menüpunkt, z. B. offene Fehlermeldungen */
@@ -72,6 +74,8 @@ export function App() {
   const [konto, setKonto] = useState<Konto | null | undefined>(undefined); // undefined = lädt
   // Lernmodul: nur für Azubis, deren Ausbildungsberuf ein Inhaltspaket hat
   const [lernen, setLernen] = useState(false);
+  // Titel des Lernpakets für alle Berufe (Anleitungen) – null, wenn es keins gibt; nur Azubis
+  const [anleitungen, setAnleitungen] = useState<string | null>(null);
   // Titel des Planers für das Prüfungsvorhaben (z. B. „Abschlussprojekt“) – null, solange er für den Azubi nicht freigeschaltet ist
   const [planer, setPlaner] = useState<string | null>(null);
   const [version, setVersion] = useState('');
@@ -120,10 +124,11 @@ export function App() {
 
   const lade = useCallback(async () => {
     try {
-      const r = await api<{ konto: Konto; version: string; lernen?: boolean; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
+      const r = await api<{ konto: Konto; version: string; lernen?: boolean; anleitungen?: string | null; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
       setKonto(r.konto);
       setProfilbild(r.profilbild === true);
       setLernen(r.lernen === true);
+      setAnleitungen(r.anleitungen ?? null);
       setPlaner(r.planer ?? null);
       setVersion(r.version);
     } catch {
@@ -289,6 +294,7 @@ export function App() {
   const urlaubAzubi = /^\/azubis\/(\d{1,12})\/urlaub$/.exec(pfad)?.[1];
   // Leseansicht der Lerninhalte für Ausbilder und Beauftragte: /lerninhalte/<paket>[/kompendium|/<themenfeld>]
   const lesePfad = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})(?:\/([a-z0-9-]{1,40}))?$/.exec(pfad);
+  const anleitung = /^\/anleitungen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernThema = /^\/lernen\/(?!ueben$)([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernKarten = /^\/lernen\/ueben\/karten\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernQuiz = /^\/lernen\/ueben\/quiz\/([a-z0-9-]{1,40}\.[a-z0-9-]{1,60})$/.exec(pfad)?.[1];
@@ -322,6 +328,19 @@ export function App() {
   else if (lesePfad && betreut)
     seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
   else if (pfad === '/planer' && planer) seite = <Planer />;
+  // Paket für alle Berufe: jeder Azubi liest es – auch ohne eigenes Lernmodul
+  else if (pfad === '/anleitungen' && anleitungen)
+    seite = (
+      <Anleitungen>
+        <LerninhalteUebersicht />
+      </Anleitungen>
+    );
+  else if (anleitung && anleitungen)
+    seite = (
+      <Anleitungen>
+        <LernThema key={anleitung} id={anleitung} />
+      </Anleitungen>
+    );
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (pfad === '/lernen/ueben' && lernen) seite = <LernUeben />;
@@ -354,7 +373,8 @@ export function App() {
             // die Startseite des Azubis ist sein Ausbildungsplan
             { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
             { zu: '/berichtsheft', text: 'Berichtsheft', icon: 'heft', aktivAb: '/berichtsheft' },
-            ...(lernen ? [{ zu: '/lernen', text: 'Lernen', icon: 'lernen', aktivAb: '/lernen' } as Punkt] : []),
+            // ohne eigenes Lernmodul führt „Lernen“ zu den Anleitungen für alle Berufe
+            ...(lernen ? [{ zu: '/lernen', text: 'Lernen', icon: 'lernen', aktivAb: '/lernen', auch: '/anleitungen' } as Punkt] : anleitungen ? [{ zu: '/anleitungen', text: 'Lernen', icon: 'lernen', aktivAb: '/anleitungen' } as Punkt] : []),
             ...(planer ? [{ zu: '/planer', text: planer, icon: 'haken', mehr: true } as Punkt] : []),
             { zu: '/urlaub', text: 'Urlaub', icon: 'urlaub' },
           ]
@@ -401,7 +421,7 @@ export function App() {
   const liste = (punkte: Punkt[]) =>
     punkte.map((p) => (
       <li key={p.zu}>
-        <Link zu={p.zu} aktivAb={p.aktivAb}>
+        <Link zu={p.zu} aktivAb={p.aktivAb} auch={p.auch}>
           <Icon name={p.icon} />
           {p.text}
         </Link>
@@ -479,7 +499,7 @@ export function App() {
           </Link>
           <nav aria-label="Hauptnavigation" className="haupt-nav">
             {haupt.map((p) => (
-              <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb}>
+              <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb} auch={p.auch}>
                 {/* Symbol über dem Wort – wie in der Leiste am Handy; das Wort bleibt, damit nichts zu raten ist */}
                 <span className="nav-symbol" aria-hidden="true">
                   <Icon name={p.icon} groesse={20} />
@@ -550,7 +570,13 @@ export function App() {
           </aside>
         )}
         {begleiter.angebot}
-        {seite}
+        {konto.rolle === 'azubi' ? (
+          <LernAzubi lernen={lernen} allgemein={anleitungen}>
+            {seite}
+          </LernAzubi>
+        ) : (
+          seite
+        )}
       </main>
       {!fuehrung && begleiter.rest}
       {weitUnten && !fuehrung && (
@@ -567,7 +593,7 @@ export function App() {
           <Icon name="oben" groesse={22} />
         </button>
       )}
-      {fuehrung && <Fuehrung rolle={konto.rolle} bereiche={[...(lernen ? ['lernen' as const] : []), ...(planer ? ['planer' as const] : [])]} onEnde={beendeFuehrung} />}
+      {fuehrung && <Fuehrung rolle={konto.rolle} bereiche={[...(lernen ? ['lernen' as const] : anleitungen ? ['anleitungen' as const] : []), ...(planer ? ['planer' as const] : [])]} onEnde={beendeFuehrung} />}
       {melden && <FehlerMelden version={version} onZu={schliesseMelden} />}
       <Dialoge />
       <footer className="fuss leise">
@@ -585,7 +611,7 @@ export function App() {
         {haupt
           .filter((p) => !p.mehr)
           .map((p) => (
-          <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb}>
+          <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb} auch={p.auch}>
             <Icon name={p.icon} groesse={22} />
             <span>{p.kurz ?? p.text}</span>
             {!!p.zahl && (

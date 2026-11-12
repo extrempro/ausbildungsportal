@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.53.0] – 2026-11-12
+
+### Neu
+
+- **Anleitungen für alle Berufe unter „Lernen“.** Ausbilder können in den Stammdaten ein Lernmodul als „Lerninhalte für alle Berufe“ festlegen – gedacht für Anleitungen, die in jedem Beruf gelten, zum Beispiel zum strukturierten Arbeiten, zur Vorbereitung auf eine Prüfung und zum Prüfungstag. Alle Azubis sehen es unter „Lernen“ als eigenen Reiter.
+- **Nur zum Lesen.** In diesem Bereich gibt es keine Ampel, keine Notizen, kein Üben und keine Abzeichen. Es wird nichts über die Azubis gespeichert.
+- **Auch ohne Lernmodul für den Beruf.** Azubis, deren Beruf noch kein Lernmodul hat, bekommen dadurch den Menüpunkt „Lernen“ mit den Anleitungen.
+- Die Inhalte kommen wie jedes Lernmodul auf den Server: als Ordner oder als ZIP-Datei über „Lerninhalte einreichen“.
+
 ## [0.52.0] – 2026-11-12
 
 ### Neu

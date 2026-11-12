@@ -653,7 +653,7 @@ const AZUBI: Kapitel[] = [
     inhalt: (
       <>
         <p>
-          Den Menüpunkt <Link zu="/lernen">Lernen</Link> gibt es, wenn für deinen Ausbildungsberuf Lerninhalte eingeschaltet sind. Fehlt er, gibt es für deinen Beruf noch keine – frag deinen Ausbilder.
+          Den Menüpunkt <Link zu="/lernen">Lernen</Link> gibt es, wenn für deinen Ausbildungsberuf Lerninhalte eingeschaltet sind. Fehlt er, gibt es für deinen Beruf noch keine – frag deinen Ausbilder. Zeigt „Lernen“ bei dir nur Anleitungen ohne Ampel, gibt es für deinen Beruf noch kein Lernmodul, aber Anleitungen für alle Berufe – siehe Kapitel „Anleitungen für alle Berufe lesen“.
         </p>
         <h3>So geht's</h3>
         <ol className="schritte">
@@ -824,6 +824,32 @@ const AZUBI: Kapitel[] = [
           <li>Deine Ausbilder können den Planer ergänzen. Dann kommt zum Beispiel ein Punkt in einer Checkliste dazu, und „16 von 16“ wird zu „16 von 17“. Oben im Planer steht dann „Dein Planer wurde ergänzt“ mit den neuen Punkten; sie tragen die Marke „neu“, bis du „Als gesehen merken“ wählst. Deine Haken und Texte bleiben.</li>
           <li>Nimmt dein Ausbilder die Freischaltung zurück, verschwindet der Planer aus dem Menü. Deine Eintragungen bleiben gespeichert und sind wieder da, wenn er ihn erneut freischaltet.</li>
           <li>Dein Beruf hat keinen Planer im Menü? Dann gibt es für ihn noch keinen, oder er ist für dich nicht freigeschaltet. Frag deinen Ausbilder.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: 'anleitungen',
+    titel: 'Anleitungen für alle Berufe lesen',
+    gruppe: 'Lernen und Prüfung',
+    inhalt: (
+      <>
+        <p>
+          Unter <Link zu="/anleitungen">Lernen</Link> kann es einen Bereich geben, der für alle Berufe gleich ist – zum Beispiel „Arbeiten und Prüfung“ mit Anleitungen zum strukturierten Arbeiten, zur Vorbereitung auf eine Prüfung und zum Prüfungstag. Du liest dort nur. Es gibt ihn, wenn dein Ausbilder ihn eingeschaltet hat.
+        </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Öffne „Lernen“. Hast du ein Lernmodul für deinen Beruf, steht der Bereich oben als letzter Reiter. Hast du keins, landest du direkt dort.</li>
+          <li>Wähle eine Anleitung. Sie ist in Abschnitte geteilt; jeder Abschnitt hat kurze Stichpunkte und einen Merksatz.</li>
+          <li>Unter „Zum Vertiefen“ stehen längere Stücke – zum Beispiel ein Vorgehen in Schritten oder eine Checkliste. Mit „Anzeigen“ klappst du sie auf.</li>
+          <li>Am PC wechselst du links zwischen den Anleitungen und springst zu einem Abschnitt. Am Handy geht das über „Anleitung wechseln“.</li>
+        </ol>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>Hier gibt es keine Ampel, keine Notizen, kein Üben und keine Abzeichen. Es wird nichts über dich gespeichert – auch nicht, was du gelesen hast.</li>
+          <li>Die Checklisten sind zum Lesen gedacht. Abhaken kannst du sie nicht.</li>
+          <li>Die Anleitungen gelten für alle Berufe und sind deshalb allgemein gehalten. Was in deiner Prüfung genau gilt – Termine, Hilfsmittel, Regeln –, steht in deiner Einladung. Frag im Zweifel deinen Ausbilder oder die zuständige Stelle.</li>
+          <li>Woher die Texte stammen und von wann sie sind, steht unten auf jeder Seite.</li>
         </ul>
       </>
     ),
@@ -1609,6 +1635,34 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>
                   Im Text gehen <code>**fett**</code>, <code>`Code`</code> und Links. Mehr Auszeichnung gibt es nicht.
                 </li>
+              </ul>
+            </>
+          ),
+        },
+        {
+          id: 'lern-allgemein',
+          titel: 'Lerninhalte für alle Berufe festlegen',
+          gruppe: 'Verwaltung',
+          inhalt: (
+            <>
+              <p>
+                Ein Lernmodul gehört sonst zu einem Beruf. Zusätzlich kannst du <strong>ein</strong> Lernmodul festlegen, das alle Azubis sehen – gedacht für Anleitungen, die in jedem Beruf gelten, zum Beispiel „Arbeiten und Prüfung“. Azubis lesen es nur: ohne Ampel, Notizen, Üben und Abzeichen.
+              </p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>Die Inhalte müssen auf dem Server liegen. Entweder bindet der Betreiber sie als Ordner ein, oder du reichst sie unter <Link zu="/lerninhalte">Lerninhalte</Link> als ZIP-Datei ein und der Super-Admin lädt sie hoch.</li>
+                <li>Öffne <Link zu="/verwaltung/stammdaten">Stammdaten</Link>. Im Abschnitt „Ausbildungsberufe“ steht das Feld „Lerninhalte für alle Berufe“.</li>
+                <li>Wähle das Lernmodul und dann „Auswahl speichern“. Mit „– aus –“ nimmst du es wieder weg.</li>
+              </ol>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>Jeder Azubi sieht es sofort unter „Lernen“ – auch Azubis, deren Beruf kein eigenes Lernmodul hat. Bei ihnen erscheint dadurch der Menüpunkt „Lernen“.</li>
+                <li>Das Format ist dasselbe wie bei jedem Lernmodul (Kapitel „Lerninhalte für einen Beruf erstellen“). Prüfungsfragen und Karteikarten brauchst du hier nicht: Geübt wird in diesem Bereich nicht.</li>
+                <li>Es wird nichts über die Azubis gespeichert – auch nicht, wer was gelesen hat.</li>
+                <li>Dasselbe Lernmodul kann zugleich an einem Beruf eingeschaltet sein. Dort hat es dann wie gewohnt Ampel und Abzeichen. Sinnvoll ist das selten.</li>
+                <li>Ist das Feld gesperrt, liegen noch keine Lerninhalte auf dem Server.</li>
+                <li>Du und die Ausbildungsbeauftragten seht das Lernmodul unter „Lerninhalte“ mit dem Vermerk „alle Berufe“.</li>
+                <li>Die Azubis bekommen dazu keine Nachricht. Sag ihnen Bescheid, wenn es etwas Neues gibt.</li>
               </ul>
             </>
           ),

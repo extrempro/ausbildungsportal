@@ -451,6 +451,63 @@ test('Leseansicht: Ausbilder und Beauftragte sehen alle Lernmodule mit Inhalt �
   assert.equal((await ruf(w.u, 'GET', '/api/lerninhalte')).status, 401);
 });
 
+test('Paket für alle Berufe: Ausbilder legt es fest, jeder Azubi liest es – ohne Lernstand, nichts wird gespeichert', async () => {
+  const dir = inhalte();
+  const p = join(dir, 'arbeiten');
+  mkdirSync(join(p, 'themen'), { recursive: true });
+  writeFileSync(join(p, 'paket.json'), JSON.stringify({ titel: 'Arbeiten und Prüfung' }));
+  writeFileSync(join(p, 'meta.json'), JSON.stringify({ stand: '2026-11-12' }));
+  writeFileSync(join(p, 'themenfelder.json'), JSON.stringify([{ id: 'struktur', icon: 'book-open', lernfelder: [], pruefung: [] }]));
+  writeFileSync(join(p, 'themen', 'struktur.md'), '---\ntitel: Strukturiert arbeiten\n---\n\nSo behältst du den Überblick.\n\n## Aufgabe klären {#klaeren}\n\n### Kernbegriffe\n- **Ziel:** Was am Ende da sein soll.\n\n### Merksatz\nErst fragen, dann anfangen.\n');
+  const w = await welt(dir);
+  const ich = async (wer: BenutzerZeile) => koerper(await ruf(w.u, 'GET', '/api/ich', { cookies: als(w, wer) }));
+  const setze = (paket: unknown, wer = w.ausbilder) => ruf(w.u, 'PUT', '/api/stammdaten/lern-allgemein', { cookies: als(w, wer), body: { paket } });
+  const sd = async (wer = w.ausbilder) => koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, wer) })).lernAllgemein;
+
+  // am Anfang keins
+  assert.equal(await sd(), null);
+  assert.equal((await ich(w.maler)).anleitungen, null);
+  assert.equal((await ruf(w.u, 'GET', '/api/anleitungen', { cookies: als(w, w.maler) })).status, 404);
+
+  // nur Ausbilder legen fest, nur vorhandene Pakete
+  for (const wer of [w.bea, w.anna, admin(w.u.db)]) assert.equal((await setze('arbeiten', wer)).status, 403, wer.rolle);
+  assert.equal((await setze('gibt-es-nicht')).status, 400);
+  assert.equal((await setze('../arbeiten')).status, 400);
+  assert.equal((await setze(7)).status, 400);
+  assert.deepEqual(koerper(await setze('arbeiten')), { lernAllgemein: 'arbeiten' });
+  assert.equal(await sd(), 'arbeiten');
+  assert.equal(await sd(w.bea), null, 'Beauftragte brauchen die Angabe nicht');
+
+  // jeder Azubi sieht es – mit und ohne Lernmodul für seinen Beruf; andere Rollen bekommen kein Menü dafür
+  assert.deepEqual([(await ich(w.maler)).anleitungen, (await ich(w.maler)).lernen], ['Arbeiten und Prüfung', false]);
+  assert.deepEqual([(await ich(w.anna)).anleitungen, (await ich(w.anna)).lernen], ['Arbeiten und Prüfung', true]);
+  assert.equal((await ich(w.ausbilder)).anleitungen, null);
+  for (const wer of [w.maler, w.anna]) {
+    const ue = koerper(await ruf(w.u, 'GET', '/api/anleitungen', { cookies: als(w, wer) }));
+    assert.deepEqual([ue.paket.titel, ue.themenfelder.map((f: { id: string; titel: string }) => f.titel), ue.rang], ['Arbeiten und Prüfung', ['Strukturiert arbeiten'], undefined]);
+    const t = koerper(await ruf(w.u, 'GET', '/api/anleitungen/thema/struktur', { cookies: als(w, wer) })).thema;
+    assert.deepEqual([t.worum, t.unterthemen[0].begriffe[0].begriff, t.unterthemen[0].merksatz, t.unterthemen[0].status, t.abzeichen.stufe], ['So behältst du den Überblick.', 'Ziel', 'Erst fragen, dann anfangen.', 'rot', 0]);
+    assert.equal((await ruf(w.u, 'GET', '/api/anleitungen/thema/gibtsnicht', { cookies: als(w, wer) })).status, 404);
+  }
+  for (const wer of [w.ausbilder, w.bea, admin(w.u.db)]) for (const pfad of ['/api/anleitungen', '/api/anleitungen/thema/struktur']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) })).status, 403, `${wer.rolle} ${pfad}`);
+  assert.equal((await ruf(w.u, 'GET', '/api/anleitungen')).status, 401);
+
+  // das eigene Lernmodul bleibt davon unberührt: Annas Lernen kennt die Anleitung nicht, der Lernstand lässt sich dort nicht setzen
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.anna) })).themenfelder.map((f: { id: string }) => f.id), ['netz', 'wiso']);
+  assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/unterthema/struktur.klaeren', { cookies: als(w, w.anna), body: { status: 'gruen' } })).status, 404);
+  assert.equal((w.u.db.prepare("SELECT COUNT(*) AS n FROM lern_status WHERE paket = 'arbeiten'").get() as { n: number }).n, 0);
+
+  // Leseansicht der Betreuenden nennt „alle Berufe“
+  const liste = koerper(await ruf(w.u, 'GET', '/api/lerninhalte', { cookies: als(w, w.bea) })).pakete as { id: string; berufe: string[] }[];
+  assert.deepEqual(liste.find((x) => x.id === 'arbeiten')!.berufe, ['alle Berufe']);
+
+  // wieder wegnehmen; im Protokoll steht beides
+  assert.deepEqual(koerper(await setze(null)), { lernAllgemein: null });
+  assert.equal((await ich(w.maler)).anleitungen, null);
+  assert.equal((await ruf(w.u, 'GET', '/api/anleitungen', { cookies: als(w, w.maler) })).status, 404);
+  assert.deepEqual((w.u.db.prepare("SELECT detail FROM protokoll WHERE detail LIKE 'Lerninhalte für alle%' ORDER BY id").all() as { detail: string }[]).map((z) => z.detail), ['Lerninhalte für alle Berufe: arbeiten', 'Lerninhalte für alle Berufe ausgeschaltet']);
+});
+
 // Paket mit Quiz: zwei Unterthemen mit je vier Begriffen, eins mit nur einem (kein Quiz)
 const begriffe = (namen: string[]) => namen.map((n) => `- **${n}:** Erklärung zu ${n.toLowerCase()} mit genug Text, damit die Frage trägt.`).join('\n');
 const QUIZ_NETZ = `---\ntitel: Netzwerke\n---\n\nNetze.\n\n## Adressen {#adressen}\n\n### Kernbegriffe\n${begriffe(['Netzadresse', 'Broadcast', 'Gateway', 'Subnetzmaske'])}\n\n### Prüfungsfrage\nTeile ein Netz.\n\n1. Bits leihen\n\n## Geräte {#geraete}\n\n### Kernbegriffe\n${begriffe(['Switch', 'Router', 'Hub', 'Repeater'])}\n\n## Kabel {#kabel}\n\n### Kernbegriffe\n${begriffe(['Patchkabel'])}\n`;
