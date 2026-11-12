@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.44.1] – 2026-11-12
+
+### Geändert
+
+- **Lernmodul: Cheatsheets stehen offen da.** Sie müssen nicht mehr an jedem Unterthema aufgeklappt werden – ein Themenfeld liest sich von oben nach unten.
+- **Unterthemen sind deutlicher voneinander getrennt:** Jedes hat eine Nummer und einen abgesetzten Kopf mit Titel und Ampel, dazu mehr Abstand zum nächsten. Das gilt auch in der Leseansicht für Ausbilder und Beauftragte.
+- „Meine Notiz“, Lösungswege und das Zusatzwissen klappen weiterhin auf.
+
 ## [0.44.0] – 2026-11-12
 
 ### Neu
