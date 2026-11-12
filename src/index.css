@@ -8134,3 +8134,236 @@ p.aktionen.links {
   left: 0;
   margin: 0;
 }
+
+/* ---------- Planer für das Prüfungsvorhaben (src/pages/Planer.tsx) ---------- */
+.planer-oben {
+  display: grid;
+  gap: 0 24px;
+}
+
+.planer-untertitel {
+  margin: 0 0 12px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.planer-angaben {
+  display: grid;
+  gap: 12px;
+}
+
+.planer-stand {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
+.planer-stand-feld {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.planer-zu-viel {
+  color: var(--c-rot-fg);
+}
+
+.planer-naechstes h2 {
+  margin-top: 0;
+}
+
+.planer-naechstes-was {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.planer-naechstes-tage {
+  margin: 4px 0;
+  color: var(--c-accent);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.planer-naechstes-tage span {
+  color: var(--c-muted);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.planer-links {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--c-border);
+  list-style: none;
+}
+
+.planer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-weight: 600;
+}
+
+.planer-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-width: 0;
+}
+
+.planer-zusatz {
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.planer-feldhinweis {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.planer-gruppen {
+  display: grid;
+  gap: 8px 32px;
+}
+
+.planer-gruppen h3,
+.planer-uhr h3 {
+  margin: 12px 0 4px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.planer-punkte {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+label.haken.planer-punkt {
+  align-items: flex-start;
+  padding: 8px 0;
+}
+
+label.haken.planer-punkt input {
+  margin-top: 2px;
+}
+
+.planer-erledigt {
+  color: var(--c-muted);
+  text-decoration: line-through;
+}
+
+.planer-hilfe {
+  display: block;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+table.planer-zeit {
+  width: 100%;
+  margin: 12px 0;
+}
+
+table.planer-zeit input {
+  width: 100%;
+}
+
+table.planer-zeit td:nth-child(2),
+table.planer-zeit td:nth-child(3) {
+  width: 170px;
+}
+
+table.planer-zeit td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+tr.planer-summe td {
+  font-weight: 600;
+}
+
+.planer-fragen {
+  display: grid;
+  gap: 24px;
+}
+
+.planer-fragen details.klapp {
+  margin-top: 8px;
+}
+
+.planer-notiert {
+  margin-left: 8px;
+}
+
+.planer-uhr-zeit {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 20px 16px;
+  border-radius: 12px;
+  background: var(--c-accent-soft);
+  color: var(--c-text);
+}
+
+.planer-uhr-zeit strong {
+  font-size: 48px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.planer-uhr-zeit.knapp {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+}
+
+.planer-uhr-zeit.ueber {
+  background: var(--c-rot-bg);
+  color: var(--c-rot-fg);
+}
+
+@media (min-width: 1024px) {
+  .planer-oben {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .planer-gruppen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planer-fragen.mit-uhr {
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 699px) {
+  table.planer-zeit td:nth-child(2),
+  table.planer-zeit td:nth-child(3),
+  table.planer-zeit td:last-child {
+    width: auto;
+  }
+
+  table.planer-zeit td input {
+    max-width: 60%;
+  }
+
+  table.planer-zeit td:first-child input {
+    max-width: none;
+  }
+}

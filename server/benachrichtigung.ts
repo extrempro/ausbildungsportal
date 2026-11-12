@@ -28,7 +28,7 @@ export type Bereich = (typeof BEREICHE)[number];
 /** So lange wird gesammelt, bevor eine Nachricht hinausgeht. */
 export const SAMMEL_MS = 3 * 60_000;
 
-const bereichVon = (art: AktivitaetArt): Bereich => (art === 'plan_neu' ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
+const bereichVon = (art: AktivitaetArt): Bereich => (art === 'plan_neu' || art.startsWith('planer_') ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
 
 /**
  * Stellt eine Aktivität für alle ein, die sie in der Glocke sehen und für den Bereich eine Benachrichtigung gewählt haben.
@@ -76,6 +76,8 @@ const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
   urlaub_genehmigt: ['Dein Urlaub wurde genehmigt.', '{n} deiner Urlaubsanträge wurden genehmigt.', 'Ein Urlaubsantrag wurde genehmigt.', '{n} Urlaubsanträge wurden genehmigt.'],
   urlaub_abgelehnt: ['Dein Urlaubsantrag wurde abgelehnt. Den Grund findest du im Portal.', '{n} deiner Urlaubsanträge wurden abgelehnt.', 'Ein Urlaubsantrag wurde abgelehnt.', '{n} Urlaubsanträge wurden abgelehnt.'],
   urlaub_zurueckgezogen: ['Dein Urlaubsantrag wurde zurückgezogen.', '{n} deiner Urlaubsanträge wurden zurückgezogen.', 'Ein Urlaubsantrag wurde zurückgezogen.', '{n} Urlaubsanträge wurden zurückgezogen.'],
+  planer_frei: ['Für dich ist ein Planer für deine Prüfung freigeschaltet. Du findest ihn im Menü.', 'Für dich ist ein Planer für deine Prüfung freigeschaltet. Du findest ihn im Menü.', 'Für einen Azubi wurde der Planer für die Prüfung freigeschaltet.', 'Für {n} Azubis wurde der Planer für die Prüfung freigeschaltet.'],
+  planer_termine: ['Du hast Termine in deinem Planer geändert.', 'Du hast Termine in deinem Planer geändert.', 'Ein Azubi hat Termine für seine Prüfung eingetragen oder geändert. Sie stehen im Ausbildungsplan.', 'Azubis haben Termine für ihre Prüfung eingetragen oder geändert. Sie stehen im Ausbildungsplan.'],
   urlaub_storniert: ['Dein genehmigter Urlaub wurde storniert.', '{n} deiner genehmigten Urlaube wurden storniert.', 'Ein genehmigter Urlaub wurde storniert.', '{n} genehmigte Urlaube wurden storniert.'],
 };
 

@@ -1,11 +1,12 @@
 import { urlaubsZeitraeume } from './urlaub';
 import { randomBytes } from 'node:crypto';
 import { Fehler } from './api-basis';
-import type { Ctx, Route } from './api-basis';
+import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { plusTage } from './kalender';
 import { protokolliere } from './protokoll';
 import { darfAzubiSehen, sichtbareAzubis } from './rechte';
+import { mitPlanerTerminen } from './planer';
 import { leseProfil } from './stammdaten';
 import type { BenutzerZeile } from './typen';
 
@@ -109,7 +110,7 @@ interface Termin {
   beschreibung: string;
 }
 
-function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string, eigener: boolean): Termin[] {
+function termineVon(k: Kontext, db: DB, azubi: BenutzerZeile, mitName: boolean, host: string, eigener: boolean): Termin[] {
   const vorn = mitName ? `${azubi.anzeigename}: ` : '';
   const zeilen = db
     .prepare(
@@ -142,7 +143,7 @@ function termineVon(db: DB, azubi: BenutzerZeile, mitName: boolean, host: string
   }
   const profil = leseProfil(db, azubi.id);
   const profilZeit = (db.prepare('SELECT geaendert FROM azubi_profil WHERE benutzer_id = ?').get(azubi.id) as { geaendert: string } | undefined)?.geaendert ?? '';
-  profil.pruefungen.forEach((p, i) => {
+  mitPlanerTerminen(k, azubi.id, profil.pruefungen).forEach((p, i) => {
     if (!p.datum) return;
     termine.push({ uid: `pruefung-${azubi.id}-${p.datum}-${i}@${host}`, von: p.datum, bis: p.datum, titel: `${vorn}Prüfung: ${p.bezeichnung}`, art: 'Prüfung', geaendert: profilZeit, beschreibung: 'Prüfungstermin' });
   });
@@ -243,7 +244,7 @@ export const ABO_ROUTEN: Route[] = [
       }
       const azubis = ids.map((id) => db.prepare('SELECT * FROM benutzer WHERE id = ?').get(id) as unknown as BenutzerZeile);
       const mitName = wer.rolle !== 'azubi' && nur === null;
-      const termine = azubis.flatMap((a) => termineVon(db, a, mitName, host, a.id === wer.id));
+      const termine = azubis.flatMap((a) => termineVon(c.k, db, a, mitName, host, a.id === wer.id));
       const name = wer.rolle === 'azubi' ? 'Ausbildungsplan' : nur !== null && azubis[0] ? `Ausbildungsplan ${azubis[0].anzeigename}` : 'Ausbildungsplan Azubis';
 
       db.prepare('UPDATE kalender_abo SET letzter_abruf = ? WHERE benutzer_id = ?').run(jetzt.toISOString(), wer.id);

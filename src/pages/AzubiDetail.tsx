@@ -54,6 +54,8 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
         {BERICHT_FORM[p.berichtFormGilt]}
         {p.profil.berichtForm === null ? ' (wie im Betrieb eingestellt)' : ''}
       </dd>
+      <dt>Planer für die Prüfung</dt>
+      <dd>{p.profil.planerFrei ? (p.planerTitel ? `„${p.planerTitel}“ freigeschaltet` : 'freigeschaltet – im Inhaltspaket des Berufs fehlt aber der Planer') : 'nicht freigeschaltet'}</dd>
       {p.profil.pruefungen.length > 0 && (
         <>
           <dt>Prüfungen</dt>
@@ -198,6 +200,21 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
         >
           Prüfungstermin hinzufügen
         </button>
+      </fieldset>
+      <fieldset className="abschnitt">
+        <legend>Planer für die Prüfung</legend>
+        <label className="haken">
+          <input type="checkbox" checked={wert.planerFrei} disabled={!wert.planerFrei && (p.planerTitel === null || wert.berufId !== p.profil.berufId)} onChange={(e) => setze('planerFrei', e.target.checked)} />
+          {p.planerTitel && wert.berufId === p.profil.berufId ? `Planer „${p.planerTitel}“ freischalten` : 'Planer freischalten'}
+        </label>
+        <p className="leise klein">
+          {wert.berufId !== p.profil.berufId
+            ? 'Du hast den Beruf geändert. Speichere erst das Profil – danach zeigt sich, ob es für den neuen Beruf einen Planer gibt.'
+            : p.planerTitel === null
+              ? 'Gesperrt: Für diesen Beruf gibt es noch keinen Planer. Er gehört als Datei „planer.md“ ins Inhaltspaket des Berufs.'
+              : 'Der Azubi plant damit sein Prüfungsvorhaben. Was er einträgt, siehst du nicht – nur die Termine stehen in seinem Ausbildungsplan.'}{' '}
+          <HandbuchLink kapitel="planer-freischalten">Planer freischalten</HandbuchLink>
+        </p>
       </fieldset>
       <p className="leise klein">
         Fehlen Beruf oder Berufsschule in der Auswahl, lassen sie sich unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> anlegen. <HandbuchLink kapitel="profil">Das Profil eines Azubis</HandbuchLink>

@@ -67,6 +67,16 @@ test('Einreichen: Das Portal prüft sofort; mit Fehlern wird nichts angenommen',
   assert.equal(kaputt.status, 422);
   assert.match(koerper(kaputt).fehler, /wurde nicht eingereicht/);
   assert.ok(koerper(kaputt).pruefung.fehler.some((f: string) => f.startsWith('themen/wiso.md')));
+  // der Planer (planer.md) gehört zum Paket: Er wird mitgeprüft, Fehler nennen Datei und Zeile
+  const planerKaputt = await reiche(w, w.petra, baueZip([...paket(), { name: 'planer.md', daten: '---\ntitel: Fachaufgabe\n---\n\n## Termine\n- Abgabe ohne Kennung\n' }]), 'mit-planer');
+  assert.equal(planerKaputt.status, 422);
+  assert.ok(koerper(planerKaputt).pruefung.fehler.some((f: string) => f.startsWith('planer.md:6')), JSON.stringify(koerper(planerKaputt).pruefung.fehler));
+  const mitPlaner = await reiche(w, w.petra, baueZip([...paket(), { name: 'planer.md', daten: '---\ntitel: Fachaufgabe\n---\n\n## Termine\n- Abgabe am {#abgabe}\n' }]), 'mit-planer');
+  assert.equal(mitPlaner.status, 201);
+  assert.equal(koerper(mitPlaner).einreichung.pruefung.planer, 'Fachaufgabe');
+  assert.deepEqual(koerper(mitPlaner).einreichung.pruefung.ignoriert, [], 'planer.md wird übernommen');
+  assert.equal(e.pruefung.planer, '', 'Paket ohne Planer');
+  assert.equal((await tue(w, w.petra, koerper(mitPlaner).einreichung.id, 'zurueckziehen')).status, 200);
   for (const [zip, kennung, status] of [
     [baueZip([{ name: 'irgendwas.txt', daten: 'x' }]), 'x', 422], // kein Inhaltspaket
     [Buffer.from('kein zip'), 'x', 422],
@@ -75,7 +85,7 @@ test('Einreichen: Das Portal prüft sofort; mit Fehlern wird nichts angenommen',
     [baueZip(paket()), '../oben', 400],
     [baueZip(paket()), '', 400],
   ] as const) assert.equal((await reiche(w, w.petra, zip as Buffer | undefined, kennung)).status, status, kennung);
-  assert.equal((await liste(w, w.petra)).einreichungen.length, 1);
+  assert.equal((await liste(w, w.petra)).einreichungen.length, 2); // die gültige und die zurückgezogene mit Planer
   // nur Ausbilder reichen ein
   for (const wer of [w.bea, w.anna, w.chef]) assert.equal((await reiche(w, wer, baueZip(paket()), 'andere')).status, 403, wer.rolle);
 });

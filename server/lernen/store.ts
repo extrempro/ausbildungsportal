@@ -3,12 +3,16 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BILD_DATEI, ID_MUSTER, parseThemaMarkdown } from './parse';
+import { parsePlaner, PLANER_DATEI } from './planer';
+import type { Planer } from './planer';
 import type { AblaufSzenario, Bild, KatalogEintrag, Meldung, Meta, Themenfeld, Zusatz } from './typen';
 
 export interface Inhalte {
   themenfelder: Themenfeld[];
   meta: Meta;
   umbenennungen: Record<string, string>;
+  /** Planer für das Prüfungsvorhaben (planer.md) – null, wenn das Paket keinen hat */
+  planer: Planer | null;
   meldungen: Meldung[];
 }
 
@@ -115,7 +119,15 @@ export function ladeInhalte(dir: string, vorher?: Inhalte | null): Inhalte {
   pruefeUngenutzteBilder(dir, themenfelder, meldungen);
   pruefeZuVerweise(themenfelder, meldungen);
 
-  return { themenfelder, meta, umbenennungen, meldungen };
+  // Planer (freiwillig): mit Fehlern gilt – falls vorhanden – die zuletzt gültige Fassung weiter
+  let planer: Planer | null = null;
+  if (existsSync(join(dir, PLANER_DATEI))) {
+    const r = parsePlaner(readFileSync(join(dir, PLANER_DATEI), 'utf8'));
+    meldungen.push(...r.meldungen);
+    planer = r.planer ?? vorher?.planer ?? null;
+  }
+
+  return { themenfelder, meta, umbenennungen, planer, meldungen };
 }
 
 /**

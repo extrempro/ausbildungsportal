@@ -7,6 +7,7 @@ import { ferienZwischen, ladeFerien } from './ferien';
 import { firmentermineZwischen } from './firmentermin';
 import { plusTage } from './kalender';
 import { darfAzubiSehen, sichtbareAzubis } from './rechte';
+import { mitPlanerTerminen } from './planer';
 import { dauerVon, leseBetrieb, leseProfil, standAus } from './stammdaten';
 
 /**
@@ -53,7 +54,7 @@ function kalenderVon(c: Ctx, azubiId: number, jahr: number, tag: string) {
     urlaub: [...new Set([...urlaub, ...genehmigteTage(db, azubiId, von, bis)])].sort(),
     // offene Urlaubsanträge: noch nicht entschieden, aber niemand soll in den Zeitraum hineinplanen
     beantragt: urlaubsZeitraeume(db, azubiId, 'offen', von, bis).map((u) => ({ von: u.von, bis: u.bis })),
-    pruefungen: profil.pruefungen.filter((p) => p.datum >= von && p.datum <= bis).map((p) => ({ tag: p.datum, bezeichnung: p.bezeichnung })),
+    pruefungen: mitPlanerTerminen(c.k, azubiId, profil.pruefungen).filter((p) => p.datum >= von && p.datum <= bis).map((p) => ({ tag: p.datum, bezeichnung: p.bezeichnung })),
     termine,
     ferien,
   };

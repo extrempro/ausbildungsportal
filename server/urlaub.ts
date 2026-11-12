@@ -1,7 +1,8 @@
 import { merkeAktivitaet } from './aktivitaet';
 import type { AktivitaetArt } from './aktivitaet';
 import { Fehler, holeBenutzer, idAus, koerper, text } from './api-basis';
-import type { Ctx, Route } from './api-basis';
+import type { Ctx, Kontext, Route } from './api-basis';
+import { mitPlanerTerminen } from './planer';
 import type { DB } from './db';
 import { transaktion } from './db';
 import { heute } from './datum';
@@ -115,12 +116,13 @@ function konto(db: DB, azubiId: number, jahr: number, ohneAntrag = 0) {
 }
 
 /** Was vor dem Antrag auffallen sollte – Hinweise, keine Sperren. */
-function hinweise(db: DB, azubiId: number, von: string, bis: string, tage: string[], ohneAntrag = 0): string[] {
+function hinweise(k: Kontext, azubiId: number, von: string, bis: string, tage: string[], ohneAntrag = 0): string[] {
   const out: string[] = [];
+  const { db } = k;
   const schule = db.prepare("SELECT von, bis, titel FROM plan_eintrag WHERE azubi_id = ? AND art = 'schule' AND von <= ? AND bis >= ? ORDER BY von").all(azubiId, bis, plusTage(montagVon(von), 0)) as unknown as { von: string; bis: string; titel: string }[];
   const inSchule = schule.filter((s) => tage.some((t) => t >= s.von && t <= plusTage(s.bis, 4)));
   if (inSchule.length) out.push(`In diesem Zeitraum ist Berufsschule (${inSchule.map((s) => s.titel).join(', ')}). Urlaub in der Schulzeit ist in der Regel nicht möglich – bitte vorher klären.`);
-  const pruefungen = leseProfil(db, azubiId).pruefungen.filter((p) => p.datum >= von && p.datum <= bis);
+  const pruefungen = mitPlanerTerminen(k, azubiId, leseProfil(db, azubiId).pruefungen).filter((p) => p.datum >= von && p.datum <= bis);
   if (pruefungen.length) out.push(`In diesem Zeitraum liegt ein Prüfungstermin: ${pruefungen.map((p) => `${p.bezeichnung} am ${p.datum.slice(8, 10)}.${p.datum.slice(5, 7)}.`).join(', ')}.`);
   for (const jahr of new Set([Number(von.slice(0, 4)), Number(bis.slice(0, 4))])) {
     const k = konto(db, azubiId, jahr, ohneAntrag);
@@ -170,7 +172,7 @@ function ansicht(c: Ctx, z: AntragZeile) {
     bemerkung: z.bemerkung,
     status: z.status,
     // was beim Entscheiden auffallen sollte (Berufsschule, Prüfung, Resturlaub) – nur solange der Antrag offen ist
-    hinweise: offen ? hinweise(db, z.azubi_id, z.von, z.bis, arbeitstage(db, z.von, z.bis), z.id) : [],
+    hinweise: offen ? hinweise(c.k, z.azubi_id, z.von, z.bis, arbeitstage(db, z.von, z.bis), z.id) : [],
     // wo der offene Antrag gerade liegt
     stufe: !offen ? null : fehlt.length ? 'beauftragte' : 'ausbilder',
     bestaetigungen,
@@ -256,7 +258,7 @@ export const URLAUB_ROUTEN: Route[] = [
       const azubi = sichtbarerAzubi(c);
       const { von, bis } = zeitraumAus(c, c.a.query.get('von'), c.a.query.get('bis'));
       const tage = arbeitstage(c.k.db, von, bis);
-      return { status: 200, body: { tage: tage.length, hinweise: hinweise(c.k.db, azubi.id, von, bis, tage), bestaetiger: bestaetigerText(bestaetiger(c.k.db, azubi.id, von, bis)) } };
+      return { status: 200, body: { tage: tage.length, hinweise: hinweise(c.k, azubi.id, von, bis, tage), bestaetiger: bestaetigerText(bestaetiger(c.k.db, azubi.id, von, bis)) } };
     },
   },
 

@@ -214,12 +214,16 @@ export interface Profil {
   urlaubstage: number | null;
   /** Form des Berichtshefts für diesen Azubi; null = wie im Betrieb eingestellt */
   berichtForm: 'woche' | 'tag' | null;
+  /** Planer für das Prüfungsvorhaben (z. B. Abschlussprojekt) für diesen Azubi freigeschaltet */
+  planerFrei: boolean;
   pruefungen: Pruefung[];
 }
 
 export interface Pruefung {
   bezeichnung: string;
   datum: string;
+  /** Termin aus dem Planer des Azubis (im Ausbildungsplan) – keine Prüfung aus dem Profil */
+  planer?: true;
 }
 
 export interface Stand {
@@ -248,6 +252,8 @@ export interface ProfilAntwort {
   hoechsteVerkuerzung: number;
   /** welche Form für neue Berichte gilt (eigene Einstellung oder die des Betriebs) */
   berichtFormGilt: 'woche' | 'tag';
+  /** Titel des Planers aus dem Inhaltspaket des Berufs; null = für den Beruf gibt es keinen */
+  planerTitel: string | null;
   bearbeitbar: boolean;
   betreuung: Betreuung;
 }

@@ -22,7 +22,10 @@ export type AktivitaetArt =
   | 'urlaub_genehmigt'
   | 'urlaub_abgelehnt'
   | 'urlaub_zurueckgezogen'
-  | 'urlaub_storniert';
+  | 'urlaub_storniert'
+  // Planer für das Prüfungsvorhaben: freigeschaltet (durch den Ausbilder) bzw. Termine geändert (durch den Azubi)
+  | 'planer_frei'
+  | 'planer_termine';
 
 const AUFBEWAHRUNG_TAGE = 60;
 /** so viele Aktivitäten werden höchstens gelesen und zusammengefasst */

@@ -404,7 +404,7 @@ function WochenInhalt({ woche, daten, frei, voll, leer, a }: { woche: Woche; dat
   return (
     <>
       {pruefungen.map((p) => (
-        <Marke key={p.bezeichnung + p.datum} art="Prüfung" klasse="pruefung" titel={p.bezeichnung} zusatz={tagKurz(p.datum)} />
+        <Marke key={p.bezeichnung + p.datum} art={p.planer ? 'Prüfungstermin' : 'Prüfung'} klasse="pruefung" titel={p.bezeichnung} zusatz={tagKurz(p.datum)} />
       ))}
       {firma.map((t) => (
         <Marke key={`firma-${t.id}`} art="Firmentermin" klasse="firma" titel={t.hinweis ? `${t.titel} – ${t.hinweis}` : t.titel} zusatz={t.von === t.bis ? tagKurz(t.von) : `${tagMonat(t.von)}–${tagMonat(t.bis)}`} />
@@ -801,7 +801,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const zurueck = (berichte?.wochen ?? []).filter((w) => w.status === 'zurueck');
   const rest = aktuelle && aktuelle.nummer ? gesamt - aktuelle.nummer : null;
   // nächste eingetragene Prüfung; ohne Prüfungstermin zählt die Kachel bis zum Ende der Ausbildung
-  const pruefung = d.pruefungen.find((p) => p.datum >= d.heute) ?? null;
+  const pruefung = d.pruefungen.find((p) => !p.planer && p.datum >= d.heute) ?? null;
   const bisPruefung = pruefung ? Math.round((Date.parse(montagVon(pruefung.datum)) - Date.parse(montagVon(d.heute))) / 604800000) : 0;
 
   const neu = (w: Woche | null, art?: PlanArt): Entwurf => ({ id: null, art: art ?? (d.rechte.arten.includes('einsatz') ? 'einsatz' : 'aufgabe'), titel: '', von: w?.montag ?? d.heute, bis: '', text: '', zustaendigId: null, abteilungId: null, zuweisen: true, erledigt: false, unteraufgaben: [], tag: w && !(w.montag <= d.heute && w.sonntag >= d.heute) ? w.montag : d.heute, zeitVon: '', zeitBis: '' });
@@ -944,7 +944,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               {pruefung ? (
                 <Kennzahl wert={bisPruefung} einheit={bisPruefung === 1 ? 'Woche' : 'Wochen'} text={`bis zur Prüfung „${pruefung.bezeichnung}“ (${tagKurz(pruefung.datum)}${pruefung.datum.slice(0, 4)})`}>
                   {d.pruefungen
-                    .filter((p) => p !== pruefung && p.datum > d.heute)
+                    .filter((p) => p !== pruefung && !p.planer && p.datum > d.heute)
                     .map((p) => (
                       <span className="leise klein" key={p.bezeichnung + p.datum}>
                         danach: {p.bezeichnung} am {datum(p.datum)}

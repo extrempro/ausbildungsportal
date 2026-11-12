@@ -15,6 +15,8 @@ export interface Pruefung {
   themenfelder: number;
   unterthemen: number;
   dateien: number;
+  /** Titel des Planers für die Prüfung (planer.md); leer oder fehlend = das Paket hat keinen */
+  planer?: string;
   fehler: string[];
   warnungen: string[];
   ignoriert: string[];
@@ -117,6 +119,7 @@ export function EinreichungKarte({ e, onGeaendert }: { e: Einreichung; onGeaende
       <p className="antrag-zeile">
         <strong>
           {p.themenfelder} {p.themenfelder === 1 ? 'Themenfeld' : 'Themenfelder'}, {p.unterthemen} Unterthemen
+          {p.planer ? `, Planer: ${p.planer}` : ''}
         </strong>
         <span className="leise">
           {' '}

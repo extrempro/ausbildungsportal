@@ -11,6 +11,7 @@ import { firmentermineZwischen } from './firmentermin';
 import { ausbildungsjahrAm, gueltigesDatum, kalenderwoche, montagVon, plusTage } from './kalender';
 import { protokolliere } from './protokoll';
 import { darfAzubiVerwalten, darfPlanBearbeiten, darfPlanEintragAendern, hatGesamtsicht, sichtbareAzubis } from './rechte';
+import { mitPlanerTerminen } from './planer';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import type { BenutzerZeile } from './typen';
 
@@ -396,6 +397,8 @@ export const PLAN_ROUTEN: Route[] = [
       const tag = heute(c.k.jetzt());
       const profil = leseProfil(db, azubi.id);
       const dauer = dauerVon(db, profil);
+      // Termine aus dem Planer des Azubis (z. B. Abgabe des Projektantrags) stehen wie Prüfungstermine im Plan
+      const pruefungen = mitPlanerTerminen(c.k, azubi.id, profil.pruefungen);
       const zeilen = db.prepare("SELECT * FROM plan_eintrag WHERE azubi_id = ? AND (art != 'termin' OR ?) ORDER BY von, bis, tag, zeit_von, id").all(azubi.id, c.b.id === azubi.id ? 1 : 0) as unknown as EintragZeile[];
 
       // Wochen der Ausbildung; Einträge außerhalb (z. B. nach geändertem Beginn) bleiben sichtbar
@@ -406,7 +409,7 @@ export const PLAN_ROUTEN: Route[] = [
         if (!letzte || z.bis > letzte) letzte = z.bis;
       }
       // Prüfungen nach dem Vertragsende (z. B. mündliche Prüfung) bleiben sichtbar
-      for (const p of profil.pruefungen) {
+      for (const p of pruefungen) {
         if (erste && letzte && montagVon(p.datum) > letzte) letzte = montagVon(p.datum);
       }
       const wochen: { montag: string; kw: number; jahr: number; ausbildungsjahr: number | null }[] = [];
@@ -438,7 +441,7 @@ export const PLAN_ROUTEN: Route[] = [
           beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
           wochen,
           eintraege: zeilen.map((z) => ansicht(c, z)),
-          pruefungen: profil.pruefungen,
+          pruefungen,
           feiertage: erste && istBundesland(betriebLand) ? feiertageZwischen(betriebLand, erste, ende).filter((f) => !f.teilweise) : [],
           ferien: ferien ? ferienZwischen(ferien, erste!, ende) : [],
           ferienVorhanden: ferien?.vorhanden ?? false,

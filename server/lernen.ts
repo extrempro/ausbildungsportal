@@ -56,7 +56,7 @@ const LAGER = new Map<string, Lager>();
 
 function marke(ordner: string): string {
   // meta.json wird bei jeder Inhaltspflege angefasst (Inhaltsstand); dazu die Themenliste
-  return ['meta.json', 'themenfelder.json', 'paket.json', 'themen']
+  return ['meta.json', 'themenfelder.json', 'paket.json', 'planer.md', 'themen']
     .map((d) => {
       const p = join(ordner, d);
       return existsSync(p) ? statSync(p).mtimeMs : 0;
@@ -95,7 +95,7 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
       inhalte = ladeInhalte(pfad, alt?.inhalte);
     } catch (f) {
       // z. B. Datei ohne Leserecht: als Fehler des Pakets zeigen statt die ganze Seite scheitern zu lassen
-      inhalte = alt?.inhalte ?? { themenfelder: [], meta: { stand: '' }, umbenennungen: {}, meldungen: [] };
+      inhalte = alt?.inhalte ?? { themenfelder: [], meta: { stand: '' }, umbenennungen: {}, planer: null, meldungen: [] };
       inhalte = { ...inhalte, meldungen: [{ level: 'fehler', datei: e.name, text: `Inhalte nicht lesbar: ${(f as Error).message}` }] };
     }
     let info: { titel?: unknown; quelle?: unknown; lizenz?: unknown } = {};

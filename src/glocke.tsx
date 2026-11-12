@@ -22,7 +22,9 @@ type Art =
   | 'urlaub_genehmigt'
   | 'urlaub_abgelehnt'
   | 'urlaub_zurueckgezogen'
-  | 'urlaub_storniert';
+  | 'urlaub_storniert'
+  | 'planer_frei'
+  | 'planer_termine';
 
 interface Gruppe {
   id: number;
@@ -122,6 +124,10 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
       return { icon: 'urlaub', farbe: 'rot', kopf: 'Urlaub abgelehnt', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
     case 'urlaub_zurueckgezogen':
       return { icon: 'urlaub', farbe: 'grau', kopf: 'Urlaubsantrag zurückgezogen', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
+    case 'planer_frei':
+      return { icon: 'haken', farbe: 'blau', kopf: azubi ? 'Neu für dich: Planer für deine Prüfung' : 'Planer für die Prüfung freigeschaltet', mitte: g.titel[0] ? `„${g.titel[0]}“` : '', zu: azubi ? '/planer' : `/azubis/${g.azubiId}` };
+    case 'planer_termine':
+      return { icon: 'plan', farbe: 'blau', kopf: 'Termine für die Prüfung eingetragen oder geändert', mitte: 'Sie stehen im Ausbildungsplan.', zu: azubi ? '/planer' : `/azubis/${g.azubiId}/plan` };
     case 'urlaub_storniert':
       return { icon: 'urlaub', farbe: 'rot', kopf: 'Genehmigter Urlaub storniert', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
     default:

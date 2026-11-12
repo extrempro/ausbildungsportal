@@ -26,6 +26,7 @@ import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
 import { MELDUNG_ROUTEN } from './meldungen';
 import { PLAN_ROUTEN } from './plan';
+import { PLANER_ROUTEN, planerFuer } from './planer';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, ROLLEN } from './typen';
 import type { BenutzerZeile, Rolle, Zuweisung } from './typen';
@@ -295,7 +296,7 @@ export const ROUTEN: Route[] = [
     },
   },
 
-  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null, profilbild: c.k.cfg.entraProfilbild } }) },
+  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
 
   {
     m: 'PUT',
@@ -637,6 +638,7 @@ export const ROUTEN: Route[] = [
   ...BENACHRICHTIGUNG_ROUTEN,
   ...ANHANG_ROUTEN,
   ...FIRMENTERMIN_ROUTEN,
+  ...PLANER_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

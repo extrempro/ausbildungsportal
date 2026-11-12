@@ -62,7 +62,7 @@ Bei jeder neuen Funktion fragen: Erfährt dadurch eine andere Person etwas Neues
 
 ## Datenschutz und Recht
 
-- **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
+- **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
 - **Neue Daten über Personen** nennst du im Pull Request ausdrücklich (was, wie lange, wer sieht es). Der Betreiber ergänzt damit die Leistungsbeschreibung für den Betriebsrat.
 - **Meldungen nach außen** (Teams, Mail) enthalten so wenig wie möglich – keine Namen in Teams-Karten für Kanäle, keine Bemerkungen in Mails. Persönliche Benachrichtigungen sprechen nur die Person an, an die sie gehen, und nennen niemanden sonst.
 - **Keine Geheimnisse im Repository.** Es ist öffentlich. `.env`, der Ordner `data/`, Zugangsdaten, Webhook-Adressen und echte Namen oder Mailadressen gehören nicht hinein – auch nicht in Tests, Commits oder Pull Requests.
