@@ -821,7 +821,7 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Texte und Termine speicherst du mit dem Knopf im jeweiligen Abschnitt. Verlässt du die Seite vorher, fragt das Portal nach.</li>
           <li>Der Planer ersetzt nicht das Merkblatt deiner Kammer. Dort stehen die Regeln, die für deine Prüfung gelten. Den Link findest du oben rechts im Planer, wenn deine Ausbilder einen hinterlegt haben.</li>
-          <li>Deine Ausbilder können den Planer ergänzen. Dann kommt zum Beispiel ein Punkt in einer Checkliste dazu, und „16 von 16“ wird zu „16 von 17“. Deine Haken und Texte bleiben.</li>
+          <li>Deine Ausbilder können den Planer ergänzen. Dann kommt zum Beispiel ein Punkt in einer Checkliste dazu, und „16 von 16“ wird zu „16 von 17“. Oben im Planer steht dann „Dein Planer wurde ergänzt“ mit den neuen Punkten; sie tragen die Marke „neu“, bis du „Als gesehen merken“ wählst. Deine Haken und Texte bleiben.</li>
           <li>Nimmt dein Ausbilder die Freischaltung zurück, verschwindet der Planer aus dem Menü. Deine Eintragungen bleiben gespeichert und sind wieder da, wenn er ihn erneut freischaltet.</li>
           <li>Dein Beruf hat keinen Planer im Menü? Dann gibt es für ihn noch keinen, oder er ist für dich nicht freigeschaltet. Frag deinen Ausbilder.</li>
         </ul>
@@ -1479,6 +1479,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </ul>
               <h3>Einreichen und Status</h3>
               <dl className="begriffe">
+                <Begriff wort="Rückfrage „Trotzdem einreichen?“">Kommt bei einer neuen Fassung, wenn Kennungen fehlen, die es bisher gab (dann wäre Lernstand der Azubis nicht mehr zu sehen), oder wenn der Betreiber ein Lernmodul mit dieser Kennung schon als Ordner einbindet. Die Rückfrage nennt die Folgen. Was du bestätigst, sieht auch der Betreiber an der Einreichung.</Begriff>
                 <Begriff wort="Sofort-Prüfung">Beim Hochladen liest das Portal das Paket ein. Findet es Fehler, nimmt es nichts an und zeigt sie mit Datei und Zeile. Behebe sie und lade neu hoch.</Begriff>
                 <Begriff wort="Eingereicht – wird geprüft">Die Einreichung liegt beim Betreiber des Portals. Solange kannst du sie zurückziehen. Für dieselbe Kennung geht in dieser Zeit keine zweite Einreichung.</Begriff>
                 <Begriff wort="Zurückgegeben">Der Betreiber möchte Änderungen. Seine Rückmeldung steht an der Einreichung. Ändere die Dateien und reiche neu ein.</Begriff>
@@ -1607,7 +1608,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Du änderst den Text, die Kennung bleibt">Haken, Datum und Stichworte der Azubis bleiben. Texte darfst du jederzeit verbessern.</Begriff>
                 <Begriff wort="Du änderst die Kennung">Für das Portal ist das ein neuer Punkt. Die Eintragungen der Azubis zu diesem Punkt sind nicht mehr zu sehen – als hätte niemand etwas eingetragen.</Begriff>
                 <Begriff wort="Du löschst einen Punkt">Er verschwindet bei den Azubis. Ihre Eintragung bleibt gespeichert und ist wieder da, wenn die Kennung zurückkommt.</Begriff>
-                <Begriff wort="Du fügst einen Punkt hinzu">Er erscheint bei allen Azubis leer. Wer „16 von 16“ hatte, hat danach „16 von 17“.</Begriff>
+                <Begriff wort="Du fügst einen Punkt hinzu">Er erscheint bei allen Azubis leer. Wer „16 von 16“ hatte, hat danach „16 von 17“. Azubis, die den Planer schon benutzen, sehen oben den Hinweis „Dein Planer wurde ergänzt“ und die Marke „neu“ am Punkt.</Begriff>
               </dl>
               <ul className="punkte">
                 <li>
@@ -1619,6 +1620,9 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   Muss eine Kennung doch einmal anders heißen, trag alt und neu am Ende der Datei ein. Dann nimmt das Portal die Eintragungen der Azubis mit:
                   <pre className="datei-beispiel" tabIndex={0} aria-label="Beispiel für Umbenennungen">{PLANER_UMBENENNEN}</pre>
                   Vorn steht bei Checklisten und Fragen die Kennung des Abschnitts, bei Terminen das Wort <code>termine</code>. Die Zeilen bleiben dauerhaft in der Datei stehen.
+                </li>
+                <li>
+                  <strong>Das Portal passt mit auf:</strong> Fehlt in einer neuen Fassung eine Kennung, die es bisher gab, fragt es dich vor dem Einreichen und nennt die Kennungen. Brich dann ab und trag die Umbenennung ein – oder bestätige, wenn der Punkt wirklich wegfallen soll.
                 </li>
               </ul>
               <h3>Gut zu wissen</h3>
@@ -1757,6 +1761,7 @@ const ADMIN: Kapitel[] = [
         <dl className="begriffe">
           <Begriff wort="Was das Portal schon geprüft hat">Den Aufbau: Jede Einreichung wurde mit dem Einleser des Lernmoduls gelesen. Pakete mit Fehlern kommen gar nicht erst bei dir an. Hinweise (zum Beispiel ein Unterthema ohne Inhalt) stehen an der Einreichung.</Begriff>
           <Begriff wort="Was du prüfst">Den Inhalt: Stimmt er fachlich, ist er eigener Text (Urheberrecht), stehen keine Namen oder Daten realer Personen darin? Mit „ZIP-Datei herunterladen“ siehst du dir die Dateien an.</Begriff>
+          <Begriff wort="Folgen für vorhandene Daten">Steht an einer Einreichung, wenn die neue Fassung Kennungen nicht mehr enthält, an denen Lernstand oder Eintragungen im Planer hängen – oder wenn du dasselbe Lernmodul schon als Ordner auf dem Server einbindest. Der Ausbilder hat das beim Einreichen bestätigt. Prüfe, ob es so gewollt ist, bevor du hochlädst.</Begriff>
           <Begriff wort="Einreichung zurückgeben …">Mit Rückmeldung, was zu ändern ist. Der Ausbilder liest sie und reicht neu ein.</Begriff>
           <Begriff wort="Lerninhalte hochladen …">Übernimmt das Paket ins Portal, auf Wunsch mit einem Kommentar. Gibt es schon ein Lernmodul mit dieser Kennung, wird es ersetzt und gilt sofort für alle Azubis, deren Beruf es nutzt. Ihr Lernstand bleibt erhalten.</Begriff>
         </dl>

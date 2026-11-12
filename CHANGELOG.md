@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.50.0] – 2026-11-12
+
+### Neu
+
+- **Planer: Hinweis, wenn etwas dazukommt.** Ergänzen die Ausbilder den Planer für die Prüfung – zum Beispiel um einen Punkt in einer Checkliste oder einen Termin –, steht beim Azubi oben „Dein Planer wurde ergänzt“ mit den neuen Punkten. Sie tragen die Marke „neu“, bis der Azubi „Als gesehen merken“ wählt. Seine Eintragungen bleiben.
+- **Lerninhalte einreichen: Rückfrage, bevor etwas verloren geht.** Fehlen in einer neuen Fassung Kennungen, die es bisher gab, nennt das Portal sie vor dem Einreichen – denn daran hängen der Lernstand und die Eintragungen im Planer. Dasselbe gilt, wenn die neue Fassung keinen Planer mehr enthält.
+- **Lerninhalte einreichen: Hinweis auf doppelte Wege.** Bindet der Betreiber ein Lernmodul schon als Ordner auf dem Server ein, fragt das Portal nach, bevor jemand dasselbe Lernmodul im Portal einreicht. Der Betreiber sieht an der Einreichung, was bestätigt wurde.
+
 ## [0.49.0] – 2026-11-12
 
 ### Geändert

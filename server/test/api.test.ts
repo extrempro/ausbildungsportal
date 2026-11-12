@@ -74,6 +74,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'PUT /api/planer/phasen': 'azubi',
     'PUT /api/planer/antwort': 'azubi',
     'PUT /api/planer/notizen': 'azubi',
+    'POST /api/planer/gesehen': 'azubi',
     'GET /api/lernpakete/einreichungen': 'ausbilder,admin',
     'POST /api/lernpakete/einreichungen': 'ausbilder',
     'GET /api/lernpakete/einreichungen/:id/zip': 'ausbilder,admin',

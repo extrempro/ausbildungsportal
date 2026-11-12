@@ -8485,3 +8485,13 @@ tr.planer-summe td {
     display: block;
   }
 }
+
+/* Planer: Hinweis „wurde ergänzt“ */
+.planer-ergaenzt ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.planer-ergaenzt .aktionen {
+  margin-top: 12px;
+}

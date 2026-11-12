@@ -70,6 +70,8 @@ interface Daten {
 interface Antwort {
   planer: Inhalt;
   daten: Daten;
+  /** Kennungen, die seit dem letzten „gesehen“ dazugekommen sind: „termine.x“, „<checkliste>.x“, „<fragen>.x“ */
+  neu: string[];
 }
 type Sende = (methode: string, pfad: string, body: unknown, meldung?: string) => Promise<void>;
 
@@ -97,6 +99,12 @@ export function Planer() {
   if (ladefehler) return <Ladefehler titel="Planer" text={ladefehler} />;
   if (!d) return <p className="leise">Lädt …</p>;
   const { planer: p, daten } = d;
+  const neu = new Set(d.neu);
+  // was dazugekommen ist, in Worten: „Abschnitt: Punkt“
+  const neuText = [
+    ...p.termine.filter((t) => neu.has(`termine.${t.id}`)).map((t) => `Termine: ${t.label}`),
+    ...p.abschnitte.flatMap((a) => (a.art === 'checkliste' ? punkteVon(a).filter((x) => neu.has(`${a.id}.${x.id}`)).map((x) => `${a.titel}: ${x.text}`) : a.art === 'fragen' ? a.fragen.filter((x) => neu.has(`${a.id}.${x.id}`)).map((x) => `${a.titel}: ${x.text}`) : [])),
+  ];
   const listen = p.abschnitte.filter((a): a is Checkliste => a.art === 'checkliste');
   const zeit = p.abschnitte.find((a): a is Zeitplanung => a.art === 'zeitplanung');
   const geplant = daten.phasen.reduce((n, x) => n + x.soll, 0);
@@ -112,6 +120,8 @@ export function Planer() {
         {p.einleitung || 'Hier planst du dein Prüfungsvorhaben Schritt für Schritt.'} Was du einträgst, siehst nur du – außer den Terminen: Sie stehen auch in deinem Ausbildungsplan.{' '}
         <HandbuchLink kapitel="planer">So funktioniert der Planer</HandbuchLink>
       </p>
+
+      {neuText.length > 0 && <Ergaenzt punkte={neuText} sende={sende} />}
 
       <div className="planer-oben">
         <section className="karte">
@@ -157,15 +167,15 @@ export function Planer() {
         </section>
       </div>
 
-      {p.termine.length > 0 && <Termine p={p} daten={daten} sende={sende} />}
+      {p.termine.length > 0 && <Termine p={p} daten={daten} neu={neu} sende={sende} />}
 
       {p.abschnitte.map((a) =>
         a.art === 'checkliste' ? (
-          <ChecklisteKarte key={a.id} c={a} daten={daten} sende={sende} />
+          <ChecklisteKarte key={a.id} c={a} daten={daten} neu={neu} sende={sende} />
         ) : a.art === 'zeitplanung' ? (
           <ZeitKarte key="zeit" z={a} daten={daten} sende={sende} />
         ) : (
-          <FragenKarte key={a.id} f={a} daten={daten} sende={sende} />
+          <FragenKarte key={a.id} f={a} daten={daten} neu={neu} sende={sende} />
         ),
       )}
 
@@ -173,6 +183,47 @@ export function Planer() {
         <TextMitSpeichern label="Notizen (nur für dich)" platzhalter="Ideen, offene Fragen, Links …" wert={daten.notizen} zeilen={6} max={20000} knopf="Notizen speichern" onSpeichern={(text) => sende('PUT', '/api/planer/notizen', { text }, 'Notizen gespeichert.')} />
       </Klappe>
     </>
+  );
+}
+
+/** Marke an einem Punkt, der durch eine neue Fassung des Planers dazugekommen ist. */
+function Neu() {
+  return <span className="pille blau planer-notiert">neu</span>;
+}
+
+/** Hinweis oben auf der Seite: Der Planer wurde ergänzt. Bleibt, bis der Azubi ihn bestätigt. */
+function Ergaenzt({ punkte, sende }: { punkte: string[]; sende: Sende }) {
+  const [laeuft, setLaeuft] = useState(false);
+  const [fehler, setFehler] = useState('');
+  return (
+    <section className="hinweis planer-ergaenzt" role="status">
+      <p>
+        <strong>Dein Planer wurde ergänzt.</strong> {punkte.length === 1 ? 'Dieser Punkt ist dazugekommen' : `Diese ${punkte.length} Punkte sind dazugekommen`} – sie tragen unten die Marke „neu“. Was du schon eingetragen hast, ist geblieben.
+      </p>
+      <ul>
+        {punkte.slice(0, 8).map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+        {punkte.length > 8 && <li>… und {punkte.length - 8} weitere</li>}
+      </ul>
+      <Fehler text={fehler} />
+      <div className="aktionen links">
+        <button
+          type="button"
+          className="knopf schlicht"
+          disabled={laeuft}
+          onClick={() => {
+            setLaeuft(true);
+            setFehler('');
+            sende('POST', '/api/planer/gesehen', {})
+              .catch((e: Error) => setFehler(e.message))
+              .finally(() => setLaeuft(false));
+          }}
+        >
+          Als gesehen merken
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -260,7 +311,7 @@ function Angaben({ p, daten, sende }: { p: Inhalt; daten: Daten; sende: Sende })
   );
 }
 
-function Termine({ p, daten, sende }: { p: Inhalt; daten: Daten; sende: Sende }) {
+function Termine({ p, daten, neu, sende }: { p: Inhalt; daten: Daten; neu: Set<string>; sende: Sende }) {
   const [werte, setWerte] = useState<Record<string, string>>(() => Object.fromEntries(p.termine.map((t) => [t.id, daten.termine[t.id] ?? ''])));
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
@@ -286,7 +337,10 @@ function Termine({ p, daten, sende }: { p: Inhalt; daten: Daten; sende: Sende })
           {p.termine.map((t) => (
             <div key={t.id}>
               <label>
-                {t.label}
+                <span>
+                  {t.label}
+                  {neu.has(`termine.${t.id}`) && <Neu />}
+                </span>
                 <input type="date" min="2000-01-01" max="2099-12-31" aria-describedby={t.hinweis ? `planer-termin-${t.id}` : undefined} value={werte[t.id] ?? ''} onChange={(e) => setWerte({ ...werte, [t.id]: e.target.value })} />
               </label>
               {t.hinweis && (
@@ -308,7 +362,7 @@ function Termine({ p, daten, sende }: { p: Inhalt; daten: Daten; sende: Sende })
   );
 }
 
-function ChecklisteKarte({ c, daten, sende }: { c: Checkliste; daten: Daten; sende: Sende }) {
+function ChecklisteKarte({ c, daten, neu, sende }: { c: Checkliste; daten: Daten; neu: Set<string>; sende: Sende }) {
   const [laeuft, setLaeuft] = useState<string | null>(null);
   const [fehler, setFehler] = useState('');
   const fertig = erledigt(c, daten);
@@ -343,6 +397,7 @@ function ChecklisteKarte({ c, daten, sende }: { c: Checkliste; daten: Daten; sen
                       <span>
                         <span className={an ? 'planer-erledigt' : undefined}>{x.text}</span>
                         {an && <span className="nur-vorleser"> (erledigt)</span>}
+                        {neu.has(id) && <Neu />}
                         {x.hilfe && <span className="planer-hilfe">{x.hilfe}</span>}
                       </span>
                     </label>
@@ -444,7 +499,7 @@ function ZeitKarte({ z, daten, sende }: { z: Zeitplanung; daten: Daten; sende: S
   );
 }
 
-function FragenKarte({ f, daten, sende }: { f: Fragen; daten: Daten; sende: Sende }) {
+function FragenKarte({ f, daten, neu, sende }: { f: Fragen; daten: Daten; neu: Set<string>; sende: Sende }) {
   const [aktiv, setAktiv] = useState<string | null>(null);
   const notiert = f.fragen.filter((x) => daten.antworten[`${f.id}.${x.id}`]).length;
   return (
@@ -473,6 +528,7 @@ function FragenKarte({ f, daten, sende }: { f: Fragen; daten: Daten; sende: Send
                 <details className="klapp" key={x.id} open={aktiv === x.id} onToggle={(e) => (e.currentTarget.open ? setAktiv(x.id) : aktiv === x.id && setAktiv(null))}>
                   <summary>
                     {x.text}
+                    {neu.has(id) && <Neu />}
                     {text && <span className="pille gruen planer-notiert">Stichworte notiert</span>}
                   </summary>
                   <TextMitSpeichern label="Deine Stichworte (nur für dich)" platzhalter="Was würdest du antworten?" wert={text} zeilen={3} max={3000} knopf="Stichworte speichern" onSpeichern={(t) => sende('PUT', '/api/planer/antwort', { id, text: t }, 'Stichworte gespeichert.')} />

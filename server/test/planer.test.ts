@@ -317,6 +317,19 @@ test('Aktualisierung des Pakets: Eintragungen hängen an den Kennungen; Umbenenn
   assert.equal(d.haken['antrag.thema'], true);
   assert.equal(d.haken['antrag.portal'], true);
 
+  // Neue Punkte: Der Azubi bekommt einen Hinweis, bis er ihn bestätigt. Umbenanntes gilt nicht als neu.
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).neu, [], 'nichts Neues, solange sich nichts geändert hat');
+  neu(PLANER.replace('- Projektziel {#ziel}', '- Projektziel {#ziel}\n- Zielgruppe {#zielgruppe}').replace('- Präsentation am {#praesentation}', '- Präsentation am {#praesentation}\n- Doku hochladen bis {#doku}').replace('{#warum}', '{#grund}') + '\n## Umbenennungen\n- gespraech.warum → gespraech.grund\n');
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).neu.sort(), ['antrag.zielgruppe', 'termine.doku']);
+  // ein Haken dazwischen lässt den Hinweis stehen; erst „gesehen“ räumt ihn weg
+  assert.deepEqual(koerper(await ruf(w.u, 'PATCH', '/api/planer/haken', { cookies: c, body: { id: 'antrag.zielgruppe', an: true } })).neu.sort(), ['antrag.zielgruppe', 'termine.doku']);
+  assert.deepEqual(koerper(await ruf(w.u, 'POST', '/api/planer/gesehen', { cookies: c, body: {} })).neu, []);
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).neu, []);
+  assert.equal('bekannt' in koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).daten, false);
+  // wer noch nie etwas gespeichert hat, bekommt keinen Hinweis – für ihn ist alles neu
+  await w.profil(w.ben, { berufId: w.fisi, planerFrei: true });
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: w.als(w.ben) })).neu, []);
+
   // fehlerhafte Datei: die zuletzt gültige Fassung gilt weiter
   neu(PLANER.replace('{#ziel}', ''));
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).planer.titel, 'Abschlussprojekt');

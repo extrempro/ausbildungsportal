@@ -5,6 +5,7 @@ import type { DB } from './db';
 import { gueltigesDatum } from './kalender';
 import { lernpakete, paketVon } from './lernen';
 import type { Paket } from './lernen';
+import { planerKennungen } from './lernen/planer';
 import type { Planer } from './lernen/planer';
 
 /**
@@ -38,6 +39,7 @@ interface Zeile {
   phasen: string | null;
   antworten: string;
   notizen: string;
+  bekannt: string | null;
   geaendert: string;
 }
 
@@ -50,9 +52,11 @@ interface Daten {
   phasen: Phase[] | null;
   antworten: Record<string, string>;
   notizen: string;
+  /** Kennungen, die der Azubi schon gesehen hat (für den Hinweis „Planer ergänzt“); null = noch nicht festgehalten */
+  bekannt: string[] | null;
 }
 
-const LEER: Daten = { name: '', auftraggeber: '', termine: {}, haken: {}, phasen: null, antworten: {}, notizen: '' };
+const LEER: Daten = { name: '', auftraggeber: '', termine: {}, haken: {}, phasen: null, antworten: {}, notizen: '', bekannt: null };
 
 function json<T>(s: string | null, sonst: T): T {
   if (!s) return sonst;
@@ -100,7 +104,7 @@ function benenneUm<T>(werte: Record<string, T>, um: Record<string, string>, vors
 }
 
 function lies(db: DB, azubiId: number, paket: Paket, planer: Planer): Daten {
-  const z = db.prepare('SELECT name, auftraggeber, termine, haken, phasen, antworten, notizen, geaendert FROM planer WHERE azubi_id = ? AND paket = ?').get(azubiId, paket.id) as Zeile | undefined;
+  const z = db.prepare('SELECT name, auftraggeber, termine, haken, phasen, antworten, notizen, bekannt, geaendert FROM planer WHERE azubi_id = ? AND paket = ?').get(azubiId, paket.id) as Zeile | undefined;
   if (!z) return { ...LEER };
   const ohneTermine = Object.fromEntries(Object.entries(planer.umbenennungen).filter(([a]) => !a.startsWith('termine.')));
   return {
@@ -111,15 +115,17 @@ function lies(db: DB, azubiId: number, paket: Paket, planer: Planer): Daten {
     phasen: z.phasen === null ? null : json<Phase[]>(z.phasen, []),
     antworten: benenneUm(json<Record<string, string>>(z.antworten, {}), ohneTermine),
     notizen: z.notizen,
+    // umbenannte Kennungen gelten als bekannt
+    bekannt: z.bekannt === null ? null : json<string[]>(z.bekannt, []).map((id) => planer.umbenennungen[id] ?? id),
   };
 }
 
 function schreibe(db: DB, jetzt: Date, azubiId: number, paket: Paket, d: Daten): void {
   db.prepare(
-    `INSERT INTO planer (azubi_id, paket, name, auftraggeber, termine, haken, phasen, antworten, notizen, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO planer (azubi_id, paket, name, auftraggeber, termine, haken, phasen, antworten, notizen, bekannt, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(azubi_id, paket) DO UPDATE SET name = excluded.name, auftraggeber = excluded.auftraggeber, termine = excluded.termine, haken = excluded.haken,
-       phasen = excluded.phasen, antworten = excluded.antworten, notizen = excluded.notizen, geaendert = excluded.geaendert`,
-  ).run(azubiId, paket.id, d.name, d.auftraggeber, JSON.stringify(d.termine), JSON.stringify(d.haken), d.phasen === null ? null : JSON.stringify(d.phasen), JSON.stringify(d.antworten), d.notizen, jetzt.toISOString());
+       phasen = excluded.phasen, antworten = excluded.antworten, notizen = excluded.notizen, bekannt = excluded.bekannt, geaendert = excluded.geaendert`,
+  ).run(azubiId, paket.id, d.name, d.auftraggeber, JSON.stringify(d.termine), JSON.stringify(d.haken), d.phasen === null ? null : JSON.stringify(d.phasen), JSON.stringify(d.antworten), d.notizen, d.bekannt === null ? null : JSON.stringify(d.bekannt), jetzt.toISOString());
 }
 
 /**
@@ -145,14 +151,18 @@ export function mitPlanerTerminen<T extends { bezeichnung: string; datum: string
 function ansicht(planer: Planer, d: Daten) {
   const zeit = planer.abschnitte.find((a) => a.art === 'zeitplanung');
   const { umbenennungen: _, ...inhalt } = planer;
+  // „bekannt“ ist nur Buchführung – die Oberfläche bekommt stattdessen „neu“
+  const { bekannt, ...eintragungen } = d;
   return {
     planer: inhalt,
     daten: {
-      ...d,
+      ...eintragungen,
       phasen: d.phasen ?? (zeit ? zeit.phasen.map((p) => ({ name: p.name, soll: p.stunden, ist: 0 })) : []),
       // solange der Azubi nichts gespeichert hat, ist die Zeitplanung der Vorschlag aus dem Paket
       phasenVorschlag: d.phasen === null,
     },
+    // Termine, Punkte und Fragen, die seit dem letzten „gesehen“ dazugekommen sind (durch eine neue Fassung des Pakets)
+    neu: bekannt === null ? [] : [...planerKennungen(planer)].filter((id) => !bekannt.includes(id)),
   };
 }
 
@@ -164,6 +174,8 @@ function meiner(c: Ctx) {
 }
 
 function speichere(c: Ctx, m: ReturnType<typeof meiner>, daten: Daten) {
+  // beim ersten Speichern festhalten, welche Punkte es gab – alles Spätere gilt als „neu“
+  if (daten.bekannt === null) daten = { ...daten, bekannt: [...planerKennungen(m.planer)] };
   schreibe(c.k.db, c.k.jetzt(), c.b.id, m.paket, daten);
   return { status: 200, body: ansicht(m.planer, daten) };
 }
@@ -274,6 +286,17 @@ export const PLANER_ROUTEN: Route[] = [
       if (t) antworten[id] = t;
       else delete antworten[id];
       return speichere(c, m, { ...m.daten, antworten });
+    },
+  },
+
+  {
+    // „Planer ergänzt“ bestätigen: alles, was es jetzt gibt, gilt als gesehen
+    m: 'POST',
+    p: '/api/planer/gesehen',
+    wer: ['azubi'],
+    h: (c) => {
+      const m = meiner(c);
+      return speichere(c, m, { ...m.daten, bekannt: [...planerKennungen(m.planer)] });
     },
   },
 

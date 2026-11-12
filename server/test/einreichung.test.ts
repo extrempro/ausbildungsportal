@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -165,4 +165,53 @@ test('Einreichung benachrichtigt den Teams-Kanal – ohne Namen, mit Link zur Pr
   // ein kaputtes Paket löst nichts aus
   await ruf(u, 'POST', '/api/lernpakete/einreichungen?kennung=x', { cookies: sitzung(u, petra), body: Buffer.from('kein zip') });
   assert.equal(karten.length, 1);
+});
+
+test('Neue Fassung: fehlende Kennungen und ein Paket aus dem Ordner des Betreibers müssen vor dem Einreichen bestätigt werden', async () => {
+  const w = await welt();
+  const PLANER = '---\ntitel: Fachaufgabe\n---\n\n## Termine\n- Abgabe am {#abgabe}\n\n## Checkliste: Report {#report}\n- Gliederung {#gliederung}\n- Quellen {#quellen}\n';
+  const mit = (planer: string | null, thema = THEMA('Probezeit: 1 bis 4 Monate.')) => baueZip([...paket().slice(0, 3), { name: 'themen/wiso.md', daten: thema }, ...(planer === null ? [] : [{ name: 'planer.md', daten: planer }])]);
+  // erste Fassung: nichts zu bestätigen
+  const erste = await reiche(w, w.petra, mit(PLANER));
+  assert.equal(erste.status, 201);
+  assert.equal(koerper(erste).einreichung.pruefung.achtung, undefined);
+  assert.equal((await tue(w, w.chef, koerper(erste).einreichung.id, 'uebernehmen')).status, 200);
+
+  // gleiche Kennungen, anderer Text: keine Rückfrage
+  const gleich = await reiche(w, w.petra, mit(PLANER.replace('Gliederung', 'Gliederung mit Seitenzahlen')));
+  assert.equal(gleich.status, 201);
+  await tue(w, w.petra, koerper(gleich).einreichung.id, 'zurueckziehen');
+
+  // Kennung im Planer geändert und ein Unterthema umbenannt, ohne Umbenennung einzutragen
+  const kaputt = mit(PLANER.replace('{#quellen}', '{#literatur}'), THEMA('Probezeit: 1 bis 4 Monate.').replace(/\{#([a-z-]+)\}/, '{#$1-neu}'));
+  const frage = await reiche(w, w.petra, kaputt);
+  assert.equal(frage.status, 409);
+  const achtung = koerper(frage).achtung as string[];
+  assert.equal(achtung.length, 2);
+  assert.match(achtung[0], /Cheatsheets .*wiso\./);
+  assert.match(achtung[1], /Planer .*report\.quellen/);
+  assert.equal((await liste(w, w.petra)).einreichungen.filter((e: { status: string }) => e.status === 'eingereicht').length, 0, 'ohne Bestätigung wird nichts gespeichert');
+  // mit Bestätigung: eingereicht, und der Super-Admin sieht, was bestätigt wurde
+  const best = await ruf(w.u, 'POST', '/api/lernpakete/einreichungen?kennung=buero&notiz=&bestaetigt=1', { cookies: als(w, w.petra), body: kaputt });
+  assert.equal(best.status, 201);
+  assert.deepEqual((await liste(w, w.chef)).einreichungen[0].pruefung.achtung, achtung);
+  await tue(w, w.petra, koerper(best).einreichung.id, 'zurueckziehen');
+
+  // richtig umbenannt: keine Rückfrage
+  const sauber = await reiche(w, w.petra, mit(`${PLANER.replace('{#quellen}', '{#literatur}')}\n## Umbenennungen\n- report.quellen → report.literatur\n`));
+  assert.equal(sauber.status, 201);
+  await tue(w, w.petra, koerper(sauber).einreichung.id, 'zurueckziehen');
+  // Planer ganz entfernt
+  const ohne = await reiche(w, w.petra, mit(null));
+  assert.equal(ohne.status, 409);
+  assert.match(koerper(ohne).achtung[0], /keinen Planer mehr/);
+
+  // Paket, das der Betreiber als Ordner einbindet: Die Einreichung würde es verdrängen
+  const ordner = join(w.u.cfg.lernDir, 'git-paket');
+  mkdirSync(join(ordner, 'themen'), { recursive: true });
+  for (const d of paket()) writeFileSync(join(ordner, d.name), d.daten);
+  vergissLernpakete();
+  const doppelt = await reiche(w, w.petra, baueZip(paket()), 'git-paket');
+  assert.equal(doppelt.status, 409);
+  assert.match(koerper(doppelt).achtung[0], /als Ordner auf dem Server/);
 });
