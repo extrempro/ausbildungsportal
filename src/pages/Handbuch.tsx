@@ -363,6 +363,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Termin">Ein einzelner Tag, den du selbst eingetragen hast – mit Datum und, wenn du willst, Uhrzeit.</Begriff>
           <Begriff wort="Prüfung">Ein Prüfungstermin. Oben auf der Seite siehst du, wie viele Wochen es noch sind.</Begriff>
           <Begriff wort="Schulferien, Feiertag">Zur Info. In den Schulferien ist keine Berufsschule – im Betrieb arbeitest du normal weiter, außer du hast Urlaub.</Begriff>
+          <Begriff wort="Firmentermin">Ein Termin deines Betriebs, der für alle gilt – zum Beispiel „Betrieb geschlossen“ oder eine Betriebsversammlung. Er steht als gelbe Zeile in der Woche. Das ist nur eine Info: In deinem Bericht steht er nicht von selbst, und Urlaub musst du trotzdem beantragen, wenn dein Betrieb das so regelt. Frag im Zweifel deinen Ausbilder.</Begriff>
         </dl>
         <p>
           <strong>Selbst etwas eintragen:</strong> Mit dem „+“ an einer Woche legst du eigene Aufgaben und Notizen an, zum Beispiel „Für die Klassenarbeit lernen“. Diese kannst du auch wieder ändern oder löschen.
@@ -525,6 +526,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Gelb gestreift, „Urlaub?“">Beantragter Urlaub, über den noch nicht entschieden ist.</Begriff>
           <Begriff wort="Rot">Prüfung.</Begriff>
           <Begriff wort="Blau">Feiertag. Ein blauer Punkt mit Text ist ein eigener Termin von dir – den siehst nur du.</Begriff>
+          <Begriff wort="Gelber Rand">Firmentermin: ein Termin deines Betriebs für alle, zum Beispiel „Betrieb geschlossen“. Alle Firmentermine des Jahres stehen außerdem als Liste über dem Kalender.</Begriff>
           <Begriff wort="Türkiser Strich unten">Schulferien.</Begriff>
           <Begriff wort="Grau">Wochenende oder Tage vor Beginn und nach Ende deiner Ausbildung.</Begriff>
         </dl>
@@ -952,7 +954,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         </dl>
         <ul className="punkte">
           <li>Die Azubis sind nach Ausbildungsjahr geordnet.</li>
-          <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
+          <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage und – mit gelbem Rand – die Firmentermine. Alle Firmentermine des Jahres stehen außerdem als Liste über dem Kalender. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
           <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor.</li>
           <li>Private Termine der Azubis stehen nicht im Kalender.</li>
           <li>Der Kalender ist nur zum Lesen. Geplant wird im Ausbildungsplan{rolle === 'ausbilder' ? ' oder in der Sammelplanung' : ''}.</li>
@@ -1146,6 +1148,31 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Bitte nichts ändern oder löschen, nur weil du es selbst gerade nicht brauchst.</li>
                 <li>Ein Beruf oder eine Berufsschule lässt sich erst löschen, wenn kein Azubi mehr zugeordnet ist.</li>
                 <li>Änderungen stehen mit deinem Namen im Protokoll.</li>
+              </ul>
+            </>
+          ),
+        },
+        {
+          id: 'firmentermine',
+          titel: 'Firmentermine für alle',
+          inhalt: (
+            <>
+              <p>
+                Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei „Firmentermine“ trägst du ganztägige Termine ein, die für alle im Betrieb gelten – zum Beispiel eine Betriebsschließung zwischen den Feiertagen, eine Betriebsversammlung oder ein Sommerfest.
+              </p>
+              <dl className="begriffe">
+                <Begriff wort="Titel">Freier Text, so wie er im Plan stehen soll – etwa „Betrieb geschlossen“.</Begriff>
+                <Begriff wort="Erster und letzter Tag">Der Termin gilt für ganze Tage. Lässt du den letzten Tag leer, ist es ein einzelner Tag.</Begriff>
+                <Begriff wort="Hinweis">Freiwillig, eine Zeile – zum Beispiel „Notdienst über die Zentrale“.</Begriff>
+              </dl>
+              <ul className="punkte">
+                <li>Alle Azubis, Ausbildungsbeauftragten und Ausbilder sehen den Termin: im Ausbildungsplan in der betroffenen Woche (gelbe Zeile „Firmentermin“) und im Jahreskalender (Liste oben, im Kalender eines Azubis zusätzlich ein gelber Rand am Tag).</li>
+                <li>
+                  <strong>Es ist nur eine Übersicht.</strong> Ein Firmentermin steht nicht im Berichtsheft, zieht keinen Urlaub ab und ändert nichts an Berufsschule oder Einsätzen. Müssen Azubis für eine Schließung Urlaub nehmen, beantragen sie ihn wie sonst auch.
+                </li>
+                <li>Eine Benachrichtigung gibt es dafür nicht – auch nicht in der Glocke.</li>
+                <li>Vergangene Termine stehen eingeklappt unter „Vergangene Firmentermine“. Du kannst sie dort ändern oder löschen.</li>
+                <li>Anlegen, ändern und löschen können alle Ausbilder. Jede Änderung steht mit Namen im Protokoll.</li>
               </ul>
             </>
           ),

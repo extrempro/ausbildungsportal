@@ -396,13 +396,18 @@ function WochenInhalt({ woche, daten, frei, voll, leer, a }: { woche: Woche; dat
   const pruefungen = daten.pruefungen.filter((p) => d2(p.datum, woche));
   const ferien = frei ? daten.ferien.filter((f) => f.von <= woche.sonntag && f.bis >= woche.montag) : [];
   const feiertage = frei ? daten.feiertage.filter((f) => f.datum >= woche.montag && f.datum <= woche.sonntag) : [];
+  // Termine des Betriebs für alle stehen immer da – auch wenn Ferien und Feiertage ausgeblendet sind
+  const firma = daten.firmentermine.filter((t) => t.von <= woche.sonntag && t.bis >= woche.montag);
   const beginnt = d2(daten.beginn, woche);
   const endet = d2(daten.ende, woche);
-  if (!eintraege.length && !pruefungen.length && !ferien.length && !feiertage.length && !beginnt && !endet) return leer ? <p className="leise klein">{leer}</p> : null;
+  if (!eintraege.length && !pruefungen.length && !ferien.length && !feiertage.length && !firma.length && !beginnt && !endet) return leer ? <p className="leise klein">{leer}</p> : null;
   return (
     <>
       {pruefungen.map((p) => (
         <Marke key={p.bezeichnung + p.datum} art="Prüfung" klasse="pruefung" titel={p.bezeichnung} zusatz={tagKurz(p.datum)} />
+      ))}
+      {firma.map((t) => (
+        <Marke key={`firma-${t.id}`} art="Firmentermin" klasse="firma" titel={t.hinweis ? `${t.titel} – ${t.hinweis}` : t.titel} zusatz={t.von === t.bis ? tagKurz(t.von) : `${tagMonat(t.von)}–${tagMonat(t.bis)}`} />
       ))}
       {beginnt && <Marke art="Start" klasse="marke" titel="Ausbildungsbeginn" zusatz={tagKurz(daten.beginn!)} />}
       {endet && <Marke art="Ende" klasse="marke" titel="Ende der Ausbildung" zusatz={tagKurz(daten.ende!)} />}

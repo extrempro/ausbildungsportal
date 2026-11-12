@@ -177,12 +177,22 @@ export interface Berufsschule {
   form: 'block' | 'teilzeit';
 }
 
+/** Ganztägiger Termin des Betriebs, der für alle gilt (z. B. Betriebsschließung) */
+export interface Firmentermin {
+  id: number;
+  titel: string;
+  von: string;
+  bis: string;
+  hinweis: string;
+}
+
 export interface Stammdaten {
   betrieb: { name: string; anschrift: string; bundesland: string; personalMail: string; personalAnrede: string; berichtForm: 'woche' | 'tag' };
   /** ist im Portal ein Mailserver eingerichtet? */
   mailversand: boolean;
   berufe: Beruf[];
   berufsschulen: Berufsschule[];
+  firmentermine: Firmentermin[];
   bundeslaender: { kuerzel: string; name: string }[];
   ausbilder: { id: number; anzeigename: string }[];
   /** Inhaltspakete, die sich an einem Beruf als Lernmodul einschalten lassen */
@@ -459,6 +469,8 @@ export interface PlanWoche {
 
 export interface PlanAntwort {
   azubi: { id: number; anzeigename: string };
+  /** Termine des Betriebs für alle, die in die Ausbildungszeit fallen */
+  firmentermine: Firmentermin[];
   eigenes: boolean;
   heute: string;
   beginnFehlt: boolean;

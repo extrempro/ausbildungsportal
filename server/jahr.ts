@@ -4,6 +4,7 @@ import type { Ctx, Route } from './api-basis';
 import { heute } from './datum';
 import { feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
+import { firmentermineZwischen } from './firmentermin';
 import { plusTage } from './kalender';
 import { darfAzubiSehen, sichtbareAzubis } from './rechte';
 import { dauerVon, leseBetrieb, leseProfil, standAus } from './stammdaten';
@@ -89,6 +90,8 @@ export const JAHR_ROUTEN: Route[] = [
           eigenes: c.b.rolle === 'azubi',
           einzeln: c.b.rolle === 'azubi' || nur !== null,
           feiertage: istBundesland(land) ? feiertageZwischen(land, `${jahr}-01-01`, `${jahr}-12-31`).filter((f) => !f.teilweise).map((f) => ({ tag: f.datum, name: f.name })) : [],
+          // Termine des Betriebs für alle – gelten für jeden Azubi gleich
+          firmentermine: firmentermineZwischen(db, `${jahr}-01-01`, `${jahr}-12-31`),
           azubis: ids.map((id) => kalenderVon(c, id, jahr, tag)),
         },
       };

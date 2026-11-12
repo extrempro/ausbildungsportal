@@ -30,6 +30,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/migrations/` | Datenbank, fortlaufend nummerierte SQL-Dateien |
 | `server/test/` | Tests; `api.test.ts` enthält die Rechte-Tabelle aller Routen, `handbuch.test.ts` prüft die Handbuch-Verweise |
 | `server/berichte.ts`, `server/bericht-anhang.ts` | Berichtsheft (Wochen- und Tagesform) und Fotos/Dateien an Berichten – Dateityp am Dateianfang geprüft, Rechte wie der Bericht |
+| `server/firmentermin.ts` | Firmentermine für alle (Stammdaten) – reine Übersicht in Plan und Jahreskalender, bewusst ohne Glocke und nicht im Berichtsheft |
 | `server/mail-gestalt.ts` | das gemeinsame Aussehen aller Mails (`gestalteMail`) – neue Mails nicht von Hand gestalten |
 | `server/aktivitaet.ts`, `server/benachrichtigung.ts` | Glocke und – daran angehängt – Benachrichtigungen per Teams und E-Mail (ohne Namen, nur für Berechtigte) |
 | `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben) |

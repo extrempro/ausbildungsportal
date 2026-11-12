@@ -1,3 +1,4 @@
+import { alleFirmentermine } from './firmentermin';
 import { lernpakete, paketListe } from './lernen';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
@@ -286,6 +287,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         mailversand: c.k.cfg.smtp !== null,
         berufe: alleBerufe(c.k.db),
         berufsschulen: alleSchulen(c.k.db),
+        // Termine des Betriebs für alle – zum Pflegen (Ausbilder) und zur Übersicht
+        firmentermine: alleFirmentermine(c.k.db),
         bundeslaender: Object.entries(BUNDESLAENDER).map(([kuerzel, name]) => ({ kuerzel, name })),
         // Inhaltspakete für das Lernmodul – zur Auswahl am Beruf
         lernpakete: c.b.rolle === 'ausbilder' ? paketListe(c.k) : [],

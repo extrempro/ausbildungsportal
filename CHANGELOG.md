@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.46.0] – 2026-11-12
+
+### Neu
+
+- **Firmentermine für alle.** Ausbilder tragen unter „Stammdaten → Firmentermine“ ganztägige Termine des Betriebs ein, zum Beispiel „Betrieb geschlossen“ oder eine Betriebsversammlung – mit freiem Titel, erstem und letztem Tag und einem freiwilligen Hinweis.
+  - Alle sehen sie im Ausbildungsplan in der betroffenen Woche (gelbe Zeile „Firmentermin“) und im Jahreskalender (Liste über dem Kalender; im Kalender eines Azubis zusätzlich ein gelber Rand am Tag).
+  - Es ist nur eine Übersicht: Firmentermine stehen nicht im Berichtsheft, ziehen keinen Urlaub ab und lösen keine Benachrichtigung aus.
+  - Vergangene Termine stehen in den Stammdaten eingeklappt.
+
 ## [0.45.0] – 2026-11-12
 
 ### Neu
