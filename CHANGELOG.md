@@ -1,11 +1,17 @@
 # Änderungen
 
+## [0.43.0] – 2026-11-12
+
+### Neu
+
+- **Anrede in der Mail an die Personalstelle:** Unter „Stammdaten → Betrieb“ tragen Ausbilder ein, wie die Mail beginnt – zum Beispiel „Hallo Kim“ oder „Guten Tag Frau Beispiel“. Ohne Angabe bleibt es bei „Guten Tag“. Das gilt auch für die Testmail.
+
 ## [0.42.0] – 2026-11-12
 
 ### Geändert
 
 - **Mail an die Personalstelle ist jetzt gestaltet** – wie die Benachrichtigungen: oben „Ausbildungsportal“, Name und Logo des Betriebs, darunter deutlich „Urlaub genehmigt“ oder „Urlaub storniert“ und die Angaben als Übersicht. Der Inhalt ist derselbe wie bisher; Bemerkung und Begründung gehen weiterhin nicht mit. Auch die Testmail sieht so aus.
-- Die Personalstelle wird weiter mit „Guten Tag,“ angesprochen: Das Portal kennt dort nur eine Adresse, keine Person.
+- Die Personalstelle wird mit „Guten Tag,“ angesprochen: Das Portal kennt dort nur eine Adresse, keine Person.
 
 ## [0.41.1] – 2026-11-12
 

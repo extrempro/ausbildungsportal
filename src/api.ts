@@ -178,7 +178,7 @@ export interface Berufsschule {
 }
 
 export interface Stammdaten {
-  betrieb: { name: string; anschrift: string; bundesland: string; personalMail: string };
+  betrieb: { name: string; anschrift: string; bundesland: string; personalMail: string; personalAnrede: string };
   /** ist im Portal ein Mailserver eingerichtet? */
   mailversand: boolean;
   berufe: Beruf[];
