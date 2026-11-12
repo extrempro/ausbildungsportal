@@ -7,6 +7,7 @@ import { transaktion } from './db';
 import { heute } from './datum';
 import { feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
+import { firmentermineZwischen } from './firmentermin';
 import { ausbildungsjahrAm, gueltigesDatum, kalenderwoche, montagVon, plusTage } from './kalender';
 import { protokolliere } from './protokoll';
 import { darfAzubiVerwalten, darfPlanBearbeiten, darfPlanEintragAendern, hatGesamtsicht, sichtbareAzubis } from './rechte';
@@ -441,6 +442,8 @@ export const PLAN_ROUTEN: Route[] = [
           feiertage: erste && istBundesland(betriebLand) ? feiertageZwischen(betriebLand, erste, ende).filter((f) => !f.teilweise) : [],
           ferien: ferien ? ferienZwischen(ferien, erste!, ende) : [],
           ferienVorhanden: ferien?.vorhanden ?? false,
+          // Termine des Betriebs für alle (z. B. Betriebsschließung) – reine Übersicht
+          firmentermine: erste ? firmentermineZwischen(db, erste, ende) : [],
           rechte: { arten: [...(darfAlles ? PLANBAR : darfAufgaben ? ['aufgabe', 'notiz'] : []), ...(darfPlanBearbeiten(db, c.b, azubi.id, 'termin', tag) ? ['termin'] : [])], zuweisen: darfAzubiVerwalten(db, c.b, azubi.id) },
           // Auswahl für „zuständig“ und Vorlagen nur für die, die planen
           personen: darfAufgaben && c.b.rolle !== 'azubi'

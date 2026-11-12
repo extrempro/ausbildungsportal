@@ -33,6 +33,8 @@ interface Daten {
   eigenes: boolean;
   einzeln: boolean;
   feiertage: { tag: string; name: string }[];
+  /** Termine des Betriebs für alle */
+  firmentermine: { id: number; titel: string; von: string; bis: string; hinweis: string }[];
   azubis: JkAzubi[];
 }
 
@@ -112,13 +114,30 @@ export function Jahreskalender({ azubiId }: { azubiId?: number }) {
         )}
       </div>
 
-      <Legende einzeln={!!einer} eigenes={d.eigenes} />
+      <Legende einzeln={!!einer} eigenes={d.eigenes} firma={d.firmentermine.length > 0} />
+      {d.firmentermine.length > 0 && (
+        <section className="karte jk-firma" aria-labelledby="jk-firma-titel">
+          <h2 id="jk-firma-titel">Firmentermine {d.jahr}</h2>
+          <p className="leise klein">Gelten für alle im Betrieb.</p>
+          <ul>
+            {d.firmentermine.map((t) => (
+              <li key={t.id}>
+                <span className="jk-firma-zeit">{t.von === t.bis ? datum(t.von) : `${datum(t.von)} bis ${datum(t.bis)}`}</span>
+                <span>
+                  <strong>{t.titel}</strong>
+                  {t.hinweis ? ` – ${t.hinweis}` : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {einer ? <JahrEinzeln d={d} a={einer} /> : <JahrAlle d={d} />}
     </>
   );
 }
 
-function Legende({ einzeln, eigenes }: { einzeln: boolean; eigenes: boolean }) {
+function Legende({ einzeln, eigenes, firma }: { einzeln: boolean; eigenes: boolean; firma: boolean }) {
   return (
     <ul className="jk-legende" aria-label="Bedeutung der Farben">
       <li>
@@ -144,6 +163,11 @@ function Legende({ einzeln, eigenes }: { einzeln: boolean; eigenes: boolean }) {
       <li>
         <span className="jk-farbe ferien" /> Schulferien
       </li>
+      {einzeln && firma && (
+        <li>
+          <span className="jk-farbe firma" /> Firmentermin (für alle)
+        </li>
+      )}
       {eigenes && (
         <li>
           <span className="jk-farbe termin" /> Eigener Termin (siehst nur du)
@@ -166,6 +190,10 @@ interface TagInfo {
   frei: boolean;
   ausserhalb: boolean;
   termine: { zeitVon: string; titel: string }[];
+  /** Termine des Betriebs an diesem Tag */
+  firma: string[];
+  /** Beschriftung zeigen: am ersten Tag, an jedem Montag und am Monatsersten */
+  firmaZeigen: boolean;
 }
 
 function tagInfo(d: Daten, a: JkAzubi, tag: string, feiertage: Map<string, string>): TagInfo {
@@ -174,7 +202,8 @@ function tagInfo(d: Daten, a: JkAzubi, tag: string, feiertage: Map<string, strin
   const ausserhalb = !a.beginn || !a.ende || tag < a.beginn || tag > a.ende;
   const ferien = a.ferien.find((f) => f.von <= tag && f.bis >= tag)?.name ?? '';
   const termine = a.termine.filter((t) => t.tag === tag);
-  const basis = { ferien, frei: wochenende, ausserhalb, termine };
+  const firma = d.firmentermine.filter((t) => t.von <= tag && t.bis >= tag);
+  const basis = { ferien, frei: wochenende, ausserhalb, termine, firma: firma.map((t) => t.titel), firmaZeigen: firma.some((t) => t.von === tag) || wt === 1 || tag.endsWith('-01') };
   const pruefung = a.pruefungen.filter((p) => p.tag === tag);
   if (pruefung.length) {
     const text = `Prüfung: ${pruefung.map((p) => p.bezeichnung).join(', ')}`;
@@ -230,8 +259,8 @@ function JahrEinzeln({ d, a }: { d: Daten; a: JkAzubi }) {
                 const tag = iso(d.jahr, i, t);
                 const info = tagInfo(d, a, tag, feiertage);
                 const wt = wochentag(tag);
-                const klassen = ['jk-zelle', info.art ?? '', info.frei && !info.art ? 'frei' : '', info.ausserhalb ? 'ausserhalb' : '', info.ferien ? 'ferien' : '', tag === d.heute ? 'heute' : ''].filter(Boolean).join(' ');
-                const auskunft = [info.voll, info.ferien && `Schulferien: ${info.ferien}`, ...info.termine.map((x) => `Termin${x.zeitVon ? ` ${x.zeitVon}` : ''}: ${x.titel}`), info.ausserhalb ? 'nicht in der Ausbildung' : ''].filter(Boolean).join(' · ');
+                const klassen = ['jk-zelle', info.firma.length ? 'firma' : '', info.art ?? '', info.frei && !info.art ? 'frei' : '', info.ausserhalb ? 'ausserhalb' : '', info.ferien ? 'ferien' : '', tag === d.heute ? 'heute' : ''].filter(Boolean).join(' ');
+                const auskunft = [info.voll, info.ferien && `Schulferien: ${info.ferien}`, ...info.firma.map((x) => `Firmentermin: ${x}`), ...info.termine.map((x) => `Termin${x.zeitVon ? ` ${x.zeitVon}` : ''}: ${x.titel}`), info.ausserhalb ? 'nicht in der Ausbildung' : ''].filter(Boolean).join(' · ');
                 return (
                   <td key={m} className={klassen} title={`${TAGE_LANG[wt]}, ${datum(tag)}${auskunft ? ` – ${auskunft}` : ''}`}>
                     <span className="jk-wt" aria-hidden="true">
@@ -240,6 +269,17 @@ function JahrEinzeln({ d, a }: { d: Daten; a: JkAzubi }) {
                     <span className="nur-vorleser">{TAGE_LANG[wt]}</span>
                     {info.text ? <span className="jk-text">{info.text}</span> : info.voll && <span className="nur-vorleser">{info.voll}</span>}
                     {info.ferien && <span className="nur-vorleser">Schulferien</span>}
+                    {info.firma.map((x, n) =>
+                      info.firmaZeigen ? (
+                        <span key={`f${n}`} className="jk-termin firma">
+                          {x}
+                        </span>
+                      ) : (
+                        <span key={`f${n}`} className="nur-vorleser">
+                          Firmentermin: {x}
+                        </span>
+                      ),
+                    )}
                     {info.termine.map((x, n) => (
                       <span key={n} className="jk-termin">
                         {x.zeitVon ? `${x.zeitVon} ` : ''}

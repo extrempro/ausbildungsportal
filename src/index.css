@@ -7978,3 +7978,49 @@ fieldset.benach-bereich p {
     justify-content: flex-start;
   }
 }
+
+/* ---------- Firmentermine: Termine des Betriebs für alle ---------- */
+.eintrag.firma {
+  --art: var(--c-warn-fg);
+  background: var(--c-warn-bg);
+}
+
+.jk-firma ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jk-firma li {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 4px 16px;
+}
+
+.jk-firma-zeit {
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Jahreskalender eines Azubis: Tage mit Firmentermin tragen einen Streifen am Rand und die Beschriftung */
+.jk-zelle.firma {
+  box-shadow: inset 3px 0 0 var(--c-warn-fg);
+}
+
+.jk-termin.firma {
+  color: var(--c-warn-fg);
+}
+
+.jk-farbe.firma {
+  background: var(--c-warn-bg);
+  box-shadow: inset 3px 0 0 var(--c-warn-fg);
+}
+
+@media (max-width: 640px) {
+  .jk-firma li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}

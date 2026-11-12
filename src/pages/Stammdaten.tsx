@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, datum } from '../api';
 import { useEingaben } from '../router';
-import type { Beruf, Berufsschule, Stammdaten as Daten } from '../api';
+import type { Beruf, Berufsschule, Firmentermin, Stammdaten as Daten } from '../api';
 import { HandbuchLink } from '../handbuchLink';
 
 type Meldung = { text: string; fehler: boolean } | null;
@@ -162,6 +162,69 @@ function SchulFormular({ schule, daten, onFertig }: { schule?: Berufsschule; dat
   );
 }
 
+function FirmenterminFormular({ termin, onFertig }: { termin?: Firmentermin; onFertig: (text: string) => Promise<void> }) {
+  const eingaben = useEingaben();
+  const [fehler, setFehler] = useState('');
+  const sende = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const body = { titel: f.get('titel'), von: f.get('von'), bis: f.get('bis'), hinweis: f.get('hinweis') };
+    try {
+      if (termin) await api('PATCH', `/api/stammdaten/firmentermine/${termin.id}`, body);
+      else await api('POST', '/api/stammdaten/firmentermine', body);
+      if (!termin) form.reset();
+      eingaben.gespeichert();
+      setFehler('');
+      await onFertig(termin ? 'Firmentermin gespeichert.' : 'Firmentermin angelegt.');
+    } catch (err) {
+      setFehler(err instanceof Error ? err.message : 'Fehler');
+    }
+  };
+  const loesche = async () => {
+    if (!termin || !(await rueckfrage(`Firmentermin „${termin.titel}“ löschen?\n\nEr verschwindet für alle aus dem Ausbildungsplan und dem Jahreskalender.`, { ja: 'Firmentermin löschen', gefahr: true }))) return;
+    try {
+      await api('DELETE', `/api/stammdaten/firmentermine/${termin.id}`);
+      await onFertig('Firmentermin gelöscht.');
+    } catch (err) {
+      setFehler(err instanceof Error ? err.message : 'Fehler');
+    }
+  };
+  return (
+    <form className="reihe" onSubmit={sende} onInput={eingaben.merke}>
+      <label>
+        Titel
+        <input name="titel" defaultValue={termin?.titel} maxLength={100} placeholder="z. B. Betrieb geschlossen" required />
+      </label>
+      <label>
+        Erster Tag
+        <input name="von" type="date" defaultValue={termin?.von} required />
+      </label>
+      <label>
+        Letzter Tag (leer = nur ein Tag)
+        <input name="bis" type="date" defaultValue={termin && termin.bis !== termin.von ? termin.bis : ''} />
+      </label>
+      <label className="ganz">
+        Hinweis (freiwillig)
+        <input name="hinweis" defaultValue={termin?.hinweis} maxLength={200} placeholder="z. B. Notdienst über die Zentrale" />
+      </label>
+      <div className="aktionen links ganz">
+        <button className={termin ? 'knopf schlicht' : 'knopf'}>{termin ? 'Firmentermin speichern' : 'Firmentermin anlegen'}</button>
+        {termin && (
+          <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
+            Firmentermin löschen
+          </button>
+        )}
+      </div>
+      {fehler && (
+        <p className="hinweis fehler ganz" role="alert">
+          {fehler}
+        </p>
+      )}
+    </form>
+  );
+}
+
 export function Stammdaten() {
   const eingaben = useEingaben();
   const [daten, setDaten] = useState<Daten | null>(null);
@@ -207,6 +270,10 @@ export function Stammdaten() {
   };
 
   if (!daten) return meldung ? <Zeile m={meldung} /> : <p className="leise">Lädt …</p>;
+  // Firmentermine: was noch kommt (oder läuft) steht offen da, Vergangenes eingeklappt – das Neueste zuerst
+  const heuteIso = new Date().toLocaleDateString('sv-SE');
+  const kommende = daten.firmentermine.filter((t) => t.bis >= heuteIso);
+  const vergangene = daten.firmentermine.filter((t) => t.bis < heuteIso).reverse();
 
   return (
     <>
@@ -344,6 +411,27 @@ export function Stammdaten() {
         <h3>Neue Berufsschule</h3>
         {/* key: Bundesland des Betriebs als Vorbelegung übernehmen, sobald es gespeichert ist */}
         <SchulFormular key={`neu-${daten.betrieb.bundesland}`} daten={daten} onFertig={fertig} />
+      </section>
+
+      <section className="karte" id="firmentermine">
+        <h2>Firmentermine</h2>
+        <p>
+          Ganztägige Termine, die für alle im Betrieb gelten – zum Beispiel eine Betriebsschließung oder eine Betriebsversammlung. Alle sehen sie im Ausbildungsplan und im Jahreskalender. <HandbuchLink kapitel="firmentermine">Firmentermine</HandbuchLink>
+        </p>
+        {kommende.length === 0 && <p className="leise">Kein kommender Firmentermin eingetragen.</p>}
+        {kommende.map((t) => (
+          <FirmenterminFormular key={`${t.id}-${t.titel}-${t.von}-${t.bis}-${t.hinweis}`} termin={t} onFertig={fertig} />
+        ))}
+        {vergangene.length > 0 && (
+          <details className="klapp">
+            <summary>Vergangene Firmentermine ({vergangene.length})</summary>
+            {vergangene.map((t) => (
+              <FirmenterminFormular key={`${t.id}-${t.titel}-${t.von}-${t.bis}-${t.hinweis}`} termin={t} onFertig={fertig} />
+            ))}
+          </details>
+        )}
+        <h3>Neuer Firmentermin</h3>
+        <FirmenterminFormular key={`neu-${daten.firmentermine.length}`} onFertig={fertig} />
       </section>
     </>
   );
