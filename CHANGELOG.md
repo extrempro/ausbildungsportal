@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.41.1] – 2026-11-12
+
+### Geändert
+
+- **Regeln für die Mitarbeit:** Bei jeder neuen Funktion wird jetzt geprüft, ob sie eine Benachrichtigung braucht (Glocke, Teams, E-Mail). Das steht in den Bedienregeln, in `CONTRIBUTING.md`, `CLAUDE.md` und in der Checkliste für Pull Requests. Am Portal selbst ändert sich nichts.
+
 ## [0.41.0] – 2026-11-12
 
 ### Geändert

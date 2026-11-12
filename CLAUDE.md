@@ -47,9 +47,10 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 3. **`CHANGELOG.md`**: neuer Abschnitt oben, `### Neu` / `### Geändert` / `### Behoben`, in Worten für Nutzer.
 4. **`docs/bedienregeln.md` durchgehen** und im Abschlussbericht sagen, dass geprüft wurde und wo abgewichen wird.
 5. **Handbuch mitziehen** (`src/pages/Handbuch.tsx`) – für jede Rolle, die die Änderung sieht – und an der Stelle im Portal einen `<HandbuchLink kapitel="…">` setzen. Ohne Aufforderung.
-6. **Neue Route:** `wer` setzen, in die Rechte-Tabelle in `server/test/api.test.ts` eintragen, den verbotenen Zugriff testen. Fremde Kennung → 404, falsche Rolle → 403.
-7. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole.
-8. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
+6. **Benachrichtigungen mitdenken:** Erfährt durch die Änderung eine andere Person etwas Neues? Dann gehört das Ereignis in die Glocke (`merkeAktivitaet`) – Teams und E-Mail gehen von selbst mit; neue Arten brauchen Texte in `src/glocke.tsx` und `server/benachrichtigung.ts`. Wenn nicht, im Pull Request kurz begründen. Einzelheiten in `docs/bedienregeln.md`.
+7. **Neue Route:** `wer` setzen, in die Rechte-Tabelle in `server/test/api.test.ts` eintragen, den verbotenen Zugriff testen. Fremde Kennung → 404, falsche Rolle → 403.
+8. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole.
+9. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
 
 ## Bedienung und Gestaltung – die häufigsten Punkte
 

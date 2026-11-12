@@ -26,6 +26,11 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
   2. An der Stelle im Portal steht ein `<HandbuchLink kapitel="…">` zum Kapitel: auf Seiten am Ende des einleitenden Satzes unter der `h1`, in Fenstern und Abschnitten bei der Erklärung. Kein Verweis, wo es nichts zu erklären gibt (Versionshinweise, Anmeldeseite).
   3. Ändert sich eine Funktion, wird der Handbuchtext mitgeändert; fällt sie weg, auch das Kapitel und seine Verweise.
   4. Der Test `server/test/handbuch.test.ts` prüft, dass jeder Verweis auf ein vorhandenes Kapitel zeigt. Gilt ein Kapitel nicht für alle Rollen, wählt der Verweis das Kapitel nach Rolle.
+- [ ] **Benachrichtigungen mitdenken – bei jeder neuen Funktion:** Passiert dabei etwas, das eine andere Person wissen sollte (jemand reicht etwas ein, entscheidet, gibt zurück, plant für jemanden)?
+  1. Wenn ja: Das Ereignis kommt in die Glocke (`merkeAktivitaet` in `server/aktivitaet.ts`). Benachrichtigungen per Teams und E-Mail hängen daran und gehen dann von selbst mit.
+  2. Eine neue Art von Ereignis braucht einen Text in der Glocke (`src/glocke.tsx`) und einen für die Nachricht (`TEXT` in `server/benachrichtigung.ts`) – ohne Namen anderer Personen, ohne Inhalte. Sie gehört zu einem Bereich, den man unter „Konto“ wählen kann; ein neuer Bereich kommt dort als eigene Auswahl hinzu.
+  3. Wenn nein: im Pull Request in einem Satz sagen, warum nicht (zum Beispiel „betrifft nur die Person selbst“ oder „privat für den Azubi“).
+  4. Was privat für den Azubi ist (Lernstand, Abzeichen, Übungsergebnisse, Termine), wird niemand anderem gemeldet.
 - [ ] **Mitziehen:** Führung (`src/fuehrung.tsx`), Versionshinweise und – bei neuen Daten über Personen – die Leistungsbeschreibung für den Betriebsrat sind angepasst.
 - [ ] **Im Browser durchgespielt** in PC- und Handybreite, nicht nur übersetzt und getestet.
 
