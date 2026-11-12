@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.52.0] – 2026-11-12
+
+### Neu
+
+- **Der Begleiter erinnert.** Der Begleiter der Azubis weist jetzt auf das hin, was ansteht: Der Bericht dieser Woche ist noch nicht eingereicht (ab Donnerstag), Berichte aus vergangenen Wochen fehlen, ein Bericht kam zurück, die Unterschrift fehlt, nächste Woche beginnt die Berufsschule, ein Firmentermin steht in zwei Tagen an, ein Termin für die Prüfung steht an (eine Woche und einen Tag vorher) oder der Urlaub beginnt.
+- **Höchstens eine Erinnerung am Tag, jede nur einmal.** Die Erinnerung bleibt als Sprechblase stehen, bis du sie schließt; ein Knopf führt zur passenden Seite. Ans Lernen erinnert der Begleiter nie.
+- **Einzeln abschaltbar.** Unter „Konto“ bei „Begleiter“ wählst du, woran er dich erinnert.
+
 ## [0.51.0] – 2026-11-12
 
 ### Neu
