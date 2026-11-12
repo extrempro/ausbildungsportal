@@ -39,6 +39,8 @@ export interface Betrieb {
   bundesland: string;
   /** Mail-Adresse der Personalstelle – dorthin geht die Nachricht über genehmigten Urlaub */
   personalMail: string;
+  /** wie die Mail an die Personalstelle beginnt, z. B. „Hallo Kim“ – leer heißt „Guten Tag“ */
+  personalAnrede: string;
 }
 
 interface ProfilZeile {
@@ -99,7 +101,7 @@ const LEERES_PROFIL: Profil = {
 export function leseBetrieb(db: DB): Betrieb {
   const zeilen = db.prepare("SELECT schluessel, wert FROM einstellungen WHERE schluessel LIKE 'betrieb_%'").all() as unknown as { schluessel: string; wert: string }[];
   const m = new Map(zeilen.map((z) => [z.schluessel, z.wert]));
-  return { name: m.get('betrieb_name') ?? '', anschrift: m.get('betrieb_anschrift') ?? '', bundesland: m.get('betrieb_bundesland') ?? '', personalMail: m.get('betrieb_personal_mail') ?? '' };
+  return { name: m.get('betrieb_name') ?? '', anschrift: m.get('betrieb_anschrift') ?? '', bundesland: m.get('betrieb_bundesland') ?? '', personalMail: m.get('betrieb_personal_mail') ?? '', personalAnrede: m.get('betrieb_personal_anrede') ?? '' };
 }
 
 function alleBerufe(db: DB): Beruf[] {
@@ -263,7 +265,7 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       status: 200,
       body: {
         // die Adresse der Personalstelle brauchen nur Ausbilder
-        betrieb: c.b.rolle === 'ausbilder' ? leseBetrieb(c.k.db) : { ...leseBetrieb(c.k.db), personalMail: '' },
+        betrieb: c.b.rolle === 'ausbilder' ? leseBetrieb(c.k.db) : { ...leseBetrieb(c.k.db), personalMail: '', personalAnrede: '' },
         // ist ein Mailserver eingerichtet? (für den Hinweis am Feld „Mail der Personalstelle“)
         mailversand: c.k.cfg.smtp !== null,
         berufe: alleBerufe(c.k.db),
@@ -291,6 +293,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         anschrift: text(String(body.anschrift ?? '').replace(/\r?\n/g, ', '), 300, 'Anschrift', false),
         bundesland: bundesland(body.bundesland, false),
         personalMail: text(body.personalMail, 200, 'Mail-Adresse der Personalstelle', false),
+        // eine Zeile, ohne das Komma am Ende – das setzt die Mail selbst
+        personalAnrede: text(String(body.personalAnrede ?? '').replace(/[\r\n]+/g, ' ').replace(/[\s,;:.!]+$/, ''), 80, 'Anrede der Personalstelle', false),
       };
       // eine einzelne Adresse – keine Liste, keine Zeilenumbrüche (die kämen sonst in den Kopf der Mail)
       if (neu.personalMail && !/^[^\s@<>,;"]+@[^\s@<>,;"]+\.[^\s@<>,;"]{2,}$/.test(neu.personalMail)) throw new Fehler(400, 'Die Mail-Adresse der Personalstelle ist ungültig – bitte genau eine Adresse eintragen');
@@ -299,6 +303,7 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       setze.run('betrieb_anschrift', neu.anschrift);
       setze.run('betrieb_bundesland', neu.bundesland);
       setze.run('betrieb_personal_mail', neu.personalMail);
+      setze.run('betrieb_personal_anrede', neu.personalAnrede);
       protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, 'Betrieb');
       return { status: 200, body: { betrieb: neu } };
     },

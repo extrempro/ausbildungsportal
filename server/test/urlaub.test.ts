@@ -202,12 +202,24 @@ test('Mail an die Personalstelle: nach Genehmigung und Storno, knapp und ohne Be
   assert.ok(post[1].text.includes('wurde storniert. Der Urlaub findet nicht statt.') && post[1].text.includes('Storniert von: Petra Lang am 10.11.2026'));
   assert.ok(!post[1].text.includes('Projekt geht vor'), 'die Begründung der Stornierung geht nicht mit');
   assert.ok((post[1].html ?? '').includes('Urlaub storniert') && !(post[1].html ?? '').includes('Projekt geht vor'), 'gestaltet: Storno ohne Begründung');
+  // Anrede aus den Stammdaten: eine Zeile, das Komma setzt die Mail; nur Ausbilder sehen sie; leer heißt wieder „Guten Tag“
+  const stamm = { name: 'Muster GmbH', bundesland: 'HH', personalMail: 'personal@firma.test' };
+  assert.equal((await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, personalAnrede: ' Hallo Kim,\nBcc: x@y.de, ' } })).status, 200);
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.ausbilder) })).betrieb.personalAnrede, 'Hallo Kim, Bcc: x@y.de');
+  await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, personalAnrede: 'Hallo Kim' } });
+  for (const wer of [w.anna, w.bea]) assert.equal(koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, wer) })).betrieb.personalAnrede, '');
+  const a4 = koerper(await beantrage(w, '2027-03-01', '2027-03-02')).antrag;
+  await tue(w, w.bea, a4.id, 'bestaetigen');
+  await tue(w, w.ausbilder, a4.id, 'genehmigen');
+  assert.ok(post[2].text.startsWith('Hallo Kim,\n') && (post[2].html ?? '').includes('>Hallo Kim,<') && !post[2].text.includes('Guten Tag'));
+  assert.equal((await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, personalAnrede: 'x'.repeat(81) } })).status, 400);
+  await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: stamm });
   // Ablehnen und Zurückziehen lösen keine Mail aus
   const a2 = koerper(await beantrage(w, '2027-02-01', '2027-02-05')).antrag;
   await tue(w, w.bea, a2.id, 'ablehnen', { kommentar: 'Inventur' });
   const a3 = koerper(await beantrage(w, '2027-02-01', '2027-02-05')).antrag;
   await tue(w, w.anna, a3.id, 'zurueckziehen');
-  assert.equal(post.length, 2);
+  assert.equal(post.length, 3);
   assert.equal((await tue(w, w.ausbilder, a2.id, 'mail')).status, 409);
 });
 

@@ -184,7 +184,7 @@ export function Stammdaten() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     try {
-      await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland'), personalMail: f.get('personalMail') });
+      await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland'), personalMail: f.get('personalMail'), personalAnrede: f.get('personalAnrede') });
       eingaben.gespeichert();
       await fertig('Angaben zum Betrieb gespeichert.');
     } catch (err) {
@@ -250,6 +250,11 @@ export function Stammdaten() {
           <label className="ganz">
             Mail-Adresse der Personalstelle (für genehmigten Urlaub)
             <input name="personalMail" type="email" defaultValue={daten.betrieb.personalMail} maxLength={200} placeholder="personal@firma.de" autoComplete="off" />
+          </label>
+          <label className="ganz">
+            Anrede in der Mail an die Personalstelle (freiwillig)
+            <input name="personalAnrede" defaultValue={daten.betrieb.personalAnrede} maxLength={80} placeholder="Guten Tag" autoComplete="off" />
+            <span className="leise klein">So beginnt die Mail, zum Beispiel „Hallo Kim“ oder „Guten Tag Frau Beispiel“. Leer heißt „Guten Tag“.</span>
           </label>
           <div>
             <button className="knopf">Betrieb speichern</button>

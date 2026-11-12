@@ -9,7 +9,7 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { gueltigesDatum, montagVon, plusTage } from './kalender';
 import { darfAzubiSehen, darfAzubiVerwalten, sichtbareAzubis, zustaendiger } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi } from './stammdaten';
-import { informierePersonal, mailHindernis, versende } from './urlaub-mail';
+import { informierePersonal, mailHindernis, versende, personalAnrede } from './urlaub-mail';
 import { gestalteMail } from './mail-gestalt';
 
 /**
@@ -414,7 +414,7 @@ export const URLAUB_ROUTEN: Route[] = [
       if (hindernis) throw new Fehler(409, hindernis);
       const betrieb = leseBetrieb(c.k.db);
       const absaetze = [
-        'Guten Tag,',
+        personalAnrede(c.k),
         `dies ist eine Testmail aus dem Ausbildungsportal${betrieb.name ? ` (${betrieb.name})` : ''}, ausgelöst von ${c.b.anzeigename}.`,
         'An diese Adresse schickt das Portal künftig eine kurze Mail, wenn für Auszubildende Urlaub genehmigt oder ein genehmigter Urlaub storniert wurde.',
       ];

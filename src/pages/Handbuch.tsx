@@ -806,7 +806,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>Genehmigter Urlaub steht von selbst im Jahreskalender, im Bericht der Woche (als Abwesenheit) und im abonnierten Kalender des Azubis. Beantragter Urlaub steht im Jahreskalender gestreift.</li>
           <li>In der Glocke steht, wenn ein Antrag gestellt, bestätigt oder zurückgezogen wurde.</li>
           <li>
-            <strong>Mail an die Personalstelle:</strong> Nach der Genehmigung und nach einer Stornierung schickt das Portal von selbst eine kurze Mail an die Personalstelle – mit Name, Zeitraum, Arbeitstagen und wer bestätigt und entschieden hat. Sie trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Angesprochen wird die Personalstelle mit „Guten Tag“, weil das Portal dort nur eine Adresse kennt und keine Person. Die Bemerkung des Azubis und die Begründung einer Stornierung stehen nicht darin.{' '}
+            <strong>Mail an die Personalstelle:</strong> Nach der Genehmigung und nach einer Stornierung schickt das Portal von selbst eine kurze Mail an die Personalstelle – mit Name, Zeitraum, Arbeitstagen und wer bestätigt und entschieden hat. Sie trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Die Mail beginnt mit „Guten Tag“ – oder mit der Anrede, die ein Ausbilder in den Stammdaten eingetragen hat, zum Beispiel „Hallo Kim“. Die Bemerkung des Azubis und die Begründung einer Stornierung stehen nicht darin.{' '}
             {rolle === 'ausbilder'
               ? 'Die Adresse trägst du in den Stammdaten ein. Kommt die Mail nicht raus, gilt die Genehmigung trotzdem: Am Antrag steht dann der Grund und der Knopf „Mail an die Personalstelle senden“.'
               : 'Darum kümmert sich der Ausbilder.'}
@@ -1100,6 +1100,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <dl className="begriffe">
                 <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
                 <Begriff wort="Mail-Adresse der Personalstelle">Dorthin schickt das Portal eine kurze Mail, sobald ein Urlaub genehmigt oder storniert wurde. Genau eine Adresse, am besten ein Sammelpostfach. Mit „Testmail an die Personalstelle senden“ prüfst du, ob Mails ankommen. Der Knopf ist gesperrt, solange der Betreiber des Portals keinen Mailserver eingerichtet hat oder die Adresse fehlt.</Begriff>
+                <Begriff wort="Anrede in der Mail an die Personalstelle">So beginnt die Mail, zum Beispiel „Hallo Kim“ oder „Guten Tag Frau Beispiel“. Das Komma dahinter setzt das Portal. Lässt du das Feld leer, heißt es „Guten Tag“. Die Anrede sehen nur Ausbilder.</Begriff>
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
                 <Begriff wort="Lernmodul">
                   Am Beruf lässt sich ein Paket mit Lerninhalten einschalten, sofern eines auf dem Server liegt. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“ mit Cheatsheets und einer Ampel zur Selbsteinschätzung. Den Lernstand sieht nur der Azubi selbst – du siehst ihn nicht, auch
