@@ -2128,12 +2128,18 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
             {verzeichnis}
           </nav>
         ) : (
-          <details className="karte handbuch-inhalt nicht-drucken" open={inhaltOffen || wort !== ''} onToggle={(e) => setInhaltOffen(e.currentTarget.open)}>
+          <details className="karte handbuch-inhalt nicht-drucken" open={inhaltOffen} onToggle={(e) => setInhaltOffen(e.currentTarget.open)}>
             <summary>
               <span className="handbuch-kopf">
                 <span>Inhalt und Suche</span>
                 {/* angeheftet zeigt der Kopf, in welchem Kapitel man gerade liest */}
                 {!inhaltOffen && !wort && aktiv && <span className="handbuch-wo">{kapitel.find((k) => k.id === aktiv)?.titel}</span>}
+                {/* eingeklappt mit Suchwort: zeigen, dass nur die Treffer zu sehen sind */}
+                {!inhaltOffen && wort && (
+                  <span className="handbuch-wo">
+                    Suche: „{suche.trim()}“ · {gefunden.length} Kapitel
+                  </span>
+                )}
               </span>
             </summary>
             <nav aria-label="Inhalt des Handbuchs">{verzeichnis}</nav>

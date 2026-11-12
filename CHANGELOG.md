@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.53.1] – 2026-11-12
+
+### Behoben
+
+- **Handbuch am Handy und Tablet:** Wer im Handbuch gesucht und dann ein Kapitel angetippt hat, blieb im aufgeklappten Verzeichnis hängen – es schloss sich nicht. Jetzt klappt „Inhalt und Suche“ zu und das Kapitel steht da. Die Zeile zeigt weiter das Suchwort und die Zahl der Treffer; ein Antippen öffnet die Suche wieder.
+
 ## [0.53.0] – 2026-11-12
 
 ### Neu
