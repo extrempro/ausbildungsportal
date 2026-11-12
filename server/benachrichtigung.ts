@@ -6,6 +6,8 @@ import type { DB } from './db';
 import { heute } from './datum';
 import { sichtbareAzubis } from './rechte';
 import { logoBild } from './branding';
+import { gestalteMail } from './mail-gestalt';
+import type { MailFarbe } from './mail-gestalt';
 import { istMailAdresse, MailFehler } from './smtp';
 import type { Mail } from './smtp';
 import { leseBetrieb } from './stammdaten';
@@ -176,39 +178,25 @@ export function teamsKarte(k: Kontext, b: Empfaenger, zeilen: Zeile[]): unknown 
   };
 }
 
-const html = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-/** Mailprogramme kennen die Farbvariablen des Portals nicht – deshalb hier feste Werte (helle Darstellung). */
-const MAIL_FARBE: Record<Ton, string> = { gut: '#166534', wartet: '#b45309', achtung: '#b91c1c', neutral: '#2563eb' };
+const MAIL_FARBE: Record<Ton, MailFarbe> = { gut: 'gruen', wartet: 'gelb', achtung: 'rot', neutral: 'blau' };
 
 /** Mail in zwei Fassungen: reiner Text und gestaltet (Kopf mit Logo und Betrieb, Liste, Knopf). */
 export function mailAus(k: Kontext, b: Empfaenger, zeilen: Zeile[]): Pick<Mail, 'betreff' | 'text' | 'html' | 'bild'> {
-  const betrieb = leseBetrieb(k.db).name;
   const ziel = zielVon(k, b, zeilen);
   const fuss = 'Du bekommst diese Mail, weil du im Portal unter „Konto“ Benachrichtigungen per E-Mail eingeschaltet hast. Dort kannst du sie auch wieder abstellen.';
+  const einleitung = 'im Ausbildungsportal gibt es Neues für dich:';
   const betreff = zeilen.length === 1 ? `Ausbildungsportal: ${zeilen[0].text.replace(/\.( .*)?$/, '')}` : `Ausbildungsportal: ${zeilen.length} Neuigkeiten`;
-  const text = [anrede(b), '', 'im Ausbildungsportal gibt es Neues für dich:', '', ...zeilen.map((z) => `- ${z.text}`), '', `Zum Portal: ${ziel}`, '', fuss].join('\n');
-  // Outlook zeigt kein WebP – dann lieber kein Bild als ein kaputtes
-  const logo = logoBild(k.db);
-  const bild = logo && logo.typ !== 'image/webp' ? { cid: 'logo@ausbildungsportal', typ: logo.typ, inhalt: logo.inhalt } : undefined;
-  const gestaltet = `<!doctype html>
-<html lang="de"><body style="margin:0;padding:0;background:#f8fafc;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;"><tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
-<tr><td style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
-<table role="presentation" cellpadding="0" cellspacing="0"><tr>
-${bild ? `<td style="padding-right:12px;vertical-align:middle;"><img src="cid:${bild.cid}" alt="${html(betrieb ? `Logo ${betrieb}` : 'Logo')}" height="36" style="display:block;height:36px;width:auto;border:0;"></td>` : ''}
-<td style="vertical-align:middle;"><div style="font-size:18px;font-weight:700;color:#2563eb;">Ausbildungsportal</div>${betrieb ? `<div style="font-size:13px;color:#475569;">${html(betrieb)}</div>` : ''}</td>
-</tr></table></td></tr>
-<tr><td style="padding:24px 24px 8px;font-size:16px;line-height:1.5;">
-<p style="margin:0 0 12px;">${html(anrede(b))}</p>
-<p style="margin:0 0 12px;">im Ausbildungsportal gibt es Neues für dich:</p>
-<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-${zeilen.map((z) => `<tr><td style="width:18px;vertical-align:top;padding:4px 0;color:${MAIL_FARBE[z.ton]};font-size:16px;line-height:1.5;">&#9679;</td><td style="padding:4px 0;font-size:16px;line-height:1.5;">${html(z.text)}</td></tr>`).join('\n')}
-</table></td></tr>
-<tr><td style="padding:16px 24px 24px;"><a href="${html(ziel)}" style="display:inline-block;padding:11px 18px;background:#2563eb;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Im Portal öffnen</a></td></tr>
-<tr><td style="padding:16px 24px;border-top:1px solid #e2e8f0;font-size:13px;line-height:1.5;color:#475569;">${html(fuss)}</td></tr>
-</table></td></tr></table></body></html>`;
-  return { betreff: betreff.slice(0, 150), text, html: gestaltet, bild };
+  const text = [anrede(b), '', einleitung, '', ...zeilen.map((z) => `- ${z.text}`), '', `Zum Portal: ${ziel}`, '', fuss].join('\n');
+  const gestaltet = gestalteMail(k, {
+    teile: [
+      { art: 'absatz', text: anrede(b) },
+      { art: 'absatz', text: einleitung },
+      { art: 'liste', zeilen: zeilen.map((z) => ({ text: z.text, farbe: MAIL_FARBE[z.ton] })) },
+    ],
+    knopf: { text: 'Im Portal öffnen', url: ziel },
+    fuss,
+  });
+  return { betreff: betreff.slice(0, 150), text, ...gestaltet };
 }
 
 /** Warum ein Weg gerade nicht geht – oder null. */

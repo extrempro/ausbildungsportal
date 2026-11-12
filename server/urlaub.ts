@@ -10,6 +10,7 @@ import { gueltigesDatum, montagVon, plusTage } from './kalender';
 import { darfAzubiSehen, darfAzubiVerwalten, sichtbareAzubis, zustaendiger } from './rechte';
 import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi } from './stammdaten';
 import { informierePersonal, mailHindernis, versende } from './urlaub-mail';
+import { gestalteMail } from './mail-gestalt';
 
 /**
  * Urlaub beantragen.
@@ -412,11 +413,18 @@ export const URLAUB_ROUTEN: Route[] = [
       const hindernis = mailHindernis(c.k);
       if (hindernis) throw new Fehler(409, hindernis);
       const betrieb = leseBetrieb(c.k.db);
+      const absaetze = [
+        'Guten Tag,',
+        `dies ist eine Testmail aus dem Ausbildungsportal${betrieb.name ? ` (${betrieb.name})` : ''}, ausgelöst von ${c.b.anzeigename}.`,
+        'An diese Adresse schickt das Portal künftig eine kurze Mail, wenn für Auszubildende Urlaub genehmigt oder ein genehmigter Urlaub storniert wurde.',
+      ];
+      const fuss = 'Bitte nicht auf diese Mail antworten.';
       const fehler = await versende(
         c.k,
         betrieb.personalMail,
         'Test: Mails aus dem Ausbildungsportal',
-        `Guten Tag,\n\ndies ist eine Testmail aus dem Ausbildungsportal${betrieb.name ? ` (${betrieb.name})` : ''}, ausgelöst von ${c.b.anzeigename}.\n\nAn diese Adresse schickt das Portal künftig eine kurze Mail, wenn für Auszubildende Urlaub genehmigt oder ein genehmigter Urlaub storniert wurde. Bitte nicht auf diese Mail antworten.`,
+        [...absaetze, fuss].join('\n\n'),
+        gestalteMail(c.k, { teile: [{ art: 'marke', text: 'Testmail', farbe: 'blau' }, ...absaetze.map((text) => ({ art: 'absatz' as const, text }))], fuss }),
       );
       if (fehler) throw new Fehler(502, `Die Testmail wurde nicht gesendet: ${fehler}`);
       return { status: 200, body: { ok: true, an: betrieb.personalMail } };

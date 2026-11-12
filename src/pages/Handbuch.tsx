@@ -806,7 +806,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>Genehmigter Urlaub steht von selbst im Jahreskalender, im Bericht der Woche (als Abwesenheit) und im abonnierten Kalender des Azubis. Beantragter Urlaub steht im Jahreskalender gestreift.</li>
           <li>In der Glocke steht, wenn ein Antrag gestellt, bestätigt oder zurückgezogen wurde.</li>
           <li>
-            <strong>Mail an die Personalstelle:</strong> Nach der Genehmigung und nach einer Stornierung schickt das Portal von selbst eine kurze Mail an die Personalstelle – mit Name, Zeitraum, Arbeitstagen und wer bestätigt und entschieden hat. Die Bemerkung des Azubis und die Begründung einer Stornierung stehen nicht darin.{' '}
+            <strong>Mail an die Personalstelle:</strong> Nach der Genehmigung und nach einer Stornierung schickt das Portal von selbst eine kurze Mail an die Personalstelle – mit Name, Zeitraum, Arbeitstagen und wer bestätigt und entschieden hat. Sie trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Angesprochen wird die Personalstelle mit „Guten Tag“, weil das Portal dort nur eine Adresse kennt und keine Person. Die Bemerkung des Azubis und die Begründung einer Stornierung stehen nicht darin.{' '}
             {rolle === 'ausbilder'
               ? 'Die Adresse trägst du in den Stammdaten ein. Kommt die Mail nicht raus, gilt die Genehmigung trotzdem: Am Antrag steht dann der Grund und der Knopf „Mail an die Personalstelle senden“.'
               : 'Darum kümmert sich der Ausbilder.'}
