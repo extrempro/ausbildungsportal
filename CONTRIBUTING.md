@@ -43,6 +43,10 @@ Das Wichtigste in Kürze:
 
 Jede neue Funktion und jede Änderung wird im Handbuch beschrieben – für jede Rolle, die sie sieht – und an der Stelle im Portal verlinkt. Fällt eine Funktion weg, fällt auch ihr Kapitel weg.
 
+### Benachrichtigungen
+
+Bei jeder neuen Funktion fragen: Erfährt dadurch eine andere Person etwas Neues – etwa weil jemand etwas einreicht, entscheidet oder für jemanden plant? Dann gehört das Ereignis in die Glocke; Nachrichten per Teams und E-Mail hängen daran und gehen von selbst mit. Wenn nicht, steht im Pull Request ein Satz dazu, warum. Wie das geht, steht in den Bedienregeln.
+
 ### Rechte
 
 - Jede neue Route nennt, wer sie aufrufen darf, und steht in der Rechte-Tabelle des Tests `server/test/api.test.ts`.

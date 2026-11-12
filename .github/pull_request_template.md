@@ -11,6 +11,7 @@ Bitte abhaken. Trifft ein Punkt nicht zu, kurz dahinter schreiben, warum (z. B. 
 - [ ] `npm run typecheck`, `npm test` und `npm run build` laufen
 - [ ] Bedienregeln (`docs/bedienregeln.md`) durchgegangen
 - [ ] Handbuch ergänzt – für jede Rolle, die die Änderung sieht – und im Portal verlinkt
+- [ ] Benachrichtigungen bedacht: neues Ereignis steht in der Glocke (Teams und E-Mail gehen dann mit) – oder kurz begründet, warum keins nötig ist
 - [ ] Im Browser durchgespielt: PC und Handybreite (390 px), hell und dunkel
 - [ ] Neue Routen stehen in der Rechte-Tabelle (`server/test/api.test.ts`), der verbotene Zugriff ist getestet
 - [ ] Keine neuen Abhängigkeiten
