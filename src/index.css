@@ -8062,3 +8062,75 @@ fieldset.benach-bereich p {
   border-left: 2px solid var(--c-warn-fg);
   opacity: 0.85;
 }
+
+/* ---------- Knopfzeilen: auch als Absatz mit Abstand zwischen den Knöpfen ---------- */
+/* Bisher galt der Abstand nur für <div class="aktionen">; in einem <p> klebten die Knöpfe aneinander. */
+p.aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+p.aktionen.links {
+  justify-content: flex-start;
+}
+
+/* ---------- Hauptnavigation am PC: Symbol über dem Wort, wie in der Leiste am Handy ---------- */
+.nav-symbol {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .haupt-nav > a,
+  .haupt-nav .menue-knopf {
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 48px;
+    padding: 5px 9px;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .haupt-nav .nav-symbol {
+    display: flex;
+  }
+
+  .haupt-nav .nav-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* die Zahl sitzt wie am Handy oben rechts am Symbol */
+  .haupt-nav > a .nav-zahl {
+    position: absolute;
+    top: 0;
+    left: calc(50% + 6px);
+    min-width: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    line-height: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  p.aktionen {
+    justify-content: flex-start;
+  }
+}
+
+/* Jahreskalender aller Azubis: Die Textfassung für Vorleseprogramme ragte unten aus dem Rahmen und
+   erzeugte einen senkrechten Rollbalken. Sie sitzt jetzt oben in ihrer Zelle. */
+.jk-alle td {
+  position: relative;
+}
+
+.jk-alle td > .nur-vorleser {
+  top: 0;
+  left: 0;
+  margin: 0;
+}

@@ -116,7 +116,9 @@ export function Jahreskalender({ azubiId }: { azubiId?: number }) {
 
       <Legende einzeln={!!einer} eigenes={d.eigenes} firma={d.firmentermine.length > 0} />
       {d.firmentermine.length > 0 && (
-        <section className="karte jk-firma" aria-labelledby="jk-firma-titel">
+        // am PC stehen die Firmentermine im Kalender selbst (eigene Zeile mit Titel bzw. beschriftete Tage) – die Liste braucht es
+        // nur in der Kartenansicht aller Azubis am Handy, wo im Kalender kein Platz für den Titel ist
+        !einer && <section className="karte jk-firma nur-schmal" aria-labelledby="jk-firma-titel">
           <h2 id="jk-firma-titel">Firmentermine {d.jahr}</h2>
           <p className="leise klein">Gelten für alle im Betrieb.</p>
           <ul>

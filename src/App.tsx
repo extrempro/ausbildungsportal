@@ -470,7 +470,11 @@ export function App() {
           <nav aria-label="Hauptnavigation" className="haupt-nav">
             {haupt.map((p) => (
               <Link key={p.zu} zu={p.zu} aktivAb={p.aktivAb}>
-                {p.text}
+                {/* Symbol über dem Wort – wie in der Leiste am Handy; das Wort bleibt, damit nichts zu raten ist */}
+                <span className="nav-symbol" aria-hidden="true">
+                  <Icon name={p.icon} groesse={20} />
+                </span>
+                <span className="nav-text">{p.text}</span>
                 {!!p.zahl && (
                   <span className="nav-zahl" aria-label={`${p.zahl} offen`}>
                     {p.zahl}
@@ -481,8 +485,13 @@ export function App() {
             {gruppen.map((g) => (
               <div className="menue" key={g.id}>
                 <button type="button" className={`menue-knopf${inGruppe(g) ? ' aktiv' : ''}`} aria-expanded={menue === g.id} aria-controls={`menue-${g.id}`} onClick={() => schalte(g.id)}>
-                  {g.text}
-                  <Icon name="unten" groesse={16} />
+                  <span className="nav-symbol" aria-hidden="true">
+                    <Icon name={g.id === 'planung' ? 'sammel' : 'stammdaten'} groesse={20} />
+                  </span>
+                  <span className="nav-text">
+                    {g.text}
+                    <Icon name="unten" groesse={14} />
+                  </span>
                 </button>
                 {menue === g.id && (
                   <ul id={`menue-${g.id}`} className="menue-flaeche">
