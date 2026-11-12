@@ -1,5 +1,19 @@
 # Änderungen
 
+## [0.45.0] – 2026-11-12
+
+### Neu
+
+- **Fotos und Dateien an Berichten.** Azubis können an einen Bericht Bilder, PDF und Office-Dateien hängen – zum Beispiel ein Foto vom fertigen Werkstück.
+  - Wer Tag für Tag schreibt, hängt sie an den jeweiligen Tag. Sonst gehören sie zum ganzen Bericht (neuer Teil „Fotos und Dateien“).
+  - Am Handy und Tablet öffnet „Foto aufnehmen“ direkt die Kamera.
+  - Erlaubt: JPG, PNG, GIF, WebP, HEIC, PDF, DOCX, XLSX, PPTX, ODT, ODS, ODP. Je Datei höchstens 5 MB, je Bericht höchstens 12 Anhänge. Große Fotos werden vor dem Hochladen verkleinert.
+  - Alte Office-Formate und Dateien mit Makros werden nicht angenommen.
+  - Ein Anhang wird sofort gespeichert und sofort gelöscht – ohne „Speichern“.
+  - Ausbilder und Ausbildungsbeauftragte sehen die Anhänge unter dem Bericht, sobald er eingereicht ist. Ändern kann sie nur der Azubi, solange der Bericht nicht eingereicht ist.
+  - Im Ausdruck und im PDF des Berichtshefts stehen Anhänge nicht.
+- **Für den Betrieb:** Die Anhänge liegen in der Datenbank. Sie wächst dadurch – bitte beim Speicherplatz und bei den Sicherungen einplanen.
+
 ## [0.44.2] – 2026-11-12
 
 ### Neu

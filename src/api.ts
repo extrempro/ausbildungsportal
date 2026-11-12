@@ -303,6 +303,18 @@ export interface BerichtAbwesenheit {
   stunden: number;
   text: string;
 }
+/** Foto oder Datei an einem Bericht – ohne die Datei selbst */
+export interface BerichtAnhang {
+  id: number;
+  /** Tag in der Tagesform, sonst null (gehört zum ganzen Bericht) */
+  tag: string | null;
+  name: string;
+  art: 'bild' | 'pdf' | 'office';
+  /** lässt sich im Browser als Bild zeigen */
+  vorschau: boolean;
+  groesse: number;
+}
+
 export interface BerichtInhalt {
   /** „tag“: jeder Eintrag gehört zu einem Tag; „woche“: Tätigkeiten der ganzen Woche */
   form: 'woche' | 'tag';
@@ -320,6 +332,7 @@ export interface Bericht {
   ausbildungsjahr: number | null;
   status: BerichtStatus;
   inhalt: BerichtInhalt;
+  anhaenge: BerichtAnhang[];
   summe: { betrieb: number; unterweisung: number; schule: number; abwesenheit: number; gesamt: number };
   soll: number;
   kommentar: string;

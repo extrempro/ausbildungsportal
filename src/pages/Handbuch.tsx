@@ -434,6 +434,24 @@ const AZUBI: Kapitel[] = [
         <p>
           <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte und Berichtsheft: PDF herunterladen oder drucken“.
         </p>
+        <h3>Fotos und Dateien anhängen</h3>
+        <p>Manchmal sagt ein Foto mehr als ein Satz: der fertig verkabelte Schrank, das Werkstück, die Skizze. Solche Dinge kannst du an den Bericht hängen.</p>
+        <ul className="punkte">
+          <li>
+            Wähle <strong>„Foto oder Datei anhängen“</strong>. Am Handy und Tablet gibt es zusätzlich <strong>„Foto aufnehmen“</strong> – das öffnet die Kamera.
+          </li>
+          <li>Schreibst du Tag für Tag, hängt der Anhang am jeweiligen Tag. Sonst gehört er zum ganzen Bericht (Teil „Fotos und Dateien“).</li>
+          <li>Erlaubt sind Bilder (JPG, PNG, GIF, WebP, HEIC), PDF und Office-Dateien (DOCX, XLSX, PPTX, ODT, ODS, ODP). Je Datei höchstens 5 MB, je Bericht höchstens 12 Anhänge. Große Fotos macht das Portal vor dem Hochladen kleiner.</li>
+          <li>Alte Office-Formate (DOC, XLS, PPT) und Dateien mit Makros nimmt das Portal nicht an. Speichere sie als DOCX, XLSX, PPTX oder PDF.</li>
+          <li>
+            <strong>Ein Anhang wird sofort gespeichert</strong> – du musst nicht extra speichern. Ist der Bericht noch nicht gespeichert, legt das Portal dabei einen Entwurf an. Auch „Löschen“ wirkt sofort.
+          </li>
+          <li>
+            <strong>Achte darauf, was zu sehen ist:</strong> keine anderen Personen ohne ihr Einverständnis, keine Bildschirme oder Unterlagen mit Namen, Passwörtern oder Kundendaten. Im Zweifel frag deinen Ausbilder.
+          </li>
+          <li>Anhänge sehen dieselben Personen wie den Bericht – bei einem Entwurf also nur du. Nach dem Einreichen kannst du sie nicht mehr ändern, außer du ziehst den Bericht zurück.</li>
+          <li>Im Ausdruck und im PDF des Berichtshefts stehen Anhänge nicht.</li>
+        </ul>
         <h3>Wenn dein Betrieb Einträge je Tag möchte</h3>
         <p>Dein Betrieb legt fest, ob du die Woche im Ganzen beschreibst oder Tag für Tag – das kann für jeden Azubi anders sein. Was für dich gilt, steht unter „Konto“ bei „Meine Ausbildung“. Bei „je Tag“ sieht die Seite etwas anders aus:</p>
         <ul className="punkte">
@@ -742,7 +760,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>
             Unter <Link zu="/abzeichnen">Abzeichnen</Link> stehen alle eingereichten Berichte, die auf dich warten. Die Startseite zeigt die Anzahl.
           </li>
-          <li>Zum Lesen die Woche öffnen.</li>
+          <li>Zum Lesen die Woche öffnen. Hat der Azubi Fotos oder Dateien angehängt, stehen sie unter dem Bericht bei „Fotos und Dateien“: Bilder öffnen sich mit einem Klick in einem neuen Fenster, andere Dateien lädst du herunter. Im Ausdruck und im PDF stehen sie nicht.</li>
           <li>
             <strong>Abzeichnen</strong> bestätigt den Bericht mit deiner Unterschrift. Mehrere Berichte lassen sich in der Liste anhaken und gemeinsam abzeichnen.
           </li>
