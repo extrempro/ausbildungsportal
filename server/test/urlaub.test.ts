@@ -187,6 +187,10 @@ test('Mail an die Personalstelle: nach Genehmigung und Storno, knapp und ohne Be
   assert.deepEqual([post[0].an, post[0].betreff], ['personal@firma.test', 'Urlaub genehmigt: Anna Azubi, 21.12.2026–03.01.2027']);
   for (const teil of ['für Anna Azubi (Auszubildende/r) wurde Urlaub genehmigt', 'Zeitraum: 21.12.2026 bis 03.01.2027', 'Arbeitstage: 8', 'Beantragt am: 10.11.2026', 'Bestätigt von: Bea Auft', 'Genehmigt von: Petra Lang am 10.11.2026', '(Muster GmbH)']) assert.ok(post[0].text.includes(teil), teil);
   assert.ok(!post[0].text.includes('Familienbesuch'), 'die Bemerkung des Azubis geht nicht mit');
+  // die gestaltete Fassung sagt dasselbe: Kopf mit Betrieb, Marke, Angaben – ohne Bemerkung; die Personalstelle wird nicht mit Namen angesprochen
+  const html0 = post[0].html ?? '';
+  for (const teil of ['Ausbildungsportal', 'Muster GmbH', 'Urlaub genehmigt', 'Guten Tag,', 'Anna Azubi', '21.12.2026 bis 03.01.2027', 'Bea Auft', 'Petra Lang am 10.11.2026']) assert.ok(html0.includes(teil), `gestaltet: ${teil}`);
+  assert.ok(!html0.includes('Familienbesuch') && !html0.includes('<a href'), 'gestaltet: keine Bemerkung, kein Knopf ins Portal');
   // den Stand der Mail sieht nur, wer genehmigt
   for (const wer of [w.anna, w.bea]) assert.equal((await liste(w, wer)).antraege[0].mail, null, wer.anzeigename);
   assert.equal((await tue(w, w.ausbilder, antrag.id, 'mail')).status, 409, 'schon gesendet');
@@ -197,6 +201,7 @@ test('Mail an die Personalstelle: nach Genehmigung und Storno, knapp und ohne Be
   assert.equal(post[1].betreff, 'Urlaub storniert: Anna Azubi, 21.12.2026–03.01.2027');
   assert.ok(post[1].text.includes('wurde storniert. Der Urlaub findet nicht statt.') && post[1].text.includes('Storniert von: Petra Lang am 10.11.2026'));
   assert.ok(!post[1].text.includes('Projekt geht vor'), 'die Begründung der Stornierung geht nicht mit');
+  assert.ok((post[1].html ?? '').includes('Urlaub storniert') && !(post[1].html ?? '').includes('Projekt geht vor'), 'gestaltet: Storno ohne Begründung');
   // Ablehnen und Zurückziehen lösen keine Mail aus
   const a2 = koerper(await beantrage(w, '2027-02-01', '2027-02-05')).antrag;
   await tue(w, w.bea, a2.id, 'ablehnen', { kommentar: 'Inventur' });

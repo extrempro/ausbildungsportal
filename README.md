@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.41.1.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.42.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -165,6 +165,7 @@ Gut zu wissen:
 - Das Passwort gehört nur in die `.env`. Es wird nie unverschlüsselt gesendet: Bietet der Server bei `starttls` keine Verschlüsselung an, geht nichts raus; mit `keine` ist keine Anmeldung möglich.
 - Das Zertifikat des Mailservers wird geprüft. Für eine firmeneigene Zertifizierungsstelle die Datei in den Container einbinden und `NODE_EXTRA_CA_CERTS` auf ihren Pfad setzen.
 - In der Mail stehen Name des Azubis, Zeitraum, Arbeitstage und wer bestätigt und entschieden hat – nicht die Bemerkung des Azubis und nicht die Begründung einer Stornierung.
+- Die Mail ist gestaltet wie die Benachrichtigungen: Kopf mit „Ausbildungsportal“, Betriebsname und Logo, dazu eine reine Textfassung. Die Personalstelle ist eine Adresse, keine Person im Portal – deshalb beginnt die Mail mit „Guten Tag,“ und hat keinen Knopf ins Portal.
 - Kommt die Mail nicht an, gilt die Genehmigung trotzdem. Am Antrag steht der Grund, im Log (`docker compose logs app`) ebenfalls; der Ausbilder kann erneut senden.
 - Unterstützt wird die Anmeldung mit Benutzer und Passwort (AUTH PLAIN oder LOGIN). **Microsoft 365 / Exchange Online** verlangt dafür „SMTP AUTH“ am Postfach; ist das im Tenant abgeschaltet, braucht es ein internes Relay oder einen Connector. OAuth-Anmeldung kann das Portal nicht.
 - Erprobt ist der Versand mit einem nachgestellten Mailserver in den Tests (auch STARTTLS und TLS), noch nicht mit einem echten Mailserver.

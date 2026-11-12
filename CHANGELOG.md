@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.42.0] – 2026-11-12
+
+### Geändert
+
+- **Mail an die Personalstelle ist jetzt gestaltet** – wie die Benachrichtigungen: oben „Ausbildungsportal“, Name und Logo des Betriebs, darunter deutlich „Urlaub genehmigt“ oder „Urlaub storniert“ und die Angaben als Übersicht. Der Inhalt ist derselbe wie bisher; Bemerkung und Begründung gehen weiterhin nicht mit. Auch die Testmail sieht so aus.
+- Die Personalstelle wird weiter mit „Guten Tag,“ angesprochen: Das Portal kennt dort nur eine Adresse, keine Person.
+
 ## [0.41.1] – 2026-11-12
 
 ### Geändert
