@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ROLLE_TEXT } from '../api';
 import type { Rolle } from '../api';
@@ -8,9 +8,18 @@ import { Link } from '../router';
  * Handbuch je Rolle. Für Azubis bewusst in kurzen Sätzen und mit erklärten Begriffen –
  * die Leser sind zwischen 16 und 30 Jahre alt und kennen die Abläufe einer Ausbildung oft noch nicht.
  */
+/**
+ * Gruppen des Inhaltsverzeichnisses, in dieser Reihenfolge. Jedes Kapitel gehört zu genau einer.
+ * Aufbau und Regeln stehen in docs/handbuch-regeln.md; server/test/handbuch.test.ts prüft sie.
+ */
+const GRUPPEN = ['Erste Schritte', 'Ausbildungsplan', 'Berichtsheft', 'Urlaub', 'Lernen und Prüfung', 'Azubis betreuen', 'Verwaltung', 'Dateien und Formate', 'Konto und Nachrichten', 'Hilfe'] as const;
+type Gruppe = (typeof GRUPPEN)[number];
+
 interface Kapitel {
   id: string;
   titel: string;
+  /** unter welcher Überschrift das Kapitel im Inhaltsverzeichnis steht – siehe docs/handbuch-regeln.md */
+  gruppe: Gruppe;
   inhalt: ReactNode;
 }
 
@@ -164,32 +173,41 @@ function Begriff({ wort, children }: { wort: string; children: ReactNode }) {
 const BEDIENUNG: Kapitel = {
   id: 'bedienung',
   titel: 'Bedienung auf PC, Tablet und Handy',
+  gruppe: 'Erste Schritte',
   inhalt: (
-    <ul className="punkte">
-      <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
-      <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
-      <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Mehr dazu im Kapitel „Fehler melden“. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
-      <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
-      <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
-      <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
-      <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
-      <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
-    </ul>
+    <>
+      <p>Das Portal läuft im Browser – am PC, auf dem Tablet und auf dem Handy. Hier steht, was überall gleich funktioniert.</p>
+      <h3>Gut zu wissen</h3>
+      <ul className="punkte">
+        <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
+      <li>Dieses Handbuch hat links ein Inhaltsverzeichnis mit Suchfeld (am Handy oben unter „Inhalt und Suche“). Jedes Kapitel ist gleich aufgebaut: erst wozu es da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.</li>
+        <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
+        <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Mehr dazu im Kapitel „Fehler melden“. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
+        <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
+        <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
+        <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
+        <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
+        <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
+      </ul>
+    </>
   ),
 };
 
 const FEHLER: Kapitel = {
   id: 'fehler',
   titel: 'Fehler melden',
+  gruppe: 'Hilfe',
   inhalt: (
     <>
       <p>Etwas funktioniert nicht oder sieht falsch aus? Dann melde es – so wird es behoben.</p>
+      <h3>So geht's</h3>
       <ol className="schritte">
         <li>Im Menü an deinem Namen (am Handy unter „Mehr“) „Fehler melden“ wählen. Das geht von jeder Seite aus.</li>
         <li>Kurz beschreiben: Was wolltest du tun? Was ist stattdessen passiert?</li>
         <li>Wenn du magst, ein Bildschirmfoto anhängen: auswählen, einfügen (Strg + V) oder am PC direkt aufnehmen. Du siehst das Bild vor dem Senden und kannst es wieder entfernen.</li>
         <li>„Meldung senden“.</li>
       </ol>
+      <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>
           <strong>Das wird mitgeschickt:</strong> dein Name und deine Rolle, die Seite, auf der du warst, die Version des Portals, dein Browser, die Größe des Fensters und die letzten Fehlermeldungen des Browsers. Im Fenster steht das unter „Das wird automatisch mitgeschickt“.
@@ -207,8 +225,11 @@ const FEHLER: Kapitel = {
 const DRUCKEN = (rolle: Rolle): Kapitel => ({
   id: 'drucken',
   titel: 'Berichte und Berichtsheft: PDF herunterladen oder drucken',
+  gruppe: 'Berichtsheft',
   inhalt: (
     <>
+      <p>Berichte gibt es auf Papier oder als PDF – einzeln oder als ganzes Berichtsheft, zum Beispiel für die Anmeldung zur Prüfung.</p>
+      <h3>Begriffe</h3>
       <dl className="begriffe">
         <Begriff wort="Ein einzelner Bericht">Den Bericht öffnen und „Als PDF herunterladen“ wählen. Das Portal erzeugt die Datei und der Browser speichert sie bei deinen Downloads. „Bericht drucken“ öffnet stattdessen das Druckfenster.</Begriff>
         <Begriff wort="Das ganze Berichtsheft">Im Berichtsheft „Berichtsheft drucken …“. Auf der Seite dahinter wählst du aus, was hinein soll, und druckst es oder lädst es als PDF herunter. Daraus wird ein Dokument: ein Deckblatt, dann jeder Bericht auf einer eigenen Seite.</Begriff>
@@ -237,22 +258,26 @@ const DRUCKEN = (rolle: Rolle): Kapitel => ({
 const KALENDER = (rolle: Rolle): Kapitel => ({
   id: 'kalender',
   titel: 'Kalender abonnieren (Kalender-Abo)',
+  gruppe: 'Ausbildungsplan',
   inhalt: (
     <>
       <p>
         {rolle === 'azubi' ? 'Du kannst deinen Ausbildungsplan' : 'Du kannst die Pläne deiner Azubis'} in dein Kalenderprogramm holen – zum Beispiel auf dem Handy oder in Outlook. Das nennt man <strong>abonnieren</strong>: Der Kalender holt sich die Termine von selbst immer wieder neu.
       </p>
+      <h3>So geht's</h3>
       <ol className="schritte">
         <li>
           Unter <Link zu="/konto">Konto</Link> bei „Kalender abonnieren“ auf „Kalender-Link erstellen“ gehen.
         </li>
         <li>Den Link kopieren und im Kalenderprogramm als Kalender-Abo eintragen – so geht es je Programm:</li>
       </ol>
+      <h3>Begriffe</h3>
       <dl className="begriffe">
         <Begriff wort="iPhone, iPad, Mac">Im Portal „Im Kalenderprogramm öffnen“ antippen und „Abonnieren“ bestätigen. Oder: Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen, dort den Link einfügen.</Begriff>
         <Begriff wort="Outlook">Im Kalender „Kalender hinzufügen“ → „Aus dem Internet abonnieren“ wählen und den Link einfügen. Der Kalender erscheint danach auch in der Outlook-App auf dem Handy.</Begriff>
         <Begriff wort="Google Kalender (Android)">Am PC calendar.google.com öffnen: links bei „Weitere Kalender“ auf „+“ → „Per URL“, den Link einfügen. Danach erscheint der Kalender auch auf dem Handy.</Begriff>
       </dl>
+      <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine. {rolle === 'azubi' ? 'Dazu kommen deine eigenen Termine, mit Uhrzeit, wenn du eine angegeben hast. ' : 'Private Termine der Azubis stehen nicht in deinem Kalender. '}Aufgaben, Notizen und Berichte stehen dort nicht.</li>
         {rolle !== 'azubi' && <li>Vor jedem Termin steht der Name des Azubis. Du kannst den Link auch auf einen einzelnen Azubi beschränken. Du siehst nur Azubis, die du auch im Portal siehst.</li>}
@@ -269,16 +294,19 @@ const KALENDER = (rolle: Rolle): Kapitel => ({
 const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
   id: 'benachrichtigungen',
   titel: 'Benachrichtigungen per Teams und E-Mail',
+  gruppe: 'Konto und Nachrichten',
   inhalt: (
     <>
       <p>
         Die Glocke zeigt dir immer, was es Neues gibt. Zusätzlich kann dir das Portal eine Nachricht schicken – per Teams, per E-Mail oder beides. Das ist freiwillig und am Anfang ausgeschaltet. Du stellst es unter <Link zu="/konto">Konto</Link> bei „Benachrichtigungen“ ein.
       </p>
+      <h3>Begriffe</h3>
       <dl className="begriffe">
         <Begriff wort="Berichtsheft">{rolle === 'azubi' ? 'Dein Bericht wurde abgezeichnet, zurückgegeben oder wieder geöffnet.' : 'Ein Azubi hat einen Bericht eingereicht – oder an einem Bericht hat sich etwas getan.'}</Begriff>
         <Begriff wort="Urlaub">{rolle === 'azubi' ? 'Dein Urlaubsantrag wurde bestätigt, genehmigt, abgelehnt oder storniert.' : 'Ein Azubi hat Urlaub beantragt – oder an einem Antrag hat sich etwas getan.'}</Begriff>
         <Begriff wort="Ausbildungsplan">{rolle === 'azubi' ? 'In deinem Plan gibt es neue Einträge – oder für dich wurde der Planer für deine Prüfung freigeschaltet.' : 'Im Plan eines deiner Azubis gibt es neue Einträge von jemand anderem – oder ein Azubi hat Termine für seine Prüfung eingetragen oder geändert.'}</Begriff>
       </dl>
+      <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>Für jeden der drei Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
         <li>Du bekommst nur Nachrichten zu dem, was du auch in der Glocke siehst. Was du selbst gemacht hast, wird dir nicht gemeldet.</li>
@@ -300,9 +328,11 @@ const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
 const GLOCKE = (rolle: Rolle): Kapitel => ({
   id: 'glocke',
   titel: 'Die Glocke: Was gibt es Neues?',
+  gruppe: 'Konto und Nachrichten',
   inhalt: (
     <>
       <p>Oben rechts steht eine Glocke. Eine rote Zahl daran sagt dir, wie viel seit deinem letzten Blick neu ist.</p>
+      <h3>Begriffe</h3>
       <dl className="begriffe">
         {rolle === 'azubi' ? (
           <>
@@ -321,6 +351,7 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
           </>
         )}
       </dl>
+      <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>Ein Tipp auf eine Zeile führt direkt zum Plan oder zum Bericht.</li>
         <li>Sobald du die Glocke öffnest, verschwindet die Zahl. Die Zeilen bleiben stehen, damit du später noch einmal nachsehen kannst.</li>
@@ -334,12 +365,14 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
 
 const PROFILBILD = (rolle: Rolle): Kapitel => ({
   id: 'profilbild',
-  titel: 'Profilbild',
+  titel: 'Dein Profilbild',
+  gruppe: 'Konto und Nachrichten',
   inhalt: (
     <>
       <p>
         Hat der Betreiber des Portals es eingeschaltet, zeigt das Portal dein Profilbild aus Microsoft 365 – dort, wo sonst deine Anfangsbuchstaben stehen. Unter <Link zu="/konto">Konto</Link> steht der Abschnitt „Profilbild“. Ist der Haken dort gesperrt, ist die Funktion nicht eingeschaltet – dann gibt es im Portal kein Bild von dir.
       </p>
+      <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>Das Portal holt das Bild bei jeder Anmeldung. Ein neues Bild in Microsoft 365 erscheint also nach deiner nächsten Anmeldung.</li>
         <li>Ändern kannst du das Bild nur in Microsoft 365, nicht im Portal.</li>
@@ -359,6 +392,7 @@ const PROFILBILD = (rolle: Rolle): Kapitel => ({
 const APP: Kapitel = {
   id: 'app',
   titel: 'Als App auf Handy oder Tablet einrichten',
+  gruppe: 'Erste Schritte',
   inhalt: (
     <>
       <p>Du kannst das Portal wie eine App auf den Startbildschirm legen. Dann öffnest du es mit einem Tipp, ohne die Adresse einzugeben. Es wird nichts aus einem App-Store geladen.</p>
@@ -390,9 +424,11 @@ const AZUBI: Kapitel[] = [
   {
     id: 'ueberblick',
     titel: 'Worum geht es?',
+    gruppe: 'Erste Schritte',
     inhalt: (
       <>
         <p>Das Portal hat zwei Teile:</p>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>
             <strong>Ausbildungsplan</strong> – hier siehst du, was in welcher Woche ansteht: Berufsschule, Abteilung, Aufgaben, Prüfungen. Das ist deine Startseite.
@@ -408,9 +444,11 @@ const AZUBI: Kapitel[] = [
   {
     id: 'plan',
     titel: 'Den Ausbildungsplan lesen',
+    gruppe: 'Ausbildungsplan',
     inhalt: (
       <>
         <p>Jede Zeile ist eine Kalenderwoche (KW). Die laufende Woche ist blau hinterlegt. In einer Woche können stehen:</p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Berufsschule">Du bist in der Schule. Die Woche hat links einen violetten Streifen.</Begriff>
           <Begriff wort="Einsatz">In dieser Abteilung oder an diesem Ort arbeitest du. Dabei steht oft, wer für dich zuständig ist.</Begriff>
@@ -435,12 +473,14 @@ const AZUBI: Kapitel[] = [
   {
     id: 'termine',
     titel: 'Eigene Termine eintragen',
+    gruppe: 'Ausbildungsplan',
     inhalt: (
       <>
         <p>
           Mit „+ Termin“ bei „Diese Woche“ oder „Nächste Woche“ – oder über „+“ an einer Woche und die Art „Termin“ – trägst du einzelne Tage ein, die du dir merken willst. Zum Beispiel eine Sitzung der JAV (Jugend- und
           Auszubildendenvertretung), ein Gespräch mit der Personalabteilung oder eine Betriebsversammlung. Du gibst den Tag an und, wenn du willst, Beginn und Ende.
         </p>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>
             <strong>Termine siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen sie nicht – nicht in deinem Plan, nicht in ihrem Jahreskalender, nicht in der Glocke und nicht in ihrem Kalender. Wenn sie von einem Termin wissen sollen, sag es ihnen selbst.
@@ -454,12 +494,14 @@ const AZUBI: Kapitel[] = [
   {
     id: 'bericht',
     titel: 'Einen Bericht schreiben – Schritt für Schritt',
+    gruppe: 'Berichtsheft',
     inhalt: (
       <>
         <p>
           <strong>Einmal vorab:</strong> Unterschreibe unter <Link zu="/konto">Konto</Link> im Feld „Unterschrift“ – mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie
           kannst du nicht einreichen.
         </p>
+        <h3>So geht's</h3>
         <ol className="schritte">
           <li>
             Öffne das <Link zu="/berichtsheft">Berichtsheft</Link> und wähle bei der Woche „Schreiben“.
@@ -537,11 +579,13 @@ const AZUBI: Kapitel[] = [
   {
     id: 'urlaub',
     titel: 'Urlaub beantragen',
+    gruppe: 'Urlaub',
     inhalt: (
       <>
         <p>
           Unter <Link zu="/urlaub">Urlaub</Link> beantragst du deinen Urlaub. Du kommst auch aus dem Ausbildungsplan über „Urlaub beantragen“ dorthin.
         </p>
+        <h3>So geht's</h3>
         <ol className="schritte">
           <li>Trag den ersten und den letzten Urlaubstag ein. Für einen einzelnen Tag ist beides derselbe Tag.</li>
           <li>Das Portal zählt die Arbeitstage: Montag bis Freitag, ohne Feiertage. Es sagt dir auch, wer zustimmen muss.</li>
@@ -549,6 +593,7 @@ const AZUBI: Kapitel[] = [
           <li>Tipp auf „Urlaub beantragen“.</li>
         </ol>
         <p>So geht es weiter:</p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Wartet auf Bestätigung">Deine Ausbildungsbeauftragten müssen zustimmen. Bist du in einer Abteilung eingesetzt, genügt die Zustimmung einer Person aus dieser Abteilung.</Begriff>
           <Begriff wort="Wartet auf Genehmigung">Jetzt entscheidet dein Ausbilder. Ist dir niemand zugewiesen, liegt der Antrag sofort bei ihm.</Begriff>
@@ -556,6 +601,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Abgelehnt">Der Grund steht am Antrag. Du kannst einen neuen Antrag für eine andere Zeit stellen.</Begriff>
           <Begriff wort="Storniert">Dein Ausbilder hat einen genehmigten Urlaub wieder aufgehoben. Der Grund steht am Antrag.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Was sich an deinem Antrag tut, siehst du auch in der Glocke.</li>
           <li>Solange noch nicht entschieden ist, kannst du den Antrag zurückziehen. Danach nicht mehr – sprich dann mit deinem Ausbilder.</li>
@@ -571,11 +617,13 @@ const AZUBI: Kapitel[] = [
   {
     id: 'jahreskalender',
     titel: 'Den Jahreskalender lesen',
+    gruppe: 'Ausbildungsplan',
     inhalt: (
       <>
         <p>
           Der <Link zu="/jahreskalender">Jahreskalender</Link> zeigt dein ganzes Jahr auf einer Seite. Du findest ihn im Ausbildungsplan über „Jahreskalender anzeigen“. Die Monate stehen nebeneinander, die Tage 1 bis 31 untereinander – wie bei einem Wandkalender.
         </p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Violett">Berufsschule.</Begriff>
           <Begriff wort="Grün">Einsatz in einer Abteilung. Der Name steht am ersten Tag und an jedem Montag.</Begriff>
@@ -587,6 +635,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Türkiser Strich unten">Schulferien.</Begriff>
           <Begriff wort="Grau">Wochenende oder Tage vor Beginn und nach Ende deiner Ausbildung.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Der heutige Tag ist blau umrandet.</li>
           <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor. „Dieses Jahr“ bringt dich zurück.</li>
@@ -600,11 +649,20 @@ const AZUBI: Kapitel[] = [
   {
     id: 'lernen',
     titel: 'Lernen mit Cheatsheets und Ampel',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
           Den Menüpunkt <Link zu="/lernen">Lernen</Link> gibt es, wenn für deinen Ausbildungsberuf Lerninhalte eingeschaltet sind. Fehlt er, gibt es für deinen Beruf noch keine – frag deinen Ausbilder.
         </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
+          <li>Das Cheatsheet des Unterthemas lesen. Es steht gleich offen da. Jedes Unterthema hat einen eigenen Kasten mit Nummer und Titel im farbigen Kopf – so siehst du, wo eins aufhört und das nächste anfängt.</li>
+          <li>Die Ampel einstellen. Das Portal fragt nach, ob du wirklich umstellen willst – so ändert ein versehentlicher Klick nichts. Nach „Auf … stellen“ ist der neue Stand gespeichert. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
+          <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
+        </ol>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Themenfeld">Ein großes Thema deines Berufs, zum Beispiel „Netzwerkgrundlagen“. Jedes Themenfeld hat mehrere Unterthemen.</Begriff>
           <Begriff wort="Cheatsheet">Ein Spickzettel zu einem Unterthema: die wichtigsten Begriffe, Tabellen, Befehle, ein Merksatz und oft eine typische Prüfungsfrage mit Lösungsweg. Grafiken werden groß, wenn du sie anklickst.</Begriff>
@@ -613,12 +671,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Notiz">Eine freie Notiz zu jedem Unterthema, zum Beispiel „in der Berufsschule nachfragen“.</Begriff>
           <Begriff wort="Zusatzwissen">Vertiefungen zu einem Themenfeld, zum Beispiel ein Ablauf Schritt für Schritt oder ein Vergleich. Zusatzwissen ist freiwillig und zählt nicht zur Ampel. Du findest es unten im Themenfeld im gestrichelten Rahmen.</Begriff>
         </dl>
-        <ol className="schritte">
-          <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
-          <li>Das Cheatsheet des Unterthemas lesen. Es steht gleich offen da. Jedes Unterthema hat einen eigenen Kasten mit Nummer und Titel im farbigen Kopf – so siehst du, wo eins aufhört und das nächste anfängt.</li>
-          <li>Die Ampel einstellen. Das Portal fragt nach, ob du wirklich umstellen willst – so ändert ein versehentlicher Klick nichts. Nach „Auf … stellen“ ist der neue Stand gespeichert. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
-          <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
-        </ol>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>
             <strong>Deinen Lernstand siehst nur du.</strong> Dein Ausbilder und deine Ausbildungsbeauftragten sehen weder deine Ampeln noch deine Lernpunkte oder Notizen. Es gibt auch keine Auswertung für sie.
@@ -637,6 +690,7 @@ const AZUBI: Kapitel[] = [
   {
     id: 'ueben',
     titel: 'Üben mit Karteikarten und Quiz',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
@@ -674,11 +728,13 @@ const AZUBI: Kapitel[] = [
   {
     id: 'abzeichen',
     titel: 'Abzeichen sammeln',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
           Unter <Link zu="/lernen">Lernen</Link> sammelst du Abzeichen: in jedem Themenfeld ein Schild, das mit deinem Lernstand wächst. Es gibt sechs Stufen. Die ersten drei hängen an Ampel und Zusatzwissen, die oberen drei am Quiz unter „Üben“:
         </p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Holz">Bei einem Unterthema steht die Ampel auf Gelb oder Grün.</Begriff>
           <Begriff wort="Stein">Bei der Hälfte der Unterthemen steht die Ampel auf Gelb oder Grün.</Begriff>
@@ -687,6 +743,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Gold">Du hast das Quiz zu allen Unterthemen bestanden.</Begriff>
           <Begriff wort="Meister">Du hast alle Quiz noch einmal ohne Fehler geschafft – frühestens eine Woche nach dem Bestehen. So zeigt sich, was wirklich sitzt.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Unter jedem Schild steht, was bis zur nächsten Stufe fehlt.</li>
           <li>Gezählt werden nur Unterthemen, für die es ein Quiz gibt. Hat ein Themenfeld gar kein Quiz, ist dort Bronze die höchste Stufe.</li>
@@ -704,16 +761,19 @@ const AZUBI: Kapitel[] = [
   {
     id: 'kompendium',
     titel: 'Im Kompendium nachschlagen',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
           Das <Link zu="/lernen/kompendium">Kompendium</Link> ist ein Nachschlagewerk: Es sammelt alles aus allen Cheatsheets in einer Liste von A bis Z – Begriffe, Befehle, Tabellen, Merksätze, Prüfungsfragen und das Zusatzwissen. Praktisch, wenn du im Betrieb schnell etwas wissen willst und nicht weißt, in welchem Themenfeld es steht. Du findest es unter „Lernen“ oben neben „Themenfelder“.
         </p>
+        <h3>So geht's</h3>
         <ol className="schritte">
           <li>Bei „Suchen“ ein Wort eintippen, zum Beispiel „DHCP“. Die Liste zeigt sofort nur noch passende Einträge. Die Fundstellen sind gelb markiert.</li>
           <li>Wenn du willst: ein Themenfeld wählen oder nur eine Art anzeigen, zum Beispiel „Befehle“.</li>
           <li>Unter jedem Eintrag steht „Zum Cheatsheet“ (beim Zusatzwissen „Zum Zusatzwissen“). Damit springst du zur passenden Stelle.</li>
         </ol>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Mehrere Suchwörter: Es erscheinen nur Einträge, in denen alle vorkommen.</li>
           <li>Umlaute musst du nicht genau treffen: „Schluessel“ findet auch „Schlüssel“.</li>
@@ -727,6 +787,7 @@ const AZUBI: Kapitel[] = [
   {
     id: 'planer',
     titel: 'Planer für deine Prüfung (zum Beispiel Abschlussprojekt)',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
@@ -770,25 +831,32 @@ const AZUBI: Kapitel[] = [
   {
     id: 'stand',
     titel: 'Was bedeutet der Stand eines Berichts?',
+    gruppe: 'Berichtsheft',
     inhalt: (
-      <dl className="begriffe">
-        <Begriff wort="fehlt">Für diese Woche hast du noch nichts geschrieben.</Begriff>
-        <Begriff wort="Entwurf">Du hast angefangen und gespeichert. Nur du siehst den Bericht. Er ist noch nicht abgegeben.</Begriff>
-        <Begriff wort="eingereicht">Du hast den Bericht abgegeben. Jetzt ist dein Ausbilder dran. Solange er nicht unterschrieben hat, kannst du den Bericht zurückziehen und ändern.</Begriff>
-        <Begriff wort="zurückgegeben">Dein Ausbilder möchte, dass du etwas änderst. Der Grund steht oben im Bericht. Ändere ihn und reiche ihn noch einmal ein. Das ist normal und kein Drama.</Begriff>
-        <Begriff wort="abgezeichnet">Dein Ausbilder hat unterschrieben. Der Bericht ist fertig und lässt sich nicht mehr ändern.</Begriff>
-      </dl>
+      <>
+        <p>Jeder Bericht hat einen Stand. Er steht als farbige Marke am Bericht und sagt dir, wer gerade am Zug ist.</p>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="fehlt">Für diese Woche hast du noch nichts geschrieben.</Begriff>
+          <Begriff wort="Entwurf">Du hast angefangen und gespeichert. Nur du siehst den Bericht. Er ist noch nicht abgegeben.</Begriff>
+          <Begriff wort="eingereicht">Du hast den Bericht abgegeben. Jetzt ist dein Ausbilder dran. Solange er nicht unterschrieben hat, kannst du den Bericht zurückziehen und ändern.</Begriff>
+          <Begriff wort="zurückgegeben">Dein Ausbilder möchte, dass du etwas änderst. Der Grund steht oben im Bericht. Ändere ihn und reiche ihn noch einmal ein. Das ist normal und kein Drama.</Begriff>
+          <Begriff wort="abgezeichnet">Dein Ausbilder hat unterschrieben. Der Bericht ist fertig und lässt sich nicht mehr ändern.</Begriff>
+        </dl>
+      </>
     ),
   },
   DRUCKEN('azubi'),
   {
     id: 'konto',
     titel: 'Dein Konto und deine Unterschrift',
+    gruppe: 'Konto und Nachrichten',
     inhalt: (
       <>
         <p>
           Unter <Link zu="/konto">Konto</Link> (im Menü an deinem Namen, am Handy unter „Mehr“) steht alles, was nur dich betrifft:
         </p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Meine Ausbildung">Beruf, Berufsschule, Ausbildungszeit, Wochenstunden, die Form deines Berichtshefts und Prüfungstermine. Das trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</Begriff>
           <Begriff wort="Unterschrift">Du unterschreibst einmal mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie kannst du nicht einreichen. Änderst du sie später, behalten alte Berichte die alte Unterschrift.</Begriff>
@@ -803,17 +871,21 @@ const AZUBI: Kapitel[] = [
   {
     id: 'fragen',
     titel: 'Häufige Fragen',
+    gruppe: 'Hilfe',
     inhalt: (
-      <dl className="begriffe breit">
-        <Begriff wort="Ich habe Wochen vergessen. Was jetzt?">Schreib sie nach – die fehlenden Wochen stehen im Berichtsheft unter „Fehlt“. Je früher, desto leichter erinnerst du dich.</Begriff>
-        <Begriff wort="Ich habe einen Fehler eingereicht.">Öffne den Bericht und wähle „Zurückziehen“. Das geht, solange er nicht abgezeichnet ist. Danach bitte deinen Ausbilder, die Abzeichnung aufzuheben.</Begriff>
-        <Begriff wort="Ich war die ganze Woche krank oder im Urlaub.">Schreib trotzdem einen Bericht: Trag die Tage unter „Abwesenheit“ ein und reiche ihn ein. Genehmigter Urlaub steht dort schon.</Begriff>
-        <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
-        <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
-        <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
-        <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft drucken …“ wählen: Dort druckst du es oder lädst es als PDF herunter.</Begriff>
-        <Begriff wort="Ich komme nicht weiter.">Frag deinen Ausbilder oder deine Ausbildungsbeauftragten. Wenn die Anmeldung nicht klappt, hilft die IT deines Betriebs.</Begriff>
-      </dl>
+      <>
+        <p>Kurze Antworten auf das, was am häufigsten gefragt wird.</p>
+        <dl className="begriffe breit">
+          <Begriff wort="Ich habe Wochen vergessen. Was jetzt?">Schreib sie nach – die fehlenden Wochen stehen im Berichtsheft unter „Fehlt“. Je früher, desto leichter erinnerst du dich.</Begriff>
+          <Begriff wort="Ich habe einen Fehler eingereicht.">Öffne den Bericht und wähle „Zurückziehen“. Das geht, solange er nicht abgezeichnet ist. Danach bitte deinen Ausbilder, die Abzeichnung aufzuheben.</Begriff>
+          <Begriff wort="Ich war die ganze Woche krank oder im Urlaub.">Schreib trotzdem einen Bericht: Trag die Tage unter „Abwesenheit“ ein und reiche ihn ein. Genehmigter Urlaub steht dort schon.</Begriff>
+          <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
+          <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
+          <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
+          <Begriff wort="Ich brauche das Berichtsheft auf Papier.">Im Berichtsheft „Berichtsheft drucken …“ wählen: Dort druckst du es oder lädst es als PDF herunter.</Begriff>
+          <Begriff wort="Ich komme nicht weiter.">Frag deinen Ausbilder oder deine Ausbildungsbeauftragten. Wenn die Anmeldung nicht klappt, hilft die IT deines Betriebs.</Begriff>
+        </dl>
+      </>
     ),
   },
   KALENDER('azubi'),
@@ -829,6 +901,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'aufgabe',
     titel: rolle === 'ausbilder' ? 'Deine Aufgaben im Portal' : 'Deine Aufgaben als Ausbildungsbeauftragte/r',
+    gruppe: 'Erste Schritte',
     inhalt:
       rolle === 'ausbilder' ? (
         <>
@@ -847,6 +920,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'unterschrift',
     titel: 'Einmalig: Unterschrift hinterlegen',
+    gruppe: 'Erste Schritte',
     inhalt: (
       <p>
         Unter <Link zu="/konto">Konto</Link> im Feld „Unterschrift“ unterschreiben. Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Beim Abzeichnen wird eine Kopie am Bericht gespeichert; eine spätere Änderung verändert alte Berichte nicht.
@@ -856,8 +930,11 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'abzeichnen',
     titel: 'Berichte lesen, abzeichnen, zurückgeben',
+    gruppe: 'Berichtsheft',
     inhalt: (
       <>
+        <p>Azubis reichen ihre Berichte ein. Du liest sie und zeichnest sie ab – oder gibst sie mit einem Hinweis zurück.</p>
+        <h3>So geht's</h3>
         <ol className="schritte">
           <li>
             Unter <Link zu="/abzeichnen">Abzeichnen</Link> stehen alle eingereichten Berichte, die auf dich warten. Die Startseite zeigt die Anzahl.
@@ -877,12 +954,14 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   },
   {
     id: 'plan',
-    titel: 'Ausbildungsplan',
+    titel: 'Den Ausbildungsplan eines Azubis bearbeiten',
+    gruppe: 'Ausbildungsplan',
     inhalt: (
       <>
         <p>
           Über <Link zu="/azubis">Azubis</Link> den Azubi öffnen, dann „Ausbildungsplan“. Oben stehen diese und die nächste Woche, links die Übersicht über die Ausbildungsjahre, rechts alle Kalenderwochen.
         </p>
+        <h3>Gut zu wissen</h3>
         {rolle === 'ausbilder' ? (
           <ul className="punkte">
             <li>Mit „+“ an einer Woche oder „Eintrag hinzufügen“ legst du Schulblöcke, Einsätze, Aufgaben und Notizen an. Ein Eintrag kann über mehrere Wochen gehen.</li>
@@ -907,13 +986,15 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   },
   {
     id: 'urlaub',
-    titel: 'Urlaubsanträge',
+    titel: 'Urlaubsanträge bestätigen und genehmigen',
+    gruppe: 'Urlaub',
     inhalt: (
       <>
         <p>
           Azubis beantragen ihren Urlaub im Portal. Unter <Link zu="/urlaub">Urlaub</Link> (am Handy unter „Mehr“) stehen alle Anträge {rolle === 'ausbilder' ? 'deiner' : 'der dir zugewiesenen'} Azubis. Eine Zahl am Menüpunkt und eine Kachel auf der Startseite zeigen, wie viele auf dich warten.
         </p>
         <p>Der Ablauf hat zwei Stufen:</p>
+        <h3>So geht's</h3>
         <ol className="schritte">
           <li>
             <strong>Bestätigen:</strong> Alle, denen der Azubi im Urlaubszeitraum zugewiesen ist, bestätigen den Antrag – Ausbildungsbeauftragte und Ausbilder als Vertretung. Sind mehrere von Hand zugewiesen, müssen alle bestätigen. Ist der Azubi in einer Abteilung eingesetzt, genügt aus dieser Abteilung eine Bestätigung – von einem Beauftragten oder der Stellvertretung.
@@ -922,6 +1003,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
             <strong>Genehmigen:</strong> Danach entscheidet der zuständige Ausbilder endgültig. Ist im Zeitraum niemand zugewiesen, liegt der Antrag sofort bei ihm.
           </li>
         </ol>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Urlaub bestätigen">{rolle === 'ausbilder' ? 'Nur, wenn du dem Azubi als Vertretung zugewiesen bist.' : 'Deine Zustimmung.'} Sie lässt sich nicht zurücknehmen.</Begriff>
           {rolle === 'ausbilder' && (
@@ -934,6 +1016,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <Begriff wort="Hinweise am Antrag">Das Portal warnt, wenn im Zeitraum Berufsschule oder eine Prüfung liegt oder die Tage laut Urlaubskonto nicht reichen. Es sperrt nichts – die Entscheidung liegt bei euch.</Begriff>
           <Begriff wort="Verlauf">Wer wann was getan hat, klappt an jedem Antrag auf.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Gezählt werden Arbeitstage: Montag bis Freitag ohne die Feiertage des Bundeslands aus den Stammdaten. Halbe Tage gibt es nicht.</li>
           <li>Ein Klick auf den Namen zeigt das Urlaubskonto des Azubis: Anspruch, genehmigt, beantragt, frei.{rolle === 'ausbilder' ? ' Den Anspruch trägst du im Profil des Azubis unter „Urlaubstage im Jahr“ ein.' : ' Den Anspruch trägt der Ausbilder im Profil ein.'} Resturlaub aus dem Vorjahr kennt das Portal nicht.</li>
@@ -954,6 +1037,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'abteilungen',
     titel: 'Abteilungen und Einsätze',
+    gruppe: 'Azubis betreuen',
     inhalt: (
       <>
         <p>
@@ -1009,17 +1093,20 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'lernansicht',
     titel: 'Lerninhalte ansehen',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
           Unter <Link zu="/lerninhalte">Lerninhalte</Link> ({rolle === 'ausbilder' ? 'im Menü „Planung“' : 'am Handy unter „Mehr“'}) liest du, was die Azubis im Lernmodul lernen. Du siehst alle Lernmodule, die auf dem Server liegen – auch solche, die noch für keinen Beruf eingeschaltet sind.
         </p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Themenfelder">Die Gliederung des Stoffs. Ein Klick öffnet das Themenfeld mit seinen Unterthemen.</Begriff>
           <Begriff wort="Cheatsheet">Steht an jedem Unterthema offen da: Begriffe, Tabellen, Befehle, Merksatz, Prüfungsfrage. Die Unterthemen sind nummeriert und haben je einen eigenen Kasten.</Begriff>
           <Begriff wort="Zusatzwissen">Vertiefungen am Ende eines Themenfelds.</Begriff>
           <Begriff wort="Kompendium">Alle Bausteine aus allen Cheatsheets zum Suchen und Nachschlagen.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Die Ansicht ist nur zum Lesen. Ampel, Notizen und Abzeichen gibt es nur bei den Azubis.</li>
           <li>
@@ -1038,6 +1125,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'planer-freischalten',
     titel: 'Planer für die Prüfung freischalten',
+    gruppe: 'Lernen und Prüfung',
     inhalt: (
       <>
         <p>
@@ -1077,11 +1165,13 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   {
     id: 'jahreskalender',
     titel: 'Den Jahreskalender lesen',
+    gruppe: 'Ausbildungsplan',
     inhalt: (
       <>
         <p>
           Der <Link zu="/jahreskalender">Jahreskalender</Link> (eigener Menüpunkt, am Handy „Jahr“) beantwortet: Wer ist wann wo? Er zeigt ein ganzes Kalenderjahr für alle {rolle === 'ausbilder' ? 'deine' : 'dir zugewiesenen'} Azubis: Die Monate stehen nebeneinander, jeder Azubi hat eine Zeile.
         </p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Obere Balken (violett)">Berufsschule.</Begriff>
           <Begriff wort="Mittlere Balken (grün)">Einsätze, mit Namen. Ist der Balken zu kurz für den Namen: mit der Maus darauf zeigen.</Begriff>
@@ -1091,6 +1181,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <Begriff wort="Schraffiert">Der Azubi ist in dieser Zeit nicht in der Ausbildung.</Begriff>
           <Begriff wort="Blaue senkrechte Linie">Heute.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Die Azubis sind nach Ausbildungsjahr geordnet.</li>
           <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage und – mit gelbem Rand – die Firmentermine. In der Übersicht aller Azubis haben Firmentermine oben eine eigene Zeile und ziehen sich als gelbes Band durch jede Zeile. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
@@ -1103,10 +1194,11 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     ),
   },
   ...(rolle === 'ausbilder'
-    ? [
+    ? ([
         {
           id: 'planung',
           titel: 'Planung: Sammelplanung und Bausteine',
+          gruppe: 'Ausbildungsplan',
           inhalt: (
             <>
               <p>Unter „Planung“ (auf dem Handy unter „Mehr“) steht, was über den Plan eines einzelnen Azubis hinausgeht.</p>
@@ -1137,6 +1229,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'import',
           titel: 'Bausteine importieren: Aufbau der Datei',
+          gruppe: 'Dateien und Formate',
           inhalt: (
             <>
               <p>
@@ -1216,8 +1309,11 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'zustaendig',
           titel: 'Meine Azubis, Übernehmen, Vertretung',
+          gruppe: 'Azubis betreuen',
           inhalt: (
             <>
+              <p>Jeder Azubi hat einen zuständigen Ausbilder. Davon hängt ab, wen du siehst und wen du voll bearbeiten darfst.</p>
+              <h3>Gut zu wissen</h3>
               <ul className="punkte">
                 <li>
                   <strong>Zuständig</strong> bist du für Azubis, bei denen du im Profil unter „Zuständiger Ausbilder“ stehst. Legst du selbst ein Azubi-Konto an, trägt das Portal dich gleich ein. Nur diese Azubis siehst du in Listen, Jahreskalender, Abzeichnen und Glocke.
@@ -1243,11 +1339,13 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'profil',
           titel: 'Das Profil eines Azubis',
+          gruppe: 'Azubis betreuen',
           inhalt: (
             <>
               <p>
                 Über <Link zu="/azubis">Azubis</Link> → „Profil“. Aus diesen Angaben berechnet das Portal Ausbildungsjahr, Wochen und Ende der Ausbildung.
               </p>
+              <h3>Begriffe</h3>
               <dl className="begriffe">
                 <Begriff wort="Ausbildungsberuf, Berufsschule">Aus den Stammdaten. Der Beruf bestimmt die Regeldauer, die Berufsschule das Bundesland für die Schulferien.</Begriff>
                 <Begriff wort="Zuständiger Ausbilder">Bestimmt, wer den Azubi sieht und voll bearbeitet. Mehr im Kapitel „Meine Azubis, Übernehmen, Vertretung“.</Begriff>
@@ -1267,11 +1365,13 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'stammdaten',
           titel: 'Stammdaten pflegen',
+          gruppe: 'Verwaltung',
           inhalt: (
             <>
               <p>
                 Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> stehen Betrieb, Ausbildungsberufe und Berufsschulen. Sie gelten <strong>für das ganze Portal</strong> – alle Ausbilder arbeiten mit denselben Einträgen.
               </p>
+              <h3>Begriffe</h3>
               <dl className="begriffe">
                 <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
                 <Begriff wort="Form des Berichtshefts">Entweder beschreiben Azubis die Woche im Ganzen (drei Teile: Betrieb, Unterweisung, Berufsschule) oder Tag für Tag (für jeden Tag ein Kasten mit eigenen Zeilen). In beiden Fällen ist es ein Bericht je Woche, der einmal eingereicht und abgezeichnet wird. Die Wahl gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form. Für einzelne Azubis lässt sich die Form im Profil des Azubis abweichend einstellen (Feld „Form des Berichtshefts“) – zum Beispiel, wenn nur ein Beruf oder ein Ausbildungsjahr Tag für Tag schreiben soll. Welche Form eure Kammer verlangt, klärt ihr am besten mit ihr.</Begriff>
@@ -1284,6 +1384,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 </Begriff>
                 <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
               </dl>
+              <h3>Gut zu wissen</h3>
               <ul className="punkte">
                 <li>Bitte nichts ändern oder löschen, nur weil du es selbst gerade nicht brauchst.</li>
                 <li>Ein Beruf oder eine Berufsschule lässt sich erst löschen, wenn kein Azubi mehr zugeordnet ist.</li>
@@ -1295,16 +1396,19 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'firmentermine',
           titel: 'Firmentermine für alle',
+          gruppe: 'Verwaltung',
           inhalt: (
             <>
               <p>
                 Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei „Firmentermine“ trägst du ganztägige Termine ein, die für alle im Betrieb gelten – zum Beispiel eine Betriebsschließung zwischen den Feiertagen, eine Betriebsversammlung oder ein Sommerfest.
               </p>
+              <h3>Begriffe</h3>
               <dl className="begriffe">
                 <Begriff wort="Titel">Freier Text, so wie er im Plan stehen soll – etwa „Betrieb geschlossen“.</Begriff>
                 <Begriff wort="Erster und letzter Tag">Der Termin gilt für ganze Tage. Lässt du den letzten Tag leer, ist es ein einzelner Tag.</Begriff>
                 <Begriff wort="Hinweis">Freiwillig, eine Zeile – zum Beispiel „Notdienst über die Zentrale“.</Begriff>
               </dl>
+              <h3>Gut zu wissen</h3>
               <ul className="punkte">
                 <li>Alle Azubis, Ausbildungsbeauftragten und Ausbilder sehen den Termin: im Ausbildungsplan in der betroffenen Woche (gelbe Zeile „Firmentermin“) und im Jahreskalender. Dort stehen sie in der Übersicht aller Azubis als eigene Zeile „Firmentermine“ und als gelbes Band durch jede Zeile, im Kalender eines Azubis als gelber Rand am Tag. Am Handy steht über der Übersicht aller Azubis zusätzlich eine Liste, weil die Bänder dort keinen Titel zeigen.</li>
                 <li>
@@ -1320,6 +1424,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'lerninhalte',
           titel: 'Lerninhalte für einen Beruf erstellen',
+          gruppe: 'Lernen und Prüfung',
           inhalt: (
             <>
               <p>
@@ -1328,7 +1433,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <p className="hinweis">
                 <strong>So kommen die Inhalte ins Portal:</strong> Du packst den fertigen Ordner als ZIP-Datei und reichst ihn unter <Link zu="/lerninhalte">Lerninhalte</Link> ein. Das Portal prüft den Aufbau sofort. Danach sieht der Betreiber des Portals (Super-Admin) die Einreichung und lädt sie hoch oder gibt sie dir mit einer Rückmeldung zurück. Nach dem Hochladen erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Für jede spätere Änderung reichst du das ganze Paket noch einmal mit derselben Kennung ein.
               </p>
-              <h3>So gehst du vor</h3>
+              <h3>So geht's</h3>
               <ol className="schritte">
                 <li>
                   <strong>Stoff gliedern.</strong> Ausbildungsrahmenplan und Prüfungskatalog des Berufs in etwa 8 bis 15 Themenfelder aufteilen, jedes mit 5 bis 10 Unterthemen. Zum Vergleich: Das Modul für Fachinformatiker hat 13 Themenfelder.
@@ -1346,6 +1451,60 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   <strong>Prüfen und einschalten.</strong> Unter Stammdaten steht das Paket mit der Zahl der Themenfelder. Stimmt in einer Datei etwas nicht, zeigt die Seite den Fehler mit Datei und Zeile. Dann am Beruf einschalten.
                 </li>
               </ol>
+              <p>
+                Wie der Ordner und die Dateien aufgebaut sind, steht im Kapitel „Lerninhalte: Aufbau des Ordners und der Dateien“.
+              </p>
+              <h3>Worauf du achten solltest</h3>
+              <ul className="punkte">
+                <li>
+                  <strong>Urheberrecht:</strong> Texte, Tabellen und Bilder aus Lehrbüchern, von Webseiten oder aus alten Prüfungen darfst du nicht einfach übernehmen. Schreib die Inhalte selbst oder klär die Rechte. In <code>paket.json</code> steht, woher die Inhalte kommen.
+                </li>
+                <li>
+                  <strong>Sprache:</strong> kurze Sätze, ein Gedanke je Satz. Ein Cheatsheet ist ein Spickzettel, kein Lehrbuch.
+                </li>
+                <li>
+                  <strong>Keine Personen:</strong> In die Inhalte gehören keine Namen oder Daten von Azubis oder Kollegen.
+                </li>
+                <li>Bearbeiten mit einem Texteditor (Editor, Notepad++, VS Code) – nicht mit Word. Zeichensatz UTF-8, damit Umlaute stimmen.</li>
+                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt.</li>
+                <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
+                <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>
+                <li>
+                  <strong>Aktualisieren:</strong> Ändere die Dateien und reich den ganzen Ordner noch einmal ein – unter derselben Kennung des Pakets (dem Ordnernamen). Die neue Fassung ersetzt die alte. Unter einer anderen Kennung entsteht ein zweites Lernmodul.
+                </li>
+                <li>
+                  <strong>Je Paket nur ein Weg:</strong> Bindet der Betreiber ein Paket als Ordner auf dem Server ein (zum Beispiel aus einem Git-Repository), reich unter derselben Kennung nichts im Portal ein. Sonst gilt ab dann die Einreichung, und Änderungen im Ordner kommen nicht mehr an.
+                </li>
+                <li>Zum Paket kann ein Planer für die Prüfung gehören (Datei <code>planer.md</code>). Wie sie aufgebaut ist, steht im Kapitel „Planer für einen Beruf erstellen: Aufbau der Datei“.</li>
+              </ul>
+              <h3>Einreichen und Status</h3>
+              <dl className="begriffe">
+                <Begriff wort="Sofort-Prüfung">Beim Hochladen liest das Portal das Paket ein. Findet es Fehler, nimmt es nichts an und zeigt sie mit Datei und Zeile. Behebe sie und lade neu hoch.</Begriff>
+                <Begriff wort="Eingereicht – wird geprüft">Die Einreichung liegt beim Betreiber des Portals. Solange kannst du sie zurückziehen. Für dieselbe Kennung geht in dieser Zeit keine zweite Einreichung.</Begriff>
+                <Begriff wort="Zurückgegeben">Der Betreiber möchte Änderungen. Seine Rückmeldung steht an der Einreichung. Ändere die Dateien und reiche neu ein.</Begriff>
+                <Begriff wort="Hochgeladen">Die Inhalte sind im Portal. Ein neues Lernmodul schaltest du jetzt am Beruf ein; eine neue Fassung eines vorhandenen Lernmoduls gilt sofort. Der Lernstand der Azubis bleibt erhalten.</Begriff>
+              </dl>
+              <ul className="punkte">
+                <li>Die ZIP-Datei darf den Ordner selbst enthalten oder direkt seinen Inhalt – das Portal findet das Paket an der Datei <code>themenfelder.json</code>.</li>
+                <li>Übernommen werden nur Dateien, die zu einem Inhaltspaket gehören. Was sonst in der ZIP-Datei liegt, zeigt die Einreichung unter „Nicht übernommene Dateien“.</li>
+                <li>Alle Ausbilder sehen alle Einreichungen, weil die Lernmodule für das ganze Portal gelten.</li>
+                <li>Ausbildungsbeauftragte reichen nicht selbst ein. Sie wenden sich an einen Ausbilder.</li>
+              </ul>
+              <p>
+                Für den Betreiber: Er kann Pakete weiterhin auch als Ordner auf dem Server einbinden; wie, steht in der Datei <code>lerninhalte/README.md</code> des Portals.
+              </p>
+            </>
+          ),
+        },
+        {
+          id: 'lern-dateien',
+          titel: 'Lerninhalte: Aufbau des Ordners und der Dateien',
+          gruppe: 'Dateien und Formate',
+          inhalt: (
+            <>
+              <p>
+                Ein Lernmodul ist ein Ordner mit Textdateien. Hier steht, welche Dateien hineingehören und wie eine Themen-Datei aufgebaut ist. Wie du vorgehst und einreichst, steht im Kapitel „Lerninhalte für einen Beruf erstellen“.
+              </p>
               <h3>Der Ordner</h3>
               <p>
                 Der Name des Ordners ist die Kennung des Pakets: nur Kleinbuchstaben, Ziffern und Bindestrich, zum Beispiel <code>industriekaufleute</code>.
@@ -1391,51 +1550,13 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   Im Text gehen <code>**fett**</code>, <code>`Code`</code> und Links. Mehr Auszeichnung gibt es nicht.
                 </li>
               </ul>
-              <h3>Worauf du achten solltest</h3>
-              <ul className="punkte">
-                <li>
-                  <strong>Urheberrecht:</strong> Texte, Tabellen und Bilder aus Lehrbüchern, von Webseiten oder aus alten Prüfungen darfst du nicht einfach übernehmen. Schreib die Inhalte selbst oder klär die Rechte. In <code>paket.json</code> steht, woher die Inhalte kommen.
-                </li>
-                <li>
-                  <strong>Sprache:</strong> kurze Sätze, ein Gedanke je Satz. Ein Cheatsheet ist ein Spickzettel, kein Lehrbuch.
-                </li>
-                <li>
-                  <strong>Keine Personen:</strong> In die Inhalte gehören keine Namen oder Daten von Azubis oder Kollegen.
-                </li>
-                <li>Bearbeiten mit einem Texteditor (Editor, Notepad++, VS Code) – nicht mit Word. Zeichensatz UTF-8, damit Umlaute stimmen.</li>
-                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt.</li>
-                <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
-                <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>
-                <li>
-                  <strong>Aktualisieren:</strong> Ändere die Dateien und reich den ganzen Ordner noch einmal ein – unter derselben Kennung des Pakets (dem Ordnernamen). Die neue Fassung ersetzt die alte. Unter einer anderen Kennung entsteht ein zweites Lernmodul.
-                </li>
-                <li>
-                  <strong>Je Paket nur ein Weg:</strong> Bindet der Betreiber ein Paket als Ordner auf dem Server ein (zum Beispiel aus einem Git-Repository), reich unter derselben Kennung nichts im Portal ein. Sonst gilt ab dann die Einreichung, und Änderungen im Ordner kommen nicht mehr an.
-                </li>
-                <li>Zum Paket kann ein Planer für die Prüfung gehören (Datei <code>planer.md</code>). Wie sie aufgebaut ist, steht im Kapitel „Planer für einen Beruf erstellen: Aufbau der Datei“.</li>
-              </ul>
-              <h3>Einreichen und Status</h3>
-              <dl className="begriffe">
-                <Begriff wort="Sofort-Prüfung">Beim Hochladen liest das Portal das Paket ein. Findet es Fehler, nimmt es nichts an und zeigt sie mit Datei und Zeile. Behebe sie und lade neu hoch.</Begriff>
-                <Begriff wort="Eingereicht – wird geprüft">Die Einreichung liegt beim Betreiber des Portals. Solange kannst du sie zurückziehen. Für dieselbe Kennung geht in dieser Zeit keine zweite Einreichung.</Begriff>
-                <Begriff wort="Zurückgegeben">Der Betreiber möchte Änderungen. Seine Rückmeldung steht an der Einreichung. Ändere die Dateien und reiche neu ein.</Begriff>
-                <Begriff wort="Hochgeladen">Die Inhalte sind im Portal. Ein neues Lernmodul schaltest du jetzt am Beruf ein; eine neue Fassung eines vorhandenen Lernmoduls gilt sofort. Der Lernstand der Azubis bleibt erhalten.</Begriff>
-              </dl>
-              <ul className="punkte">
-                <li>Die ZIP-Datei darf den Ordner selbst enthalten oder direkt seinen Inhalt – das Portal findet das Paket an der Datei <code>themenfelder.json</code>.</li>
-                <li>Übernommen werden nur Dateien, die zu einem Inhaltspaket gehören. Was sonst in der ZIP-Datei liegt, zeigt die Einreichung unter „Nicht übernommene Dateien“.</li>
-                <li>Alle Ausbilder sehen alle Einreichungen, weil die Lernmodule für das ganze Portal gelten.</li>
-                <li>Ausbildungsbeauftragte reichen nicht selbst ein. Sie wenden sich an einen Ausbilder.</li>
-              </ul>
-              <p>
-                Für den Betreiber: Er kann Pakete weiterhin auch als Ordner auf dem Server einbinden; wie, steht in der Datei <code>lerninhalte/README.md</code> des Portals.
-              </p>
             </>
           ),
         },
         {
           id: 'planer-datei',
           titel: 'Planer für einen Beruf erstellen: Aufbau der Datei',
+          gruppe: 'Dateien und Formate',
           inhalt: (
             <>
               <p>
@@ -1518,42 +1639,53 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         {
           id: 'einrichten',
           titel: 'Einen neuen Azubi einrichten',
+          gruppe: 'Azubis betreuen',
           inhalt: (
-            <ol className="schritte">
-              <li>
-                Einmalig unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> Betrieb (mit Bundesland für die Feiertage), Ausbildungsberuf und Berufsschule anlegen.
-              </li>
-              <li>
-                Unter <Link zu="/verwaltung/konten">Konten</Link> das Konto anlegen: Rolle „Azubi“, Microsoft-Anmeldename, Anzeigename. Die Anmeldung läuft über Microsoft; beim ersten Anmelden wird das Konto fest verknüpft. Du bist damit gleich als zuständiger Ausbilder eingetragen.
-              </li>
-              <li>
-                Unter <Link zu="/azubis">Azubis</Link> das Profil ausfüllen: Beruf, Berufsschule, Ausbildungsbeginn, Wochenstunden, Prüfungstermine. <strong>Erst mit einem Ausbildungsbeginn</strong> gibt es Berichtsheft und Plan.
-              </li>
-              <li>Bei Bedarf Ausbildungsbeauftragte – oder einen anderen Ausbilder als Vertretung – mit Zeitraum zuweisen.</li>
-              <li>Im Ausbildungsplan Bausteine einfügen oder die Einträge von Hand anlegen.</li>
-              <li>Dem Azubi das Handbuch zeigen (Reiter „Azubi“ oben auf dieser Seite) und beim ersten Bericht helfen.</li>
-            </ol>
+            <>
+              <p>Ein neuer Azubi braucht ein Konto und ein Profil. In dieser Reihenfolge fehlt am Ende nichts.</p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>
+                  Einmalig unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> Betrieb (mit Bundesland für die Feiertage), Ausbildungsberuf und Berufsschule anlegen.
+                </li>
+                <li>
+                  Unter <Link zu="/verwaltung/konten">Konten</Link> das Konto anlegen: Rolle „Azubi“, Microsoft-Anmeldename, Anzeigename. Die Anmeldung läuft über Microsoft; beim ersten Anmelden wird das Konto fest verknüpft. Du bist damit gleich als zuständiger Ausbilder eingetragen.
+                </li>
+                <li>
+                  Unter <Link zu="/azubis">Azubis</Link> das Profil ausfüllen: Beruf, Berufsschule, Ausbildungsbeginn, Wochenstunden, Prüfungstermine. <strong>Erst mit einem Ausbildungsbeginn</strong> gibt es Berichtsheft und Plan.
+                </li>
+                <li>Bei Bedarf Ausbildungsbeauftragte – oder einen anderen Ausbilder als Vertretung – mit Zeitraum zuweisen.</li>
+                <li>Im Ausbildungsplan Bausteine einfügen oder die Einträge von Hand anlegen.</li>
+                <li>Dem Azubi das Handbuch zeigen (Reiter „Azubi“ oben auf dieser Seite) und beim ersten Bericht helfen.</li>
+              </ol>
+            </>
           ),
         },
         {
           id: 'konten',
           titel: 'Konten verwalten',
+          gruppe: 'Verwaltung',
           inhalt: (
-            <ul className="punkte">
-              <li>Du legst Konten für Azubis und Ausbildungsbeauftragte an, sperrst oder löschst sie. Von den Azubi-Konten siehst du nur die deiner Azubis (und die ohne Ausbilder). Konten von Ausbildern verwaltet der Super-Admin.</li>
-              <li>
-                <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf das Berichtsheft als PDF herunterladen.
-              </li>
-              <li>„Verknüpfung lösen“ brauchst du nur, wenn die IT das Microsoft-Konto einer Person neu angelegt hat. Es gehen keine Daten verloren.</li>
-              <li>Auf der Seite selbst erklärt „Was bewirkt was?“ jede Rolle und jede Funktion mit ihren Folgen.</li>
-            </ul>
+            <>
+              <p>Unter „Konten“ legst du fest, wer sich am Portal anmelden darf und in welcher Rolle.</p>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>Du legst Konten für Azubis und Ausbildungsbeauftragte an, sperrst oder löschst sie. Von den Azubi-Konten siehst du nur die deiner Azubis (und die ohne Ausbilder). Konten von Ausbildern verwaltet der Super-Admin.</li>
+                <li>
+                  <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf das Berichtsheft als PDF herunterladen.
+                </li>
+                <li>„Verknüpfung lösen“ brauchst du nur, wenn die IT das Microsoft-Konto einer Person neu angelegt hat. Es gehen keine Daten verloren.</li>
+                <li>Auf der Seite selbst erklärt „Was bewirkt was?“ jede Rolle und jede Funktion mit ihren Folgen.</li>
+              </ul>
+            </>
           ),
         },
-      ]
+      ] satisfies Kapitel[])
     : []),
   {
     id: 'azubi-sicht',
     titel: 'Was der Azubi sieht',
+    gruppe: 'Erste Schritte',
     inhalt: (
       <p>Azubis sehen nur ihre eigenen Daten. Ihre Startseite ist der Ausbildungsplan; im Berichtsheft schreiben und reichen sie ein. Was genau sie lesen, steht im Handbuch für Azubis{rolle === 'ausbilder' || rolle === 'beauftragter' ? ' (Reiter oben)' : ''}.</p>
     ),
@@ -1572,6 +1704,7 @@ const ADMIN: Kapitel[] = [
   {
     id: 'aufgabe',
     titel: 'Deine Aufgaben als Super-Admin',
+    gruppe: 'Erste Schritte',
     inhalt: (
       <p>
         Du verwaltest Konten, siehst das Protokoll, bearbeitest <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link> und stellst das Logo ein. Ausbildungspläne, Berichte und Stammdaten siehst du nicht. Fehlermeldungen kommen von allen Nutzern über „Fehler melden“; die Zahl am Menüpunkt zeigt die
@@ -1581,24 +1714,30 @@ const ADMIN: Kapitel[] = [
   },
   {
     id: 'konten',
-    titel: 'Konten',
+    titel: 'Konten verwalten',
+    gruppe: 'Verwaltung',
     inhalt: (
-      <ul className="punkte">
-        <li>
-          Unter <Link zu="/verwaltung/konten">Konten</Link> legst du Konten an, sperrst oder löschst sie – auch die der Ausbilder.
-        </li>
-        <li>
-          Ausbilder sehen nur ihre eigenen Azubis, Azubis ohne Ausbilder und Vertretungen. Mit dem Haken <strong>„sieht alle Azubis“</strong> an einem Ausbilder-Konto gibst du die Gesamtsicht über alle Azubis des Betriebs – gedacht für die Ausbildungsleitung. Legst du selbst ein
-          Azubi-Konto an, hat der Azubi zunächst keinen Ausbilder; alle Ausbilder sehen ihn, bis einer ihn übernimmt.
-        </li>
-        <li>Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto an. Beim Anlegen genügt der Microsoft-Anmeldename.</li>
-        <li>Nur der Super-Admin meldet sich lokal mit Passwort an (mindestens 14 Zeichen) – unter der Adresse des Portals mit <code>/super</code> am Ende.</li>
-      </ul>
+      <>
+        <p>Du verwaltest alle Konten des Portals – auch die der Ausbilder.</p>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            Unter <Link zu="/verwaltung/konten">Konten</Link> legst du Konten an, sperrst oder löschst sie – auch die der Ausbilder.
+          </li>
+          <li>
+            Ausbilder sehen nur ihre eigenen Azubis, Azubis ohne Ausbilder und Vertretungen. Mit dem Haken <strong>„sieht alle Azubis“</strong> an einem Ausbilder-Konto gibst du die Gesamtsicht über alle Azubis des Betriebs – gedacht für die Ausbildungsleitung. Legst du selbst ein
+            Azubi-Konto an, hat der Azubi zunächst keinen Ausbilder; alle Ausbilder sehen ihn, bis einer ihn übernimmt.
+          </li>
+          <li>Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto an. Beim Anlegen genügt der Microsoft-Anmeldename.</li>
+          <li>Nur der Super-Admin meldet sich lokal mit Passwort an (mindestens 14 Zeichen) – unter der Adresse des Portals mit <code>/super</code> am Ende.</li>
+        </ul>
+      </>
     ),
   },
   {
     id: 'protokoll',
-    titel: 'Protokoll',
+    titel: 'Das Protokoll lesen',
+    gruppe: 'Verwaltung',
     inhalt: (
       <p>
         Das <Link zu="/verwaltung/protokoll">Protokoll</Link> zeigt Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen dort nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Nur du kannst das Protokoll einsehen.
@@ -1608,17 +1747,20 @@ const ADMIN: Kapitel[] = [
   {
     id: 'lernpruefung',
     titel: 'Lerninhalte prüfen und hochladen',
+    gruppe: 'Verwaltung',
     inhalt: (
       <>
         <p>
           Ausbilder reichen Lerninhalte für das Lernmodul als ZIP-Datei ein. Unter <Link zu="/verwaltung/lerninhalte">Lerninhalte</Link> (am Handy unter „Mehr“) stehen die Einreichungen; eine Zahl am Menüpunkt zeigt, wie viele warten.
         </p>
+        <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Was das Portal schon geprüft hat">Den Aufbau: Jede Einreichung wurde mit dem Einleser des Lernmoduls gelesen. Pakete mit Fehlern kommen gar nicht erst bei dir an. Hinweise (zum Beispiel ein Unterthema ohne Inhalt) stehen an der Einreichung.</Begriff>
           <Begriff wort="Was du prüfst">Den Inhalt: Stimmt er fachlich, ist er eigener Text (Urheberrecht), stehen keine Namen oder Daten realer Personen darin? Mit „ZIP-Datei herunterladen“ siehst du dir die Dateien an.</Begriff>
           <Begriff wort="Einreichung zurückgeben …">Mit Rückmeldung, was zu ändern ist. Der Ausbilder liest sie und reicht neu ein.</Begriff>
           <Begriff wort="Lerninhalte hochladen …">Übernimmt das Paket ins Portal, auf Wunsch mit einem Kommentar. Gibt es schon ein Lernmodul mit dieser Kennung, wird es ersetzt und gilt sofort für alle Azubis, deren Beruf es nutzt. Ihr Lernstand bleibt erhalten.</Begriff>
         </dl>
+        <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Ist die Benachrichtigung in Teams eingerichtet (siehe „Fehlermeldungen“), erscheint dort ein Hinweis, sobald jemand Lerninhalte einreicht.</li>
           <li>Ein neues Lernmodul sehen Azubis erst, wenn ein Ausbilder es in den Stammdaten an einem Beruf einschaltet.</li>
@@ -1633,22 +1775,28 @@ const ADMIN: Kapitel[] = [
   },
   {
     id: 'meldungen',
-    titel: 'Fehlermeldungen',
+    titel: 'Fehlermeldungen bearbeiten',
+    gruppe: 'Verwaltung',
     inhalt: (
-      <ul className="punkte">
-        <li>
-          Jede angemeldete Person kann über „Fehler melden“ ein Problem beschreiben, auf Wunsch mit Bildschirmfoto. Die Meldungen stehen unter <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link>; die Zahl am Menüpunkt zeigt die offenen.
-        </li>
-        <li>Ein Bildschirmfoto erscheint erst nach einem Klick. Es kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</li>
-        <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig.</li>
-        <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
-        <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
-      </ul>
+      <>
+        <p>Über „Fehler melden“ erreichen dich Hinweise der Nutzer, wenn im Portal etwas nicht funktioniert.</p>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            Jede angemeldete Person kann über „Fehler melden“ ein Problem beschreiben, auf Wunsch mit Bildschirmfoto. Die Meldungen stehen unter <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link>; die Zahl am Menüpunkt zeigt die offenen.
+          </li>
+          <li>Ein Bildschirmfoto erscheint erst nach einem Klick. Es kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</li>
+          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig.</li>
+          <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
+          <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
+        </ul>
+      </>
     ),
   },
   {
     id: 'logo',
-    titel: 'Logo',
+    titel: 'Das Logo des Betriebs hinterlegen',
+    gruppe: 'Verwaltung',
     inhalt: (
       <p>
         Unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> hinterlegst du das Logo des Betriebs (PNG, JPEG oder WebP, höchstens 150 KB) – eines für die helle und, wenn du möchtest, eines für die dunkle Darstellung. Es steht in der Kopfzeile und auf der Anmeldeseite; „Ausbildungsportal“ bleibt klein daneben stehen.
@@ -1660,12 +1808,57 @@ const ADMIN: Kapitel[] = [
   BEDIENUNG,
 ];
 
+const kapitelVon = (r: Rolle): Kapitel[] => {
+  const alle = r === 'azubi' ? AZUBI : r === 'admin' ? ADMIN : BETREUUNG(r);
+  // nach Gruppen sortiert; innerhalb einer Gruppe in der Reihenfolge, in der die Kapitel oben stehen
+  return GRUPPEN.flatMap((g) => alle.filter((k) => k.gruppe === g));
+};
+
+/** true ab der Breite, bei der das Inhaltsverzeichnis links neben dem Text steht */
+function useBreit(): boolean {
+  const [breit, setBreit] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const m = window.matchMedia('(min-width: 1024px)');
+    const hoere = () => setBreit(m.matches);
+    m.addEventListener('change', hoere);
+    return () => m.removeEventListener('change', hoere);
+  }, []);
+  return breit;
+}
+
 export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () => void }) {
   // Ausbilder und Beauftragte können auch das Handbuch der Azubis lesen, um ihnen zu helfen
   const ansichten: Rolle[] = rolle === 'ausbilder' ? ['ausbilder', 'beauftragter', 'azubi'] : rolle === 'beauftragter' ? ['beauftragter', 'azubi'] : [rolle];
   const [ansicht, setAnsicht] = useState<Rolle>(rolle);
-  const kapitel = ansicht === 'azubi' ? AZUBI : ansicht === 'admin' ? ADMIN : BETREUUNG(ansicht);
-  const springe = (id: string) => document.getElementById(`kapitel-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const [suche, setSuche] = useState('');
+  const [aktiv, setAktiv] = useState<string | null>(null);
+  const [inhaltOffen, setInhaltOffen] = useState(false);
+  const breit = useBreit();
+  const kapitel = useMemo(() => kapitelVon(ansicht), [ansicht]);
+  // Text jedes Kapitels in Kleinbuchstaben – für die Suche; wird gelesen, solange alle Kapitel angezeigt sind
+  const texte = useRef(new Map<string, string>());
+
+  const wort = suche.trim().toLowerCase();
+  const gefunden = wort ? kapitel.filter((k) => k.titel.toLowerCase().includes(wort) || (texte.current.get(`${ansicht}:${k.id}`) ?? '').includes(wort)) : kapitel;
+  const nummer = (k: Kapitel) => kapitel.indexOf(k) + 1;
+
+  useEffect(() => {
+    if (wort) return;
+    for (const k of kapitel) {
+      const el = document.getElementById(`kapitel-${k.id}`);
+      if (el) texte.current.set(`${ansicht}:${k.id}`, (el.textContent ?? '').toLowerCase());
+    }
+  }, [ansicht, kapitel, wort]);
+
+  const springe = (id: string) => {
+    setInhaltOffen(false);
+    // erst nach dem Einklappen springen, sonst verrutscht das Ziel
+    window.requestAnimationFrame(() => {
+      const el = document.getElementById(`kapitel-${id}`);
+      el?.scrollIntoView({ block: 'start' });
+      el?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
+    });
+  };
 
   // Verweise aus dem Portal (HandbuchLink) öffnen das Handbuch gleich beim richtigen Kapitel
   useEffect(() => {
@@ -1680,7 +1873,7 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
         return;
       }
       // steht das Kapitel nur im Handbuch einer anderen Rolle, die man lesen darf, dorthin wechseln
-      const andere = ansichten.find((r) => r !== ansicht && (r === 'azubi' ? AZUBI : r === 'admin' ? ADMIN : BETREUUNG(r)).some((k) => k.id === id));
+      const andere = ansichten.find((r) => r !== ansicht && kapitelVon(r).some((k) => k.id === id));
       if (andere) setAnsicht(andere);
     };
     zeige();
@@ -1688,52 +1881,133 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
     return () => window.removeEventListener('hashchange', zeige);
   }, [ansicht]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // im Inhaltsverzeichnis markieren, welches Kapitel gerade oben im Fenster steht
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return;
+    const sichtbar = new Set<string>();
+    const beobachter = new IntersectionObserver(
+      (eintraege) => {
+        for (const e of eintraege) {
+          const id = e.target.id.replace('kapitel-', '');
+          if (e.isIntersecting) sichtbar.add(id);
+          else sichtbar.delete(id);
+        }
+        setAktiv(gefunden.find((k) => sichtbar.has(k.id))?.id ?? null);
+      },
+      { rootMargin: '-80px 0px -55% 0px' },
+    );
+    for (const k of gefunden) {
+      const el = document.getElementById(`kapitel-${k.id}`);
+      if (el) beobachter.observe(el);
+    }
+    return () => beobachter.disconnect();
+  }, [ansicht, wort]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // das markierte Kapitel im Verzeichnis sichtbar halten – nur das Verzeichnis rollt, nicht die Seite
+  useEffect(() => {
+    const nav = document.querySelector<HTMLElement>('nav.handbuch-inhalt');
+    const knopf = nav?.querySelector<HTMLElement>('button.aktiv');
+    if (!nav || !knopf || nav.scrollHeight <= nav.clientHeight) return;
+    const n = nav.getBoundingClientRect();
+    const k = knopf.getBoundingClientRect();
+    if (k.top < n.top + 8) nav.scrollTop -= n.top + 8 - k.top;
+    else if (k.bottom > n.bottom - 8) nav.scrollTop += k.bottom - (n.bottom - 8);
+  }, [aktiv]);
+
+  const verzeichnis = (
+    <>
+      <label className="handbuch-suche">
+        Im Handbuch suchen
+        <input type="search" value={suche} placeholder="z. B. Urlaub" onChange={(e) => setSuche(e.target.value)} />
+      </label>
+      <p className="leise klein" role="status">
+        {wort ? (gefunden.length === 0 ? 'Kein Kapitel gefunden. Versuch ein anderes Wort.' : `${gefunden.length} von ${kapitel.length} Kapiteln enthalten „${suche.trim()}“.`) : `${kapitel.length} Kapitel`}
+      </p>
+      {GRUPPEN.filter((g) => gefunden.some((k) => k.gruppe === g)).map((g) => (
+        <div key={g} className="handbuch-gruppe">
+          <h3>{g}</h3>
+          <ul>
+            {gefunden
+              .filter((k) => k.gruppe === g)
+              .map((k) => (
+                <li key={k.id}>
+                  <button type="button" className={aktiv === k.id ? 'aktiv' : undefined} aria-current={aktiv === k.id ? 'location' : undefined} onClick={() => springe(k.id)}>
+                    <span className="handbuch-nr">{nummer(k)}.</span> {k.titel}
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))}
+      <div className="aktionen links">
+        {ansicht === rolle && (
+          <button type="button" className="knopf" onClick={onFuehrung}>
+            Führung starten
+          </button>
+        )}
+        <button type="button" className="knopf schlicht" onClick={() => window.print()}>
+          Handbuch drucken
+        </button>
+      </div>
+      {ansicht === rolle && <p className="leise klein">Die Führung zeigt dir die wichtigsten Stellen direkt im Portal. Sie dauert etwa eine Minute.</p>}
+    </>
+  );
+
   return (
     <>
       <h1>Handbuch</h1>
       <p className="leise">
-        {ansicht === 'azubi' ? 'Hier steht, wie das Portal funktioniert – kurz und der Reihe nach.' : `Anleitung für die Rolle ${ROLLE_TEXT[ansicht]}.`}
+        {ansicht === 'azubi' ? 'Hier steht, wie das Portal funktioniert – kurz und der Reihe nach.' : `Anleitung für die Rolle ${ROLLE_TEXT[ansicht]}.`} Jedes Kapitel ist gleich aufgebaut: erst wozu, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.
       </p>
       {ansichten.length > 1 && (
         <div className="filter nicht-drucken" role="group" aria-label="Handbuch für">
           {ansichten.map((r) => (
-            <button key={r} type="button" className="knopf schlicht" aria-pressed={ansicht === r} onClick={() => setAnsicht(r)}>
+            <button
+              key={r}
+              type="button"
+              className="knopf schlicht"
+              aria-pressed={ansicht === r}
+              onClick={() => {
+                // eine Sprungmarke aus einem Verweis gilt für das alte Handbuch – sonst spränge die Ansicht gleich wieder zurück
+                if (window.location.hash) window.history.replaceState(window.history.state, '', window.location.pathname);
+                setAnsicht(r);
+                setSuche('');
+              }}
+            >
               {ROLLE_TEXT[r]}
             </button>
           ))}
         </div>
       )}
-      <nav aria-label="Inhalt des Handbuchs" className="karte nicht-drucken">
-        <h2>Inhalt</h2>
-        <ol className="inhalt">
-          {kapitel.map((k) => (
-            <li key={k.id}>
-              <button type="button" className="link-knopf" onClick={() => springe(k.id)}>
-                {k.titel}
-              </button>
-            </li>
+      <div className="handbuch">
+        {breit ? (
+          <nav aria-label="Inhalt des Handbuchs" className="karte handbuch-inhalt nicht-drucken">
+            <h2>Inhalt</h2>
+            {verzeichnis}
+          </nav>
+        ) : (
+          <details className="karte handbuch-inhalt nicht-drucken" open={inhaltOffen || wort !== ''} onToggle={(e) => setInhaltOffen(e.currentTarget.open)}>
+            <summary>Inhalt und Suche</summary>
+            <nav aria-label="Inhalt des Handbuchs">{verzeichnis}</nav>
+          </details>
+        )}
+        <div className="handbuch-text">
+          {gefunden.map((k) => (
+            <section className="karte kapitel" id={`kapitel-${k.id}`} key={`${ansicht}-${k.id}`}>
+              <p className="kapitel-gruppe">{k.gruppe}</p>
+              <h2 tabIndex={-1}>
+                {nummer(k)}. {k.titel}
+              </h2>
+              {k.inhalt}
+            </section>
           ))}
-        </ol>
-        <div className="aktionen links">
-          {ansicht === rolle && (
-            <button type="button" className="knopf" onClick={onFuehrung}>
-              Führung starten
-            </button>
+          {gefunden.length === 0 && (
+            <p className="karte leise">
+              Zu „{suche.trim()}“ steht nichts im Handbuch. Versuch ein anderes Wort – oder frag {ansicht === 'azubi' ? 'deinen Ausbilder' : 'den Betreiber des Portals'}.
+            </p>
           )}
-          <button type="button" className="knopf schlicht" onClick={() => window.print()}>
-            Handbuch drucken
-          </button>
         </div>
-        {ansicht === rolle && <p className="leise klein">Die Führung zeigt dir die wichtigsten Stellen direkt im Portal. Sie dauert etwa eine Minute und lässt sich jederzeit abbrechen und wiederholen.</p>}
-      </nav>
-      {kapitel.map((k, i) => (
-        <section className="karte kapitel" id={`kapitel-${k.id}`} key={`${ansicht}-${k.id}`}>
-          <h2>
-            {i + 1}. {k.titel}
-          </h2>
-          {k.inhalt}
-        </section>
-      ))}
+      </div>
     </>
   );
 }

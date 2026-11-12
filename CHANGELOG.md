@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.49.0] – 2026-11-12
+
+### Geändert
+
+- **Handbuch mit Inhaltsverzeichnis am linken Rand:** Am PC steht das Inhaltsverzeichnis jetzt links neben dem Text und bleibt beim Rollen sichtbar. Es zeigt, in welchem Kapitel du gerade liest. Auf Tablet und Handy klappst du es über dem Text auf.
+- **Kapitel in Gruppen:** Statt einer langen Liste sind die Kapitel geordnet – zum Beispiel „Erste Schritte“, „Ausbildungsplan“, „Berichtsheft“, „Urlaub“, „Lernen und Prüfung“, „Konto und Nachrichten“, „Hilfe“.
+- **Jedes Kapitel gleich aufgebaut:** erst ein, zwei Sätze, wozu etwas da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“. Einige Titel sagen jetzt deutlicher, worum es geht.
+- **Lange Kapitel geteilt:** Wie die Dateien eines Lernmoduls aufgebaut sind, steht jetzt in einem eigenen Kapitel unter „Dateien und Formate“.
+
+### Neu
+
+- **Suche im Handbuch:** Das Suchfeld über dem Inhaltsverzeichnis zeigt nur die Kapitel, in denen dein Wort vorkommt.
+
 ## [0.48.0] – 2026-11-12
 
 ### Neu

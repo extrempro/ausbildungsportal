@@ -41,7 +41,7 @@ Das Wichtigste in Kürze:
 
 ### Handbuch
 
-Jede neue Funktion und jede Änderung wird im Handbuch beschrieben – für jede Rolle, die sie sieht – und an der Stelle im Portal verlinkt. Fällt eine Funktion weg, fällt auch ihr Kapitel weg.
+Jede neue Funktion und jede Änderung wird im Handbuch beschrieben – für jede Rolle, die sie sieht – und an der Stelle im Portal verlinkt. Fällt eine Funktion weg, fällt auch ihr Kapitel weg. Wie ein Kapitel aufgebaut ist (Gruppe, Einleitung, „So geht's“, „Begriffe“, „Gut zu wissen“), steht in [docs/handbuch-regeln.md](docs/handbuch-regeln.md); ein Test prüft es.
 
 ### Benachrichtigungen
 

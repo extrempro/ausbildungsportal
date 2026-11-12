@@ -8367,3 +8367,121 @@ tr.planer-summe td {
     max-width: none;
   }
 }
+
+/* ---------- Handbuch: Inhaltsverzeichnis links, Kapitel rechts (docs/handbuch-regeln.md) ---------- */
+.handbuch {
+  display: grid;
+  gap: 0 24px;
+}
+
+.handbuch-text {
+  min-width: 0;
+}
+
+.handbuch-suche {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.handbuch-suche input {
+  width: 100%;
+}
+
+.handbuch-gruppe h3 {
+  margin: 16px 0 4px;
+  padding-top: 12px;
+  color: var(--c-muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.handbuch-gruppe ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.handbuch-gruppe button {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.handbuch-gruppe button:hover {
+  background: var(--c-chip);
+}
+
+.handbuch-gruppe button.aktiv {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.handbuch-nr {
+  flex: none;
+  min-width: 22px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.handbuch-gruppe button.aktiv .handbuch-nr {
+  color: inherit;
+}
+
+.handbuch-inhalt .aktionen {
+  margin-top: 16px;
+}
+
+.kapitel-gruppe {
+  margin: 0 0 4px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.kapitel h2 {
+  margin-top: 0;
+}
+
+.kapitel h2:focus {
+  outline: none;
+}
+
+@media (min-width: 1024px) {
+  .handbuch {
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  nav.handbuch-inhalt {
+    position: sticky;
+    top: calc(var(--kopf, 60px) + 16px);
+    max-height: calc(100vh - var(--kopf, 60px) - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  nav.handbuch-inhalt h2 {
+    margin-top: 0;
+  }
+}
+
+@media print {
+  .handbuch {
+    display: block;
+  }
+}
