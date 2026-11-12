@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.44.2] – 2026-11-12
+
+### Neu
+
+- **Für den Betrieb mit Docker:** Adresse und Port, unter denen das Portal auf dem Server erreichbar ist, lassen sich in der `.env` einstellen – `BIND_ADRESSE` und `BIND_PORT`. Ohne Angabe bleibt es bei `127.0.0.1:3000`. Eine eigene `docker-compose.override.yml` ist dafür nicht mehr nötig; wer schon eine hat, kann sie behalten. Für Nutzer des Portals ändert sich nichts.
+
 ## [0.44.1] – 2026-11-12
 
 ### Geändert

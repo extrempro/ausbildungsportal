@@ -13,18 +13,19 @@ services:
     container_name: ausbildungsportal
     restart: unless-stopped
     ports:
-      # Nur auf diesem Rechner erreichbar – gedacht für einen Reverse Proxy mit HTTPS davor.
-      # Eigenen Port oder Freigabe im Netz nicht hier ändern, sondern in docker-compose.override.yml
-      # (Vorlage: docker-compose.override.example.yml).
-      - "127.0.0.1:3000:3000"
-    # Einstellungen aus .env (Vorlage: .env.example): APP_URL, ENTRA_*, TRUST_PROXY, FEHLER_WEBHOOK_*, TEAMS_CHAT_WEBHOOK_URL, SMTP_*, beim ersten Start ADMIN_*.
+      # Adresse und Port auf dem Server kommen aus der .env: BIND_ADRESSE und BIND_PORT.
+      # Ohne Angabe: 127.0.0.1:3000 – nur auf diesem Rechner erreichbar, gedacht für einen Reverse Proxy mit HTTPS davor.
+      # Rechts steht der Port im Container; er ist immer 3000.
+      # Für mehr als eine Zuordnung oder ganz ohne Ports: docker-compose.override.yml (Vorlage: docker-compose.override.example.yml).
+      - "${BIND_ADRESSE:-127.0.0.1}:${BIND_PORT:-3000}:3000"
+    # Einstellungen aus .env (Vorlage: .env.example): BIND_ADRESSE, BIND_PORT (siehe oben), APP_URL, ENTRA_*, TRUST_PROXY, FEHLER_WEBHOOK_*, TEAMS_CHAT_WEBHOOK_URL, SMTP_*, beim ersten Start ADMIN_*.
     # Fehlt die Datei, startet die App mit Standardwerten; dann kann sich nur der Super-Admin anmelden.
     env_file:
       - path: .env
         required: false
     environment:
       TZ: Europe/Berlin
-      # im Container fest – nicht über .env ändern (Port außen siehe oben bzw. Override-Datei)
+      # im Container fest – nicht über .env ändern (Adresse und Port außen: BIND_ADRESSE und BIND_PORT, siehe oben)
       PORT: "3000"
       HOST: 0.0.0.0
       DATA_DIR: /app/data

@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.44.1.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.44.2.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -28,8 +28,9 @@ docker compose logs app   # beim ersten Start steht hier das Startpasswort des S
 ```
 
 - Die App lauscht danach auf `127.0.0.1:3000` – nur auf dem Server selbst. Davor gehört ein **Reverse Proxy mit HTTPS**; `APP_URL` in der `.env` ist die Adresse dieses Proxys, und `TRUST_PROXY=true` gehört dazu.
-- Einen anderen Port oder eine Freigabe im Netz stellt man in einer eigenen `docker-compose.override.yml` ein (Vorlage: `docker-compose.override.example.yml`), nicht in `docker-compose.yml`. Übernommen wird sie mit `docker compose up -d` (nicht mit `restart`). Kontrolle: `docker compose config` zeigt, was gilt, `docker compose ps` den tatsächlich offenen Port – im Log der App steht immer Port 3000, das ist der Port im Container.
-- **`APP_URL` muss immer die Adresse sein, die im Browser steht.** Wer in der Override-Datei Port oder IP ändert und die App direkt aufruft, trägt genau diese Adresse ein, z. B. `APP_URL=http://100.64.0.10:8989`. Sonst lädt die Seite, aber Anmelden und Speichern werden abgelehnt.
+- **Andere Adresse oder anderer Port:** in der `.env` `BIND_ADRESSE` und `BIND_PORT` eintragen, z. B. `BIND_ADRESSE=100.64.0.10` und `BIND_PORT=8989`. Ohne Angabe gilt `127.0.0.1:3000`. Übernommen wird das mit `docker compose up -d` (nicht mit `restart`). Kontrolle: `docker compose config` zeigt, was gilt, `docker compose ps` den tatsächlich offenen Port – im Log der App steht immer Port 3000, das ist der Port im Container. `BIND_ADRESSE=0.0.0.0` öffnet die App in allen Netzen des Servers; das ist nur sinnvoll, wenn ein Reverse Proxy auf einem anderen Rechner oder eine Firewall davorsteht.
+- Für mehr – mehrere Zuordnungen, gar keine Ports, eigene Netze – gibt es weiterhin eine eigene `docker-compose.override.yml` (Vorlage: `docker-compose.override.example.yml`).
+- **`APP_URL` muss immer die Adresse sein, die im Browser steht.** Wer Adresse oder Port ändert und die App direkt aufruft, trägt genau diese Adresse ein, z. B. `APP_URL=http://100.64.0.10:8989`. Sonst lädt die Seite, aber Anmelden und Speichern werden abgelehnt.
 - Ohne HTTPS funktioniert nur die lokale Anmeldung des Super-Admins. Microsoft nimmt als Umleitungs-URI nur `https://` an (Ausnahme `http://localhost`) – für die Microsoft-Anmeldung braucht es also den Reverse Proxy mit Zertifikat.
 - Datenbank und Sicherungen liegen im Ordner `./data` neben der Compose-Datei und bleiben bei Updates und bei `docker compose down` erhalten.
 - Die App läuft im Container als Benutzer mit der UID 1000, nicht als root. Die Rechte am Ordner `./data` richtet der Container beim Start selbst; nur wenn das nicht geht (z. B. Netzlaufwerk), von Hand: `sudo chown -R 1000:1000 ./data`.
@@ -74,7 +75,8 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | Variable | Bedeutung |
 | --- | --- |
 | `APP_URL` | Adresse, unter der die Nutzer die App im Browser sehen. Bestimmt die Umleitungs-URI für Entra (`<APP_URL>/api/auth/entra/callback`) und ob Cookies nur über HTTPS gehen |
-| `PORT`, `HOST` | worauf der Server lauscht (Standard `3000`, `0.0.0.0`); mit Docker fest, den Port außen bestimmt die Compose-Datei |
+| `BIND_ADRESSE`, `BIND_PORT` | nur mit Docker: Adresse und Port, unter denen die App auf dem Server erreichbar ist (Standard `127.0.0.1` und `3000`) |
+| `PORT`, `HOST` | nur ohne Docker: worauf der Server lauscht (Standard `3000`, `0.0.0.0`); mit Docker fest |
 | `DATA_DIR` | Ordner für Datenbank und Sicherungen (Standard `./data`); mit Docker fest `/app/data` |
 | `CONTENT_DIR` | Ordner mit gepflegten Inhalten wie den Schulferien (Standard `./content`); mit Docker fest `/app/content` |
 | `LERN_DIR` | Ordner mit Lerninhalten für das Lernmodul, ein Unterordner je Inhaltspaket (Standard `./lerninhalte`); mit Docker fest `/app/lerninhalte` |
