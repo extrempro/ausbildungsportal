@@ -107,7 +107,7 @@ export function LernThema({ id }: { id: string }) {
     [id, nachSpeichern],
   );
 
-  // Sprung aus dem Kompendium oder von einer Vertiefung (#u-… / #z-…): hinrollen und den Inhalt aufklappen – einmal, sobald die Seite steht
+  // Sprung aus dem Kompendium oder von einer Vertiefung (#u-… / #z-…): hinrollen und – beim Zusatzwissen – den Inhalt aufklappen; einmal, sobald die Seite steht
   const gesprungen = useRef('');
   useEffect(() => {
     if (!daten || daten.thema.id !== id || gesprungen.current === id) return;
@@ -115,7 +115,7 @@ export function LernThema({ id }: { id: string }) {
     const marke = decodeURIComponent(window.location.hash.slice(1));
     const ziel = /^[uz]-/.test(marke) ? document.getElementById(marke) : null;
     if (!ziel) return;
-    ziel.querySelector<HTMLDetailsElement>('details.lern-cheatsheet, details.lern-zusatz-inhalt')?.setAttribute('open', '');
+    ziel.querySelector<HTMLDetailsElement>('details.lern-zusatz-inhalt')?.setAttribute('open', '');
     ziel.scrollIntoView();
   }, [daten, id]);
 
@@ -307,8 +307,8 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
           Stell bei jedem Unterthema ein, wie sicher du bist. Bei „In Arbeit“ notierst du, was noch hakt. <HandbuchLink kapitel="lernen">So nutzt du die Ampel</HandbuchLink>
         </p>
       )}
-      {t.unterthemen.map((u) => (
-        <UnterthemaKarte key={`${t.id}.${u.id}`} feld={t.id} u={u} aendere={(p) => aendere(u.id, p)} />
+      {t.unterthemen.map((u, i) => (
+        <UnterthemaKarte key={`${t.id}.${u.id}`} feld={t.id} u={u} nr={i + 1} von={t.unterthemen.length} aendere={(p) => aendere(u.id, p)} />
       ))}
 
       {t.fehler.length > 0 && (
@@ -347,7 +347,7 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
   );
 }
 
-function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; aendere: (p: Aenderung) => Promise<void> }) {
+function UnterthemaKarte({ feld, u, nr, von, aendere }: { feld: string; u: Unterthema; /** Stelle im Themenfeld, ab 1 */ nr: number; von: number; aendere: (p: Aenderung) => Promise<void> }) {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
   const { basis, lesen } = useLern();
@@ -370,6 +370,12 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
     <section className={`karte lern-unterthema ${lesen ? 'lesen' : u.status}`} id={`u-${u.id}`}>
       <div className="lern-unterthema-kopf">
         <h3>
+          <span className="lern-nr" aria-hidden="true">
+            {nr}
+          </span>
+          <span className="nur-vorleser">
+            Unterthema {nr} von {von}:{' '}
+          </span>
           {u.titel}
           {!u.hatInhalt && <span className="pille grau">Cheatsheet folgt</span>}
           {u.vertiefung.length > 0 && <span className="pille blau">Vertiefung</span>}
@@ -430,10 +436,10 @@ function UnterthemaKarte({ feld, u, aendere }: { feld: string; u: Unterthema; ae
       )}
 
       {u.hatInhalt ? (
-        <details className="klapp lern-cheatsheet">
-          <summary>Cheatsheet</summary>
+        // das Cheatsheet steht offen da – man liest ein Themenfeld von oben nach unten, ohne jedes Unterthema aufzuklappen
+        <div className="lern-cheatsheet">
           <Inhalt u={u} />
-        </details>
+        </div>
       ) : (
         <p className="leise">Zu diesem Unterthema gibt es noch kein Cheatsheet.{lesen ? '' : ' Du kannst dir trotzdem eine Notiz machen.'}</p>
       )}

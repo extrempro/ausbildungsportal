@@ -7832,3 +7832,48 @@ fieldset.benach-bereich p {
     color: #333;
   }
 }
+
+/* ---------- Lernmodul: Unterthemen klar voneinander getrennt, Cheatsheet offen ---------- */
+.lern-unterthema {
+  margin-bottom: 32px;
+}
+
+/* der Kopf als eigenes Band: hier beginnt ein neues Unterthema */
+.lern-unterthema-kopf {
+  margin: -8px -8px 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--c-chip);
+  border: 1px solid var(--c-border);
+}
+
+.lern-nr {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.lern-cheatsheet {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
+@media print {
+  .lern-unterthema {
+    break-inside: auto;
+  }
+
+  .lern-unterthema-kopf {
+    break-after: avoid;
+  }
+}

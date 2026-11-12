@@ -538,7 +538,7 @@ const AZUBI: Kapitel[] = [
         </dl>
         <ol className="schritte">
           <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
-          <li>Beim Unterthema „Cheatsheet“ aufklappen und lesen.</li>
+          <li>Das Cheatsheet des Unterthemas lesen. Es steht gleich offen da. Jedes Unterthema hat einen eigenen Kasten mit Nummer und Titel im farbigen Kopf – so siehst du, wo eins aufhört und das nächste anfängt.</li>
           <li>Die Ampel einstellen. Das Portal fragt nach, ob du wirklich umstellen willst – so ändert ein versehentlicher Klick nichts. Nach „Auf … stellen“ ist der neue Stand gespeichert. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
           <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
         </ol>
@@ -635,7 +635,7 @@ const AZUBI: Kapitel[] = [
         <ol className="schritte">
           <li>Bei „Suchen“ ein Wort eintippen, zum Beispiel „DHCP“. Die Liste zeigt sofort nur noch passende Einträge. Die Fundstellen sind gelb markiert.</li>
           <li>Wenn du willst: ein Themenfeld wählen oder nur eine Art anzeigen, zum Beispiel „Befehle“.</li>
-          <li>Unter jedem Eintrag steht „Zum Cheatsheet“ (beim Zusatzwissen „Zum Zusatzwissen“). Damit springst du zur passenden Stelle; der Inhalt ist dann schon aufgeklappt.</li>
+          <li>Unter jedem Eintrag steht „Zum Cheatsheet“ (beim Zusatzwissen „Zum Zusatzwissen“). Damit springst du zur passenden Stelle.</li>
         </ol>
         <ul className="punkte">
           <li>Mehrere Suchwörter: Es erscheinen nur Einträge, in denen alle vorkommen.</li>
@@ -896,7 +896,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         </p>
         <dl className="begriffe">
           <Begriff wort="Themenfelder">Die Gliederung des Stoffs. Ein Klick öffnet das Themenfeld mit seinen Unterthemen.</Begriff>
-          <Begriff wort="Cheatsheet">Klappt an jedem Unterthema auf: Begriffe, Tabellen, Befehle, Merksatz, Prüfungsfrage.</Begriff>
+          <Begriff wort="Cheatsheet">Steht an jedem Unterthema offen da: Begriffe, Tabellen, Befehle, Merksatz, Prüfungsfrage. Die Unterthemen sind nummeriert und haben je einen eigenen Kasten.</Begriff>
           <Begriff wort="Zusatzwissen">Vertiefungen am Ende eines Themenfelds.</Begriff>
           <Begriff wort="Kompendium">Alle Bausteine aus allen Cheatsheets zum Suchen und Nachschlagen.</Begriff>
         </dl>
