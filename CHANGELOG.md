@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.46.1] – 2026-11-12
+
+### Behoben
+
+- **Jahreskalender aller Azubis:** Firmentermine standen dort nur als Liste über dem Kalender und waren im Kalender selbst nicht zu sehen. Jetzt haben sie oben eine eigene Zeile „Firmentermine“ mit Titel und ziehen sich als gelbes Band durch die Zeile jedes Azubis – auch in den Karten am Handy. Die Legende nennt sie.
+
 ## [0.46.0] – 2026-11-12
 
 ### Neu

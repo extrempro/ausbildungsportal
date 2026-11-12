@@ -8024,3 +8024,41 @@ fieldset.benach-bereich p {
     gap: 0;
   }
 }
+
+/* Jahreskalender aller Azubis: Firmentermine als eigene Zeile oben und als gelbes Band durch jede Azubi-Zeile */
+.jk-firma-zeile .jk-name {
+  font-weight: 700;
+}
+
+.jk-balken.firma {
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 8px;
+  padding: 0;
+  overflow: visible;
+  background: var(--c-warn-bg);
+  border: 1px solid var(--c-warn-fg);
+  color: var(--c-text);
+}
+
+/* der Titel steht neben dem Balken – ein einzelner Tag ist zu schmal für Text; am Jahresende links davon */
+.jk-balken.firma span {
+  position: absolute;
+  left: calc(100% + 6px);
+  overflow: visible;
+}
+
+.jk-balken.firma.links span {
+  left: auto;
+  right: calc(100% + 6px);
+}
+
+.jk-firma-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 4px;
+  background: var(--c-warn-bg);
+  border-left: 2px solid var(--c-warn-fg);
+  opacity: 0.85;
+}
