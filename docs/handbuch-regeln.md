@@ -93,7 +93,7 @@ Wie überall im Portal: „du“, kurze Sätze, ein Gedanke je Satz, erklärte F
 
 ## Was die Seite daraus macht
 
-- **Inhaltsverzeichnis** nach Gruppen, am PC links neben dem Text und beim Rollen sichtbar, auf Tablet und Handy zum Aufklappen über dem Text. Das Kapitel, das gerade oben steht, ist markiert.
+- **Inhaltsverzeichnis** nach Gruppen, am PC links neben dem Text und beim Rollen sichtbar, auf Tablet und Handy zum Aufklappen über dem Text – dort bleibt die Zeile „Inhalt und Suche“ beim Rollen unter der Kopfzeile stehen und nennt das Kapitel, in dem man gerade liest. Das Kapitel, das gerade oben steht, ist im Verzeichnis markiert.
 - **Suche** über Titel und Text aller Kapitel der gewählten Rolle.
 - **Nummern** laufen in der Reihenfolge des Inhaltsverzeichnisses durch. Sie können sich ändern, wenn ein Kapitel dazukommt – im Text deshalb auf den **Titel** verweisen, nie auf die Nummer.
 - Über jedem Kapitel steht klein seine Gruppe.

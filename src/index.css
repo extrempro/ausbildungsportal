@@ -8480,6 +8480,43 @@ tr.planer-summe td {
   }
 }
 
+/* Tablet und Handy: „Inhalt und Suche“ bleibt beim Rollen unter der Kopfzeile stehen.
+   Aufgeklappt rollt das Verzeichnis in sich, damit es nie höher ist als der Bildschirm. */
+@media (max-width: 1023px) {
+  details.handbuch-inhalt {
+    position: sticky;
+    top: var(--kopf, 60px);
+    z-index: 5;
+    box-shadow: 0 6px 16px var(--c-schatten);
+  }
+
+  details.handbuch-inhalt[open] {
+    max-height: calc(100dvh - var(--kopf, 60px) - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .handbuch-kopf {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .handbuch-wo {
+    display: block;
+    overflow: hidden;
+    color: var(--c-muted);
+    font-size: 14px;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .handbuch .kapitel {
+    scroll-margin-top: calc(var(--kopf, 60px) + 96px);
+  }
+}
+
 @media print {
   .handbuch {
     display: block;

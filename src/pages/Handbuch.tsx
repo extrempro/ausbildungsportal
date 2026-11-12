@@ -180,7 +180,7 @@ const BEDIENUNG: Kapitel = {
       <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
-      <li>Dieses Handbuch hat links ein Inhaltsverzeichnis mit Suchfeld (am Handy oben unter „Inhalt und Suche“). Jedes Kapitel ist gleich aufgebaut: erst wozu es da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.</li>
+      <li>Dieses Handbuch hat links ein Inhaltsverzeichnis mit Suchfeld (am Handy oben unter „Inhalt und Suche“ – die Zeile bleibt beim Rollen stehen). Jedes Kapitel ist gleich aufgebaut: erst wozu es da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.</li>
         <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
         <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Mehr dazu im Kapitel „Fehler melden“. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
         <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
@@ -1992,7 +1992,13 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
           </nav>
         ) : (
           <details className="karte handbuch-inhalt nicht-drucken" open={inhaltOffen || wort !== ''} onToggle={(e) => setInhaltOffen(e.currentTarget.open)}>
-            <summary>Inhalt und Suche</summary>
+            <summary>
+              <span className="handbuch-kopf">
+                <span>Inhalt und Suche</span>
+                {/* angeheftet zeigt der Kopf, in welchem Kapitel man gerade liest */}
+                {!inhaltOffen && !wort && aktiv && <span className="handbuch-wo">{kapitel.find((k) => k.id === aktiv)?.titel}</span>}
+              </span>
+            </summary>
             <nav aria-label="Inhalt des Handbuchs">{verzeichnis}</nav>
           </details>
         )}
