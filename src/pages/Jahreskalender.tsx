@@ -163,7 +163,7 @@ function Legende({ einzeln, eigenes, firma }: { einzeln: boolean; eigenes: boole
       <li>
         <span className="jk-farbe ferien" /> Schulferien
       </li>
-      {einzeln && firma && (
+      {firma && (
         <li>
           <span className="jk-farbe firma" /> Firmentermin (für alle)
         </li>
@@ -354,6 +354,36 @@ function JahrAlle({ d }: { d: Daten }) {
             </th>
           </tr>
         </thead>
+        {d.firmentermine.length > 0 && (
+          <tbody>
+            <tr className="jk-firma-zeile">
+              <th scope="row" className="jk-name">
+                Firmentermine
+                <span className="leise klein">für alle</span>
+              </th>
+              <td>
+                <div className="jk-bahn" aria-hidden="true">
+                  {monate.slice(1).map((x) => (
+                    <i key={x.m} className="jk-strich" style={{ left: x.left }} />
+                  ))}
+                  {d.firmentermine.map((t) => (
+                    <b key={t.id} className={`jk-balken firma${parseFloat(lage(t.von, t.bis).left) > 75 ? ' links' : ''}`} style={lage(t.von, t.bis)} title={`Firmentermin: ${t.titel}, ${t.von === t.bis ? datum(t.von) : `${datum(t.von)} bis ${datum(t.bis)}`}`}>
+                      <span>{t.titel}</span>
+                    </b>
+                  ))}
+                  {heuteDrin && <i className="jk-heute" style={{ left: lage(d.heute, d.heute).left }} />}
+                </div>
+                <ul className="nur-vorleser">
+                  {d.firmentermine.map((t) => (
+                    <li key={t.id}>
+                      {t.titel}: {t.von === t.bis ? datum(t.von) : `${datum(t.von)} bis ${datum(t.bis)}`}
+                    </li>
+                  ))}
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        )}
         {gruppen(d.azubis).map((g) => (
           <tbody key={g.titel}>
             <tr className="jk-gruppe">
@@ -382,6 +412,9 @@ function JahrAlle({ d }: { d: Daten }) {
                       {!a.beginn && <i className="jk-aus" style={{ left: 0, width: '100%' }} />}
                       {vor && <i className="jk-aus" style={vor} />}
                       {nach && <i className="jk-aus" style={nach} />}
+                      {d.firmentermine.map((t) => (
+                        <i key={`f${t.id}`} className="jk-firma-band" style={lage(t.von, t.bis)} title={`Firmentermin: ${t.titel}, ${zeit(t.von, t.bis)}`} />
+                      ))}
                       {a.ferien.map((f) => (
                         <i key={f.von} className="jk-ferien" style={lage(f.von, f.bis)} title={`Schulferien: ${f.name}, ${zeit(f.von, f.bis)}`} />
                       ))}
@@ -518,6 +551,9 @@ function JahrKarten({ d, lage, monate }: { d: Daten; lage: (von: string, bis: st
                     {!a.beginn && <i className="jk-aus" style={{ left: 0, width: '100%' }} />}
                     {a.beginn && a.beginn > anfang && <i className="jk-aus" style={lage(anfang, a.beginn > ende ? ende : a.beginn)} />}
                     {a.ende && a.ende < ende && <i className="jk-aus" style={lage(a.ende < anfang ? anfang : a.ende, ende)} />}
+                    {d.firmentermine.map((t) => (
+                      <i key={`f${t.id}`} className="jk-firma-band" style={lage(t.von, t.bis)} />
+                    ))}
                     {alle
                       .filter((z) => z.art !== 'pruefung')
                       .map((z, i) => (
