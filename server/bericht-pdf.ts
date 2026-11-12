@@ -98,6 +98,25 @@ export function berichtsheftPdf(a: HeftAngaben): Buffer {
   return dok.ausgabe();
 }
 
+const WOCHENTAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+const ART_KURZ: Record<(typeof ABSCHNITTE)[number]['schluessel'], string> = { betrieb: 'Betrieb', unterweisung: 'Unterweisung', schule: 'Berufsschule' };
+
+/** Tagesform: Montag bis Freitag immer, Samstag und Sonntag nur, wenn dort etwas steht. */
+function tageVon(b: BerichtFuerPdf): { tag: string; name: string; summe: number; zeilen: { text: string; stunden: number }[] }[] {
+  const tage: ReturnType<typeof tageVon> = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(`${b.montag}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + i);
+    const tag = d.toISOString().slice(0, 10);
+    const zeilen = [
+      ...ABSCHNITTE.flatMap((a) => b.inhalt[a.schluessel].filter((e) => e.tag === tag).map((e) => ({ text: `${ART_KURZ[a.schluessel]}: ${e.text}`, stunden: e.stunden }))),
+      ...b.inhalt.abwesenheit.filter((e) => e.tag === tag).map((e) => ({ text: `Abwesenheit: ${GRUND_TEXT[e.grund] ?? e.grund}${e.text ? ` (${e.text})` : ''}`, stunden: e.stunden })),
+    ];
+    if (i < 5 || zeilen.length > 0) tage.push({ tag, name: WOCHENTAGE[i], summe: zeilen.reduce((n, z) => n + z.stunden, 0), zeilen });
+  }
+  return tage;
+}
+
 function zeichneBericht(dok: PdfDokument, b: BerichtFuerPdf, logo: number | null): void {
   let s: PdfSeite = dok.seite();
   let y = 0;
@@ -159,17 +178,28 @@ function zeichneBericht(dok: PdfDokument, b: BerichtFuerPdf, logo: number | null
   };
 
   kopf(false);
-  for (const a of ABSCHNITTE) {
-    titel(a.titel);
-    const liste = b.inhalt[a.schluessel];
-    if (liste.length === 0) leer();
-    for (const e of liste) zeile(e.text, e.stunden);
-    y += 8;
+  if (b.inhalt.form === 'tag') {
+    // Tagesform: je Tag eine Überschrift mit Tagessumme, darunter die Einträge mit ihrer Art und die Abwesenheit
+    for (const t of tageVon(b)) {
+      titel(`${t.name}, ${datum(t.tag)}${t.summe > 0 ? ` · ${stunden(t.summe)} h` : ''}`);
+      if (t.zeilen.length === 0) leer();
+      for (const z of t.zeilen) zeile(z.text, z.stunden);
+      y += 6;
+    }
+    y += 4;
+  } else {
+    for (const a of ABSCHNITTE) {
+      titel(a.titel);
+      const liste = b.inhalt[a.schluessel];
+      if (liste.length === 0) leer();
+      for (const e of liste) zeile(e.text, e.stunden);
+      y += 8;
+    }
+    titel('Abwesenheit');
+    if (b.inhalt.abwesenheit.length === 0) leer();
+    for (const e of b.inhalt.abwesenheit) zeile(`${datum(e.tag)} · ${GRUND_TEXT[e.grund] ?? e.grund}${e.text ? ` (${e.text})` : ''}`, e.stunden);
+    y += 10;
   }
-  titel('Abwesenheit');
-  if (b.inhalt.abwesenheit.length === 0) leer();
-  for (const e of b.inhalt.abwesenheit) zeile(`${datum(e.tag)} · ${GRUND_TEXT[e.grund] ?? e.grund}${e.text ? ` (${e.text})` : ''}`, e.stunden);
-  y += 10;
 
   platz(24);
   const summe = `Summe: ${stunden(b.summe.gesamt)} Stunden`;

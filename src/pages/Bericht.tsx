@@ -14,13 +14,42 @@ const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: st
   { schluessel: 'schule', titel: 'Berufsschule', frage: 'Warst du in dieser Woche in der Berufsschule?', hilfe: 'Warst du in der Berufsschule? Schreib die Themen aus dem Unterricht auf. Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Mathe: Prozentrechnung' },
 ];
 
-const ANTEILE: { schluessel: keyof BerichtInhalt; kurz: string }[] = [
+type Art = (typeof ABSCHNITTE)[number]['schluessel'];
+const ART_KURZ: Record<Art, string> = { betrieb: 'Betrieb', unterweisung: 'Unterweisung', schule: 'Berufsschule' };
+/** Tagesform: was über dem Textfeld einer Zeile steht */
+const ART_FRAGE: Record<Art, string> = { betrieb: 'Betrieb – was hast du gemacht?', unterweisung: 'Unterweisung – was wurde dir erklärt?', schule: 'Berufsschule – welche Themen?' };
+
+interface TagZeile {
+  art: Art;
+  /** Stelle des Eintrags in der Liste seiner Art */
+  index: number;
+  eintrag: BerichtEintrag;
+}
+interface Tag {
+  tag: string;
+  name: string;
+  zeilen: TagZeile[];
+  abwesend: BerichtAbwesenheit[];
+  summe: number;
+}
+
+/** Tagesform: die Einträge der drei Teile nach Tagen geordnet. Montag bis Freitag immer, Samstag und Sonntag nur mit Inhalt (oder wenn gewünscht). */
+function tageDerWoche(montag: string, i: BerichtInhalt, mitWochenende = false): Tag[] {
+  return TAGE.map((name, t): Tag => {
+    const tag = plusTage(montag, t);
+    const zeilen = ABSCHNITTE.flatMap((a) => i[a.schluessel].map((eintrag, index) => ({ art: a.schluessel, index, eintrag })).filter((z) => z.eintrag.tag === tag));
+    const abwesend = i.abwesenheit.filter((a) => a.tag === tag);
+    return { tag, name, zeilen, abwesend, summe: [...zeilen.map((z) => z.eintrag), ...abwesend].reduce((n, e) => n + (Number(e.stunden) || 0), 0) };
+  }).filter((t, nr) => nr < 5 || mitWochenende || t.zeilen.length > 0 || t.abwesend.length > 0);
+}
+
+const ANTEILE: { schluessel: Exclude<keyof BerichtInhalt, 'form'>; kurz: string }[] = [
   { schluessel: 'betrieb', kurz: 'Betrieb' },
   { schluessel: 'unterweisung', kurz: 'Unterweisung' },
   { schluessel: 'schule', kurz: 'Berufsschule' },
   { schluessel: 'abwesenheit', kurz: 'Abwesenheit' },
 ];
-const teilSumme = (i: BerichtInhalt, k: keyof BerichtInhalt) => (i[k] as { stunden: number }[]).reduce((n, e) => n + (Number(e.stunden) || 0), 0);
+const teilSumme = (i: BerichtInhalt, k: Exclude<keyof BerichtInhalt, 'form'>) => (i[k] as { stunden: number }[]).reduce((n, e) => n + (Number(e.stunden) || 0), 0);
 
 /** Was der Stand für den Azubi bedeutet und was als Nächstes zu tun ist. */
 const STATUS_HILFE: Record<string, string> = {
@@ -150,7 +179,42 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
         {b.status === 'eingereicht' && <div className="blatt-entwurf">Eingereicht – noch nicht abgezeichnet</div>}
       </header>
 
-      {ABSCHNITTE.map((a) => (
+      {b.inhalt.form === 'tag' &&
+        tageDerWoche(b.montag, b.inhalt).map((t) => (
+          <section key={t.tag}>
+            <h3>
+              {t.name}, {datum(t.tag)}
+              {t.summe > 0 && <span className="blatt-tagsumme"> · {h(t.summe)} h</span>}
+            </h3>
+            {t.zeilen.length === 0 && t.abwesend.length === 0 ? (
+              <p className="leise">–</p>
+            ) : (
+              <table className="blatt-tabelle">
+                <tbody>
+                  {t.zeilen.map((z) => (
+                    <tr key={`${z.art}-${z.index}`}>
+                      <td className="mehrzeilig">
+                        <span className="blatt-art">{ART_KURZ[z.art]}:</span> {z.eintrag.text}
+                      </td>
+                      <td className="zahl">{h(z.eintrag.stunden)} h</td>
+                    </tr>
+                  ))}
+                  {t.abwesend.map((a, i) => (
+                    <tr key={`a-${i}`}>
+                      <td>
+                        <span className="blatt-art">Abwesenheit:</span> {GRUND_TEXT[a.grund]}
+                        {a.text ? ` (${a.text})` : ''}
+                      </td>
+                      <td className="zahl">{h(a.stunden)} h</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        ))}
+
+      {b.inhalt.form !== 'tag' && ABSCHNITTE.map((a) => (
         <section key={a.schluessel}>
           <h3>{a.titel}</h3>
           {b.inhalt[a.schluessel].length === 0 ? (
@@ -170,7 +234,7 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
         </section>
       ))}
 
-      <section>
+      {b.inhalt.form !== 'tag' && <section>
         <h3>Abwesenheit</h3>
         {b.inhalt.abwesenheit.length === 0 ? (
           <p className="leise">–</p>
@@ -189,7 +253,7 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
             </tbody>
           </table>
         )}
-      </section>
+      </section>}
 
       <p className="blatt-summe">
         <strong>Summe: {h(b.summe.gesamt)} Stunden</strong> <span className="leise">(Soll {h(b.soll)})</span>
@@ -284,6 +348,76 @@ function EintragListe({ nr, art, titel, hilfe, beispiel, liste, onAendern }: { n
   );
 }
 
+/** Tagesform: je Tag eine Karte mit den Zeilen des Tages. Jede Zeile gehört zu Betrieb, Unterweisung oder Berufsschule. */
+function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAendern }: { montag: string; inhalt: BerichtInhalt; tagSoll: number; wochenende: boolean; onWochenende: () => void; onAendern: (teil: Partial<BerichtInhalt>) => void }) {
+  const tage = tageDerWoche(montag, inhalt, wochenende);
+  const setze = (z: TagZeile, teil: Partial<BerichtEintrag>) => onAendern({ [z.art]: inhalt[z.art].map((e, j) => (j === z.index ? { ...e, ...teil } : e)) });
+  const entferne = (z: TagZeile) => onAendern({ [z.art]: inhalt[z.art].filter((_, j) => j !== z.index) });
+  const neu = (art: Art, tag: string) => onAendern({ [art]: [...inhalt[art], { text: '', stunden: 0, tag }] });
+  return (
+    <>
+      {tage.map((t, nr) => (
+        <fieldset key={t.tag} className="abschnitt karte teil tag">
+          <legend>
+            <span className="ablauf-nr" aria-hidden="true">
+              {nr + 1}
+            </span>
+            <span className="teil-titel">
+              {t.name}, {datum(t.tag)}
+            </span>
+            <span className={`pille ${t.summe > 0 ? 'blau' : 'grau'}`}>{std(t.summe)}</span>
+          </legend>
+          {t.abwesend.map((a, i) => (
+            <p key={i} className="bericht-tag-abwesend klein">
+              <strong>Abwesend:</strong> {GRUND_TEXT[a.grund]}
+              {a.text ? ` (${a.text})` : ''} · {std(a.stunden)} <span className="leise">– ändern unten bei „Abwesenheit“</span>
+            </p>
+          ))}
+          {t.zeilen.length === 0 && t.abwesend.length === 0 && <p className="leise klein abschnitt-hilfe">Noch nichts eingetragen – ein voller Tag hat {std(tagSoll)}</p>}
+          {t.zeilen.map((z, i) => (
+            <div className="bericht-zeile" key={`${z.art}-${z.index}`}>
+              <span className="bericht-zeile-nr" aria-hidden="true">
+                {i + 1}.
+              </span>
+              <label className="bericht-text">
+                <span className="klein">
+                  {ART_FRAGE[z.art]} <span className="nur-vorleser">({t.name}, Zeile {i + 1})</span>
+                </span>
+                <textarea rows={2} value={z.eintrag.text} maxLength={2000} placeholder={ABSCHNITTE.find((a) => a.schluessel === z.art)?.beispiel} onChange={(ev) => setze(z, { text: ev.target.value })} />
+              </label>
+              <label className="bericht-stunden">
+                <span className="klein">Stunden</span>
+                <input type="number" inputMode="decimal" min={0} max={24} step={0.25} value={z.eintrag.stunden} aria-label={`Stunden, ${t.name}, Zeile ${i + 1}`} onChange={(ev) => setze(z, { stunden: Number(ev.target.value) })} />
+              </label>
+              <button type="button" className="knopf schlicht klein bericht-weg" aria-label={`${t.name}, Zeile ${i + 1} entfernen`} onClick={() => entferne(z)}>
+                Entfernen
+              </button>
+            </div>
+          ))}
+          <div className="aktionen links bericht-tag-neu">
+            <button type="button" className="knopf schlicht klein" onClick={() => neu('betrieb', t.tag)}>
+              Tätigkeit im Betrieb eintragen
+            </button>
+            <button type="button" className="knopf schlicht klein" onClick={() => neu('unterweisung', t.tag)}>
+              Unterweisung eintragen
+            </button>
+            <button type="button" className="knopf schlicht klein" onClick={() => neu('schule', t.tag)}>
+              Berufsschule eintragen
+            </button>
+          </div>
+        </fieldset>
+      ))}
+      {!wochenende && tage.length < 7 && (
+        <p>
+          <button type="button" className="link-knopf" onClick={onWochenende}>
+            Am Samstag oder Sonntag gearbeitet? Wochenende anzeigen
+          </button>
+        </p>
+      )}
+    </>
+  );
+}
+
 function AbwesenheitListe({ nr, montag, tagSoll, liste, onAendern }: { nr: number; montag: string; tagSoll: number; liste: BerichtAbwesenheit[]; onAendern: (l: BerichtAbwesenheit[]) => void }) {
   const setze = (i: number, teil: Partial<BerichtAbwesenheit>) => onAendern(liste.map((e, j) => (j === i ? { ...e, ...teil } : e)));
   // der nächste freie Tag der Woche als Vorschlag – wer drei Tage krank war, klickt dreimal
@@ -347,6 +481,8 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const [kommentar, setKommentar] = useState('');
   // Teile, die der Azubi von Hand aufgeklappt hat (leere Teile sind sonst nur eine Zeile)
   const [auf, setAuf] = useState<Set<string>>(new Set());
+  // Tagesform: Samstag und Sonntag zeigen, auch wenn dort noch nichts steht
+  const [wochenende, setWochenende] = useState(false);
   useUngespeichert(geaendert);
   const sollDrucken = useRef(new URLSearchParams(window.location.search).has('drucken'));
   useEffect(() => {
@@ -364,7 +500,10 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const uebernimm = useCallback((neu: Bericht) => {
     setB(neu);
     // ein neuer Bericht beginnt mit einer leeren Zeile – so ist sofort klar, wo man schreibt
-    setInhalt(neu.status === 'fehlt' && neu.rechte.schreiben && neu.inhalt.betrieb.length === 0 ? { ...neu.inhalt, betrieb: [{ text: '', stunden: 0 }] } : neu.inhalt);
+    // (in der Tagesform am ersten Tag der Woche, an dem der Azubi nicht abwesend ist)
+    const ersterTag = [0, 1, 2, 3, 4].map((t) => plusTage(neu.montag, t)).find((tag) => !neu.inhalt.abwesenheit.some((a) => a.tag === tag)) ?? neu.montag;
+    const leer: BerichtEintrag = neu.inhalt.form === 'tag' ? { text: '', stunden: 0, tag: ersterTag } : { text: '', stunden: 0 };
+    setInhalt(neu.status === 'fehlt' && neu.rechte.schreiben && neu.inhalt.betrieb.length === 0 ? { ...neu.inhalt, betrieb: [leer] } : neu.inhalt);
     setGeaendert(false);
   }, []);
 
@@ -442,6 +581,9 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const ist = summeVon(inhalt);
   const tagSoll = Math.round((b.soll / 5) * 4) / 4;
   const inSchule = b.plan.some((p) => p.art === 'schule');
+  // die Abwesenheit steht hinter den Teilen (Wochenform: 3) bzw. hinter den Tagen
+  const tage = inhalt.form === 'tag' ? tageDerWoche(b.montag, inhalt, wochenende) : [];
+  const abwNr = inhalt.form === 'tag' ? tage.length + 1 : 4;
   const stand = ist <= 0 ? 'leer' : Math.abs(ist - b.soll) <= 0.01 ? 'genau' : ist > b.soll ? 'mehr' : 'weniger';
   const standText =
     stand === 'leer'
@@ -530,7 +672,8 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
                 ))}
               </p>
             )}
-            {ABSCHNITTE.map((a, i) =>
+            {inhalt.form === 'tag' && <TagesEingabe montag={b.montag} inhalt={inhalt} tagSoll={tagSoll} wochenende={wochenende} onWochenende={() => setWochenende(true)} onAendern={aendere} />}
+            {inhalt.form !== 'tag' && ABSCHNITTE.map((a, i) =>
               a.schluessel === 'betrieb' || inhalt[a.schluessel].length > 0 || auf.has(a.schluessel) || (a.schluessel === 'schule' && inSchule) ? (
                 <EintragListe key={a.schluessel} nr={i + 1} art={a.schluessel} titel={a.titel} hilfe={a.hilfe} beispiel={a.beispiel} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />
               ) : (
@@ -548,10 +691,10 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
               ),
             )}
             {inhalt.abwesenheit.length > 0 || auf.has('abwesenheit') ? (
-              <AbwesenheitListe nr={4} montag={b.montag} tagSoll={tagSoll} liste={inhalt.abwesenheit} onAendern={(l) => aendere({ abwesenheit: l })} />
+              <AbwesenheitListe nr={abwNr} montag={b.montag} tagSoll={tagSoll} liste={inhalt.abwesenheit} onAendern={(l) => aendere({ abwesenheit: l })} />
             ) : (
               <TeilZu
-                nr={4}
+                nr={abwNr}
                 titel="Abwesenheit"
                 frage="Urlaub, krank oder Feiertag in dieser Woche?"
                 knopf="Eintragen"
@@ -580,6 +723,19 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
                 </div>
               ))}
             </dl>
+            {inhalt.form === 'tag' && (
+              <>
+                <h3 className="bericht-tage-titel">Je Tag</h3>
+                <dl className="bericht-anteile">
+                  {tage.map((t) => (
+                    <div key={t.tag}>
+                      <dt>{t.name}</dt>
+                      <dd>{t.summe > 0 ? std(t.summe) : <span className="leise">noch leer</span>}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            )}
             <p className={`bericht-sicher klein ${geaendert ? 'offen' : 'leise'}`} role="status">
               {geaendert ? 'Noch nicht gespeichert' : b.status === 'fehlt' ? 'Noch nichts gespeichert' : 'Alles gespeichert'}
             </p>

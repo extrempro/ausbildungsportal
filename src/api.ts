@@ -178,7 +178,7 @@ export interface Berufsschule {
 }
 
 export interface Stammdaten {
-  betrieb: { name: string; anschrift: string; bundesland: string; personalMail: string; personalAnrede: string };
+  betrieb: { name: string; anschrift: string; bundesland: string; personalMail: string; personalAnrede: string; berichtForm: 'woche' | 'tag' };
   /** ist im Portal ein Mailserver eingerichtet? */
   mailversand: boolean;
   berufe: Beruf[];
@@ -290,6 +290,8 @@ export type Grund = 'urlaub' | 'krank' | 'feiertag' | 'sonstiges';
 export interface BerichtEintrag {
   text: string;
   stunden: number;
+  /** nur in der Tagesform: der Tag (JJJJ-MM-TT) */
+  tag?: string;
 }
 export interface BerichtAbwesenheit {
   tag: string;
@@ -298,6 +300,8 @@ export interface BerichtAbwesenheit {
   text: string;
 }
 export interface BerichtInhalt {
+  /** „tag“: jeder Eintrag gehört zu einem Tag; „woche“: Tätigkeiten der ganzen Woche */
+  form: 'woche' | 'tag';
   betrieb: BerichtEintrag[];
   unterweisung: BerichtEintrag[];
   schule: BerichtEintrag[];

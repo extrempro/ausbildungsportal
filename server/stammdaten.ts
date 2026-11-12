@@ -39,6 +39,8 @@ export interface Betrieb {
   bundesland: string;
   /** Mail-Adresse der Personalstelle – dorthin geht die Nachricht über genehmigten Urlaub */
   personalMail: string;
+  /** Form neuer Berichte im Berichtsheft: Tätigkeiten der ganzen Woche oder je Tag */
+  berichtForm: 'woche' | 'tag';
   /** wie die Mail an die Personalstelle beginnt, z. B. „Hallo Kim“ – leer heißt „Guten Tag“ */
   personalAnrede: string;
 }
@@ -98,10 +100,14 @@ const LEERES_PROFIL: Profil = {
 
 // ---------- Lesen ----------
 
+function ungueltigeForm(): never {
+  throw new Fehler(400, 'Form des Berichtshefts: erlaubt sind „woche“ und „tag“');
+}
+
 export function leseBetrieb(db: DB): Betrieb {
   const zeilen = db.prepare("SELECT schluessel, wert FROM einstellungen WHERE schluessel LIKE 'betrieb_%'").all() as unknown as { schluessel: string; wert: string }[];
   const m = new Map(zeilen.map((z) => [z.schluessel, z.wert]));
-  return { name: m.get('betrieb_name') ?? '', anschrift: m.get('betrieb_anschrift') ?? '', bundesland: m.get('betrieb_bundesland') ?? '', personalMail: m.get('betrieb_personal_mail') ?? '', personalAnrede: m.get('betrieb_personal_anrede') ?? '' };
+  return { name: m.get('betrieb_name') ?? '', anschrift: m.get('betrieb_anschrift') ?? '', bundesland: m.get('betrieb_bundesland') ?? '', personalMail: m.get('betrieb_personal_mail') ?? '', personalAnrede: m.get('betrieb_personal_anrede') ?? '', berichtForm: m.get('betrieb_bericht_form') === 'tag' ? 'tag' : 'woche' };
 }
 
 function alleBerufe(db: DB): Beruf[] {
@@ -294,6 +300,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         bundesland: bundesland(body.bundesland, false),
         personalMail: text(body.personalMail, 200, 'Mail-Adresse der Personalstelle', false),
         // eine Zeile, ohne das Komma am Ende – das setzt die Mail selbst
+        // fehlt die Angabe (ältere Oberfläche), bleibt die Form, wie sie ist
+        berichtForm: body.berichtForm === undefined ? leseBetrieb(c.k.db).berichtForm : body.berichtForm === 'tag' ? 'tag' : body.berichtForm === 'woche' ? 'woche' : ungueltigeForm(),
         personalAnrede: text(String(body.personalAnrede ?? '').replace(/[\r\n]+/g, ' ').replace(/[\s,;:.!]+$/, ''), 80, 'Anrede der Personalstelle', false),
       };
       // eine einzelne Adresse – keine Liste, keine Zeilenumbrüche (die kämen sonst in den Kopf der Mail)
@@ -304,6 +312,7 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       setze.run('betrieb_bundesland', neu.bundesland);
       setze.run('betrieb_personal_mail', neu.personalMail);
       setze.run('betrieb_personal_anrede', neu.personalAnrede);
+      setze.run('betrieb_bericht_form', neu.berichtForm);
       protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, 'Betrieb');
       return { status: 200, body: { betrieb: neu } };
     },

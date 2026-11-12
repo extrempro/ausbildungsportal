@@ -434,6 +434,20 @@ const AZUBI: Kapitel[] = [
         <p>
           <strong>Drucken:</strong> Mehr dazu im Kapitel „Berichte und Berichtsheft: PDF herunterladen oder drucken“.
         </p>
+        <h3>Wenn dein Betrieb Einträge je Tag möchte</h3>
+        <p>Dein Betrieb legt fest, ob du die Woche im Ganzen beschreibst oder Tag für Tag. Bei „je Tag“ sieht die Seite etwas anders aus:</p>
+        <ul className="punkte">
+          <li>Statt der drei Teile steht für jeden Tag von Montag bis Freitag ein eigener Kasten. Oben rechts im Kasten siehst du die Stunden dieses Tages.</li>
+          <li>
+            In jedem Kasten wählst du, was du einträgst: <strong>„Tätigkeit im Betrieb eintragen“</strong>, <strong>„Unterweisung eintragen“</strong> oder <strong>„Berufsschule eintragen“</strong>. Über dem Textfeld steht dann, wozu die Zeile gehört.
+          </li>
+          <li>Stunden kannst du in Viertelstunden eintragen: 0,25 ist eine Viertelstunde, 1,5 sind anderthalb Stunden.</li>
+          <li>Hast du am Samstag oder Sonntag gearbeitet, wähle unter den Tagen „Wochenende anzeigen“.</li>
+          <li>Urlaub, Krankheit und Feiertage trägst du weiter unten bei „Abwesenheit“ ein. Im Kasten des Tages steht dann ein gelber Hinweis.</li>
+          <li>Unter „Deine Woche“ siehst du zusätzlich die Stunden je Tag – und welche Tage noch leer sind.</li>
+          <li>Es bleibt ein Bericht für die ganze Woche: Du reichst ihn einmal ein, und er wird einmal abgezeichnet.</li>
+          <li>Berichte, die du schon gespeichert hast, behalten ihre alte Form – auch wenn dein Betrieb umstellt.</li>
+        </ul>
         <h3>So schreibst du gute Einträge</h3>
         <p>Schreib kurz und genau: Was hast du gemacht, womit und wozu?</p>
         <dl className="begriffe">
@@ -1099,6 +1113,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </p>
               <dl className="begriffe">
                 <Begriff wort="Betrieb">Name und Anschrift stehen im Kopf der Berichte. Das Bundesland bestimmt die Feiertage im Plan.</Begriff>
+                <Begriff wort="Form des Berichtshefts">Entweder beschreiben Azubis die Woche im Ganzen (drei Teile: Betrieb, Unterweisung, Berufsschule) oder Tag für Tag (für jeden Tag ein Kasten mit eigenen Zeilen). In beiden Fällen ist es ein Bericht je Woche, der einmal eingereicht und abgezeichnet wird. Die Wahl gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form. Welche Form eure Kammer verlangt, klärt ihr am besten mit ihr.</Begriff>
                 <Begriff wort="Mail-Adresse der Personalstelle">Dorthin schickt das Portal eine kurze Mail, sobald ein Urlaub genehmigt oder storniert wurde. Genau eine Adresse, am besten ein Sammelpostfach. Mit „Testmail an die Personalstelle senden“ prüfst du, ob Mails ankommen. Der Knopf ist gesperrt, solange der Betreiber des Portals keinen Mailserver eingerichtet hat oder die Adresse fehlt.</Begriff>
                 <Begriff wort="Anrede in der Mail an die Personalstelle">So beginnt die Mail, zum Beispiel „Hallo Kim“ oder „Guten Tag Frau Beispiel“. Das Komma dahinter setzt das Portal. Lässt du das Feld leer, heißt es „Guten Tag“. Die Anrede sehen nur Ausbilder.</Begriff>
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
