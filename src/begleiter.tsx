@@ -5,6 +5,7 @@ import { FIGUR_ART, FIGUR_NAME, FIGUREN, FigurBild, TEIL_NAME, TEILE, teileBis }
 import type { Figur, Teil } from './begleiter/figuren';
 import { melde } from './dialoge';
 import { HandbuchLink } from './handbuchLink';
+import { Link, usePfad } from './router';
 
 /**
  * Begleiter: eine kleine Figur, die Azubis durch das Portal begleitet – ein freiwilliges, lustiges Beiwerk.
@@ -25,7 +26,30 @@ export interface BegleiterStand {
   gezeigt: number;
   naechstesAm: string | null;
   ohneZeit: boolean;
+  /** Arten von Erinnerungen, die der Azubi abgeschaltet hat */
+  erinnernAus: string[];
 }
+
+/** Eine Erinnerung an etwas, das ansteht (vom Server errechnet, nirgends gespeichert). */
+interface Erinnerung {
+  art: string;
+  schluessel: string;
+  text: string;
+  zu: string;
+  knopf: string;
+}
+
+/** Die Arten von Erinnerungen in der Reihenfolge, in der sie unter „Konto“ stehen. */
+const ERINNERUNGEN: [string, string][] = [
+  ['bericht_woche', 'Der Bericht dieser Woche ist noch nicht eingereicht (ab Donnerstag)'],
+  ['bericht_alt', 'Berichte aus vergangenen Wochen fehlen'],
+  ['bericht_zurueck', 'Ein Bericht kam zurück'],
+  ['unterschrift', 'Deine Unterschrift fehlt'],
+  ['schule', 'Nächste Woche ist Berufsschule'],
+  ['firmentermin', 'Ein Firmentermin steht an'],
+  ['pruefung', 'Ein Termin für deine Prüfung steht an'],
+  ['urlaub', 'Dein Urlaub beginnt'],
+];
 
 /** Anlässe, zu denen der Begleiter etwas sagt. Die Seiten melden sie über begleiterSagt(). */
 export type Anlass = 'bericht_eingereicht' | 'bericht_abgezeichnet' | 'urlaub_beantragt' | 'urlaub_genehmigt' | 'abzeichen';
@@ -58,6 +82,8 @@ export function oeffneBegleiter(): void {
 
 /** Ereignis am Fenster: Die Angaben zum Begleiter haben sich geändert. */
 const GEAENDERT = 'begleiter-geaendert';
+/** Ereignis am Fenster: Der Begleiter soll seine Angaben neu holen (z. B. nach einer Änderung unter „Konto“). */
+const NEU_LADEN = 'begleiter-neu-laden';
 
 const zufall = <T,>(liste: T[]): T => liste[Math.floor(Math.random() * liste.length)];
 const heute = () => new Date().toLocaleDateString('sv-SE');
@@ -70,6 +96,16 @@ function merke(schluessel: string, wert?: string): string | null {
     /* kein Speicher – dann eben nicht */
   }
   return null;
+}
+
+/** Schlüssel der Erinnerungen, die in diesem Browser schon gezeigt wurden (die letzten 60). */
+function gezeigteErinnerungen(): string[] {
+  try {
+    const liste = JSON.parse(merke('begleiter-erinnert') ?? '[]') as unknown;
+    return Array.isArray(liste) ? liste.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 
 function gruss(name: string): string {
@@ -103,7 +139,15 @@ export function useBegleiter(aktiv: boolean, ruhig: boolean): { kopf: ReactNode;
     setzeStand(neu);
     window.dispatchEvent(new Event(GEAENDERT));
   }, []);
-  const [blase, setBlase] = useState<{ text: string; nr: number } | null>(null);
+  // `zu` und `knopf` hat nur eine Erinnerung: Sie bleibt stehen, bis der Azubi sie schließt oder dem Knopf folgt
+  const [blase, setBlase] = useState<{ text: string; nr: number; zu?: string; knopf?: string } | null>(null);
+  // null = noch nicht geholt
+  const [erinnerungen, setErinnerungen] = useState<Erinnerung[] | null>(null);
+  const [laden, setLaden] = useState(0);
+  // bleibt das Portal über Nacht offen, soll er am nächsten Tag trotzdem grüßen oder erinnern: bei jedem Seitenwechsel nachsehen
+  const pfad = usePfad();
+  const [tag, setTag] = useState(heute);
+  useEffect(() => setTag(heute()), [pfad]);
   const [fenster, setFenster] = useState<'zu' | 'ansicht' | 'auswahl'>('zu');
   // Animation „neues Teil“: von welcher bis zu welcher Stufe; `nochmal` = nur ansehen, nichts merken
   const [feier, setFeier] = useState<{ von: number; bis: number; nochmal: boolean } | null>(null);
@@ -114,19 +158,30 @@ export function useBegleiter(aktiv: boolean, ruhig: boolean): { kopf: ReactNode;
   useEffect(() => {
     if (!aktiv) return setzeStand(null);
     api<BegleiterStand>('GET', '/api/begleiter').then(setzeStand, () => setzeStand(null));
-  }, [aktiv]);
+  }, [aktiv, laden]);
+  useEffect(() => {
+    const neu = () => setLaden((n) => n + 1);
+    window.addEventListener(NEU_LADEN, neu);
+    return () => window.removeEventListener(NEU_LADEN, neu);
+  }, []);
 
   const da = !!stand && stand.erlaubt && stand.an && stand.figur !== '';
-  const sage = useCallback((text: string) => {
+  const sage = useCallback((text: string, erinnerung?: { zu: string; knopf: string }) => {
     // nie über ein offenes Fenster oder eine Rückfrage reden
     if (document.querySelector('.dialog-hintergrund')) return;
     nr.current += 1;
-    setBlase({ text, nr: nr.current });
+    setBlase({ text, nr: nr.current, ...erinnerung });
   }, []);
 
-  // die Sprechblase verschwindet von selbst
+  // woran er heute erinnern könnte – einmal geholt, sobald er da ist (und neu nach einer Änderung unter „Konto“)
   useEffect(() => {
-    if (!blase) return;
+    if (!da) return setErinnerungen(null);
+    api<{ erinnerungen: Erinnerung[] }>('GET', '/api/begleiter/erinnerungen').then((r) => setErinnerungen(r.erinnerungen), () => setErinnerungen([]));
+  }, [da, laden, tag]);
+
+  // die Sprechblase verschwindet von selbst – eine Erinnerung bleibt, bis sie geschlossen wird
+  useEffect(() => {
+    if (!blase || blase.zu) return;
     const t = window.setTimeout(() => setBlase(null), 7000);
     return () => window.clearTimeout(t);
   }, [blase]);
@@ -150,16 +205,27 @@ export function useBegleiter(aktiv: boolean, ruhig: boolean): { kopf: ReactNode;
     };
   }, [da, stand?.erlaubt]);
 
-  // neues Teil: einmal feiern, sobald nichts anderes läuft; sonst – einmal am Tag – begrüßen
+  // neues Teil: einmal feiern, sobald nichts anderes läuft; sonst – einmal am Tag – erinnern oder begrüßen
   useEffect(() => {
     if (!da || !stand || !ruhig || feier || fenster !== 'zu') return;
-    if (stand.stufe > stand.gezeigt) {
-      setFeier({ von: stand.gezeigt, bis: stand.stufe, nochmal: false });
-    } else if (merke('begleiter-gruss') !== heute()) {
-      merke('begleiter-gruss', heute());
+    if (stand.stufe > stand.gezeigt) return setFeier({ von: stand.gezeigt, bis: stand.stufe, nochmal: false });
+    if (erinnerungen === null) return;
+    // höchstens eine Erinnerung am Tag, und jede nur einmal; steht keine an, grüßt er nur
+    if (merke('begleiter-erinnert-am') !== tag) {
+      const schon = gezeigteErinnerungen();
+      const e = erinnerungen.find((x) => !schon.includes(x.schluessel));
+      if (e) {
+        merke('begleiter-erinnert-am', tag);
+        merke('begleiter-erinnert', JSON.stringify([...schon, e.schluessel].slice(-60)));
+        merke('begleiter-gruss', tag);
+        return sage(e.text, { zu: e.zu, knopf: e.knopf });
+      }
+    }
+    if (merke('begleiter-gruss') !== tag) {
+      merke('begleiter-gruss', tag);
       sage(gruss(stand.name));
     }
-  }, [da, stand, ruhig, feier, fenster, sage]);
+  }, [da, stand, ruhig, feier, fenster, sage, erinnerungen, tag, pfad]);
 
   const schliesseFeier = useCallback(() => {
     if (feier && !feier.nochmal) {
@@ -217,7 +283,25 @@ export function useBegleiter(aktiv: boolean, ruhig: boolean): { kopf: ReactNode;
     setBlase(null);
     setFenster('ansicht');
   };
-  const sprich = blase ? (
+  const sprich = blase?.zu ? (
+    // Erinnerung: bleibt stehen, mit Knopf zur passenden Seite
+    <div className={`begleiter-blase erinnerung${breit ? '' : ' oben'}`} key={blase.nr}>
+      {!breit && <FigurBild figur={figur} stufe={stand.stufe} groesse={36} nurKopf />}
+      <span>
+        {blase.text}
+        <span className="begleiter-blase-knoepfe">
+          <span onClick={() => setBlase(null)}>
+            <Link zu={blase.zu} className="knopf klein">
+              {blase.knopf}
+            </Link>
+          </span>
+          <button type="button" className="knopf schlicht klein" onClick={() => setBlase(null)}>
+            Schließen
+          </button>
+        </span>
+      </span>
+    </div>
+  ) : blase ? (
     <button type="button" className={`begleiter-blase${breit ? '' : ' oben'}`} key={blase.nr} onClick={() => setBlase(null)} aria-label={`${stand.name} sagt: ${blase.text} – schließen`}>
       {!breit && <FigurBild figur={figur} stufe={stand.stufe} groesse={36} nurKopf />}
       <span>{blase.text}</span>
@@ -410,6 +494,13 @@ function BegleiterFenster({ stand, auswahl, onStand, onZu, onNochmal }: { stand:
                 {fehler}
               </p>
             )}
+            <p className="leise klein">
+              {stand.name} erinnert dich höchstens einmal am Tag an etwas, das ansteht – zum Beispiel an einen fehlenden Bericht. Woran, stellst du unter{' '}
+              <span onClick={onZu}>
+                <Link zu="/konto">Konto</Link>
+              </span>{' '}
+              ein.
+            </p>
             <p className="aktionen links">
               <button type="button" className="knopf schlicht" onClick={() => setAendern(true)}>
                 Figur oder Namen ändern
@@ -502,6 +593,43 @@ export function BegleiterKonto() {
               {da ? 'Begleiter öffnen' : 'Begleiter aussuchen'}
             </button>
           </p>
+          {da && (
+            <fieldset className="begleiter-erinnern">
+              <legend>Woran soll {stand.name} dich erinnern?</legend>
+              <p className="leise klein">Höchstens eine Erinnerung am Tag, jede nur einmal. Ein Haken wird sofort gespeichert. Ans Lernen erinnert dich dein Begleiter nie.</p>
+              {fehler && (
+                <p className="hinweis fehler" role="alert">
+                  {fehler}
+                </p>
+              )}
+              {ERINNERUNGEN.map(([art, text]) => (
+                <label className="haken" key={art}>
+                  <input
+                    type="checkbox"
+                    checked={!stand.erinnernAus.includes(art)}
+                    onChange={(e) => {
+                      const aus = e.target.checked ? stand.erinnernAus.filter((a) => a !== art) : [...stand.erinnernAus, art];
+                      const vorher = stand;
+                      setFehler('');
+                      // der Haken springt sofort um; scheitert das Speichern, springt er zurück und der Fehler steht darüber
+                      setStand({ ...stand, erinnernAus: aus });
+                      api<BegleiterStand>('PUT', '/api/begleiter', { an: true, erinnernAus: aus }).then(
+                        (s) => {
+                          setStand(s);
+                          window.dispatchEvent(new Event(NEU_LADEN));
+                        },
+                        (err: Error) => {
+                          setStand(vorher);
+                          setFehler(err.message);
+                        },
+                      );
+                    }}
+                  />
+                  {text}
+                </label>
+              ))}
+            </fieldset>
+          )}
         </>
       )}
     </section>

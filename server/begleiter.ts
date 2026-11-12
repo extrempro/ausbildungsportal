@@ -3,6 +3,7 @@ import type { Ctx, Route } from './api-basis';
 import { heute } from './datum';
 import type { DB } from './db';
 import { plusTage } from './kalender';
+import { ERINNERUNGEN, erinnerungenAm } from './begleiter-erinnerung';
 import { protokolliere } from './protokoll';
 import { dauerVon, leseProfil } from './stammdaten';
 
@@ -28,7 +29,11 @@ interface Zeile {
   an: number;
   gefragt: number;
   stufe_gezeigt: number;
+  erinnern_aus: string;
 }
+
+const SPALTEN = 'figur, name, an, gefragt, stufe_gezeigt, erinnern_aus';
+const ausAus = (z: Zeile | undefined) => (z?.erinnern_aus ?? '').split(',').filter((a) => (ERINNERUNGEN as readonly string[]).includes(a));
 
 const tageZwischen = (von: string, bis: string) => Math.round((Date.parse(bis) - Date.parse(von)) / 86_400_000);
 
@@ -59,7 +64,7 @@ export function begleiterErlaubt(db: DB): boolean {
 
 function ansicht(c: Ctx) {
   const { db } = c.k;
-  const z = db.prepare('SELECT figur, name, an, gefragt, stufe_gezeigt FROM begleiter WHERE azubi_id = ?').get(c.b.id) as Zeile | undefined;
+  const z = db.prepare(`SELECT ${SPALTEN} FROM begleiter WHERE azubi_id = ?`).get(c.b.id) as Zeile | undefined;
   const dauer = dauerVon(db, leseProfil(db, c.b.id));
   const tag = heute(c.k.jetzt());
   const stufe = stufeAm(dauer?.beginn ?? null, dauer?.ende ?? null, tag);
@@ -76,6 +81,8 @@ function ansicht(c: Ctx) {
     naechstesAm: naechstesTeilAm(dauer?.beginn ?? null, dauer?.ende ?? null, tag),
     // ohne Ausbildungsbeginn im Profil kann der Begleiter nichts dazubekommen
     ohneZeit: dauer === null,
+    // Arten von Erinnerungen, die der Azubi abgeschaltet hat
+    erinnernAus: ausAus(z),
   };
 }
 
@@ -90,7 +97,7 @@ export const BEGLEITER_ROUTEN: Route[] = [
     h: (c) => {
       const b = koerper(c);
       if (typeof b.an !== 'boolean') throw new Fehler(400, 'Angabe „an“ fehlt');
-      const alt = c.k.db.prepare('SELECT figur, name, an, gefragt, stufe_gezeigt FROM begleiter WHERE azubi_id = ?').get(c.b.id) as Zeile | undefined;
+      const alt = c.k.db.prepare(`SELECT ${SPALTEN} FROM begleiter WHERE azubi_id = ?`).get(c.b.id) as Zeile | undefined;
       let figur = alt?.figur ?? '';
       let name = alt?.name ?? '';
       if (b.figur !== undefined) {
@@ -98,6 +105,11 @@ export const BEGLEITER_ROUTEN: Route[] = [
         figur = b.figur;
       }
       if (b.name !== undefined) name = text(b.name, 20, 'Der Name', false);
+      let aus = ausAus(alt);
+      if (b.erinnernAus !== undefined) {
+        if (!Array.isArray(b.erinnernAus) || b.erinnernAus.some((x) => !(ERINNERUNGEN as readonly unknown[]).includes(x))) throw new Fehler(400, 'Diese Erinnerung gibt es nicht');
+        aus = ERINNERUNGEN.filter((x) => (b.erinnernAus as unknown[]).includes(x));
+      }
       if (b.an) {
         if (!begleiterErlaubt(c.k.db)) throw new Fehler(409, 'Der Begleiter ist für dieses Portal ausgeschaltet');
         if (!figur) throw new Fehler(400, 'Bitte such dir eine Figur aus');
@@ -105,10 +117,10 @@ export const BEGLEITER_ROUTEN: Route[] = [
       }
       c.k.db
         .prepare(
-          `INSERT INTO begleiter (azubi_id, figur, name, an, gefragt, stufe_gezeigt, geaendert) VALUES (?, ?, ?, ?, 1, ?, ?)
-           ON CONFLICT(azubi_id) DO UPDATE SET figur = excluded.figur, name = excluded.name, an = excluded.an, gefragt = 1, geaendert = excluded.geaendert`,
+          `INSERT INTO begleiter (azubi_id, figur, name, an, gefragt, stufe_gezeigt, erinnern_aus, geaendert) VALUES (?, ?, ?, ?, 1, ?, ?, ?)
+           ON CONFLICT(azubi_id) DO UPDATE SET figur = excluded.figur, name = excluded.name, an = excluded.an, gefragt = 1, erinnern_aus = excluded.erinnern_aus, geaendert = excluded.geaendert`,
         )
-        .run(c.b.id, figur, name, b.an ? 1 : 0, alt?.stufe_gezeigt ?? 0, c.k.jetzt().toISOString());
+        .run(c.b.id, figur, name, b.an ? 1 : 0, alt?.stufe_gezeigt ?? 0, aus.join(','), c.k.jetzt().toISOString());
       return { status: 200, body: ansicht(c) };
     },
   },
@@ -124,6 +136,18 @@ export const BEGLEITER_ROUTEN: Route[] = [
       const r = c.k.db.prepare('UPDATE begleiter SET stufe_gezeigt = MAX(stufe_gezeigt, ?) WHERE azubi_id = ?').run(Math.min(stufe, ansicht(c).stufe), c.b.id);
       if (r.changes === 0) throw new Fehler(404, 'Du hast noch keinen Begleiter');
       return { status: 200, body: ansicht(c) };
+    },
+  },
+
+  {
+    // Woran der Begleiter heute erinnern könnte. Ohne Begleiter (aus, nie gewählt, für das Portal abgeschaltet) ist die Liste leer.
+    m: 'GET',
+    p: '/api/begleiter/erinnerungen',
+    wer: ['azubi'],
+    h: (c) => {
+      const z = c.k.db.prepare(`SELECT ${SPALTEN} FROM begleiter WHERE azubi_id = ?`).get(c.b.id) as Zeile | undefined;
+      const an = z?.an === 1 && z.figur !== '' && begleiterErlaubt(c.k.db);
+      return { status: 200, body: { erinnerungen: an ? erinnerungenAm(c.k, c.b.id, heute(c.k.jetzt()), ausAus(z)) : [] } };
     },
   },
 

@@ -863,7 +863,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Kalender abonnieren">Dein Plan im eigenen Kalender. Mehr dazu im Kapitel „Kalender abonnieren“.</Begriff>
           <Begriff wort="Benachrichtigungen">Ob du zusätzlich zur Glocke eine Nachricht per Teams oder E-Mail bekommst. Mehr dazu im Kapitel „Benachrichtigungen per Teams und E-Mail“.</Begriff>
           <Begriff wort="Darstellung">Hell, dunkel oder automatisch wie dein Gerät.</Begriff>
-          <Begriff wort="Dein Begleiter">Eine kleine Figur, die dich durch die Ausbildung begleitet – freiwillig. Mehr dazu im Kapitel „Dein Begleiter“.</Begriff>
+          <Begriff wort="Begleiter">Eine kleine Figur, die dich durch die Ausbildung begleitet – freiwillig. Hier stellst du auch ein, woran sie dich erinnert. Mehr dazu im Kapitel „Dein Begleiter“.</Begriff>
         </dl>
         <p>Angemeldet wirst du mit deinem Microsoft-Konto. Ein eigenes Passwort für das Portal gibt es nicht.</p>
       </>
@@ -888,11 +888,26 @@ const AZUBI: Kapitel[] = [
           <li>Am PC und am Tablet im Querformat sitzt er unten rechts in der Ecke. An der Figur ist ein kleiner runder Knopf (am PC erscheint er, wenn du mit der Maus darüberfährst). Damit klappst du den Begleiter ein, bis nur noch der Kopf zu sehen ist.</li>
           <li>Am Handy und am Tablet im Hochformat steht sein Kopf oben in der Kopfzeile neben der Glocke. Was er sagt, erscheint darunter.</li>
         </ul>
+        <h3>Woran er dich erinnert</h3>
+        <p>Dein Begleiter erinnert dich an Dinge, die anstehen. Die Erinnerung bleibt als Sprechblase stehen, bis du sie schließt. Ein Knopf daran führt dich gleich zur passenden Seite.</p>
+        <ul className="punkte">
+          <li>Der Bericht dieser Woche ist noch nicht eingereicht (ab Donnerstag).</li>
+          <li>Berichte aus vergangenen Wochen fehlen, oder ein Bericht kam zurück.</li>
+          <li>Deine Unterschrift fehlt – ohne sie kannst du keinen Bericht einreichen.</li>
+          <li>Nächste Woche beginnt die Berufsschule (ab Freitag davor).</li>
+          <li>Ein Firmentermin steht in zwei Tagen an.</li>
+          <li>Ein Termin für deine Prüfung steht an: eine Woche und einen Tag vorher. Dazu zählen auch die Termine aus deinem Planer.</li>
+          <li>Dein genehmigter Urlaub beginnt am nächsten Arbeitstag.</li>
+        </ul>
+        <p>
+          Unter <Link zu="/konto">Konto</Link> bei „Begleiter“ schaltest du jede dieser Erinnerungen einzeln aus.
+        </p>
         <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Zubehör">Dein Begleiter bekommt mit der Zeit neun Teile – zum Beispiel einen Ausweis, eine Mütze oder ein Werkzeug. Er behält alles. Welche Teile noch kommen, bleibt eine Überraschung.</Begriff>
           <Begriff wort="Neues Teil">Kommt ein Teil dazu, zeigt es dir der Begleiter einmal mit einer kurzen Animation. Mit „Weiter“ oder Escape schließt du sie. Unter „Mein Begleiter“ kannst du jedes Teil mit „Ansehen“ noch einmal abspielen.</Begriff>
           <Begriff wort="Sprechblase">Manchmal sagt der Begleiter etwas: einen Gruß am Tag oder einen Satz, wenn du einen Bericht eingereicht oder Urlaub beantragt hast. Die Blase verschwindet von selbst.</Begriff>
+          <Begriff wort="Erinnerung">Ein Hinweis auf etwas, das ansteht – zum Beispiel „Der Bericht für diese Woche ist noch nicht eingereicht“. Sie ersetzt an dem Tag den Gruß.</Begriff>
         </dl>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
@@ -901,6 +916,9 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Das Zubehör hängt nur an der Zeit: Die neun Teile verteilen sich gleichmäßig über deine Ausbildungszeit – bei drei Jahren kommt alle vier Monate eines. Das letzte, der Abschlusshut, kommt zum Ende deiner Ausbildung.</li>
           <li>Wie viel du im Portal machst, spielt keine Rolle. Es gibt keine Punkte, keine Serien und keinen Vergleich mit anderen.</li>
+          <li>Du bekommst höchstens eine Erinnerung am Tag, und jede nur einmal. Stehen mehrere Dinge an, kommt das Wichtigste zuerst, das Nächste am Tag darauf. Ans Lernen erinnert er dich nie.</li>
+          <li>Die Erinnerungen entstehen aus dem, was du im Portal ohnehin siehst. Niemand sonst erfährt davon. Welche du schon gesehen hast, merkt sich nur dein Browser – an einem anderen Gerät kann dieselbe Erinnerung deshalb noch einmal kommen.</li>
+          <li>Verlass dich nicht allein darauf: Die Erinnerung kommt nur, wenn du das Portal öffnest. Was ansteht, steht immer auch im Ausbildungsplan und im Berichtsheft.</li>
           <li>Schaltest du ihn erst später ein, bekommt er alle Teile, die bis dahin fällig waren, auf einmal.</li>
           <li>Sind Beginn und Ende deiner Ausbildung noch nicht eingetragen, gibt es noch kein Zubehör. Das trägt dein Ausbilder ein.</li>
           <li>Hast du an deinem Gerät „Bewegung reduzieren“ eingestellt, bewegt sich der Begleiter nicht. Neue Teile siehst du dann als ruhiges Bild. Töne macht er nie.</li>
@@ -1867,6 +1885,7 @@ const ADMIN: Kapitel[] = [
           <li>Schaltest du ihn aus, verschwindet er bei allen Azubis. Unter „Konto“ steht bei ihnen, dass er für das Portal ausgeschaltet ist. Figur, Name und Zubehör bleiben gespeichert – schaltest du wieder ein, ist alles wie vorher.</li>
           <li>Du siehst nicht, welcher Azubi einen Begleiter hat, welche Figur es ist oder wie sie heißt. Das sehen auch Ausbilder und Ausbildungsbeauftragte nicht.</li>
           <li>Das Zubehör hängt nur an der Ausbildungszeit, nicht an dem, was ein Azubi im Portal macht. Es gibt keine Punkte und keinen Vergleich.</li>
+          <li>Der Begleiter erinnert Azubis an das, was ansteht – zum Beispiel an einen fehlenden Bericht oder einen Firmentermin. Das sieht nur der Azubi; gespeichert wird dazu nur, welche Erinnerungen er abgeschaltet hat.</li>
           <li>Das Ein- und Ausschalten steht im Protokoll.</li>
         </ul>
       </>

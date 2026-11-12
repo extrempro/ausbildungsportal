@@ -8717,6 +8717,30 @@ body:has(.begleiter-ecke.klein) .nach-oben {
   cursor: pointer;
 }
 
+/* Erinnerung: bleibt stehen und hat Knöpfe – deshalb kein Zeiger über der ganzen Blase */
+.begleiter-blase.erinnerung {
+  align-items: flex-start;
+  cursor: default;
+}
+
+.begleiter-blase-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.begleiter-erinnern {
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.begleiter-erinnern legend {
+  padding: 0;
+  font-weight: 600;
+}
+
 .begleiter-ecke.klein .begleiter-blase {
   margin-bottom: 8px;
 }

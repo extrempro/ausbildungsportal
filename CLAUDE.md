@@ -36,6 +36,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben) |
 | `server/planer.ts`, `server/lernen/planer.ts` | Planer für das Prüfungsvorhaben (z. B. Abschlussprojekt): Inhalt aus `planer.md` im Inhaltspaket, Freischaltung je Azubi im Profil, Eintragungen privat – nur die Termine stehen im Plan |
 | `server/begleiter.ts`, `src/begleiter.tsx`, `src/begleiter/figuren.tsx` | Begleiter der Azubis: selbst gezeichnete Figur mit Zubehör, das sich über die Ausbildungszeit verteilt – freiwillig, privat, ohne Punkte; Schalter für das ganze Portal beim Super-Admin |
+| `server/begleiter-erinnerung.ts` | woran der Begleiter erinnert (fehlender Bericht, Berufsschule, Firmentermin, Prüfung, Urlaub, Unterschrift) – bei jeder Abfrage neu errechnet, nichts gespeichert, nie ans Lernen; neue Arten dort, in `ERINNERUNGEN` in `src/begleiter.tsx` und im Handbuch |
 | `src/fuehrung.tsx` | die Führung beim ersten Anmelden, je Rolle eine Folge von Stationen; `server/test/fuehrung.test.ts` prüft, dass jede Station auf etwas zeigt, das es gibt |
 | `src/App.tsx`, `src/router.tsx` | Seiten und eigener Router (`geheZu`, `<Link>`, `useUngespeichert`) |
 | `src/pages/` | je Seite eine Datei; `Handbuch.tsx` ist das Handbuch für alle Rollen |

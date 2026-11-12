@@ -278,7 +278,7 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
 }
 
 /** Montage der Ausbildung bis zur laufenden Woche. */
-function ausbildungswochen(beginn: string, ende: string, tag: string): string[] {
+export function ausbildungswochen(beginn: string, ende: string, tag: string): string[] {
   const letzter = montagVon(ende < tag ? ende : tag);
   const wochen: string[] = [];
   for (let m = montagVon(beginn); m <= letzter && wochen.length < 400; m = plusTage(m, 7)) wochen.push(m);
