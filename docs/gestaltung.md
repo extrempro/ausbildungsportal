@@ -61,7 +61,7 @@ Regeln dazu:
 | `.link-knopf` | sieht aus wie ein Link | kleine Handlung im Text („Bearbeiten“) |
 
 - Knöpfe sind mindestens 44 px hoch, kleine mindestens 40 px.
-- Knopfzeilen stehen in `.aktionen.links`.
+- Knopfzeilen stehen in `.aktionen` (rechtsbündig) oder `.aktionen.links` – als `<div>` oder `<p>`. Die Klasse sorgt für 8 px Abstand zwischen den Knöpfen und den Umbruch am Handy; Knöpfe nie ohne sie nebeneinander setzen.
 - **Achtung:** `.gefahr` allein färbt nur die Schrift rot. Auf einem gefüllten Knopf ergibt das rote Schrift auf Blau – dafür ist `.knopf.rot` da.
 
 ### Karten und Aufklappen
@@ -102,6 +102,7 @@ Kleine Wörter für einen Stand, 12 px: `gruen` (gut, erledigt), `gelb` (wartet,
 - **Symbole:** `<Icon name="…">` aus `src/icons.tsx`, eigene Zeichnungen. Neue Symbole kommen dort hinzu; keine Symbol-Bibliothek, keine Emojis als Bedienelement.
 - **Verweis ins Handbuch:** `<HandbuchLink kapitel="…">`.
 - **Tabellen:** normales `<table>`; unter 700 px werden sie zur Liste, die Spaltenüberschrift steht dann vor jedem Wert.
+- **Hauptnavigation:** Symbol über dem Wort (`.nav-symbol`, `.nav-text`), am PC oben, sonst unten. Ein neuer Menüpunkt braucht ein Symbol aus `src/icons.tsx`.
 - **Reiter und Filter:** `.filter` mit Knöpfen bzw. `<Link>`.
 - **Fenster:** `.dialog` – am Handy kommt es von unten.
 

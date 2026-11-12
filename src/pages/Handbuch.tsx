@@ -526,7 +526,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Gelb gestreift, „Urlaub?“">Beantragter Urlaub, über den noch nicht entschieden ist.</Begriff>
           <Begriff wort="Rot">Prüfung.</Begriff>
           <Begriff wort="Blau">Feiertag. Ein blauer Punkt mit Text ist ein eigener Termin von dir – den siehst nur du.</Begriff>
-          <Begriff wort="Gelber Rand">Firmentermin: ein Termin deines Betriebs für alle, zum Beispiel „Betrieb geschlossen“. Alle Firmentermine des Jahres stehen außerdem als Liste über dem Kalender.</Begriff>
+          <Begriff wort="Gelber Rand">Firmentermin: ein Termin deines Betriebs für alle, zum Beispiel „Betrieb geschlossen“.</Begriff>
           <Begriff wort="Türkiser Strich unten">Schulferien.</Begriff>
           <Begriff wort="Grau">Wochenende oder Tage vor Beginn und nach Ende deiner Ausbildung.</Begriff>
         </dl>
@@ -954,7 +954,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         </dl>
         <ul className="punkte">
           <li>Die Azubis sind nach Ausbildungsjahr geordnet.</li>
-          <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage und – mit gelbem Rand – die Firmentermine. In der Übersicht aller Azubis haben Firmentermine oben eine eigene Zeile und ziehen sich als gelbes Band durch jede Zeile; alle Firmentermine des Jahres stehen außerdem als Liste über dem Kalender. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
+          <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage und – mit gelbem Rand – die Firmentermine. In der Übersicht aller Azubis haben Firmentermine oben eine eigene Zeile und ziehen sich als gelbes Band durch jede Zeile. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
           <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor.</li>
           <li>Private Termine der Azubis stehen nicht im Kalender.</li>
           <li>Der Kalender ist nur zum Lesen. Geplant wird im Ausbildungsplan{rolle === 'ausbilder' ? ' oder in der Sammelplanung' : ''}.</li>
@@ -1166,7 +1166,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Hinweis">Freiwillig, eine Zeile – zum Beispiel „Notdienst über die Zentrale“.</Begriff>
               </dl>
               <ul className="punkte">
-                <li>Alle Azubis, Ausbildungsbeauftragten und Ausbilder sehen den Termin: im Ausbildungsplan in der betroffenen Woche (gelbe Zeile „Firmentermin“) und im Jahreskalender. Dort stehen sie als Liste über dem Kalender, in der Übersicht aller Azubis als eigene Zeile „Firmentermine“ und als gelbes Band durch jede Zeile, im Kalender eines Azubis als gelber Rand am Tag.</li>
+                <li>Alle Azubis, Ausbildungsbeauftragten und Ausbilder sehen den Termin: im Ausbildungsplan in der betroffenen Woche (gelbe Zeile „Firmentermin“) und im Jahreskalender. Dort stehen sie in der Übersicht aller Azubis als eigene Zeile „Firmentermine“ und als gelbes Band durch jede Zeile, im Kalender eines Azubis als gelber Rand am Tag. Am Handy steht über der Übersicht aller Azubis zusätzlich eine Liste, weil die Bänder dort keinen Titel zeigen.</li>
                 <li>
                   <strong>Es ist nur eine Übersicht.</strong> Ein Firmentermin steht nicht im Berichtsheft, zieht keinen Urlaub ab und ändert nichts an Berufsschule oder Einsätzen. Müssen Azubis für eine Schließung Urlaub nehmen, beantragen sie ihn wie sonst auch.
                 </li>

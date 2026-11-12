@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.47.0] – 2026-11-12
+
+### Geändert
+
+- **Navigation am PC mit Symbolen:** Die Menüpunkte in der Kopfzeile zeigen jetzt wie am Handy ein Symbol über dem Wort. Die Zahl für Offenes sitzt am Symbol.
+- **Jahreskalender ohne Liste der Firmentermine:** Die Liste „Firmentermine“ über dem Kalender entfällt. Die Termine stehen weiter im Kalender selbst – als eigene Zeile und gelbes Band in der Übersicht aller Azubis, als gelber Rand im Kalender eines Azubis. Nur am Handy bleibt die Liste über der Übersicht aller Azubis, weil dort kein Titel im Kalender steht.
+
+### Behoben
+
+- **Knöpfe klebten aneinander:** Zwischen Knöpfen, die nebeneinander stehen (zum Beispiel „Jahreskalender anzeigen“ und „Urlaub beantragen“ im Ausbildungsplan), fehlte an mehreren Stellen der Abstand.
+- **Jahreskalender aller Azubis:** Der Kalender zeigte am PC einen überflüssigen senkrechten Rollbalken.
+
 ## [0.46.1] – 2026-11-12
 
 ### Behoben
