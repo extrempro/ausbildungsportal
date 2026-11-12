@@ -17,6 +17,7 @@ import { Jahreskalender } from './pages/Jahreskalender';
 import { Lernen } from './pages/Lernen';
 import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
 import { LernEinreichungen } from './pages/LernEinreichungen';
+import { useBegleiter } from './begleiter';
 import { Leseansicht } from './lernen/basis';
 import { Planer } from './pages/Planer';
 import { LernKompendium } from './pages/LernKompendium';
@@ -222,6 +223,9 @@ export function App() {
     beobachter.observe(leiste);
     return () => beobachter.disconnect();
   }, [konto?.id, konto?.passwortWechsel]);
+
+  // Begleiter der Azubis: wartet, solange die Führung läuft oder angeboten wird (steht vor den frühen Rückgaben – Hooks brauchen eine feste Reihenfolge)
+  const begleiter = useBegleiter(konto?.rolle === 'azubi' && !konto.passwortWechsel, !fuehrung && !angebot);
 
   if (konto === undefined) return <p className="mitte leise">Lädt …</p>;
   if (konto === null) return <Anmelden superAdmin={pfad === '/super'} />;
@@ -507,6 +511,7 @@ export function App() {
               </div>
             ))}
           </nav>
+          {begleiter.kopf}
           {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
           <div className="menue ich">
             <button type="button" className="menue-knopf" aria-expanded={menue === 'ich'} aria-controls="menue-ich" aria-label={`Menü für ${konto.anzeigename}`} onClick={() => schalte('ich')}>
@@ -544,8 +549,10 @@ export function App() {
             </span>
           </aside>
         )}
+        {begleiter.angebot}
         {seite}
       </main>
+      {!fuehrung && begleiter.rest}
       {weitUnten && !fuehrung && (
         <button
           type="button"
@@ -560,7 +567,7 @@ export function App() {
           <Icon name="oben" groesse={22} />
         </button>
       )}
-      {fuehrung && <Fuehrung rolle={konto.rolle} onEnde={beendeFuehrung} />}
+      {fuehrung && <Fuehrung rolle={konto.rolle} bereiche={[...(lernen ? ['lernen' as const] : []), ...(planer ? ['planer' as const] : [])]} onEnde={beendeFuehrung} />}
       {melden && <FehlerMelden version={version} onZu={schliesseMelden} />}
       <Dialoge />
       <footer className="fuss leise">

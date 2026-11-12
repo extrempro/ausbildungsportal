@@ -43,6 +43,10 @@ Das Wichtigste in Kürze:
 
 Jede neue Funktion und jede Änderung wird im Handbuch beschrieben – für jede Rolle, die sie sieht – und an der Stelle im Portal verlinkt. Fällt eine Funktion weg, fällt auch ihr Kapitel weg. Wie ein Kapitel aufgebaut ist (Gruppe, Einleitung, „So geht's“, „Begriffe“, „Gut zu wissen“), steht in [docs/handbuch-regeln.md](docs/handbuch-regeln.md); ein Test prüft es.
 
+### Führung
+
+Beim ersten Anmelden zeigt eine Führung jeder Rolle die wichtigsten Stellen (`src/fuehrung.tsx`). Kommt ein Bereich dazu, den man am ersten Tag kennen sollte, bekommt er eine Station – für jede Rolle, die ihn sieht. Ändert sich eine Stelle, auf die eine Station zeigt, wird die Station angepasst. Danach die Führung einmal im Browser durchklicken, am PC und am Handy. Ein Test prüft, dass jede Station auf etwas zeigt, das es gibt; ob der Text noch stimmt, sieht nur ein Mensch.
+
 ### Benachrichtigungen
 
 Bei jeder neuen Funktion fragen: Erfährt dadurch eine andere Person etwas Neues – etwa weil jemand etwas einreicht, entscheidet oder für jemanden plant? Dann gehört das Ereignis in die Glocke; Nachrichten per Teams und E-Mail hängen daran und gehen von selbst mit. Wenn nicht, steht im Pull Request ein Satz dazu, warum. Wie das geht, steht in den Bedienregeln.

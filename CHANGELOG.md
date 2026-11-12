@@ -1,5 +1,22 @@
 # Änderungen
 
+## [0.51.0] – 2026-11-12
+
+### Neu
+
+- **Ein Begleiter für Azubis.** Azubis können sich eine kleine Figur aussuchen – Eule, Fuchs, Roboter, Biber oder Pinguin – und ihr einen Namen geben. Am PC sitzt sie unten rechts in der Ecke, am Handy steht ihr Kopf oben neben der Glocke. Sie grüßt einmal am Tag und sagt einen Satz, wenn ein Bericht eingereicht oder Urlaub beantragt wurde.
+- **Zubehör über die Ausbildungszeit.** Der Begleiter bekommt neun Teile – vom Ausweis bis zum Abschlusshut –, gleichmäßig verteilt über die Ausbildungszeit des Azubis (bei drei Jahren alle vier Monate eines). Er behält alles. Jedes neue Teil zeigt er einmal mit einer kurzen Animation. Das hängt nur an der Zeit: keine Punkte, keine Serien, kein Vergleich.
+- **Freiwillig und privat.** Jeder Azubi entscheidet selbst und kann den Begleiter unter „Konto“ jederzeit aus- und einschalten. Ausbilder, Ausbildungsbeauftragte und Super-Admin sehen nichts davon. Der Super-Admin kann den Begleiter unter „Erscheinungsbild“ für das ganze Portal ausschalten.
+- **Führung: neue Stationen.** Die Führung zeigt jetzt auch „Lernen“, den Planer für die Prüfung (wenn freigeschaltet), die Urlaubsanträge, die Lerninhalte und die Benachrichtigungen per Teams und E-Mail. Stationen zu Bereichen, die ein Konto nicht hat, fallen weg.
+
+### Geändert
+
+- Nach der Führung fragt das Portal Azubis einmal, ob sie einen Begleiter wollen.
+
+### Behoben
+
+- **Führung am PC:** Bei hohen Bereichen – zum Beispiel „Auf einen Blick“ oder dem Protokoll – rutschte die Karte der Führung unten aus dem Bild, und „Weiter“ war nicht zu erreichen. Die Karte bleibt jetzt immer vollständig sichtbar.
+
 ## [0.50.0] – 2026-11-12
 
 ### Geändert

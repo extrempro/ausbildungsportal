@@ -1,3 +1,4 @@
+import { begleiterSagt } from '../begleiter';
 import { useCallback, useEffect, useState } from 'react';
 import { api, datum } from '../api';
 import { Ladefehler } from '../dialoge';
@@ -291,7 +292,10 @@ export function LernQuiz({ id }: { id: string }) {
     api<QuizDaten>('GET', `/api/lernen/quiz/${encodeURIComponent(id)}`).then(setQ, (e: Error) => setFehler(e.message));
   }, [id]);
   useEffect(() => lade(), [lade]);
-  const schliesse = useCallback(() => setErfolg(null), []);
+  const schliesse = useCallback(() => {
+    setErfolg(null);
+    window.setTimeout(() => begleiterSagt('abzeichen'), 300);
+  }, []);
   // mitten in der Runde nachfragen, bevor die Seite verlassen wird
   useUngespeichert(Object.keys(antworten).length > 0 && !ergebnis);
 

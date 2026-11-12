@@ -1,3 +1,5 @@
+import { begleiterSagt } from '../begleiter';
+import type { Anlass } from '../begleiter';
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -551,11 +553,12 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const vorAnhang = async (): Promise<boolean> => (geaendert || b.status === 'fehlt' ? speichere() : true);
   // nur die Liste der Anhänge erneuern – was im Formular steht, bleibt unberührt
   const setzeAnhaenge = (anhaenge: BerichtAnhang[]) => setB((alt) => alt && { ...alt, anhaenge });
-  const tue = async (aktion: string, body?: unknown, erfolg?: string) => {
+  const tue = async (aktion: string, body?: unknown, erfolg?: string, anlass?: Anlass) => {
     try {
       uebernimm(await api<Bericht>('POST', `${pfad}/${aktion}`, body));
       setMeldung(null);
       if (erfolg) melde(erfolg);
+      if (anlass) begleiterSagt(anlass);
       setGrund(null);
       setKommentar('');
     } catch (e) {
@@ -565,7 +568,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const reicheEin = async () => {
     // erst speichern, dann einreichen – so geht nichts verloren
     if ((geaendert || b.status === 'fehlt') && !(await speichere())) return;
-    await tue('einreichen', undefined, 'Eingereicht. Der Bericht liegt jetzt zum Abzeichnen vor.');
+    await tue('einreichen', undefined, 'Eingereicht. Der Bericht liegt jetzt zum Abzeichnen vor.', 'bericht_eingereicht');
   };
   const zeichneAb = async () => {
     try {

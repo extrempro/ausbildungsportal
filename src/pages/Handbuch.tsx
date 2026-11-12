@@ -863,8 +863,49 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Kalender abonnieren">Dein Plan im eigenen Kalender. Mehr dazu im Kapitel „Kalender abonnieren“.</Begriff>
           <Begriff wort="Benachrichtigungen">Ob du zusätzlich zur Glocke eine Nachricht per Teams oder E-Mail bekommst. Mehr dazu im Kapitel „Benachrichtigungen per Teams und E-Mail“.</Begriff>
           <Begriff wort="Darstellung">Hell, dunkel oder automatisch wie dein Gerät.</Begriff>
+          <Begriff wort="Dein Begleiter">Eine kleine Figur, die dich durch die Ausbildung begleitet – freiwillig. Mehr dazu im Kapitel „Dein Begleiter“.</Begriff>
         </dl>
         <p>Angemeldet wirst du mit deinem Microsoft-Konto. Ein eigenes Passwort für das Portal gibt es nicht.</p>
+      </>
+    ),
+  },
+  {
+    id: 'begleiter',
+    titel: 'Dein Begleiter',
+    gruppe: 'Konto und Nachrichten',
+    inhalt: (
+      <>
+        <p>Der Begleiter ist eine kleine Figur, die dich durch die Ausbildung begleitet – einfach zum Spaß. Du suchst dir eine von fünf Figuren aus und gibst ihr einen Namen. Er ist freiwillig: Du kannst ihn jederzeit aus- und wieder einschalten.</p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Nach der Führung fragt dich das Portal einmal, ob du einen Begleiter willst. Wähle „Begleiter aussuchen“. Später geht das unter <Link zu="/konto">Konto</Link> bei „Dein Begleiter“.</li>
+          <li>Wähle Eule, Fuchs, Roboter, Biber oder Pinguin und gib der Figur einen Namen (höchstens 20 Zeichen).</li>
+          <li>Wähle „Begleiter einschalten“. Ab jetzt ist er da.</li>
+          <li>Tippe auf die Figur: Es öffnet sich „Mein Begleiter“ mit allem, was er schon hat. Dort änderst du auch Figur und Namen oder schaltest ihn aus.</li>
+        </ol>
+        <h3>Wo du ihn findest</h3>
+        <ul className="punkte">
+          <li>Am PC und am Tablet im Querformat sitzt er unten rechts in der Ecke. An der Figur ist ein kleiner runder Knopf (am PC erscheint er, wenn du mit der Maus darüberfährst). Damit klappst du den Begleiter ein, bis nur noch der Kopf zu sehen ist.</li>
+          <li>Am Handy und am Tablet im Hochformat steht sein Kopf oben in der Kopfzeile neben der Glocke. Was er sagt, erscheint darunter.</li>
+        </ul>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Zubehör">Dein Begleiter bekommt mit der Zeit neun Teile – zum Beispiel einen Ausweis, eine Mütze oder ein Werkzeug. Er behält alles. Welche Teile noch kommen, bleibt eine Überraschung.</Begriff>
+          <Begriff wort="Neues Teil">Kommt ein Teil dazu, zeigt es dir der Begleiter einmal mit einer kurzen Animation. Mit „Weiter“ oder Escape schließt du sie. Unter „Mein Begleiter“ kannst du jedes Teil mit „Ansehen“ noch einmal abspielen.</Begriff>
+          <Begriff wort="Sprechblase">Manchmal sagt der Begleiter etwas: einen Gruß am Tag oder einen Satz, wenn du einen Bericht eingereicht oder Urlaub beantragt hast. Die Blase verschwindet von selbst.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Deinen Begleiter siehst nur du.</strong> Weder dein Ausbilder noch deine Ausbildungsbeauftragten noch der Super-Admin sehen, ob du einen hast, welche Figur es ist oder wie er heißt.
+          </li>
+          <li>Das Zubehör hängt nur an der Zeit: Die neun Teile verteilen sich gleichmäßig über deine Ausbildungszeit – bei drei Jahren kommt alle vier Monate eines. Das letzte, der Abschlusshut, kommt zum Ende deiner Ausbildung.</li>
+          <li>Wie viel du im Portal machst, spielt keine Rolle. Es gibt keine Punkte, keine Serien und keinen Vergleich mit anderen.</li>
+          <li>Schaltest du ihn erst später ein, bekommt er alle Teile, die bis dahin fällig waren, auf einmal.</li>
+          <li>Sind Beginn und Ende deiner Ausbildung noch nicht eingetragen, gibt es noch kein Zubehör. Das trägt dein Ausbilder ein.</li>
+          <li>Hast du an deinem Gerät „Bewegung reduzieren“ eingestellt, bewegt sich der Begleiter nicht. Neue Teile siehst du dann als ruhiges Bild. Töne macht er nie.</li>
+          <li>Ist der Abschnitt „Dein Begleiter“ unter „Konto“ gesperrt, ist der Begleiter für euer ganzes Portal ausgeschaltet. Das entscheidet, wer das Portal betreibt.</li>
+        </ul>
       </>
     ),
   },
@@ -1806,6 +1847,29 @@ const ADMIN: Kapitel[] = [
       <p>
         Unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> hinterlegst du das Logo des Betriebs (PNG, JPEG oder WebP, höchstens 150 KB) – eines für die helle und, wenn du möchtest, eines für die dunkle Darstellung. Es steht in der Kopfzeile und auf der Anmeldeseite; „Ausbildungsportal“ bleibt klein daneben stehen.
       </p>
+    ),
+  },
+  {
+    id: 'begleiter-schalter',
+    titel: 'Den Begleiter der Azubis ein- oder ausschalten',
+    gruppe: 'Verwaltung',
+    inhalt: (
+      <>
+        <p>Azubis können sich einen Begleiter aussuchen: eine kleine Figur, die sie durch die Ausbildung begleitet und mit der Zeit Zubehör bekommt. Ob es den Begleiter in eurem Portal gibt, entscheidest du.</p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Öffne <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link>.</li>
+          <li>Setze oder entferne unter „Begleiter für Azubis“ den Haken. Er wird sofort gespeichert.</li>
+        </ol>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>Am Anfang ist der Begleiter eingeschaltet. Jeder Azubi entscheidet dann selbst, ob er einen will.</li>
+          <li>Schaltest du ihn aus, verschwindet er bei allen Azubis. Unter „Konto“ steht bei ihnen, dass er für das Portal ausgeschaltet ist. Figur, Name und Zubehör bleiben gespeichert – schaltest du wieder ein, ist alles wie vorher.</li>
+          <li>Du siehst nicht, welcher Azubi einen Begleiter hat, welche Figur es ist oder wie sie heißt. Das sehen auch Ausbilder und Ausbildungsbeauftragte nicht.</li>
+          <li>Das Zubehör hängt nur an der Ausbildungszeit, nicht an dem, was ein Azubi im Portal macht. Es gibt keine Punkte und keinen Vergleich.</li>
+          <li>Das Ein- und Ausschalten steht im Protokoll.</li>
+        </ul>
+      </>
     ),
   },
   FEHLER,

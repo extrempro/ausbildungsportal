@@ -35,6 +35,8 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/aktivitaet.ts`, `server/benachrichtigung.ts` | Glocke und – daran angehängt – Benachrichtigungen per Teams und E-Mail (ohne Namen, nur für Berechtigte) |
 | `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben) |
 | `server/planer.ts`, `server/lernen/planer.ts` | Planer für das Prüfungsvorhaben (z. B. Abschlussprojekt): Inhalt aus `planer.md` im Inhaltspaket, Freischaltung je Azubi im Profil, Eintragungen privat – nur die Termine stehen im Plan |
+| `server/begleiter.ts`, `src/begleiter.tsx`, `src/begleiter/figuren.tsx` | Begleiter der Azubis: selbst gezeichnete Figur mit Zubehör, das sich über die Ausbildungszeit verteilt – freiwillig, privat, ohne Punkte; Schalter für das ganze Portal beim Super-Admin |
+| `src/fuehrung.tsx` | die Führung beim ersten Anmelden, je Rolle eine Folge von Stationen; `server/test/fuehrung.test.ts` prüft, dass jede Station auf etwas zeigt, das es gibt |
 | `src/App.tsx`, `src/router.tsx` | Seiten und eigener Router (`geheZu`, `<Link>`, `useUngespeichert`) |
 | `src/pages/` | je Seite eine Datei; `Handbuch.tsx` ist das Handbuch für alle Rollen |
 | `src/dialoge.tsx` | `rueckfrage()`, `melde()`, `<Ladefehler>` |
@@ -52,10 +54,11 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 3. **`CHANGELOG.md`**: neuer Abschnitt oben, `### Neu` / `### Geändert` / `### Behoben`, in Worten für Nutzer.
 4. **`docs/bedienregeln.md` durchgehen** und im Abschlussbericht sagen, dass geprüft wurde und wo abgewichen wird.
 5. **Handbuch mitziehen** (`src/pages/Handbuch.tsx`) – für jede Rolle, die die Änderung sieht – und an der Stelle im Portal einen `<HandbuchLink kapitel="…">` setzen. Ohne Aufforderung. Aufbau nach `docs/handbuch-regeln.md`.
-6. **Benachrichtigungen mitdenken:** Erfährt durch die Änderung eine andere Person etwas Neues? Dann gehört das Ereignis in die Glocke (`merkeAktivitaet`) – Teams und E-Mail gehen von selbst mit; neue Arten brauchen Texte in `src/glocke.tsx` und `server/benachrichtigung.ts`. Wenn nicht, im Pull Request kurz begründen. Einzelheiten in `docs/bedienregeln.md`.
-7. **Neue Route:** `wer` setzen, in die Rechte-Tabelle in `server/test/api.test.ts` eintragen, den verbotenen Zugriff testen. Fremde Kennung → 404, falsche Rolle → 403.
-8. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole.
-9. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
+6. **Führung mitziehen** (`src/fuehrung.tsx`): Kommt ein Bereich dazu, den jemand am ersten Tag kennen sollte, oder ändert sich eine Stelle, auf die eine Station zeigt? Dann Station ergänzen oder anpassen – für jede Rolle – und die Führung im Browser durchklicken. Wenn nicht, im Pull Request kurz begründen.
+7. **Benachrichtigungen mitdenken:** Erfährt durch die Änderung eine andere Person etwas Neues? Dann gehört das Ereignis in die Glocke (`merkeAktivitaet`) – Teams und E-Mail gehen von selbst mit; neue Arten brauchen Texte in `src/glocke.tsx` und `server/benachrichtigung.ts`. Wenn nicht, im Pull Request kurz begründen. Einzelheiten in `docs/bedienregeln.md`.
+8. **Neue Route:** `wer` setzen, in die Rechte-Tabelle in `server/test/api.test.ts` eintragen, den verbotenen Zugriff testen. Fremde Kennung → 404, falsche Rolle → 403.
+9. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole.
+10. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
 
 ## Bedienung und Gestaltung – die häufigsten Punkte
 
@@ -68,7 +71,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 - **Aufklappen:** `details.karte` oder `details.klapp` – keine eigene Bauform.
 - **Plan-Einträge:** immer über `EintragFelder` (`src/eintragFelder.tsx`).
 - **Personen:** `<Avatar>` aus `src/avatar.tsx`.
-- **Farben:** nur über die Variablen `--c-…` in `src/index.css` (hell und dunkel sind dort festgelegt). Keine festen Farbwerte in neuen Regeln.
+- **Farben:** nur über die Variablen `--c-…` in `src/index.css` (hell und dunkel sind dort festgelegt). Keine festen Farbwerte in neuen Regeln. Einzige Ausnahme: die Figuren des Begleiters haben eigene Farben `--bf-…`.
 - **Schmal und breit:** Hilfsklassen `nur-breit`, `nur-schmal`, `nicht-drucken`, `nur-vorleser`. Das Attribut `hidden` wird vom Stylesheet überschrieben – Elemente stattdessen bedingt rendern.
 - **Einrichtungs-Schalter** nie ausblenden: sperren und erklären, was fehlt.
 - **Sprache:** „du“, kurze Sätze, erklärte Fachwörter (Azubis sind 16 bis 30). Feste Begriffe: Bericht, Azubi, Ausbildungsbeauftragte, Planbaustein, Sammelplanung.
@@ -76,7 +79,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 
 ## Datenschutz und Recht – nicht verhandelbar
 
-- Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung (außer seinen Terminen), private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
+- Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung (außer seinen Terminen), der Begleiter (ob, welche Figur, Name), private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
 - Teams-Karten ohne Namen. Benachrichtigungen nennen nur die Person, an die sie gehen (Anrede mit Vornamen) – keine anderen Namen, keine Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
 - Geheimnisse (Webhook-Adressen, SMTP-Zugang, Kalender-Link) stehen nur in `.env` und werden nie protokolliert.
 - Das Repository ist **öffentlich**: keine privaten Daten, keine echten Namen oder Mailadressen, kein `data/`, keine `.env` – auch nicht in Tests, Commits und Pull-Request-Texten.
