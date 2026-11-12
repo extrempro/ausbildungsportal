@@ -190,6 +190,30 @@ export function paketVon(k: Kontext, wer: Pick<BenutzerZeile, 'id' | 'rolle'>): 
   return z?.p ? (lernpakete(k).get(z.p) ?? null) : null;
 }
 
+/**
+ * Das Paket „für alle Berufe“ (z. B. Anleitungen zum Arbeiten und zur Prüfung): Ein Ausbilder legt es in den Stammdaten fest.
+ * Jeder Azubi sieht es unter „Lernen“ – nur zum Lesen, ohne Ampel, Notizen, Üben und Abzeichen. Es wird nichts dazu gespeichert.
+ */
+const ALLGEMEIN = 'lern_allgemein';
+export function allgemeinesPaketId(db: DB): string | null {
+  return (db.prepare('SELECT wert FROM einstellungen WHERE schluessel = ?').get(ALLGEMEIN) as { wert: string } | undefined)?.wert || null;
+}
+/** Das Paket für alle Berufe – null, wenn keins festgelegt ist oder die Inhalte auf dem Server fehlen. */
+export function allgemeinesPaket(k: Kontext): Paket | null {
+  const id = allgemeinesPaketId(k.db);
+  return id ? (lernpakete(k).get(id) ?? null) : null;
+}
+/** Legt das Paket für alle Berufe fest (null = keins). Nur gültige Pakete, die auf dem Server liegen. */
+export function setzeAllgemeinesPaket(k: Kontext, id: unknown): string | null {
+  if (id === null || id === '') {
+    k.db.prepare('DELETE FROM einstellungen WHERE schluessel = ?').run(ALLGEMEIN);
+    return null;
+  }
+  if (typeof id !== 'string' || !PAKET_ID.test(id) || !lernpakete(k).has(id)) throw new Fehler(400, 'Dieses Lernmodul gibt es auf dem Server nicht');
+  k.db.prepare('INSERT INTO einstellungen (schluessel, wert) VALUES (?, ?) ON CONFLICT(schluessel) DO UPDATE SET wert = excluded.wert').run(ALLGEMEIN, id);
+  return id;
+}
+
 interface StatusZeile {
   unterthema_id: string;
   status: Status;
@@ -293,6 +317,12 @@ function nachSpeichern(c: Ctx, p: Paket, rangVorher: number) {
 function rangJetzt(c: Ctx, p: Paket): number {
   const hat = new Map((c.k.db.prepare('SELECT feld_id, stufe FROM lern_abzeichen WHERE azubi_id = ? AND paket = ?').all(c.b.id, p.id) as unknown as { feld_id: string; stufe: number }[]).map((z) => [z.feld_id, z.stufe]));
   return rangVon(p.inhalte.themenfelder.map((f) => hat.get(f.id) ?? 0)).stufe;
+}
+
+function allgemeines(c: Ctx): Paket {
+  const p = allgemeinesPaket(c.k);
+  if (!p) throw new Fehler(404, 'Es gibt keine Anleitungen für alle Berufe');
+  return p;
 }
 
 function meinPaket(c: Ctx): Paket {
@@ -648,6 +678,28 @@ export const LERN_ROUTEN: Route[] = [
     },
   },
 
+  // ---------- Paket für alle Berufe: jeder Azubi, nur zum Lesen – kein Lernstand, nichts wird gespeichert ----------
+  {
+    m: 'GET',
+    p: '/api/anleitungen',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = allgemeines(c);
+      return { status: 200, body: { paket: paketKopf(p), themenfelder: uebersicht(p, new Map(), new Set(), null) } };
+    },
+  },
+  {
+    m: 'GET',
+    p: '/api/anleitungen/thema/:id',
+    wer: ['azubi'],
+    h: (c) => {
+      const p = allgemeines(c);
+      const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
+      if (!f) throw new Fehler(404, 'Diese Anleitung gibt es nicht');
+      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
+    },
+  },
+
   // ---------- Leseansicht für Ausbilder und Beauftragte: dieselben Inhalte, kein Lernstand ----------
   {
     // alle Lernmodule auf dem Server – auch solche, die noch an keinem Beruf eingeschaltet sind
@@ -655,6 +707,7 @@ export const LERN_ROUTEN: Route[] = [
     p: '/api/lerninhalte',
     wer: BETREUUNG,
     h: (c) => {
+      const allgemein = allgemeinesPaketId(c.k.db);
       const berufe = c.k.db.prepare("SELECT lernpaket, bezeichnung, fachrichtung FROM beruf WHERE lernpaket IS NOT NULL AND lernpaket <> '' ORDER BY bezeichnung COLLATE NOCASE").all() as unknown as { lernpaket: string; bezeichnung: string; fachrichtung: string }[];
       return {
         status: 200,
@@ -665,7 +718,7 @@ export const LERN_ROUTEN: Route[] = [
               ...paketKopf(p),
               themenfelder: p.inhalte.themenfelder.length,
               unterthemen: p.inhalte.themenfelder.reduce((n, f) => n + f.unterthemen.length, 0),
-              berufe: berufe.filter((b) => b.lernpaket === p.id).map((b) => (b.fachrichtung ? `${b.bezeichnung} (${b.fachrichtung})` : b.bezeichnung)),
+              berufe: [...(p.id === allgemein ? ['alle Berufe'] : []), ...berufe.filter((b) => b.lernpaket === p.id).map((b) => (b.fachrichtung ? `${b.bezeichnung} (${b.fachrichtung})` : b.bezeichnung))],
             })),
         },
       };

@@ -35,7 +35,28 @@ export function Inline({ text }: { text: string }) {
 
 /** Bereiche des Lernmoduls – steht oben auf den Hauptseiten unter „Lernen“. */
 export function LernReiter() {
-  const { basis, lesen } = useLern();
+  const { basis, lesen, azubi } = useLern();
+  // Azubi: die Reiter des eigenen Lernmoduls und – wenn es eins gibt – das Paket für alle Berufe
+  if (azubi) {
+    return (
+      <nav className="lern-reiter" aria-label="Bereiche unter Lernen">
+        {azubi.lernen && (
+          <>
+            <Link zu="/lernen">Themenfelder</Link>
+            <Link zu="/lernen/kompendium">Kompendium</Link>
+            <Link zu="/lernen/ueben" aktivAb="/lernen/ueben">
+              Üben
+            </Link>
+          </>
+        )}
+        {azubi.allgemein && (
+          <Link zu="/anleitungen" aktivAb="/anleitungen">
+            {azubi.allgemein}
+          </Link>
+        )}
+      </nav>
+    );
+  }
   return (
     <nav className="lern-reiter" aria-label="Bereiche im Lernmodul">
       <Link zu={basis}>Themenfelder</Link>

@@ -58,7 +58,7 @@ export function LernThema({ id }: { id: string }) {
   // alle Themenfelder mit dem eigenen Stand – für die Navigation am Rand
   const [felder, setFelder] = useState<NavFeld[]>([]);
 
-  const { basis, api: quelle } = useLern();
+  const { basis, api: quelle, anleitungen } = useLern();
   const ladeFelder = useCallback(() => api<{ themenfelder: NavFeld[] }>('GET', quelle).then((r) => setFelder(r.themenfelder), () => undefined), [quelle]);
   useEffect(() => void ladeFelder(), [ladeFelder]);
   // neu erreichtes Abzeichen oder neuer Rang – wird einmal groß gezeigt
@@ -134,18 +134,18 @@ export function LernThema({ id }: { id: string }) {
   return (
     <div className="lern-layout">
       {navi && (
-        <aside className="karte lern-navi" aria-label="Themenfelder">
-          <h2>Themenfelder</h2>
+        <aside className="karte lern-navi" aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>
+          <h2>{anleitungen ? 'Anleitungen' : 'Themenfelder'}</h2>
           {navi}
         </aside>
       )}
       <div className="lern-haupt">
         <p className="klein">
-          <Link zu={basis}>← Alle Themenfelder</Link>
+          <Link zu={basis}>{anleitungen ? '← Alle Anleitungen' : '← Alle Themenfelder'}</Link>
         </p>
         {navi && (
           <details className="klapp lern-navi-klapp">
-            <summary>Themenfeld wechseln</summary>
+            <summary>{anleitungen ? 'Anleitung wechseln' : 'Themenfeld wechseln'}</summary>
             {navi}
           </details>
         )}
@@ -194,7 +194,7 @@ function useAktivesUnterthema(t: Thema | null): string | null {
 
 /** Navigation am Rand: alle Themenfelder mit Stand; beim geöffneten Themenfeld darunter seine Unterthemen. */
 function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; aktiv: string | null }) {
-  const { basis, lesen } = useLern();
+  const { basis, lesen, anleitungen } = useLern();
   const springe = (ziel: string) => document.getElementById(ziel)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   return (
     <ul className="lern-navi-liste">
@@ -228,7 +228,7 @@ function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; akti
             )}
             {f.id === id && f.zusatz.length > 0 && (
               <>
-                <p className="lern-navi-zwischen">Zusatzwissen</p>
+                <p className="lern-navi-zwischen">{anleitungen ? 'Zum Vertiefen' : 'Zusatzwissen'}</p>
                 <ul className="lern-navi-unter" aria-label={`Zusatzwissen: ${f.titel}`}>
                   {f.zusatz.map((z) => (
                     <li key={z.id}>
@@ -253,7 +253,7 @@ function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; akti
 
 function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema; paket: LernPaket; abzeichen: FeldAbzeichen; aendere: (unterthema: string, p: Aenderung) => Promise<void>; setzeGelesen: (z: Zusatz, gelesen: boolean) => Promise<void> }) {
   const z = zaehle(t.unterthemen);
-  const { lesen } = useLern();
+  const { lesen, anleitungen } = useLern();
   return (
     <>
       <h1>
@@ -278,7 +278,7 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
             <span>{prozent(z)} %</span>
           </span>
         )}
-        <span className="leise klein">{lesen ? `${z.n} Unterthemen` : `${z.n} Unterthemen: ${zusammenfassung(z)}`}</span>
+        <span className="leise klein">{anleitungen ? `${z.n} Abschnitte` : lesen ? `${z.n} Unterthemen` : `${z.n} Unterthemen: ${zusammenfassung(z)}`}</span>
       </div>
       <section className="karte abz-feld" hidden={lesen} aria-label="Abzeichen in diesem Themenfeld">
         <Schild stufe={abzeichen.stufe} groesse={64} />
@@ -302,8 +302,12 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
         </section>
       )}
 
-      <h2 className="abschnitt-titel">Unterthemen</h2>
-      {lesen ? (
+      <h2 className="abschnitt-titel">{anleitungen ? 'Schritt für Schritt' : 'Unterthemen'}</h2>
+      {anleitungen ? (
+        <p className="leise">
+          Zum Lesen und Nachschlagen – ohne Ampel und ohne Abzeichen. <HandbuchLink kapitel="anleitungen">Anleitungen lesen</HandbuchLink>
+        </p>
+      ) : lesen ? (
         <p className="leise">
           So sehen die Azubis die Inhalte. Bei ihnen steht an jedem Unterthema zusätzlich die Ampel und ein Feld für Notizen. <HandbuchLink kapitel="lernansicht">Lerninhalte ansehen</HandbuchLink>
         </p>
@@ -355,7 +359,7 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
 function UnterthemaKarte({ feld, u, nr, von, aendere }: { feld: string; u: Unterthema; /** Stelle im Themenfeld, ab 1 */ nr: number; von: number; aendere: (p: Aenderung) => Promise<void> }) {
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState('');
-  const { basis, lesen } = useLern();
+  const { basis, lesen, anleitungen } = useLern();
   const tue = async (p: Aenderung, bestaetigung?: string) => {
     setLaeuft(true);
     setFehler('');
@@ -422,7 +426,7 @@ function UnterthemaKarte({ feld, u, nr, von, aendere }: { feld: string; u: Unter
       {u.vertiefung.length > 0 && (
         <div className="lern-vertiefung">
           <strong>
-            <Icon name="stern" /> Vertiefung im Zusatzwissen
+            <Icon name="stern" /> {anleitungen ? 'Mehr dazu weiter unten' : 'Vertiefung im Zusatzwissen'}
           </strong>
           <ul>
             {u.vertiefung.map((v) => (

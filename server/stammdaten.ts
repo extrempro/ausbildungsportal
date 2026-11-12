@@ -1,6 +1,6 @@
 import { alleFirmentermine } from './firmentermin';
 import { merkeAktivitaet } from './aktivitaet';
-import { lernpakete, paketListe } from './lernen';
+import { allgemeinesPaketId, lernpakete, paketListe, setzeAllgemeinesPaket } from './lernen';
 import { planerDesBerufs, planerDesPakets } from './planer';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
@@ -299,6 +299,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         bundeslaender: Object.entries(BUNDESLAENDER).map(([kuerzel, name]) => ({ kuerzel, name })),
         // Inhaltspakete für das Lernmodul – zur Auswahl am Beruf
         lernpakete: c.b.rolle === 'ausbilder' ? paketListe(c.k) : [],
+        // das Paket, das alle Azubis unter „Lernen“ zum Lesen sehen (z. B. Anleitungen zum Arbeiten und zur Prüfung)
+        lernAllgemein: c.b.rolle === 'ausbilder' ? allgemeinesPaketId(c.k.db) : null,
         // nur Ausbilder brauchen die Liste, um den zuständigen Ausbilder auszuwählen
         ausbilder:
           c.b.rolle === 'ausbilder'
@@ -335,6 +337,19 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       setze.run('betrieb_bericht_form', neu.berichtForm);
       protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, 'Betrieb');
       return { status: 200, body: { betrieb: neu } };
+    },
+  },
+
+  {
+    // Paket „für alle Berufe“ festlegen oder wegnehmen
+    m: 'PUT',
+    p: '/api/stammdaten/lern-allgemein',
+    wer: ['ausbilder'],
+    h: (c) => {
+      const alt = allgemeinesPaketId(c.k.db);
+      const neu = setzeAllgemeinesPaket(c.k, koerper(c).paket ?? null);
+      if (neu !== alt) protokolliere(c.k.db, c.k.jetzt(), 'fach', 'stammdaten_geaendert', c.b, null, neu ? `Lerninhalte für alle Berufe: ${neu}` : 'Lerninhalte für alle Berufe ausgeschaltet');
+      return { status: 200, body: { lernAllgemein: neu } };
     },
   },
 

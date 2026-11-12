@@ -9,7 +9,7 @@ import { geheZu } from './router';
  * Freiwillig, jederzeit abbrechbar (Escape) und beliebig oft neu startbar (Menü, Handbuch).
  */
 /** Bereiche, die nicht jedes Konto hat */
-export type Bereich = 'lernen' | 'planer';
+export type Bereich = 'lernen' | 'anleitungen' | 'planer';
 
 interface Schritt {
   titel: string;
@@ -46,6 +46,14 @@ const AZUBI: Schritt[] = [
     pfad: '/',
     ziel: ['.haupt-nav a[href="/lernen"]', '.tabs a[href="/lernen"]'],
     braucht: 'lernen',
+  },
+  {
+    // nur wenn es kein Lernmodul für den Beruf gibt – sonst zeigt die Station „Lernen“ auf denselben Menüpunkt
+    titel: 'Anleitungen',
+    text: 'Unter „Lernen“ stehen Anleitungen, die für alle Berufe gelten – zum Beispiel zum strukturierten Arbeiten und zur Prüfung. Sie sind nur zum Lesen.',
+    pfad: '/',
+    ziel: ['.haupt-nav a[href="/anleitungen"]', '.tabs a[href="/anleitungen"]'],
+    braucht: 'anleitungen',
   },
   {
     titel: 'Planer für deine Prüfung',

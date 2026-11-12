@@ -33,7 +33,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/firmentermin.ts` | Firmentermine für alle (Stammdaten) – reine Übersicht in Plan und Jahreskalender, bewusst ohne Glocke und nicht im Berichtsheft |
 | `server/mail-gestalt.ts` | das gemeinsame Aussehen aller Mails (`gestalteMail`) – neue Mails nicht von Hand gestalten |
 | `server/aktivitaet.ts`, `server/benachrichtigung.ts` | Glocke und – daran angehängt – Benachrichtigungen per Teams und E-Mail (ohne Namen, nur für Berechtigte) |
-| `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben) |
+| `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben); dazu ein Paket „für alle Berufe“ (Einstellung `lern_allgemein`, in den Stammdaten festgelegt), das jeder Azubi unter `/anleitungen` nur liest – ohne Lernstand, nichts wird gespeichert |
 | `server/planer.ts`, `server/lernen/planer.ts` | Planer für das Prüfungsvorhaben (z. B. Abschlussprojekt): Inhalt aus `planer.md` im Inhaltspaket, Freischaltung je Azubi im Profil, Eintragungen privat – nur die Termine stehen im Plan |
 | `server/begleiter.ts`, `src/begleiter.tsx`, `src/begleiter/figuren.tsx` | Begleiter der Azubis: selbst gezeichnete Figur mit Zubehör, das sich über die Ausbildungszeit verteilt – freiwillig, privat, ohne Punkte; Schalter für das ganze Portal beim Super-Admin |
 | `server/begleiter-erinnerung.ts` | woran der Begleiter erinnert (fehlender Bericht, Berufsschule, Firmentermin, Prüfung, Urlaub, Unterschrift) – bei jeder Abfrage neu errechnet, nichts gespeichert, nie ans Lernen; neue Arten dort, in `ERINNERUNGEN` in `src/begleiter.tsx` und im Handbuch |

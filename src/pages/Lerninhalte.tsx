@@ -97,24 +97,32 @@ interface Feld {
 
 /** Die Themenfelder eines Lernmoduls – ohne Ampel. Läuft innerhalb von <Leseansicht>. */
 export function LerninhalteUebersicht() {
-  const { basis, api: quelle } = useLern();
+  const { basis, api: quelle, anleitungen } = useLern();
   const [daten, setDaten] = useState<{ paket: LernPaket; themenfelder: Feld[] } | null>(null);
   const [fehler, setFehler] = useState('');
   useEffect(() => {
     api<{ paket: LernPaket; themenfelder: Feld[] }>('GET', quelle).then(setDaten, (e: Error) => setFehler(e.message));
   }, [quelle]);
-  if (fehler) return <Ladefehler titel="Lerninhalte" text={fehler} />;
+  if (fehler) return <Ladefehler titel={anleitungen ? 'Anleitungen' : 'Lerninhalte'} text={fehler} />;
   if (!daten) return <p className="leise">Lädt …</p>;
   return (
     <>
-      <p className="klein">
-        <Link zu="/lerninhalte">← Alle Lernmodule</Link>
-      </p>
+      {!anleitungen && (
+        <p className="klein">
+          <Link zu="/lerninhalte">← Alle Lernmodule</Link>
+        </p>
+      )}
       <h1>{daten.paket.titel}</h1>
       <LernReiter />
-      <p className="leise">
-        So sehen die Azubis ihr Lernmodul – hier nur zum Lesen, ohne Ampel, Notizen und Abzeichen. <HandbuchLink kapitel="lernansicht">Lerninhalte ansehen</HandbuchLink>
-      </p>
+      {anleitungen ? (
+        <p className="leise">
+          Anleitungen für alle Berufe – zum Lesen und Nachschlagen. Hier gibt es keine Ampel und keine Abzeichen. <HandbuchLink kapitel="anleitungen">Anleitungen lesen</HandbuchLink>
+        </p>
+      ) : (
+        <p className="leise">
+          So sehen die Azubis ihr Lernmodul – hier nur zum Lesen, ohne Ampel, Notizen und Abzeichen. <HandbuchLink kapitel="lernansicht">Lerninhalte ansehen</HandbuchLink>
+        </p>
+      )}
       <ul className="lern-kacheln">
         {daten.themenfelder.map((f) => (
           <li key={f.id}>
@@ -135,8 +143,8 @@ export function LerninhalteUebersicht() {
                 ))}
               </span>
               <span className="leise klein">
-                {f.unterthemen.length} Unterthemen
-                {f.zusatz.length > 0 && ` · ${f.zusatz.length}× Zusatzwissen`}
+                {f.unterthemen.length} {anleitungen ? 'Abschnitte' : 'Unterthemen'}
+                {f.zusatz.length > 0 && (anleitungen ? ` · ${f.zusatz.length}× zum Vertiefen` : ` · ${f.zusatz.length}× Zusatzwissen`)}
               </span>
             </Link>
           </li>
