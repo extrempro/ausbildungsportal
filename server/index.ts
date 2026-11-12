@@ -6,6 +6,7 @@ import { erzeugeServer } from './http';
 import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
 import { lernpakete } from './lernen';
+import { verschickeFaellige } from './benachrichtigung';
 
 const cfg = loadConfig();
 wechsleZumBesitzer(cfg.dataDir);
@@ -23,6 +24,8 @@ console.log(
 if (cfg.devAnmeldung) console.warn('WARNUNG: DEV_ANMELDUNG ist an – Anmeldung als Testkonto ohne Passwort möglich.');
 
 setInterval(() => raeumeAuf(db, new Date()), 60 * 60 * 1000).unref();
+// Benachrichtigungen per Teams und E-Mail: jede Minute verschicken, was lange genug gesammelt wurde
+setInterval(() => void verschickeFaellige(k).catch(() => k.log('Benachrichtigungen konnten nicht verschickt werden')), 60 * 1000).unref();
 
 const server = erzeugeServer(k, fileURLToPath(new URL('../dist', import.meta.url)));
 server.listen(cfg.port, cfg.host, () => {

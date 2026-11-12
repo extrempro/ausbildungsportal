@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.40.0] – 2026-11-12
+
+### Neu
+
+- **Benachrichtigungen per Teams und E-Mail** – zusätzlich zur Glocke. Azubis, Ausbildungsbeauftragte und Ausbilder stellen unter „Konto“ selbst ein, wofür sie eine Nachricht bekommen: getrennt für Berichtsheft, Urlaub und Ausbildungsplan, jeweils per Teams, per E-Mail, beides oder gar nicht. Anfangs ist alles aus.
+  - Verschickt wird nur, was die Person auch in der Glocke sieht – nie die eigene Handlung.
+  - In den Nachrichten stehen **keine Namen und keine Inhalte**, nur was passiert ist („Ein Bericht für KW 46 wurde eingereicht“) und ein Link ins Portal.
+  - Was kurz nacheinander passiert, kommt nach etwa drei Minuten als eine Nachricht.
+  - „Testnachricht senden“ zeigt, ob und wie die Nachricht ankommt.
+  - Ist ein Weg im Portal nicht eingerichtet, sind seine Haken gesperrt und der Grund steht darunter.
+  - Gespeichert wird nur die Auswahl; einen Verlauf verschickter Nachrichten gibt es nicht.
+- **Für den Betrieb:** Teams braucht einen eigenen Workflow und die neue Einstellung `TEAMS_CHAT_WEBHOOK_URL`; E-Mail nutzt den vorhandenen Mailserver (`SMTP_…`). Die Anleitung steht im README unter „Benachrichtigungen per Teams und E-Mail“. Ohne Einrichtung ändert sich nichts.
+
 ## [0.39.3] – 2026-11-11
 
 ### Neu

@@ -4,6 +4,7 @@ import type { DB } from './db';
 import { heute } from './datum';
 import { sichtbareAzubis } from './rechte';
 import type { BenutzerZeile } from './typen';
+import { stelleEin } from './benachrichtigung';
 
 /**
  * Aktivitäten für die Glocke in der Kopfzeile.
@@ -45,7 +46,7 @@ export function merkeAktivitaet(
   if (anzahl < 1) return;
   const grenze = new Date(jetzt.getTime() - AUFBEWAHRUNG_TAGE * 86_400_000).toISOString();
   db.prepare('DELETE FROM aktivitaet WHERE zeit < ?').run(grenze);
-  db.prepare('INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl, sammel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+  const r = db.prepare('INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl, sammel_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
     jetzt.toISOString(),
     azubiId,
     wer.id,
@@ -56,6 +57,8 @@ export function merkeAktivitaet(
     anzahl,
     sammelId,
   );
+  // wer dafür eine Nachricht per Teams oder E-Mail gewählt hat, bekommt sie etwas später gebündelt
+  stelleEin(db, jetzt, Number(r.lastInsertRowid), art, azubiId, wer.id);
 }
 
 interface Zeile {

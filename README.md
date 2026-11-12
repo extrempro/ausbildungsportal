@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.39.3.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.40.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -84,7 +84,8 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
 | `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
 | `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung nach Teams; Standard `false` |
-| `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle (siehe „Mail an die Personalstelle“) |
+| `TEAMS_CHAT_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der eine Nachricht als Chat an eine einzelne Person schickt (siehe „Benachrichtigungen per Teams und E-Mail“) |
+| `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle und für Benachrichtigungen per E-Mail (siehe „Mail an die Personalstelle“) |
 | `SMTP_PORT`, `SMTP_SICHERHEIT` | Port und `starttls` (Vorgabe, Port 587), `tls` (Port 465) oder `keine` (Port 25, nur internes Relay ohne Anmeldung) |
 | `SMTP_BENUTZER`, `SMTP_PASSWORT` | Anmeldung am Mailserver, falls er eine verlangt |
 | `DEV_ANMELDUNG` | nur zum Entwickeln |
@@ -106,6 +107,37 @@ Gut zu wissen:
 - Über dieselbe Adresse meldet das Portal auch, wenn ein Ausbilder Lerninhalte einreicht (Lernmodul, Umfang, Link zur Prüfung – ohne Namen).
 - Antwortet Teams nicht, wird die Meldung trotzdem gespeichert; der Grund steht im Log (`docker compose logs app`).
 - Die früheren „Eingehenden Webhooks“ (Office-365-Connectors) hat Microsoft eingestellt; das Portal schickt das Format, das die Workflows erwarten (Adaptive Card). Mit einem echten Teams-Kanal ist das noch nicht erprobt.
+
+### Benachrichtigungen per Teams und E-Mail
+
+Freiwillig: Azubis, Ausbildungsbeauftragte und Ausbilder können sich zusätzlich zur Glocke per Teams oder E-Mail benachrichtigen lassen. Jede Person schaltet das unter **Konto → Benachrichtigungen** selbst ein – je Bereich (Berichtsheft, Urlaub, Ausbildungsplan) und je Weg. Anfangs ist alles aus.
+
+**E-Mail** nutzt den Mailserver aus „Mail an die Personalstelle“ (`SMTP_…`). Mehr ist nicht einzurichten.
+
+**Teams** braucht einen eigenen Workflow, der eine Karte als Chat an eine einzelne Person schickt – ein anderer als der für den Kanal:
+
+1. Unter `make.powerautomate.com` (oder in Teams unter **Apps → Workflows**) einen neuen Flow **ohne Vorlage** anlegen.
+2. Auslöser: **„Beim Empfang einer Teams-Webhookanforderung“**. Bei „Wer kann den Flow auslösen?“ **Jeder** wählen – mit „Beliebige Person in meinem Mandanten“ verlangt der Flow eine Anmeldung, die das Portal nicht mitbringt (Fehler `DirectApiAuthorizationRequired`).
+3. Aktion: **„Karte in einem Chat oder Kanal veröffentlichen“** mit
+   - Veröffentlichen als: **Flow-Bot**
+   - Veröffentlichen in: **Chat mit Flow-Bot**
+   - Empfänger (als Ausdruck): `triggerBody()?['empfaenger']`
+   - Adaptive Karte (als Ausdruck): `triggerBody()?['karte']`
+4. Speichern, die HTTP-URL des Auslösers kopieren und in der `.env` als `TEAMS_CHAT_WEBHOOK_URL` eintragen, dann `docker compose up -d`.
+5. Im Portal unter **Konto → Benachrichtigungen** auf „Testnachricht per Teams senden“ klicken.
+
+Gut zu wissen:
+
+- Das Portal schickt `{ "empfaenger": "<Anmeldename>", "karte": { …Adaptive Card… } }`. Die Namen der Vorlagen und Felder können je nach Teams-Version abweichen; der vereinfachte Editor in Teams bietet den Chat an eine einzelne Person nicht immer an – dann den Flow unter `make.powerautomate.com` anlegen.
+- Die Adresse ist ein Geheimnis: Wer sie kennt, kann jeder Person im Mandanten über den Bot schreiben. Sie gehört nur in die `.env`.
+- Der Absender in Teams heißt „Workflows“. Das lässt sich auf diesem Weg nicht ändern.
+- Der Workflow gehört dem Konto, das ihn anlegt. Wird dieses Konto gelöscht oder der Flow abgeschaltet, kommen keine Nachrichten mehr an.
+- Empfänger ist der Anmeldename (UPN) der Person; E-Mails gehen an dieselbe Adresse. Weicht die Mail-Adresse bei euch vom Anmeldenamen ab, kommen E-Mails nicht an.
+- **In den Nachrichten stehen keine Namen und keine Inhalte** – nur, was passiert ist („Ein Bericht für KW 46 wurde eingereicht“), und ein Link ins Portal. Verschickt wird nur, was die Person auch in der Glocke sieht.
+- Was kurz nacheinander passiert, sammelt das Portal etwa drei Minuten und schickt es als eine Nachricht je Person.
+- Gespeichert wird die Auswahl je Person und – bis zum Versand – was noch zu verschicken ist. Einen Verlauf verschickter Nachrichten gibt es nicht.
+- Scheitert der Versand, steht der Grund im Log (`docker compose logs app`, ohne Adresse und ohne Empfänger); die Nachricht wird nicht wiederholt, die Glocke zeigt das Ereignis weiterhin.
+- Erprobt ist der Weg über Teams mit einem von Hand aufgerufenen Workflow, der Versand aus dem Portal bisher nur in den Tests.
 
 ### Mail an die Personalstelle
 
