@@ -20,6 +20,8 @@ interface Schritt {
   ziel?: string[];
   /** Der Schritt gehört zu einem Bereich, den nicht jeder hat. Er kommt nur vor, wenn das Konto den Bereich hat – sonst zeigte die Führung etwas, das es nicht gibt. */
   braucht?: Bereich;
+  /** Ohne ihr Ziel ergibt die Station keinen Sinn (z. B. die Kennzahlen, solange der Ausbildungsbeginn fehlt): Dann wird sie übersprungen. */
+  nurMitZiel?: boolean;
 }
 
 const MENUE = ['.menue.ich .menue-knopf', '.tabs button'];
@@ -34,8 +36,8 @@ const GLOCKE = (text: string): Schritt => ({ titel: 'Was gibt es Neues?', text, 
 const AZUBI: Schritt[] = [
   { titel: 'Willkommen im Ausbildungsportal', text: 'Ich zeige dir kurz das Wichtigste: deinen Ausbildungsplan, das Berichtsheft und was es sonst noch gibt. Du kannst jederzeit abbrechen.', pfad: '/' },
   { titel: 'Dein Ausbildungsplan', text: 'Das ist deine Startseite. Hier steht, was diese Woche ansteht: Berufsschule, Abteilung, Aufgaben.', pfad: '/', ziel: ['.wochenkarte.hervor', 'main h1'] },
-  { titel: 'Auf einen Blick', text: 'Wie lange noch bis zur Prüfung? Fehlen Berichte? Sind Aufgaben offen? Das steht hier.', pfad: '/', ziel: ['.kennzahlen'] },
-  { titel: 'Alle Wochen', text: 'Darunter steht jede Woche deiner Ausbildung. Mit dem „+“ trägst du eigene Aufgaben, Notizen und Termine ein – zum Beispiel eine JAV-Sitzung. Erledigte Aufgaben hakst du ab.', pfad: '/', ziel: ['li.kw.heute', '.plan-jahr'] },
+  { titel: 'Auf einen Blick', text: 'Wie lange noch bis zur Prüfung? Fehlen Berichte? Sind Aufgaben offen? Das steht hier.', pfad: '/', ziel: ['.kennzahlen'], nurMitZiel: true },
+  { titel: 'Alle Wochen', text: 'Darunter steht jede Woche deiner Ausbildung. Mit dem „+“ trägst du eigene Aufgaben, Notizen und Termine ein – zum Beispiel eine JAV-Sitzung. Erledigte Aufgaben hakst du ab.', pfad: '/', ziel: ['li.kw.heute', '.plan-jahr'], nurMitZiel: true },
   { titel: 'Das Berichtsheft', text: 'Für jede Woche schreibst du einen Bericht: Was hast du gemacht, und wie viele Stunden? Hier geht es dorthin.', pfad: '/', ziel: ['.haupt-nav a[href="/berichtsheft"]', '.tabs a[href="/berichtsheft"]'] },
   { titel: 'Einen Bericht schreiben', text: 'Bei jeder Woche steht ein Knopf. „Schreiben“ öffnet die Woche. Dort trägst du ein, speicherst als Entwurf oder reichst ein.', pfad: '/berichtsheft', ziel: ['table.stapel tbody tr td.aktion a', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Unterschreibe hier einmal mit Finger, Stift oder Maus. Die Unterschrift kommt unter jeden Bericht, den du einreichst.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
@@ -184,6 +186,12 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
   const hat = bereiche.join(',');
   const schritte = useMemo(() => schritteFuer(rolle).filter((x) => !x.braucht || hat.split(',').includes(x.braucht)), [rolle, hat]);
   const [nr, setNr] = useState(0);
+  // in welche Richtung zuletzt geblättert wurde – eine übersprungene Station geht in dieser Richtung weiter
+  const richtung = useRef(1);
+  const gehe = useCallback((d: 1 | -1) => {
+    richtung.current = d;
+    setNr((n) => n + d);
+  }, []);
   const [rahmen, setRahmen] = useState<Rahmen | null>(null);
   const [bereit, setBereit] = useState(false);
   // nach einem Wechsel der Seite: der Menüpunkt der neuen Seite, zusätzlich umrandet
@@ -231,7 +239,9 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
       if (abgebrochen) return;
       const el = (s.ziel ?? []).flatMap((sel) => [...document.querySelectorAll(sel)]).find(sichtbar) ?? null;
       // ohne Ziel (oder wenn es nach drei Sekunden nicht da ist) steht die Karte in der Mitte
-      if (!el && s.ziel && versuche++ < 30) return void window.setTimeout(suche, 100);
+      if (!el && s.ziel && versuche++ < (s.nurMitZiel ? 12 : 30)) return void window.setTimeout(suche, 100);
+      // die Station zeigt etwas, das es für dieses Konto gerade nicht gibt: weiter zur nächsten
+      if (!el && s.nurMitZiel) return void setNr((n) => Math.max(0, Math.min(schritte.length - 1, n + richtung.current)));
       ziel.current = el;
       if (el) {
         const r = el.getBoundingClientRect();
@@ -252,7 +262,7 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
     return () => {
       abgebrochen = true;
     };
-  }, [nr, s, miss]);
+  }, [nr, s, miss, schritte.length]);
 
   // beim Scrollen und bei Größenänderung nachführen
   useEffect(() => {
@@ -278,8 +288,8 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
   useEffect(() => {
     const taste = (e: KeyboardEvent) => {
       if (e.key === 'Escape') beende();
-      else if (e.key === 'ArrowRight' && !letzter) setNr((n) => n + 1);
-      else if (e.key === 'ArrowLeft' && nr > 0) setNr((n) => n - 1);
+      else if (e.key === 'ArrowRight' && !letzter) gehe(1);
+      else if (e.key === 'ArrowLeft' && nr > 0) gehe(-1);
       else if (e.key === 'Tab' && karte.current) {
         const knoepfe = [...karte.current.querySelectorAll<HTMLElement>('button')];
         const erstes = knoepfe[0];
@@ -298,7 +308,7 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
     };
     window.addEventListener('keydown', taste);
     return () => window.removeEventListener('keydown', taste);
-  }, [beende, letzter, nr]);
+  }, [beende, letzter, nr, gehe]);
 
   // der Fokus liegt auf der Karte, damit Bildschirmleser den Schritt vorlesen
   useLayoutEffect(() => {
@@ -375,7 +385,7 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
             </button>
             <span className="fuehrung-rechts">
               {nr > 0 && (
-                <button type="button" className="knopf schlicht klein" onClick={() => setNr(nr - 1)}>
+                <button type="button" className="knopf schlicht klein" onClick={() => gehe(-1)}>
                   Zurück
                 </button>
               )}
@@ -384,7 +394,7 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
                   Fertig
                 </button>
               ) : (
-                <button type="button" className="knopf klein fuehrung-weiter" onClick={() => setNr(nr + 1)}>
+                <button type="button" className="knopf klein fuehrung-weiter" onClick={() => gehe(1)}>
                   Weiter
                 </button>
               )}

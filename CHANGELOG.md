@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.54.0] – 2026-11-12
+
+### Behoben
+
+- **Führung ohne Ausbildungsbeginn:** Fehlt im Profil eines Azubis noch der Ausbildungsbeginn, zeigte die Führung trotzdem die Stationen „Auf einen Blick“ und „Alle Wochen“ – obwohl es beides dann noch nicht gibt. Diese Stationen werden jetzt übersprungen.
+
+### Geändert
+
+- **Für die Entwicklung:** Die wichtigsten Abläufe werden jetzt bei jeder Änderung automatisch im Browser durchgespielt (erste Anmeldung, Berichtsheft, Urlaub, Lernen, Planer, Begleiter, Führung jeder Rolle, Handy-Breite ohne Überlauf). Für die Nutzung des Portals ändert sich dadurch nichts.
+
 ## [0.53.1] – 2026-11-12
 
 ### Behoben

@@ -6,6 +6,8 @@ ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-alpine AS build
 WORKDIR /app
 COPY package.json ./
+# Playwright (nur für die E2E-Tests) soll hier keinen Browser herunterladen
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build

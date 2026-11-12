@@ -1,4 +1,4 @@
-# Prüft jeden Push und Pull Request: Typen, Tests (inkl. Rechte- und Anmeldetests), Build.
+# Prüft jeden Push und Pull Request: Typen, Tests (inkl. Rechte- und Anmeldetests), Build – und die wichtigsten Abläufe im Browser (E2E).
 name: CI
 
 on:
@@ -18,9 +18,34 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
+        env:
+          # der Browser für die E2E-Tests wird hier nicht gebraucht
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  e2e:
+    # Spielt die wichtigsten Abläufe im echten Browser durch: je Testdatei ein frisches Portal mit erfundenen Daten.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Browser installieren
+        run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - name: Bildschirmfotos der gescheiterten Abläufe
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-bilder
+          path: e2e/ergebnis/
+          if-no-files-found: ignore
+          retention-days: 7
 
   docker:
     # Baut das Image und prüft, dass der Container startet, gesund wird und seine Daten behält.
