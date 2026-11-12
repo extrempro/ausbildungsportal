@@ -17,6 +17,8 @@ export interface Pruefung {
   dateien: number;
   /** Titel des Planers für die Prüfung (planer.md); leer oder fehlend = das Paket hat keinen */
   planer?: string;
+  /** Folgen für vorhandene Daten, die beim Einreichen bestätigt wurden */
+  achtung?: string[];
   fehler: string[];
   warnungen: string[];
   ignoriert: string[];
@@ -142,6 +144,18 @@ export function EinreichungKarte({ e, onGeaendert }: { e: Einreichung; onGeaende
           {e.rueckmeldung}
         </p>
       )}
+      {(p.achtung ?? []).length > 0 && (
+        <div className="hinweis">
+          <p>
+            <strong>Folgen für vorhandene Daten</strong> – beim Einreichen bestätigt:
+          </p>
+          <ul className="einr-meldungen">
+            {(p.achtung ?? []).map((z, i) => (
+              <li key={i}>{z}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <Liste titel="Hinweise der automatischen Prüfung" zeilen={p.warnungen} />
       <Liste titel="Nicht übernommene Dateien" zeilen={p.ignoriert} />
 
@@ -221,8 +235,22 @@ export function EinreichenFormular({ maxMb, onEingereicht }: { maxMb: number; on
     setLaeuft(true);
     setFehler('');
     setListe([]);
+    const ziel = `/api/lernpakete/einreichungen?kennung=${encodeURIComponent(kennung)}&notiz=${encodeURIComponent(notiz)}`;
     try {
-      await ladeHoch(`/api/lernpakete/einreichungen?kennung=${encodeURIComponent(kennung)}&notiz=${encodeURIComponent(notiz)}`, datei, 'application/zip');
+      try {
+        await ladeHoch(ziel, datei, 'application/zip');
+      } catch (err) {
+        // Die neue Fassung hat Folgen für vorhandene Daten (fehlende Kennungen, Paket kommt schon vom Server): erst nachfragen
+        const achtung = err instanceof ApiFehler && Array.isArray(err.daten.achtung) ? (err.daten.achtung as string[]) : null;
+        if (!achtung) throw err;
+        const ja = await rueckfrage(['Lerninhalte trotzdem einreichen?', ...achtung].join('\n\n'), { ja: 'Trotzdem einreichen' });
+        if (!ja) {
+          setFehler('Nicht eingereicht. Du kannst die Dateien ändern und es noch einmal versuchen.');
+          setListe(achtung);
+          return;
+        }
+        await ladeHoch(`${ziel}&bestaetigt=1`, datei, 'application/zip');
+      }
       setKennung('');
       setNotiz('');
       setDatei(null);

@@ -2,9 +2,11 @@ import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync }
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { Fehler, idAus, koerper, text } from './api-basis';
-import type { Ctx, Route } from './api-basis';
+import type { Ctx, Kontext, Route } from './api-basis';
 import { lernpakete, portalLernDir, pruefeLernpaketeSofort } from './lernen';
-import { ladeInhalte } from './lernen/store';
+import { planerKennungen } from './lernen/planer';
+import { ladeInhalte, unterthemaIndex, zusatzIds } from './lernen/store';
+import type { Inhalte } from './lernen/store';
 import { benachrichtige, teamsKarteEinreichung } from './meldungen';
 import { protokolliere } from './protokoll';
 import { leseZip, ZipFehler } from './zip';
@@ -50,6 +52,8 @@ interface Pruefung {
   dateien: number;
   /** Titel des Planers aus planer.md; leer oder fehlend = das Paket hat keinen */
   planer?: string;
+  /** Folgen für vorhandene Daten, die der Ausbilder vor dem Einreichen bestätigt hat (z. B. fehlende Kennungen) */
+  achtung?: string[];
   fehler: string[];
   warnungen: string[];
   /** Dateien im Archiv, die nicht zu einem Inhaltspaket gehören und nicht übernommen werden */
@@ -80,7 +84,7 @@ function schreibe(ziel: string, dateien: ZipDatei[]): void {
 }
 
 /** Entpackt und prüft ein eingereichtes Archiv mit dem Einleser des Lernmoduls. */
-function pruefe(zip: Buffer): { pruefung: Pruefung; dateien: ZipDatei[] } {
+function pruefe(zip: Buffer): { pruefung: Pruefung; dateien: ZipDatei[]; inhalte: Inhalte } {
   let alle: ZipDatei[];
   try {
     alle = leseZip(zip, GRENZEN);
@@ -103,6 +107,7 @@ function pruefe(zip: Buffer): { pruefung: Pruefung; dateien: ZipDatei[] } {
     }
     return {
       dateien,
+      inhalte,
       pruefung: {
         titel,
         stand: inhalte.meta.stand,
@@ -122,6 +127,39 @@ function pruefe(zip: Buffer): { pruefung: Pruefung; dateien: ZipDatei[] } {
   } finally {
     rmSync(ordner, { recursive: true, force: true });
   }
+}
+
+const aufzaehlung = (ids: string[]) => `${ids.slice(0, 12).join(', ')}${ids.length > 12 ? ` … und ${ids.length - 12} weitere` : ''}`;
+
+/**
+ * Was eine neue Fassung für vorhandene Daten bedeutet – der Ausbilder bestätigt das vor dem Einreichen:
+ * Kennungen, die es bisher gab und die jetzt fehlen (daran hängen Lernstand und Eintragungen im Planer),
+ * und ein Paket, das der Betreiber schon als Ordner einbindet (dann gilt künftig die Einreichung).
+ */
+export function folgenDerEinreichung(k: Kontext, kennung: string, neu: Inhalte): string[] {
+  const alt = lernpakete(k).get(kennung);
+  if (!alt) return [];
+  const out: string[] = [];
+  if (alt.herkunft === 'ordner') {
+    out.push(`Ein Lernmodul mit der Kennung „${kennung}“ bindet der Betreiber schon als Ordner auf dem Server ein. Wird deine Einreichung hochgeladen, gilt ab dann sie – spätere Änderungen im Ordner kommen nicht mehr an. Je Lernmodul sollte es nur einen Weg geben.`);
+  }
+  const neueThemen = new Set([...unterthemaIndex(neu).keys(), ...zusatzIds(neu)]);
+  const fehlt = [...unterthemaIndex(alt.inhalte).keys(), ...zusatzIds(alt.inhalte)].filter((id) => !neueThemen.has(id) && !(id in neu.umbenennungen));
+  if (fehlt.length) {
+    out.push(`${fehlt.length === 1 ? 'Eine Kennung' : `${fehlt.length} Kennungen`} aus den Cheatsheets ${fehlt.length === 1 ? 'fehlt' : 'fehlen'} in der neuen Fassung: ${aufzaehlung(fehlt)}. Der Lernstand der Azubis dazu ist dann nicht mehr zu sehen. Wurde eine Kennung nur umbenannt, gehört sie in umbenennungen.json.`);
+  }
+  if (alt.inhalte.planer) {
+    if (!neu.planer) {
+      out.push(`Die neue Fassung enthält keinen Planer mehr (planer.md fehlt). Azubis, für die „${alt.inhalte.planer.titel}“ freigeschaltet ist, sehen ihn dann nicht mehr; ihre Eintragungen bleiben gespeichert.`);
+    } else {
+      const neuePunkte = planerKennungen(neu.planer);
+      const weg = [...planerKennungen(alt.inhalte.planer)].filter((id) => !neuePunkte.has(id) && !(id in neu.planer!.umbenennungen));
+      if (weg.length) {
+        out.push(`${weg.length === 1 ? 'Eine Kennung' : `${weg.length} Kennungen`} aus dem Planer ${weg.length === 1 ? 'fehlt' : 'fehlen'} in der neuen Fassung: ${aufzaehlung(weg)}. Was Azubis dort eingetragen haben (Haken, Termine, Stichworte), ist dann nicht mehr zu sehen. Wurde eine Kennung nur umbenannt, gehört sie in planer.md unter „## Umbenennungen“.`);
+      }
+    }
+  }
+  return out;
 }
 
 function ansicht(c: Ctx, z: Zeile) {
@@ -178,10 +216,14 @@ export const EINREICHUNG_ROUTEN: Route[] = [
       if (c.a.body.length > ZIP_MAX) throw new Fehler(413, `Die ZIP-Datei ist zu groß (höchstens ${ZIP_MAX / 1024 / 1024} MB)`);
       const offen = c.k.db.prepare("SELECT ausbilder_name FROM lern_einreichung WHERE kennung = ? AND status = 'eingereicht'").get(kennung) as { ausbilder_name: string } | undefined;
       if (offen) throw new Fehler(409, `Für „${kennung}“ liegt schon eine Einreichung von ${offen.ausbilder_name} zur Prüfung vor. Sie muss erst entschieden oder zurückgezogen werden.`);
-      const { pruefung } = pruefe(c.a.body);
+      const { pruefung, inhalte } = pruefe(c.a.body);
       // mit Fehlern nimmt das Portal nichts an – die Liste sagt, was zu beheben ist
       if (pruefung.fehler.length) return { status: 422, body: { fehler: `Das Inhaltspaket hat ${pruefung.fehler.length === 1 ? 'einen Fehler' : `${pruefung.fehler.length} Fehler`} und wurde nicht eingereicht. Bitte beheben und erneut hochladen.`, pruefung } };
       if (pruefung.themenfelder === 0) throw new Fehler(422, 'Das Inhaltspaket enthält kein Themenfeld');
+      // Folgen für vorhandene Daten: erst zeigen, dann – nach der Bestätigung – mit einreichen, damit sie auch der Super-Admin sieht
+      const achtung = folgenDerEinreichung(c.k, kennung, inhalte);
+      if (achtung.length && c.a.query.get('bestaetigt') !== '1') return { status: 409, body: { fehler: 'Bitte bestätige erst, was die neue Fassung für vorhandene Daten bedeutet.', achtung } };
+      if (achtung.length) pruefung.achtung = achtung;
       const r = c.k.db
         .prepare('INSERT INTO lern_einreichung (kennung, titel, ausbilder_id, ausbilder_name, notiz, groesse, pruefung, erstellt, zip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
         .run(kennung, pruefung.titel, c.b.id, c.b.anzeigename, notiz, c.a.body.length, JSON.stringify(pruefung), c.k.jetzt().toISOString(), c.a.body);
