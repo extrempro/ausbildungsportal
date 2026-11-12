@@ -12,7 +12,7 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { ausbildungsjahrAm, gueltigesDatum, istMontag, kalenderwoche, montagVon, plusTage } from './kalender';
 import { planDerWoche } from './plan';
 import { darfAbzeichnen, darfAzubiVerwalten, sichtbareAzubis } from './rechte';
-import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
+import { berichtFormVon, dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import { bildPfad } from './typen';
 import type { BenutzerZeile } from './typen';
 
@@ -23,10 +23,10 @@ import type { BenutzerZeile } from './typen';
  * Jeder Schritt steht im Verlauf des Berichts (bericht_verlauf), den nur die Beteiligten sehen –
  * bewusst nicht im Protokoll des Super-Admins.
  *
- * Zwei Formen, wählbar in den Stammdaten des Betriebs:
+ * Zwei Formen, wählbar in den Stammdaten des Betriebs und – abweichend davon – je Azubi im Profil:
  * - „woche“: Tätigkeiten der ganzen Woche in drei Teilen (Betrieb, Unterweisung, Berufsschule).
  * - „tag“: dieselben Teile, aber jeder Eintrag gehört zu einem Tag – geschrieben, angezeigt und gedruckt wird nach Tagen.
- * Die Form steht im Bericht selbst. Ein einmal gespeicherter Bericht behält seine Form, auch wenn der Betrieb später umstellt.
+ * Die Form steht im Bericht selbst. Ein einmal gespeicherter Bericht behält seine Form, auch wenn später umgestellt wird.
  */
 export type BerichtStatus = 'entwurf' | 'eingereicht' | 'zurueck' | 'abgezeichnet';
 const GRUENDE = ['urlaub', 'krank', 'feiertag', 'sonstiges'] as const;
@@ -151,7 +151,7 @@ function inhaltAus(z: BerichtZeile): Inhalt {
 
 /** Startwerte für einen neuen Bericht: landesweite Feiertage an Werktagen als Abwesenheit. */
 function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: number): Inhalt {
-  const inhalt = leererInhalt(leseBetrieb(db).berichtForm);
+  const inhalt = leererInhalt(berichtFormVon(db, azubiId));
   const tagSoll = Math.round((wochenstunden / 5) * 4) / 4;
   // genehmigter Urlaub der Woche ist schon als Abwesenheit vorgetragen
   const urlaub: Abwesenheit[] = genehmigteTage(db, azubiId, montag, plusTage(montag, 4)).map((tag) => ({ tag, grund: 'urlaub', stunden: tagSoll, text: '' }));
@@ -429,8 +429,8 @@ export const BERICHT_ROUTEN: Route[] = [
       if (z && z.status !== 'entwurf' && z.status !== 'zurueck') {
         throw new Fehler(409, z.status === 'abgezeichnet' ? 'Der Bericht ist abgezeichnet und gesperrt' : 'Der Bericht ist eingereicht – zum Ändern zuerst zurückziehen');
       }
-      // ein gespeicherter Bericht behält seine Form; ein neuer bekommt die, die der Betrieb eingestellt hat
-      const inhalt = JSON.stringify(pruefeInhalt(koerper(c).inhalt, montag, z ? inhaltAus(z).form : leseBetrieb(db).berichtForm));
+      // ein gespeicherter Bericht behält seine Form; ein neuer bekommt die des Azubis (eigene Einstellung, sonst die des Betriebs)
+      const inhalt = JSON.stringify(pruefeInhalt(koerper(c).inhalt, montag, z ? inhaltAus(z).form : berichtFormVon(db, azubi.id)));
       const jetzt = c.k.jetzt().toISOString();
       if (z) db.prepare('UPDATE bericht SET inhalt = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?').run(inhalt, jetzt, azubi.id, montag);
       else db.prepare("INSERT INTO bericht (azubi_id, montag, status, inhalt, geaendert) VALUES (?, ?, 'entwurf', ?, ?)").run(azubi.id, montag, inhalt, jetzt);

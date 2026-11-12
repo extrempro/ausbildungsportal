@@ -59,6 +59,7 @@ interface ProfilZeile {
   wochenstunden: number;
   pruefungen: string;
   urlaubstage: number | null;
+  bericht_form: 'woche' | 'tag' | null;
 }
 
 export interface Pruefung {
@@ -80,6 +81,8 @@ export interface Profil {
   pruefungen: Pruefung[];
   /** Urlaubsanspruch je Kalenderjahr in Arbeitstagen; null = nicht eingetragen */
   urlaubstage: number | null;
+  /** Form des Berichtshefts für diesen Azubi; null = wie im Betrieb eingestellt */
+  berichtForm: 'woche' | 'tag' | null;
 }
 
 const STANDARD_REGELDAUER = 36;
@@ -96,6 +99,7 @@ const LEERES_PROFIL: Profil = {
   wochenstunden: 40,
   pruefungen: [],
   urlaubstage: null,
+  berichtForm: null,
 };
 
 // ---------- Lesen ----------
@@ -140,7 +144,13 @@ export function leseProfil(db: DB, azubiId: number): Profil {
     wochenstunden: z.wochenstunden,
     urlaubstage: z.urlaubstage ?? null,
     pruefungen,
+    berichtForm: z.bericht_form === 'tag' || z.bericht_form === 'woche' ? z.bericht_form : null,
   };
+}
+
+/** In welcher Form dieser Azubi neue Berichte schreibt: die eigene Einstellung, sonst die des Betriebs. */
+export function berichtFormVon(db: DB, azubiId: number): 'woche' | 'tag' {
+  return leseProfil(db, azubiId).berichtForm ?? leseBetrieb(db).berichtForm;
 }
 
 export function standAus(db: DB, p: Profil, tag: string): { beruf: Beruf | null; stand: Ausbildungsstand } {
@@ -424,6 +434,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
           ausbilder: ausbilder ? { id: ausbilder.id, anzeigename: ausbilder.anzeigename } : null,
           stand,
           hoechsteVerkuerzung: hoechsteVerkuerzung(beruf?.regeldauer_monate ?? STANDARD_REGELDAUER),
+          // welche Form für neue Berichte dieses Azubis gilt – die eigene Einstellung oder die des Betriebs
+          berichtFormGilt: berichtFormVon(c.k.db, azubi.id),
           bearbeitbar: darfAzubiVerwalten(c.k.db, c.b, azubi.id),
           betreuung: betreuung(c.k.db, c.b, azubi.id),
         },
@@ -468,6 +480,9 @@ export const STAMMDATEN_ROUTEN: Route[] = [
 
       const urlaubRoh = body.urlaubstage;
       const urlaubstage = urlaubRoh === null || urlaubRoh === undefined || urlaubRoh === '' ? null : ganzzahl(urlaubRoh, 0, 60, 'Urlaubstage im Jahr');
+      // fehlt die Angabe (ältere Oberfläche), bleibt die Form; null oder leer heißt „wie im Betrieb“
+      const formRoh = body.berichtForm;
+      const berichtForm = formRoh === undefined ? leseProfil(db, id).berichtForm : formRoh === null || formRoh === '' ? null : formRoh === 'tag' || formRoh === 'woche' ? formRoh : ungueltigeForm();
 
       const roh = body.pruefungen ?? [];
       if (!Array.isArray(roh) || roh.length > 8) throw new Fehler(400, 'Höchstens acht Prüfungstermine');
@@ -484,16 +499,16 @@ export const STAMMDATEN_ROUTEN: Route[] = [
 
       db.prepare(
         `INSERT INTO azubi_profil (benutzer_id, beruf_id, berufsschule_id, ausbilder_id, ausbildungsbeginn, vertragsende, verkuerzung_monate,
-                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(benutzer_id) DO UPDATE SET
            beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id,
            ausbildungsbeginn = excluded.ausbildungsbeginn, vertragsende = excluded.vertragsende,
            verkuerzung_monate = excluded.verkuerzung_monate, verkuerzung_art = excluded.verkuerzung_art,
            verkuerzung_grund = excluded.verkuerzung_grund, vorzeitige_zulassung = excluded.vorzeitige_zulassung,
            wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von,
-           urlaubstage = excluded.urlaubstage`,
-      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage);
+           urlaubstage = excluded.urlaubstage, bericht_form = excluded.bericht_form`,
+      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm);
       protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi);
       const profil = leseProfil(db, id);
       return { status: 200, body: { profil, stand: standAus(db, profil, heute(c.k.jetzt())).stand } };

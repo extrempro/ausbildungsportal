@@ -518,4 +518,29 @@ test('Tagesform: der Betrieb wählt sie; Einträge gehören zu einem Tag; gespei
   await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, berichtForm: 'woche' } });
   assert.equal((await lies(w, w.azubi, w.azubi, NEU)).inhalt.form, 'tag');
   assert.equal((await lies(w, w.azubi, w.azubi, '2026-10-19')).inhalt.form, 'woche');
+
+  // je Azubi: die Einstellung im Profil geht der des Betriebs vor; leer heißt wieder „wie im Betrieb“
+  const profilPfad = `/api/azubis/${w.azubi.id}/profil`;
+  const profil = async (wer = w.ausbilder) => koerper(await ruf(w.u, 'GET', profilPfad, { cookies: als(w, wer) }));
+  const alt2 = (await profil()).profil;
+  assert.deepEqual([alt2.berichtForm, (await profil()).berichtFormGilt], [null, 'woche']);
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: 'monat' } })).status, 400);
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.azubi), body: { ...alt2, berichtForm: 'tag' } })).status, 403);
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: 'tag' } })).status, 200);
+  // der Azubi sieht, was für ihn gilt
+  assert.deepEqual([(await profil(w.azubi)).profil.berichtForm, (await profil(w.azubi)).berichtFormGilt], ['tag', 'tag']);
+  assert.equal((await lies(w, w.azubi, w.azubi, '2026-10-19')).inhalt.form, 'tag', 'Betrieb: Woche, Azubi: Tag → neue Berichte je Tag');
+  // ein anderer Azubi bleibt bei der Form des Betriebs
+  assert.equal((await lies(w, w.ben, w.ben, '2026-10-19')).inhalt.form, 'woche');
+  // fehlt die Angabe beim Speichern des Profils, bleibt sie
+  const { berichtForm: _weg, ...ohneForm } = (await profil()).profil;
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: ohneForm })).status, 200);
+  assert.equal((await profil()).profil.berichtForm, 'tag');
+  // umgekehrt: Betrieb je Tag, dieser Azubi die Woche im Ganzen
+  await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, berichtForm: 'tag' } });
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: 'woche' } });
+  assert.equal((await lies(w, w.azubi, w.azubi, '2026-10-19')).inhalt.form, 'woche');
+  assert.equal((await lies(w, w.ben, w.ben, '2026-10-19')).inhalt.form, 'tag');
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: null } });
+  assert.deepEqual([(await profil()).profil.berichtForm, (await profil()).berichtFormGilt], [null, 'tag']);
 });

@@ -253,7 +253,7 @@ export function Stammdaten() {
               <option value="woche">Wochenbericht – Tätigkeiten der ganzen Woche</option>
               <option value="tag">Wochenbericht mit Einträgen je Tag</option>
             </select>
-            <span className="leise klein">Gilt für Berichte, die ab jetzt begonnen werden. Schon gespeicherte Berichte behalten ihre Form.</span>
+            <span className="leise klein">Gilt für Berichte, die ab jetzt begonnen werden. Schon gespeicherte Berichte behalten ihre Form. Für einzelne Azubis stellst du es im Profil des Azubis anders ein.</span>
           </label>
           <label className="ganz">
             Mail-Adresse der Personalstelle (für genehmigten Urlaub)
