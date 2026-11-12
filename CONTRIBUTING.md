@@ -60,7 +60,7 @@ Jede neue Funktion und jede Änderung wird im Handbuch beschrieben – für jede
 
 - **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
 - **Neue Daten über Personen** nennst du im Pull Request ausdrücklich (was, wie lange, wer sieht es). Der Betreiber ergänzt damit die Leistungsbeschreibung für den Betriebsrat.
-- **Meldungen nach außen** (Teams, Mail) enthalten so wenig wie möglich – keine Namen in Teams-Karten, keine Bemerkungen in Mails.
+- **Meldungen nach außen** (Teams, Mail) enthalten so wenig wie möglich – keine Namen in Teams-Karten für Kanäle, keine Bemerkungen in Mails. Persönliche Benachrichtigungen sprechen nur die Person an, an die sie gehen, und nennen niemanden sonst.
 - **Keine Geheimnisse im Repository.** Es ist öffentlich. `.env`, der Ordner `data/`, Zugangsdaten, Webhook-Adressen und echte Namen oder Mailadressen gehören nicht hinein – auch nicht in Tests, Commits oder Pull Requests.
 - **Urheberrecht:** keine fremden Bilder, Grafiken oder Texte ohne passende Lizenz. Keine Original-Prüfungsaufgaben. Grafiken werden selbst gezeichnet (SVG).
 - **Lerninhalte** liegen nicht in diesem Repository, sondern als Inhaltspaket daneben (siehe [lerninhalte/README.md](lerninhalte/README.md)).

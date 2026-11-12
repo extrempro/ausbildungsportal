@@ -102,7 +102,7 @@ export function Benachrichtigungen({ rolle }: { rolle: Rolle }) {
               ),
           )}
           <p className="leise klein">
-            Die Nachrichten nennen keine Namen und keine Inhalte – nur, was passiert ist, und einen Link ins Portal. Mehreres kurz nacheinander kommt nach wenigen Minuten als eine Nachricht.
+            Die Nachrichten sprechen dich mit deinem Vornamen an. Andere Namen und Inhalte stehen nicht darin – nur, was passiert ist, und ein Knopf ins Portal. Mehreres kurz nacheinander kommt nach wenigen Minuten als eine Nachricht.
             {daten.mail.adresse && !daten.mail.grund ? ` E-Mails gehen an ${daten.mail.adresse}.` : ''}
           </p>
           {testFehler && (

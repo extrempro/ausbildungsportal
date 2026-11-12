@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.41.0] – 2026-11-12
+
+### Geändert
+
+- **Benachrichtigungen per Teams und E-Mail sind jetzt gestaltet.**
+  - Oben stehen „Ausbildungsportal“, der Name des Betriebs und das Logo.
+  - Die Nachricht spricht die Person mit ihrem Vornamen an („Hallo Petra,“). Andere Namen und Inhalte stehen weiterhin nicht darin.
+  - Vor jeder Zeile steht ein farbiger Punkt: grün für erledigt, gelb für „wartet auf dich“, rot für „bitte ansehen“.
+  - Der Knopf „Im Portal öffnen“ führt direkt zur passenden Seite (Abzeichnen, Berichtsheft, Urlaub), wenn es nur um einen Bereich geht.
+  - Die E-Mail kommt gestaltet an – mit einer reinen Textfassung für Mailprogramme, die das nicht anzeigen.
+- **Für den Betrieb:** Für das Logo in der Teams-Karte muss das Portal aus dem Internet erreichbar sein. Sonst ist nichts einzurichten.
+
 ## [0.40.0] – 2026-11-12
 
 ### Neu

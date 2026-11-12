@@ -35,12 +35,29 @@ function beide(db: DB) {
   return { logo: leseLogo(db, 'hell'), logoDunkel: leseLogo(db, 'dunkel') };
 }
 
+/** Das helle Logo als Bild – oder null, wenn keins hinterlegt ist. */
+export function logoBild(db: DB): { typ: string; inhalt: Buffer } | null {
+  const m = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(leseLogo(db, 'hell') ?? '');
+  return m ? { typ: m[1], inhalt: Buffer.from(m[2], 'base64') } : null;
+}
+
 export const BRANDING_ROUTEN: Route[] = [
   {
     m: 'GET',
     p: '/api/branding',
     wer: 'offen',
     h: (c) => ({ status: 200, body: beide(c.k.db) }),
+  },
+  {
+    // das Logo unter einer eigenen Adresse – Teams lädt Bilder in Karten selbst und braucht dafür eine Adresse
+    m: 'GET',
+    p: '/api/branding/logo',
+    wer: 'offen',
+    h: (c) => {
+      const bild = logoBild(c.k.db);
+      if (!bild) throw new Fehler(404, 'Es ist kein Logo hinterlegt');
+      return { status: 200, bild };
+    },
   },
   {
     m: 'PUT',

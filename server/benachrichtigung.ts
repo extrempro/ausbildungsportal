@@ -1,10 +1,14 @@
+import { createHash } from 'node:crypto';
 import type { AktivitaetArt } from './aktivitaet';
 import { Fehler, koerper } from './api-basis';
 import type { Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { heute } from './datum';
 import { sichtbareAzubis } from './rechte';
+import { logoBild } from './branding';
 import { istMailAdresse, MailFehler } from './smtp';
+import type { Mail } from './smtp';
+import { leseBetrieb } from './stammdaten';
 import type { BenutzerZeile } from './typen';
 
 /**
@@ -12,7 +16,8 @@ import type { BenutzerZeile } from './typen';
  *
  * - Jede Person schaltet sie unter „Konto“ selbst ein, je Bereich und je Weg. Anfangs ist alles aus.
  * - Verschickt wird nur, was die Person auch in der Glocke sieht (dieselbe Prüfung über sichtbareAzubis), nie die eigene Handlung.
- * - Die Nachricht nennt keine Namen und keine Inhalte – nur, was passiert ist, und einen Link ins Portal.
+ * - Die Nachricht spricht die Person an, an die sie geht, nennt aber keine anderen Namen und keine Inhalte –
+ *   nur, was passiert ist, und einen Link ins Portal.
  * - Was kurz nacheinander passiert, geht als eine Nachricht hinaus. Einen Verlauf verschickter Nachrichten gibt es nicht.
  */
 export const BEREICHE = ['berichtsheft', 'urlaub', 'plan'] as const;
@@ -72,8 +77,24 @@ const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
   urlaub_storniert: ['Dein genehmigter Urlaub wurde storniert.', '{n} deiner genehmigten Urlaube wurden storniert.', 'Ein genehmigter Urlaub wurde storniert.', '{n} genehmigte Urlaube wurden storniert.'],
 };
 
+/** Wie eine Zeile gefärbt wird. Die Farbe ist nur Beigabe – was passiert ist, steht immer im Text. */
+export type Ton = 'gut' | 'wartet' | 'achtung' | 'neutral';
+
+function tonVon(art: AktivitaetArt, eigenes: boolean): Ton {
+  if (art === 'bericht_abgezeichnet' || art === 'urlaub_genehmigt' || art === 'urlaub_bestaetigt') return 'gut';
+  if (art === 'bericht_zurueck' || art === 'urlaub_abgelehnt' || art === 'urlaub_storniert' || art === 'bericht_geoeffnet') return 'achtung';
+  if (!eigenes && (art === 'bericht_eingereicht' || art === 'urlaub_beantragt')) return 'wartet';
+  return 'neutral';
+}
+
+export interface Zeile {
+  text: string;
+  ton: Ton;
+  bereich: Bereich;
+}
+
 /** Fasst zusammen: je Art (und eigen/fremd) eine Zeile. Plan-Einträge zählen mit ihrer Anzahl, alles andere je Vorgang. */
-export function zeilenAus(ereignisse: Ereignis[]): string[] {
+export function zeilenAus(ereignisse: Ereignis[]): Zeile[] {
   const gruppen = new Map<string, { art: AktivitaetArt; eigenes: boolean; n: number; wochen: Set<string> }>();
   for (const e of ereignisse) {
     const s = `${e.art}|${e.eigenes ? 1 : 0}`;
@@ -85,41 +106,109 @@ export function zeilenAus(ereignisse: Ereignis[]): string[] {
   return [...gruppen.values()].map((g) => {
     const vorlage = TEXT[g.art][(g.eigenes ? 0 : 2) + (g.n > 1 ? 1 : 0)];
     const woche = g.wochen.size === 1 ? ` für KW ${kw([...g.wochen][0])}` : '';
-    return vorlage.replace('{n}', String(g.n)).replace('{kw}', woche);
+    return { text: vorlage.replace('{n}', String(g.n)).replace('{kw}', woche), ton: tonVon(g.art, g.eigenes), bereich: bereichVon(g.art) };
   });
 }
 
-export function teamsKarte(k: Kontext, empfaenger: string, zeilen: string[]): unknown {
+/**
+ * Vorname für die Anrede – aus „Petra Lang“ ebenso wie aus „Lang, Petra“.
+ * Leer, wenn sich keiner sicher erkennen lässt (Titel, Kürzel); dann heißt es nur „Hallo“.
+ */
+export function vorname(anzeigename: string): string {
+  const name = anzeigename.trim();
+  const wort = (name.includes(',') ? (name.split(',')[1] ?? '') : name).trim().split(/\s+/)[0] ?? '';
+  return /^\p{L}[\p{L}'’-]+$/u.test(wort) ? wort : '';
+}
+
+const anrede = (b: Pick<BenutzerZeile, 'anzeigename'>) => (vorname(b.anzeigename) ? `Hallo ${vorname(b.anzeigename)},` : 'Hallo,');
+
+/** Wohin der Knopf führt: geht es nur um einen Bereich, direkt dorthin – sonst zur Startseite. */
+function zielVon(k: Kontext, b: Pick<BenutzerZeile, 'rolle'>, zeilen: Zeile[]): string {
+  const bereiche = new Set(zeilen.map((z) => z.bereich));
+  const einer = bereiche.size === 1 ? [...bereiche][0] : null;
+  const pfad = einer === 'urlaub' ? '/urlaub' : einer === 'berichtsheft' ? (b.rolle === 'azubi' ? '/berichtsheft' : '/abzeichnen') : '/';
+  return `${k.cfg.appUrl}${pfad}`;
+}
+
+type Empfaenger = Pick<BenutzerZeile, 'anmeldename' | 'anzeigename' | 'rolle'>;
+
+const TEAMS_FARBE: Record<Ton, string> = { gut: 'Good', wartet: 'Warning', achtung: 'Attention', neutral: 'Accent' };
+
+/**
+ * Karte für Teams: Kopf mit Logo und Betrieb, Anrede, je Neuigkeit eine Zeile mit farbigem Punkt, Knopf zur passenden Seite.
+ * Genannt wird nur die Person, an die die Nachricht geht – nie jemand anderes.
+ */
+export function teamsKarte(k: Kontext, b: Empfaenger, zeilen: Zeile[]): unknown {
+  const betrieb = leseBetrieb(k.db).name;
+  const logo = logoBild(k.db);
+  // die Adresse wechselt mit dem Logo, damit Teams kein altes Bild zeigt
+  const logoUrl = logo ? `${k.cfg.appUrl}/api/branding/logo?v=${createHash('sha256').update(logo.inhalt).digest('hex').slice(0, 10)}` : null;
+  const titel = {
+    type: 'Column',
+    width: 'stretch',
+    verticalContentAlignment: 'Center',
+    items: [
+      { type: 'TextBlock', text: 'Ausbildungsportal', weight: 'Bolder', size: 'Medium', color: 'Accent', wrap: true },
+      ...(betrieb ? [{ type: 'TextBlock', text: betrieb, isSubtle: true, size: 'Small', spacing: 'None', wrap: true }] : []),
+    ],
+  };
   return {
-    empfaenger,
+    empfaenger: b.anmeldename,
     karte: {
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       type: 'AdaptiveCard',
       version: '1.4',
       body: [
-        { type: 'TextBlock', text: 'Ausbildungsportal', weight: 'Bolder', size: 'Medium', color: 'Accent' },
-        ...zeilen.map((text) => ({ type: 'TextBlock', text, wrap: true })),
-        { type: 'TextBlock', text: 'Welche Nachrichten du bekommst, stellst du im Portal unter „Konto“ ein.', wrap: true, isSubtle: true, size: 'Small' },
+        { type: 'ColumnSet', columns: [...(logoUrl ? [{ type: 'Column', width: 'auto', verticalContentAlignment: 'Center', items: [{ type: 'Image', url: logoUrl, height: '36px', altText: betrieb ? `Logo ${betrieb}` : 'Logo' }] }] : []), titel] },
+        { type: 'TextBlock', text: anrede(b), wrap: true, spacing: 'Medium', separator: true },
+        ...zeilen.map((z) => ({
+          type: 'ColumnSet',
+          spacing: 'Small',
+          columns: [
+            { type: 'Column', width: 'auto', items: [{ type: 'TextBlock', text: '●', color: TEAMS_FARBE[z.ton] }] },
+            { type: 'Column', width: 'stretch', items: [{ type: 'TextBlock', text: z.text, wrap: true }] },
+          ],
+        })),
+        { type: 'TextBlock', text: 'Welche Nachrichten du bekommst, stellst du im Portal unter „Konto“ ein.', wrap: true, isSubtle: true, size: 'Small', spacing: 'Medium' },
       ],
-      actions: [{ type: 'Action.OpenUrl', title: 'Im Portal öffnen', url: k.cfg.appUrl }],
+      actions: [{ type: 'Action.OpenUrl', title: 'Im Portal öffnen', url: zielVon(k, b, zeilen) }],
     },
   };
 }
 
-export function mailAus(k: Kontext, zeilen: string[]): { betreff: string; text: string } {
-  const betreff = zeilen.length === 1 ? `Ausbildungsportal: ${zeilen[0].replace(/\.( .*)?$/, '')}` : `Ausbildungsportal: ${zeilen.length} Neuigkeiten`;
-  const text = [
-    'Hallo,',
-    '',
-    'im Ausbildungsportal gibt es Neues für dich:',
-    '',
-    ...zeilen.map((z) => `- ${z}`),
-    '',
-    `Zum Portal: ${k.cfg.appUrl}`,
-    '',
-    'Du bekommst diese Mail, weil du im Portal unter „Konto“ Benachrichtigungen per E-Mail eingeschaltet hast. Dort kannst du sie auch wieder abstellen.',
-  ].join('\n');
-  return { betreff: betreff.slice(0, 150), text };
+const html = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/** Mailprogramme kennen die Farbvariablen des Portals nicht – deshalb hier feste Werte (helle Darstellung). */
+const MAIL_FARBE: Record<Ton, string> = { gut: '#166534', wartet: '#b45309', achtung: '#b91c1c', neutral: '#2563eb' };
+
+/** Mail in zwei Fassungen: reiner Text und gestaltet (Kopf mit Logo und Betrieb, Liste, Knopf). */
+export function mailAus(k: Kontext, b: Empfaenger, zeilen: Zeile[]): Pick<Mail, 'betreff' | 'text' | 'html' | 'bild'> {
+  const betrieb = leseBetrieb(k.db).name;
+  const ziel = zielVon(k, b, zeilen);
+  const fuss = 'Du bekommst diese Mail, weil du im Portal unter „Konto“ Benachrichtigungen per E-Mail eingeschaltet hast. Dort kannst du sie auch wieder abstellen.';
+  const betreff = zeilen.length === 1 ? `Ausbildungsportal: ${zeilen[0].text.replace(/\.( .*)?$/, '')}` : `Ausbildungsportal: ${zeilen.length} Neuigkeiten`;
+  const text = [anrede(b), '', 'im Ausbildungsportal gibt es Neues für dich:', '', ...zeilen.map((z) => `- ${z.text}`), '', `Zum Portal: ${ziel}`, '', fuss].join('\n');
+  // Outlook zeigt kein WebP – dann lieber kein Bild als ein kaputtes
+  const logo = logoBild(k.db);
+  const bild = logo && logo.typ !== 'image/webp' ? { cid: 'logo@ausbildungsportal', typ: logo.typ, inhalt: logo.inhalt } : undefined;
+  const gestaltet = `<!doctype html>
+<html lang="de"><body style="margin:0;padding:0;background:#f8fafc;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;"><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+<tr><td style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+${bild ? `<td style="padding-right:12px;vertical-align:middle;"><img src="cid:${bild.cid}" alt="${html(betrieb ? `Logo ${betrieb}` : 'Logo')}" height="36" style="display:block;height:36px;width:auto;border:0;"></td>` : ''}
+<td style="vertical-align:middle;"><div style="font-size:18px;font-weight:700;color:#2563eb;">Ausbildungsportal</div>${betrieb ? `<div style="font-size:13px;color:#475569;">${html(betrieb)}</div>` : ''}</td>
+</tr></table></td></tr>
+<tr><td style="padding:24px 24px 8px;font-size:16px;line-height:1.5;">
+<p style="margin:0 0 12px;">${html(anrede(b))}</p>
+<p style="margin:0 0 12px;">im Ausbildungsportal gibt es Neues für dich:</p>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+${zeilen.map((z) => `<tr><td style="width:18px;vertical-align:top;padding:4px 0;color:${MAIL_FARBE[z.ton]};font-size:16px;line-height:1.5;">&#9679;</td><td style="padding:4px 0;font-size:16px;line-height:1.5;">${html(z.text)}</td></tr>`).join('\n')}
+</table></td></tr>
+<tr><td style="padding:16px 24px 24px;"><a href="${html(ziel)}" style="display:inline-block;padding:11px 18px;background:#2563eb;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Im Portal öffnen</a></td></tr>
+<tr><td style="padding:16px 24px;border-top:1px solid #e2e8f0;font-size:13px;line-height:1.5;color:#475569;">${html(fuss)}</td></tr>
+</table></td></tr></table></body></html>`;
+  return { betreff: betreff.slice(0, 150), text, html: gestaltet, bild };
 }
 
 /** Warum ein Weg gerade nicht geht – oder null. */
@@ -130,17 +219,17 @@ function hindernis(k: Kontext, weg: 'teams' | 'mail', b: Pick<BenutzerZeile, 'an
 }
 
 /** Schickt über einen Weg; gibt bei einem Fehler den Grund zurück. Im Log steht nie die Adresse des Workflows und nie der Empfänger. */
-async function schicke(k: Kontext, weg: 'teams' | 'mail', b: Pick<BenutzerZeile, 'anmeldename'>, zeilen: string[]): Promise<string | null> {
+async function schicke(k: Kontext, weg: 'teams' | 'mail', b: Empfaenger, zeilen: Zeile[]): Promise<string | null> {
   const grund = hindernis(k, weg, b);
   if (grund) return grund;
   try {
     if (weg === 'teams') {
-      const r = await k.sende(k.cfg.teamsChatWebhook as string, teamsKarte(k, b.anmeldename, zeilen));
+      const r = await k.sende(k.cfg.teamsChatWebhook as string, teamsKarte(k, b, zeilen));
       if (r.ok) return null;
       k.log(`Benachrichtigung per Teams fehlgeschlagen: die Gegenstelle antwortet mit Status ${r.status}`);
       return `Teams antwortet mit einem Fehler (Status ${r.status}).`;
     }
-    await k.mail({ an: b.anmeldename, ...mailAus(k, zeilen) });
+    await k.mail({ an: b.anmeldename, ...mailAus(k, b, zeilen) });
     return null;
   } catch (e) {
     const text = weg === 'mail' ? (e instanceof MailFehler ? e.message : 'Die Mail konnte nicht gesendet werden.') : e instanceof Error && e.name === 'TimeoutError' ? 'Teams antwortet nicht.' : 'Teams ist nicht erreichbar.';
@@ -252,7 +341,7 @@ export const BENACHRICHTIGUNG_ROUTEN: Route[] = [
     h: async (c) => {
       const weg = koerper(c).weg;
       if (weg !== 'teams' && weg !== 'mail') throw new Fehler(400, 'Ungültige Angabe');
-      const fehler = await schicke(c.k, weg, c.b, ['Das ist eine Testnachricht. So sehen Benachrichtigungen aus dem Ausbildungsportal aus.']);
+      const fehler = await schicke(c.k, weg, c.b, [{ text: 'Das ist eine Testnachricht. So sehen Benachrichtigungen aus dem Ausbildungsportal aus.', ton: 'neutral', bereich: 'plan' }]);
       if (fehler) throw new Fehler(502, fehler);
       return { status: 200, body: { ok: true } };
     },
