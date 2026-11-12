@@ -12,7 +12,7 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { ausbildungsjahrAm, gueltigesDatum, istMontag, kalenderwoche, montagVon, plusTage } from './kalender';
 import { planDerWoche } from './plan';
 import { darfAbzeichnen, darfAzubiVerwalten, sichtbareAzubis } from './rechte';
-import { dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
+import { berichtFormVon, dauerVon, FACH, leseBetrieb, leseProfil, sichtbarerAzubi, standAus } from './stammdaten';
 import { bildPfad } from './typen';
 import type { BenutzerZeile } from './typen';
 
@@ -22,14 +22,24 @@ import type { BenutzerZeile } from './typen';
  * Nur der Azubi schreibt; abzeichnen dürfen Ausbilder und – im Zeitraum ihrer Zuweisung – Beauftragte.
  * Jeder Schritt steht im Verlauf des Berichts (bericht_verlauf), den nur die Beteiligten sehen –
  * bewusst nicht im Protokoll des Super-Admins.
+ *
+ * Zwei Formen, wählbar in den Stammdaten des Betriebs und – abweichend davon – je Azubi im Profil:
+ * - „woche“: Tätigkeiten der ganzen Woche in drei Teilen (Betrieb, Unterweisung, Berufsschule).
+ * - „tag“: dieselben Teile, aber jeder Eintrag gehört zu einem Tag – geschrieben, angezeigt und gedruckt wird nach Tagen.
+ * Die Form steht im Bericht selbst. Ein einmal gespeicherter Bericht behält seine Form, auch wenn später umgestellt wird.
  */
 export type BerichtStatus = 'entwurf' | 'eingereicht' | 'zurueck' | 'abgezeichnet';
 const GRUENDE = ['urlaub', 'krank', 'feiertag', 'sonstiges'] as const;
 type Grund = (typeof GRUENDE)[number];
 
+export const BERICHT_FORMEN = ['woche', 'tag'] as const;
+export type BerichtForm = (typeof BERICHT_FORMEN)[number];
+
 export interface Eintrag {
   text: string;
   stunden: number;
+  /** nur in der Tagesform: der Tag (JJJJ-MM-TT) innerhalb der Berichtswoche */
+  tag?: string;
 }
 export interface Abwesenheit {
   tag: string;
@@ -38,6 +48,7 @@ export interface Abwesenheit {
   text: string;
 }
 export interface Inhalt {
+  form: BerichtForm;
   betrieb: Eintrag[];
   unterweisung: Eintrag[];
   schule: Eintrag[];
@@ -64,8 +75,8 @@ const PFAD = /^[ML0-9 .-]+$/;
 
 // ---------- Inhalt prüfen und rechnen ----------
 
-function leererInhalt(): Inhalt {
-  return { betrieb: [], unterweisung: [], schule: [], abwesenheit: [] };
+function leererInhalt(form: BerichtForm = 'woche'): Inhalt {
+  return { form, betrieb: [], unterweisung: [], schule: [], abwesenheit: [] };
 }
 
 function stunden(x: unknown, feld: string): number {
@@ -82,20 +93,28 @@ function freitext(x: unknown, max: number, feld: string): string {
   return s;
 }
 
-function pruefeEintraege(x: unknown, feld: string): Eintrag[] {
+function pruefeEintraege(x: unknown, feld: string, woche: { montag: string; sonntag: string } | null): Eintrag[] {
   if (x === undefined || x === null) return [];
   if (!Array.isArray(x) || x.length > MAX_EINTRAEGE) throw new Fehler(400, `${feld}: höchstens ${MAX_EINTRAEGE} Einträge`);
-  return x
-    .map((e) => {
+  const liste = x
+    .map((e): Eintrag => {
       if (!istObjekt(e)) throw new Fehler(400, `${feld}: ungültiger Eintrag`);
-      return { text: freitext(e.text, MAX_TEXT, feld), stunden: stunden(e.stunden ?? 0, feld) };
+      const eintrag: Eintrag = { text: freitext(e.text, MAX_TEXT, feld), stunden: stunden(e.stunden ?? 0, feld) };
+      if (!woche) return eintrag;
+      // Tagesform: jeder Eintrag gehört zu einem Tag der Berichtswoche
+      if (!gueltigesDatum(e.tag) || e.tag < woche.montag || e.tag > woche.sonntag) throw new Fehler(400, `${feld}: Der Tag muss in der Berichtswoche liegen`);
+      return { ...eintrag, tag: e.tag };
     })
     .filter((e) => e.text || e.stunden > 0);
+  // Reihenfolge innerhalb eines Tages bleibt, wie sie geschrieben wurde
+  return woche ? liste.map((e, i) => ({ e, i })).sort((a, b) => (a.e.tag as string).localeCompare(b.e.tag as string) || a.i - b.i).map((x) => x.e) : liste;
 }
 
-export function pruefeInhalt(roh: unknown, montag: string): Inhalt {
+/** Prüft den Inhalt. Die Form gibt der Server vor (gespeicherter Bericht oder Einstellung des Betriebs) – nicht die Anfrage. */
+export function pruefeInhalt(roh: unknown, montag: string, form: BerichtForm = 'woche'): Inhalt {
   if (!istObjekt(roh)) throw new Fehler(400, 'Inhalt des Berichts fehlt');
   const sonntag = plusTage(montag, 6);
+  const woche = form === 'tag' ? { montag, sonntag } : null;
   const liste = roh.abwesenheit ?? [];
   if (!Array.isArray(liste) || liste.length > 14) throw new Fehler(400, 'Abwesenheit: zu viele Einträge');
   const abwesenheit = liste.map((a): Abwesenheit => {
@@ -106,9 +125,10 @@ export function pruefeInhalt(roh: unknown, montag: string): Inhalt {
   });
   abwesenheit.sort((a, b) => a.tag.localeCompare(b.tag));
   return {
-    betrieb: pruefeEintraege(roh.betrieb, 'Betriebliche Tätigkeiten'),
-    unterweisung: pruefeEintraege(roh.unterweisung, 'Unterweisungen'),
-    schule: pruefeEintraege(roh.schule, 'Berufsschule'),
+    form,
+    betrieb: pruefeEintraege(roh.betrieb, 'Betriebliche Tätigkeiten', woche),
+    unterweisung: pruefeEintraege(roh.unterweisung, 'Unterweisungen', woche),
+    schule: pruefeEintraege(roh.schule, 'Berufsschule', woche),
     abwesenheit,
   };
 }
@@ -122,7 +142,8 @@ export function summe(i: Inhalt) {
 function inhaltAus(z: BerichtZeile): Inhalt {
   try {
     const i = JSON.parse(z.inhalt) as Partial<Inhalt>;
-    return { betrieb: i.betrieb ?? [], unterweisung: i.unterweisung ?? [], schule: i.schule ?? [], abwesenheit: i.abwesenheit ?? [] };
+    // Berichte aus der Zeit vor der Tagesform tragen keine Form – sie sind Wochenberichte
+    return { form: i.form === 'tag' ? 'tag' : 'woche', betrieb: i.betrieb ?? [], unterweisung: i.unterweisung ?? [], schule: i.schule ?? [], abwesenheit: i.abwesenheit ?? [] };
   } catch {
     return leererInhalt();
   }
@@ -130,7 +151,7 @@ function inhaltAus(z: BerichtZeile): Inhalt {
 
 /** Startwerte für einen neuen Bericht: landesweite Feiertage an Werktagen als Abwesenheit. */
 function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: number): Inhalt {
-  const inhalt = leererInhalt();
+  const inhalt = leererInhalt(berichtFormVon(db, azubiId));
   const tagSoll = Math.round((wochenstunden / 5) * 4) / 4;
   // genehmigter Urlaub der Woche ist schon als Abwesenheit vorgetragen
   const urlaub: Abwesenheit[] = genehmigteTage(db, azubiId, montag, plusTage(montag, 4)).map((tag) => ({ tag, grund: 'urlaub', stunden: tagSoll, text: '' }));
@@ -408,7 +429,8 @@ export const BERICHT_ROUTEN: Route[] = [
       if (z && z.status !== 'entwurf' && z.status !== 'zurueck') {
         throw new Fehler(409, z.status === 'abgezeichnet' ? 'Der Bericht ist abgezeichnet und gesperrt' : 'Der Bericht ist eingereicht – zum Ändern zuerst zurückziehen');
       }
-      const inhalt = JSON.stringify(pruefeInhalt(koerper(c).inhalt, montag));
+      // ein gespeicherter Bericht behält seine Form; ein neuer bekommt die des Azubis (eigene Einstellung, sonst die des Betriebs)
+      const inhalt = JSON.stringify(pruefeInhalt(koerper(c).inhalt, montag, z ? inhaltAus(z).form : berichtFormVon(db, azubi.id)));
       const jetzt = c.k.jetzt().toISOString();
       if (z) db.prepare('UPDATE bericht SET inhalt = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?').run(inhalt, jetzt, azubi.id, montag);
       else db.prepare("INSERT INTO bericht (azubi_id, montag, status, inhalt, geaendert) VALUES (?, ?, 'entwurf', ?, ?)").run(azubi.id, montag, inhalt, jetzt);

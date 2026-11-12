@@ -46,7 +46,7 @@ test('Betrieb speichern; Eingaben werden geprüft', async () => {
   const cookies = sitzung(u, w.ausbilder);
   const ok = await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: ' Muster GmbH ', anschrift: 'Hafenstraße 1\n20457 Hamburg', bundesland: 'HH' } });
   assert.equal(ok.status, 200);
-  assert.deepEqual(koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies })).betrieb, { name: 'Muster GmbH', anschrift: 'Hafenstraße 1, 20457 Hamburg', bundesland: 'HH', personalMail: '', personalAnrede: '' });
+  assert.deepEqual(koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies })).betrieb, { name: 'Muster GmbH', anschrift: 'Hafenstraße 1, 20457 Hamburg', bundesland: 'HH', personalMail: '', personalAnrede: '', berichtForm: 'woche' });
   assert.equal((await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: 'X', bundesland: 'XX' } })).status, 400);
   assert.equal((await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: 'X'.repeat(151) } })).status, 400);
 

@@ -435,3 +435,112 @@ test('Entwürfe gehören dem Azubi allein: Ausbilder und Beauftragte sehen sie n
   assert.equal((await ruf(w.u, 'POST', pfad(w.azubi, WOCHE, 'zurueckgeben'), { cookies: als(w, w.ausbilder), body: { kommentar: 'Bitte genauer.' } })).status, 200);
   assert.equal((await wocheVon(w.ausbilder)).status, 'zurueck');
 });
+
+test('Tagesform: der Betrieb wählt sie; Einträge gehören zu einem Tag; gespeicherte Berichte behalten ihre Form', async () => {
+  const { inflateSync } = await import('node:zlib');
+  const w = await welt();
+  const stamm = { name: 'Muster GmbH', bundesland: 'HH' };
+  const betrieb = async () => koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.ausbilder) })).betrieb;
+  // Vorgabe ist die Wochenform; nur Ausbilder stellen um; nur die zwei Formen sind erlaubt
+  assert.equal((await betrieb()).berichtForm, 'woche');
+  assert.equal((await lies(w, w.azubi)).inhalt.form, 'woche');
+  assert.equal((await schreibe(w)).status, 200);
+  assert.equal((await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, berichtForm: 'monat' } })).status, 400);
+  assert.equal((await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.azubi), body: { ...stamm, berichtForm: 'tag' } })).status, 403);
+  assert.equal((await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, berichtForm: 'tag' } })).status, 200);
+  assert.equal((await betrieb()).berichtForm, 'tag');
+  // fehlt die Angabe beim Speichern, bleibt die Form
+  await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: stamm });
+  assert.equal((await betrieb()).berichtForm, 'tag');
+
+  // der schon gespeicherte Bericht bleibt ein Wochenbericht – auch beim erneuten Speichern, und ohne Tage
+  const alt = koerper(await schreibe(w));
+  assert.equal(alt.inhalt.form, 'woche');
+  assert.ok(alt.inhalt.betrieb.every((e: { tag?: string }) => e.tag === undefined));
+
+  // eine neue Woche beginnt in der Tagesform
+  const NEU = '2026-10-26';
+  assert.equal((await lies(w, w.azubi, w.azubi, NEU)).inhalt.form, 'tag');
+  const tage = {
+    form: 'woche', // was die Anfrage behauptet, zählt nicht
+    betrieb: [
+      { text: 'Mittwoch: Drucker eingerichtet', stunden: 8, tag: '2026-10-28' },
+      { text: 'Montag: Server gepatcht', stunden: '6,5', tag: '2026-10-26' },
+      { text: 'Montag: Kabel verlegt', stunden: 1.5, tag: '2026-10-26' },
+      { text: '', stunden: 0, tag: '2026-10-27' },
+    ],
+    unterweisung: [{ text: 'Brandschutz', stunden: 2, tag: '2026-10-27' }],
+    schule: [{ text: 'Mathe: Prozentrechnung', stunden: 6, tag: '2026-10-29' }],
+    abwesenheit: [{ tag: '2026-10-30', grund: 'krank', stunden: 8, text: '' }],
+  };
+  const neu = koerper(await schreibe(w, w.azubi, NEU, tage));
+  assert.equal(neu.inhalt.form, 'tag');
+  // nach Tagen geordnet, Reihenfolge am selben Tag bleibt; leere Zeilen fallen weg
+  assert.deepEqual(neu.inhalt.betrieb, [
+    { text: 'Montag: Server gepatcht', stunden: 6.5, tag: '2026-10-26' },
+    { text: 'Montag: Kabel verlegt', stunden: 1.5, tag: '2026-10-26' },
+    { text: 'Mittwoch: Drucker eingerichtet', stunden: 8, tag: '2026-10-28' },
+  ]);
+  assert.deepEqual([neu.summe.betrieb, neu.summe.unterweisung, neu.summe.schule, neu.summe.abwesenheit, neu.summe.gesamt], [16, 2, 6, 8, 32]);
+  // ohne Tag oder mit einem Tag außerhalb der Woche geht es nicht
+  for (const falsch of [{ text: 'ohne Tag', stunden: 1 }, { text: 'andere Woche', stunden: 1, tag: '2026-11-02' }, { text: 'kein Datum', stunden: 1, tag: 'Montag' }]) {
+    const r = await schreibe(w, w.azubi, NEU, { ...tage, betrieb: [falsch] });
+    assert.equal(r.status, 400, falsch.text);
+    assert.match(koerper(r).fehler, /Der Tag muss in der Berichtswoche liegen/);
+  }
+  // Samstag ist erlaubt
+  assert.equal((await schreibe(w, w.azubi, NEU, { ...tage, betrieb: [{ text: 'Messe', stunden: 4, tag: '2026-10-31' }] })).status, 200);
+  assert.equal((await schreibe(w, w.azubi, NEU, tage)).status, 200);
+
+  // Einreichen und Abzeichnen wie gehabt; die Betreuerin sieht dieselbe Form
+  assert.equal((await reicheEin(w, w.azubi, NEU)).status, 200);
+  assert.equal((await lies(w, w.ausbilder, w.azubi, NEU)).inhalt.form, 'tag');
+  assert.equal((await zeichneAb(w, w.ausbilder, [{ azubiId: w.azubi.id, montag: NEU }])).status, 200);
+
+  // im PDF steht der Bericht nach Tagen, mit Art und Tagessumme; der Wochenbericht daneben bleibt in drei Teilen
+  const pdf = (await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/berichtsheft.pdf?woche=${NEU}`, { cookies: als(w, w.azubi) })).datei!.inhalt;
+  const roh = pdf.toString('latin1');
+  let text = '';
+  for (const m of roh.matchAll(/\/Filter \/FlateDecode \/Length (\d+) >>\nstream\n/g)) {
+    const start = m.index! + m[0].length;
+    try {
+      const befehle = inflateSync(pdf.subarray(start, start + Number(m[1]))).toString('latin1');
+      for (const t of befehle.matchAll(/<([0-9a-f]+)> Tj/g)) text += `${Buffer.from(t[1], 'hex').toString('latin1')}\n`;
+    } catch {
+      // Bilder und Schriften sind anders verpackt
+    }
+  }
+  for (const teil of ['Montag, 26.10.2026', '8 h', 'Betrieb: Montag: Server gepatcht', 'Dienstag, 27.10.2026', 'Unterweisung: Brandschutz', 'Berufsschule: Mathe: Prozentrechnung', 'Freitag, 30.10.2026', 'Abwesenheit: Krank']) assert.ok(text.includes(teil), `PDF: ${teil}\n${text}`);
+  assert.ok(!text.includes('Samstag') && !text.includes('Betriebliche Tätigkeiten'.normalize()), 'kein leerer Samstag, keine Teile der Wochenform');
+  assert.ok(text.indexOf('Montag, 26.10.2026') < text.indexOf('Dienstag, 27.10.2026') && text.indexOf('Dienstag, 27.10.2026') < text.indexOf('Mittwoch, 28.10.2026'));
+
+  // stellt der Betrieb zurück, bleibt der Tagesbericht ein Tagesbericht
+  await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, berichtForm: 'woche' } });
+  assert.equal((await lies(w, w.azubi, w.azubi, NEU)).inhalt.form, 'tag');
+  assert.equal((await lies(w, w.azubi, w.azubi, '2026-10-19')).inhalt.form, 'woche');
+
+  // je Azubi: die Einstellung im Profil geht der des Betriebs vor; leer heißt wieder „wie im Betrieb“
+  const profilPfad = `/api/azubis/${w.azubi.id}/profil`;
+  const profil = async (wer = w.ausbilder) => koerper(await ruf(w.u, 'GET', profilPfad, { cookies: als(w, wer) }));
+  const alt2 = (await profil()).profil;
+  assert.deepEqual([alt2.berichtForm, (await profil()).berichtFormGilt], [null, 'woche']);
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: 'monat' } })).status, 400);
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.azubi), body: { ...alt2, berichtForm: 'tag' } })).status, 403);
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: 'tag' } })).status, 200);
+  // der Azubi sieht, was für ihn gilt
+  assert.deepEqual([(await profil(w.azubi)).profil.berichtForm, (await profil(w.azubi)).berichtFormGilt], ['tag', 'tag']);
+  assert.equal((await lies(w, w.azubi, w.azubi, '2026-10-19')).inhalt.form, 'tag', 'Betrieb: Woche, Azubi: Tag → neue Berichte je Tag');
+  // ein anderer Azubi bleibt bei der Form des Betriebs
+  assert.equal((await lies(w, w.ben, w.ben, '2026-10-19')).inhalt.form, 'woche');
+  // fehlt die Angabe beim Speichern des Profils, bleibt sie
+  const { berichtForm: _weg, ...ohneForm } = (await profil()).profil;
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: ohneForm })).status, 200);
+  assert.equal((await profil()).profil.berichtForm, 'tag');
+  // umgekehrt: Betrieb je Tag, dieser Azubi die Woche im Ganzen
+  await ruf(w.u, 'PUT', '/api/stammdaten/betrieb', { cookies: als(w, w.ausbilder), body: { ...stamm, berichtForm: 'tag' } });
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: 'woche' } });
+  assert.equal((await lies(w, w.azubi, w.azubi, '2026-10-19')).inhalt.form, 'woche');
+  assert.equal((await lies(w, w.ben, w.ben, '2026-10-19')).inhalt.form, 'tag');
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: null } });
+  assert.deepEqual([(await profil()).profil.berichtForm, (await profil()).berichtFormGilt], [null, 'tag']);
+});

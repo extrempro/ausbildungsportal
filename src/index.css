@@ -7793,3 +7793,42 @@ fieldset.benach-bereich p {
 .benach-grund {
   margin: 0 0 8px;
 }
+
+/* ---------- Berichtsheft: Tagesform ---------- */
+.bericht-tag-abwesend {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+}
+
+.bericht-tag-abwesend .leise {
+  color: inherit;
+}
+
+.bericht-tag-neu {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bericht-tage-titel {
+  margin: 16px 0 4px;
+  font-size: 14px;
+}
+
+.blatt-art {
+  color: var(--c-muted);
+}
+
+.blatt-tagsumme {
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+@media print {
+  .blatt-art,
+  .blatt-tagsumme {
+    color: #333;
+  }
+}

@@ -184,7 +184,7 @@ export function Stammdaten() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     try {
-      await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland'), personalMail: f.get('personalMail'), personalAnrede: f.get('personalAnrede') });
+      await api('PUT', '/api/stammdaten/betrieb', { name: f.get('name'), anschrift: f.get('anschrift'), bundesland: f.get('bundesland'), personalMail: f.get('personalMail'), personalAnrede: f.get('personalAnrede'), berichtForm: f.get('berichtForm') });
       eingaben.gespeichert();
       await fertig('Angaben zum Betrieb gespeichert.');
     } catch (err) {
@@ -246,6 +246,14 @@ export function Stammdaten() {
                 </option>
               ))}
             </select>
+          </label>
+          <label className="ganz">
+            Form des Berichtshefts
+            <select name="berichtForm" defaultValue={daten.betrieb.berichtForm}>
+              <option value="woche">Wochenbericht – Tätigkeiten der ganzen Woche</option>
+              <option value="tag">Wochenbericht mit Einträgen je Tag</option>
+            </select>
+            <span className="leise klein">Gilt für Berichte, die ab jetzt begonnen werden. Schon gespeicherte Berichte behalten ihre Form. Für einzelne Azubis stellst du es im Profil des Azubis anders ein.</span>
           </label>
           <label className="ganz">
             Mail-Adresse der Personalstelle (für genehmigten Urlaub)
