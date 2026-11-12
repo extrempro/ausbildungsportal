@@ -1,4 +1,9 @@
 # Eigene Einstellungen für Docker Compose – nur auf deinem Server.
+#
+# Für eine andere Adresse oder einen anderen Port brauchst du diese Datei NICHT mehr:
+# Trag in der .env BIND_ADRESSE und BIND_PORT ein (Vorlage: .env.example).
+# Diese Datei ist für alles darüber hinaus – mehrere Zuordnungen, gar keine Ports, eigene Netze.
+#
 # Kopieren nach docker-compose.override.yml; Docker Compose liest die Datei automatisch mit.
 # docker-compose.override.yml steht in .gitignore, git pull überschreibt sie also nicht.
 #
