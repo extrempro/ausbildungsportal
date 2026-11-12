@@ -1,3 +1,4 @@
+import { begleiterSagt } from './begleiter';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from './api';
@@ -144,8 +145,21 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
 
   const lade = useCallback(async () => {
     try {
-      setDaten(await api<Antwort>('GET', '/api/aktivitaeten'));
+      const frisch = await api<Antwort>('GET', '/api/aktivitaeten');
+      setDaten(frisch);
       setFehler(false);
+      // gute Nachricht für einen Azubi: Der Begleiter freut sich mit – je Neuigkeit einmal (in diesem Browser gemerkt)
+      const gut = frisch.gruppen.find((g) => g.neu && (g.art === 'bericht_abgezeichnet' || g.art === 'urlaub_genehmigt'));
+      if (gut) {
+        let schon = '';
+        try {
+          schon = window.localStorage.getItem('begleiter-glocke') ?? '';
+          window.localStorage.setItem('begleiter-glocke', String(frisch.bis));
+        } catch {
+          /* ohne Speicher freut er sich eben öfter */
+        }
+        if (schon !== String(frisch.bis)) window.setTimeout(() => begleiterSagt(gut.art as 'bericht_abgezeichnet' | 'urlaub_genehmigt'), 1500);
+      }
     } catch {
       setFehler(true);
     }

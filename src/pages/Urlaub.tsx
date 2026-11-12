@@ -1,3 +1,4 @@
+import { begleiterSagt } from '../begleiter';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, datum, zeit, zeitraum } from '../api';
@@ -316,6 +317,7 @@ function AntragFormular({ azubiId, heute, onGestellt }: { azubiId: number; heute
       setBis('');
       setBemerkung('');
       melde('Urlaub beantragt.');
+      begleiterSagt('urlaub_beantragt');
       await onGestellt();
     } catch (err) {
       setFehler(err instanceof Error ? err.message : 'Fehler');

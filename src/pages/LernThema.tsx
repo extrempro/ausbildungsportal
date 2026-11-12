@@ -1,3 +1,4 @@
+import { begleiterSagt } from '../begleiter';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { Ladefehler, melde, rueckfrage } from '../dialoge';
@@ -62,7 +63,11 @@ export function LernThema({ id }: { id: string }) {
   useEffect(() => void ladeFelder(), [ladeFelder]);
   // neu erreichtes Abzeichen oder neuer Rang – wird einmal groß gezeigt
   const [erfolg, setErfolg] = useState<Erfolg | null>(null);
-  const schliesseErfolg = useCallback(() => setErfolg(null), []);
+  const schliesseErfolg = useCallback(() => {
+    setErfolg(null);
+    // erst nach dem Schließen des Fensters – der Begleiter redet nie über ein offenes Fenster
+    window.setTimeout(() => begleiterSagt('abzeichen'), 300);
+  }, []);
   const nachSpeichern = useCallback(
     (r: Erfolg) => {
       if (r.abzeichen || r.rang) setErfolg({ abzeichen: r.abzeichen, rang: r.rang });

@@ -1,3 +1,4 @@
+import { BegleiterKonto } from '../begleiter';
 import { melde, rueckfrage } from '../dialoge';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
@@ -234,6 +235,8 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
       </section>
 
       {konto.rolle !== 'admin' && <Benachrichtigungen rolle={konto.rolle} />}
+
+      {konto.rolle === 'azubi' && <BegleiterKonto />}
 
       {konto.rolle !== 'admin' && (
         <section className="karte" id="kalender-abo">

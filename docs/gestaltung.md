@@ -37,6 +37,8 @@ Regeln dazu:
 - **Hell und dunkel:** Die Klasse `dark` an `<html>` schaltet um (Einstellung des Nutzers oder des Geräts). Jede Änderung wird in beiden Darstellungen angesehen.
 - **Grafiken (SVG):** Farben über die Klassen `sv-…` in `src/index.css`, damit auch sie umschalten.
 
+**Ausnahme Begleiter:** Die fünf Figuren des Begleiters (`src/begleiter/figuren.tsx`) haben eigene Farben `--bf-…` (Fell, Bauch, Schnabel, Zubehör …), festgelegt an `.bf` und für dunkel an `html.dark .bf`. Sie gelten nur innerhalb der Figur. Neue Figuren oder Teile werden selbst gezeichnet (SVG, Strichstärke wie die vorhandenen) und nehmen diese Variablen.
+
 ## Schrift und Abstände
 
 - **Schrift:** Inter, sonst die Schrift des Geräts. Für Code und Passwörter JetBrains Mono, sonst die Festbreitenschrift des Geräts. Es werden keine Schriften aus dem Netz geladen.
@@ -124,6 +126,8 @@ Kleine Wörter für einen Stand, 12 px: `gruen` (gut, erledigt), `gelb` (wartet,
 - **Bewegung** nur innerhalb von `@media (prefers-reduced-motion: no-preference)`. Wer am Gerät Bewegung abgestellt hat, sieht keine.
 - **Fokus:** Der blaue Rahmen (3 px) für die Tastatur bleibt überall sichtbar und wird nicht entfernt.
 - **Druck:** Was auf Papier nichts zu suchen hat (Knöpfe, Navigation), bekommt `nicht-drucken`.
+
+Die Animationen des Begleiters (neues Teil, Konfetti, Sprechblase) stehen vollständig in `@media (prefers-reduced-motion: no-preference)` – bei „Bewegung reduzieren“ bleibt ein ruhiges Bild. Ton gibt es nicht.
 
 ## Wenn etwas Neues nötig ist
 
