@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.61.2] – 2026-11-13
+
+### Behoben
+
+Darstellung (aus der Prüfung nach WCAG 2.2 AA):
+
+- **Sehr schmale Handys (320 px) und starker Zoom:** Lange Hinweise in einer Woche (etwa „Feiertag: Tag der Deutschen Einheit“) und die Karten der Sammelplanung ragten über den Rand. Sie brechen jetzt um.
+- **Leiste unten:** Beschriftungen wie „Berichtsheft“ oder „Abzeichnen“ werden nicht mehr mit „…“ abgeschnitten, sondern bei Bedarf getrennt.
+- **Dunkle Darstellung:** Grauer Nebentext auf farbigen Karten (Firmentermin, Prüfung, Beginn einer Abteilung, Lernpunkt) war zu blass. Er ist jetzt heller und gut lesbar.
+- **Vorleseprogramme:** In „Konten → Was bewirkt was?“ und auf dem Blatt eines Berichts stimmen die Ebenen der Überschriften. Man springt nicht mehr von der Seitenüberschrift direkt auf die dritte Ebene.
+
 ## [0.61.1] – 2026-11-13
 
 ### Behoben

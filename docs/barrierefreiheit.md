@@ -1,6 +1,6 @@
 # Barrierefreiheit nach WCAG 2.2
 
-Stand: 13.11.2026 · Prüfung an Version 0.61.0, erste Maßnahmen in 0.61.1
+Stand: 13.11.2026 · Prüfung an Version 0.61.0, Maßnahmen in 0.61.1 (Tastatur) und 0.61.2 (Darstellung)
 
 ## Ziel
 
@@ -13,20 +13,22 @@ Neue Funktionen halten sich an die Punkte „Tastatur“, „Jedes Gerät“ und
 - **Wer:** eine Durchsicht durch den Entwickler (hier: Claude), keine Zertifizierung durch Dritte.
 - **Umfang:** 45 Seiten aus allen vier Rollen mit erfundenen Beispieldaten, hell und dunkel, bei 1280, 820, 640, 390 und 320 px; drei geöffnete Fenster.
 - **Werkzeuge:** eigene Prüfskripte im Browser (Chromium über Playwright) für Kontrast, Namen und Beschriftungen, Überschriften, Bedienflächen, Seitentitel, Umbruch, Textabstände, verdeckten Fokus und Fokus in Fenstern; dazu eine Durchsicht des Codes (Zeitbegrenzung, Unterschrift, Statusmeldungen, Bewegung, Ausrichtung).
-- **Dauerhaft im Test:** `e2e/11-fokus.test.ts` (Fokus nicht verdeckt, Fenster), `e2e/06-handy.test.ts` (kein Überlauf), `e2e/10-navigation.test.ts`.
+- **Dauerhaft im Test:** `e2e/11-fokus.test.ts` (Fokus nicht verdeckt, Fenster), `e2e/12-kontrast.test.ts` (Kontrast hell und dunkel, eigenes Skript), `e2e/06-handy.test.ts` (kein Überlauf bei 390 und 320 px), `e2e/10-navigation.test.ts`.
 
 ## Erfüllt
 
 | Bereich | WCAG |
 | --- | --- |
-| Kontrast in heller Darstellung auf allen geprüften Seiten; Feldränder mindestens 3 : 1 | 1.4.3, 1.4.11 |
+| Kontrast hell und dunkel auf allen geprüften Seiten, auch auf getönten Karten (`--c-muted-getoent`) – dunkel ab 0.61.2; Feldränder mindestens 3 : 1 | 1.4.3, 1.4.11 |
 | Jedes Feld, jeder Knopf und jeder Link hat einen Namen; Symbole sind benannt oder für Vorleser ausgeblendet | 1.1.1, 4.1.2 |
 | Eigener Seitentitel je Seite, Sprache Deutsch angegeben | 2.4.2, 3.1.1 |
 | Sichtbarer Fokusrahmen, „Zum Inhalt springen“, Escape schließt Fenster und Menüs | 2.1.1, 2.4.1, 2.4.7 |
 | Fenster holen den Fokus und halten ihn (`useFensterFokus`) – ab 0.61.1 | 2.4.3 |
 | Angeheftete Leisten verdecken den Fokus nicht (`src/fokusFrei.ts`) – ab 0.61.1 | 2.4.11 |
 | Bedienflächen mindestens 40 × 40 px (verlangt: 24 × 24) | 2.5.8 |
-| Kein Überlauf bei 200 % Zoom (640 px) | 1.4.4 |
+| Kein Überlauf bei 200 % Zoom (640 px) und bei 320 px (entspricht 400 %) – 320 px ab 0.61.2 | 1.4.4, 1.4.10 |
+| Größere Text- und Zeilenabstände: nichts läuft über, Beschriftungen der Leiste unten brechen um statt abgeschnitten zu werden – ab 0.61.2 | 1.4.12 |
+| Überschriften ohne übersprungene Ebene (Konten, Bericht) – ab 0.61.2 | 1.3.1 |
 | Nicht nur Farbe: Ampel, Plan-Arten und Pillen haben immer ein Wort | 1.4.1 |
 | „Gespeichert“ und Fehler werden angesagt (`role="status"`, `role="alert"`) | 4.1.3, 3.3.1 |
 | Reduzierte Bewegung wird beachtet, Hoch- und Querformat | 2.3.3, 1.3.4 |
@@ -38,10 +40,6 @@ Neue Funktionen halten sich an die Punkte „Tastatur“, „Jedes Gerät“ und
 | --- | --- | --- |
 | Abmelden nach 8 Stunden ohne Vorwarnung – nicht gespeicherter Text geht verloren | 2.2.1 | Hinweis vor Ablauf mit „Angemeldet bleiben“ |
 | Bericht einreichen und abzeichnen nur mit gezeichneter Unterschrift | 2.1.1 / 2.5.7 (formal Ausnahme) | Weg ohne Zeichnen – muss vorher fachlich geklärt werden |
-| Bei 320 px ragen die Pille „Feiertag: …“ und die Karten der Sammelplanung 6 px über den Rand | 1.4.10 | umbrechen lassen |
-| Dunkle Darstellung: graue Zusatzzeilen auf getönten Karten 3,8 bis 4,5 : 1 | 1.4.3 | Textfarbe statt Grau in getönten Karten |
-| Vergrößerte Textabstände: Startseite am Handy läuft über, „Berichtsheft“ in der Leiste unten wird abgeschnitten | 1.4.12 | Beschriftung umbrechen |
-| Überschrift springt von h1 auf h3 (Konten, Bericht) | 1.3.1 (Empfehlung) | Ebene anpassen |
 
 ## Nicht geprüft
 

@@ -143,7 +143,7 @@ export function Konten({ ich }: { ich: Konto }) {
         </button>
         {hilfe && (
           <div id="konten-hilfe" className="konten-hilfe">
-            <h3>Rollen</h3>
+            <h2>Rollen</h2>
             <dl className="erklaerung">
               <dt>Azubi</dt>
               <dd>Sieht nur den eigenen Ausbildungsplan und das eigene Berichtsheft. Schreibt Berichte und reicht sie ein.</dd>
@@ -161,7 +161,7 @@ export function Konten({ ich }: { ich: Konto }) {
                 </>
               )}
             </dl>
-            <h3>Funktionen</h3>
+            <h2>Funktionen</h2>
             <dl className="erklaerung">
               <dt>Konto anlegen</dt>
               <dd>
@@ -203,7 +203,7 @@ export function Konten({ ich }: { ich: Konto }) {
                 Berichte bleiben mit Name und Unterschrift gültig. Gedacht für das Ende der Aufbewahrung, nicht für eine Pause.
               </dd>
             </dl>
-            <h3>Stand</h3>
+            <h2>Stand</h2>
             <dl className="erklaerung">
               <dt>
                 <span className="pille gelb">wartet auf erste Anmeldung</span>
