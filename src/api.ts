@@ -85,6 +85,41 @@ export const neueVersion = {
   },
 };
 
+/**
+ * Ende der Sitzung (WCAG 2.2.1): Der Server nennt in jeder Antwort, wann die Anmeldung ohne weitere Anfrage endet
+ * („X-Sitzung-Ende“, bei der festen 24-Stunden-Grenze mit „;fest“). Umgerechnet auf die Uhr dieses Geräts – über die
+ * Kopfzeile „Date“ der Antwort, falls die Uhren nicht gleich gehen. `src/sitzung.tsx` warnt damit vorher.
+ */
+export interface SitzungsEnde {
+  /** Zeitpunkt nach der Uhr dieses Geräts (ms) */
+  ende: number;
+  /** feste Grenze – „Angemeldet bleiben“ hilft dann nicht */
+  fest: boolean;
+}
+let sitzungEnde: SitzungsEnde | null = null;
+const sitzungsHoerer = new Set<() => void>();
+function merkeSitzung(r: Response): void {
+  const kopf = r.headers.get('X-Sitzung-Ende');
+  if (!kopf) return;
+  const [iso, art] = kopf.split(';');
+  const serverEnde = Date.parse(iso);
+  const serverJetzt = Date.parse(r.headers.get('Date') ?? '');
+  if (!Number.isFinite(serverEnde)) return;
+  const ende = Number.isFinite(serverJetzt) ? Date.now() + (serverEnde - serverJetzt) : serverEnde;
+  const fest = art === 'fest';
+  // nur melden, wenn es sich merklich ändert – die Kopfzeile „Date“ ist sekundengenau
+  if (sitzungEnde && sitzungEnde.fest === fest && Math.abs(sitzungEnde.ende - ende) < 5000) return;
+  sitzungEnde = { ende, fest };
+  sitzungsHoerer.forEach((h) => h());
+}
+export const sitzung = {
+  abonniere: (h: () => void) => {
+    sitzungsHoerer.add(h);
+    return () => sitzungsHoerer.delete(h);
+  },
+  lies: () => sitzungEnde,
+};
+
 export async function api<T>(methode: string, pfad: string, body?: unknown): Promise<T> {
   let r: Response;
   try {
@@ -98,6 +133,7 @@ export async function api<T>(methode: string, pfad: string, body?: unknown): Pro
     throw new ApiFehler(0, 'Der Server ist nicht erreichbar');
   }
   pruefeVersion(r.headers.get('X-App-Version'));
+  merkeSitzung(r);
   const daten = (await r.json().catch(() => ({}))) as { fehler?: string; code?: string };
   if (!r.ok) {
     if (r.status === 401 && daten.code === 'anmeldung') beiAbmeldung();
@@ -117,6 +153,7 @@ export async function ladeDatei(pfad: string): Promise<void> {
   } catch {
     throw new ApiFehler(0, 'Der Server ist nicht erreichbar');
   }
+  merkeSitzung(r);
   if (!r.ok) {
     const daten = (await r.json().catch(() => ({}))) as { fehler?: string; code?: string };
     if (r.status === 401 && daten.code === 'anmeldung') beiAbmeldung();
@@ -145,6 +182,7 @@ export async function ladeHoch<T>(pfad: string, datei: Blob, typ: string): Promi
     throw new ApiFehler(0, 'Der Server ist nicht erreichbar');
   }
   pruefeVersion(r.headers.get('X-App-Version'));
+  merkeSitzung(r);
   const daten = (await r.json().catch(() => ({}))) as { fehler?: string; code?: string };
   if (!r.ok) {
     if (r.status === 401 && daten.code === 'anmeldung') beiAbmeldung();

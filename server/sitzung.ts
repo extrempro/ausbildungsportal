@@ -50,6 +50,18 @@ export function pruefeSitzung(db: DB, token: string | undefined, jetzt: Date): B
   return b;
 }
 
+/**
+ * Wann die Sitzung endet, wenn nichts mehr passiert: nach 8 Stunden ohne Anfrage, spätestens zur festen Grenze (24 Stunden).
+ * Die Oberfläche warnt damit vorher (WCAG 2.2.1). `fest`: Die feste Grenze kommt zuerst – verlängern hilft dann nicht.
+ */
+export function sitzungsEnde(db: DB, token: string | undefined): { ende: string; fest: boolean } | null {
+  if (!token) return null;
+  const s = db.prepare('SELECT zuletzt, laeuft_ab FROM sitzung WHERE token_hash = ?').get(tokenHash(token)) as { zuletzt: string; laeuft_ab: string } | undefined;
+  if (!s) return null;
+  const leerlauf = new Date(new Date(s.zuletzt).getTime() + LEERLAUF_MS).toISOString();
+  return leerlauf < s.laeuft_ab ? { ende: leerlauf, fest: false } : { ende: s.laeuft_ab, fest: true };
+}
+
 export function beendeSitzung(db: DB, token: string | undefined): void {
   if (token) db.prepare('DELETE FROM sitzung WHERE token_hash = ?').run(tokenHash(token));
 }

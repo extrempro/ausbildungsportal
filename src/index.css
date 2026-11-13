@@ -9670,3 +9670,21 @@ button.lern-navi-feld[aria-current='location'] {
   gap: 6px 10px;
   padding: 4px 8px 8px;
 }
+
+/* Warnung vor dem Abmelden: die verbleibende Zeit gut sichtbar */
+.sitzung-rest {
+  margin: 4px 0 12px;
+  color: var(--c-muted);
+}
+
+.sitzung-rest strong {
+  color: var(--c-text);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Schritte in einem Fenster untereinander – für drei Spalten ist es zu schmal */
+.dialog .ablauf-liste {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
