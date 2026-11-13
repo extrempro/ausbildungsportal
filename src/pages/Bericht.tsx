@@ -172,10 +172,10 @@ export function BerichtBlatt({ b }: { b: Bericht }) {
   return (
     <article className={`blatt${vermerk ? ' offen' : ''}`} data-vermerk={vermerk || undefined}>
       <header className="blatt-kopf">
-        <div>
+        <h2 className="blatt-titel">
           <strong>Ausbildungsnachweis</strong> · Woche {b.kw}/{b.jahr} · {wocheText(b.montag, b.sonntag)}
           {b.ausbildungsjahr ? ` · ${b.ausbildungsjahr}. Ausbildungsjahr` : ''}
-        </div>
+        </h2>
         <div className="leise klein">
           {[b.kopf.azubi, b.kopf.beruf, b.kopf.betrieb].filter(Boolean).join(' · ')}
           {b.kopf.ausbilder ? ` · Ausbilder: ${b.kopf.ausbilder}` : ''}

@@ -4,6 +4,8 @@
   --c-card: #ffffff;
   --c-text: #0f172a;
   --c-muted: #475569;
+  /* gedämpfter Text auf farbig getönten Karten – dunkel heller als --c-muted, sonst unter 4,5 : 1 (WCAG 1.4.3) */
+  --c-muted-getoent: #475569;
   --c-border: #e2e8f0;
   --c-accent: #2563eb;
   --c-accent-soft: #eff6ff;
@@ -32,6 +34,7 @@ html.dark {
   --c-card: #1e293b;
   --c-text: #f1f5f9;
   --c-muted: #94a3b8;
+  --c-muted-getoent: #cbd5e1;
   --c-border: #334155;
   --c-accent: #60a5fa;
   --c-accent-soft: #172554;
@@ -69,6 +72,8 @@ body {
   background: var(--c-bg);
   color: var(--c-text);
   font: 16px/1.6 Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* ein Wort, das nicht in seine Spalte passt, bricht um statt über den Rand zu ragen (WCAG 1.4.10) */
+  overflow-wrap: break-word;
 }
 
 h1 {
@@ -499,6 +504,12 @@ td > .pille {
   margin-left: 0;
 }
 
+/* lange Pillen in einer Woche (z. B. „Feiertag: Tag der Deutschen Einheit · Fr 03.10.“) brechen um statt über den Rand zu ragen (WCAG 1.4.10) */
+.kw .pille {
+  max-width: 100%;
+  white-space: normal;
+}
+
 .pille.gruen {
   background: var(--c-gruen-bg);
   color: var(--c-gruen-fg);
@@ -661,6 +672,16 @@ fieldset.abschnitt legend {
   border-top: 0;
   padding-top: 0;
   margin: 20px 0 4px;
+}
+
+/* Kopfzeile des Blatts ist die Überschrift über den Abschnitten (h2 → h3) – sieht aus wie normaler Text */
+.blatt-titel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 .blatt-tabelle td {
@@ -1305,6 +1326,13 @@ a.bericht-link:hover {
   font-size: 14px;
 }
 
+/* getönte Karten (Firmentermin, Prüfung, Beginn einer Abteilung, Lernpunkt): gedämpfter Text mit genug Kontrast */
+.eintrag .eintrag-zusatz,
+.eintrag .leise,
+.lern-lernpunkt .leise {
+  color: var(--c-muted-getoent);
+}
+
 .eintrag-kopf .link-knopf {
   margin-left: auto;
   font-size: 13px;
@@ -1795,6 +1823,7 @@ a.kachel:hover {
 
 .kachel-text {
   font-weight: 600;
+  hyphens: auto;
 }
 
 .kachel-zusatz {
@@ -2109,6 +2138,7 @@ td.aktion {
 }
 
 .azubi-wege a {
+  hyphens: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2566,11 +2596,14 @@ td.aktion {
     cursor: pointer;
   }
 
-  .tabs span {
-    overflow: hidden;
+  /* Beschriftung nie abschneiden (WCAG 1.4.10, 1.4.12): Wird es zu eng – sehr schmales Handy, größere Abstände –,
+     bricht das Wort mit Trennstrich um */
+  .tabs span:not(.nav-zahl) {
     max-width: 100%;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+    line-height: 1.15;
+    text-align: center;
   }
 
   .tabs a[aria-current='page'],
@@ -3338,7 +3371,7 @@ td.aktion {
   padding: 0 20px 16px;
 }
 
-.konten-hilfe h3:first-child {
+.konten-hilfe h2:first-child {
   border-top: 0;
 }
 
@@ -3350,7 +3383,7 @@ td.aktion {
   margin: 16px 0 0;
 }
 
-.konten-hilfe h3 {
+.konten-hilfe h2 {
   margin: 16px 0 8px;
   color: var(--c-muted);
   font-size: 13px;
@@ -3703,6 +3736,8 @@ fieldset.vorlage-eintrag legend + * {
 
 .sammel {
   display: grid;
+  /* minmax(0, …): Die Karten werden nie breiter als die Seite (bei 320 px liefen sie sonst über) */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
 }
 

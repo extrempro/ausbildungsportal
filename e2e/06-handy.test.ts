@@ -26,13 +26,14 @@ const seiten: Record<string, (g: Grunddaten) => string[]> = {
   [ADMIN.name]: () => ['/verwaltung/konten', '/verwaltung/protokoll', '/verwaltung/meldungen', '/verwaltung/lerninhalte', '/verwaltung/erscheinungsbild', '/konto', '/handbuch'],
 };
 
-for (const dunkel of [false, true]) {
+// 320 px: kleinstes übliches Handy und zugleich 400 % Zoom am PC (WCAG 1.4.10)
+for (const [breite, dunkel] of [[390, false], [390, true], [320, false]] as const) {
   test(
-    `Handy (390 px, ${dunkel ? 'dunkel' : 'hell'}): Keine Seite läuft waagerecht über, jede hat eine Überschrift, die Konsole bleibt leer`,
-    mitFoto(() => p, `handy-${dunkel ? 'dunkel' : 'hell'}`, async () => {
+    `Handy (${breite} px, ${dunkel ? 'dunkel' : 'hell'}): Keine Seite läuft waagerecht über, jede hat eine Überschrift, die Konsole bleibt leer`,
+    mitFoto(() => p, `handy-${breite}-${dunkel ? 'dunkel' : 'hell'}`, async () => {
       const maengel: string[] = [];
       for (const [wer, liste] of Object.entries(seiten)) {
-        const s = await p.seite(wer, { ...HANDY, dunkel });
+        const s = await p.seite(wer, { ...HANDY, breite, dunkel });
         for (const pfad of liste(g)) {
           await oeffne(s, p.url, pfad);
           const titel = await text(s, 'main h1');

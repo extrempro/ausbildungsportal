@@ -16,6 +16,7 @@ Farben stehen nur einmal fest: als Variablen am Anfang von `src/index.css`, je e
 | `--c-card` | Fläche von Karten, Fenstern, Feldern |
 | `--c-text` | normaler Text |
 | `--c-muted` | Nebentext (Klasse `.leise`) |
+| `--c-muted-getoent` | Nebentext auf farbig getönten Karten (Firmentermin, Prüfung, Lernpunkt) – dunkel heller, damit 4,5 : 1 erreicht wird |
 | `--c-border` | Linien und Rahmen |
 | `--c-rand-feld` | Rahmen von Eingabefeldern (dunkler, damit das Feld als Feld erkennbar ist) |
 | `--c-accent`, `--c-on-accent` | Hauptknopf, Links, aktive Auswahl – und die Schrift darauf |

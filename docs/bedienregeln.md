@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.61.1
+Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.61.2
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md) und [barrierefreiheit.md](barrierefreiheit.md) (Ziel: WCAG 2.2 AA), Farben und Bausteine in [gestaltung.md](gestaltung.md).
 
@@ -26,7 +26,7 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
   7. **Symbole:** Jeder Menüpunkt und jede Gruppe hat ein eigenes Symbol; dieselbe Seitenart hat bei allen Rollen dasselbe (Rückmeldungen: die zwei Daumen).
   8. **Kurznamen** in der Leiste unten nur, wo der Platz fehlt – und nur als Kürzung desselben Worts („Plan“, „Jahr“, „Meldungen“), nie ein anderes Wort. Was selten gebraucht wird, steht unter „Mehr“ mit vollem Namen.
 - [ ] **Begriffe:** Bericht (nicht Nachweis), Azubi, Ausbildungsbeauftragte, Planbaustein, Sammelplanung; gegenüber Azubis „Betreiber des Portals“, als Rolle „Super-Admin“. Anrede durchgehend „du“. Kurze Sätze, erklärte Fachwörter – die Leser sind zwischen 16 und 30 Jahre alt.
-- [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px, Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.
+- [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px und 320 px (`e2e/06-handy.test.ts`), Text mindestens 4,5 : 1 Kontrast hell und dunkel (`e2e/12-kontrast.test.ts`; auf getönten Karten `--c-muted-getoent` statt `--c-muted`), Beschriftungen nie abschneiden (umbrechen), Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.
 - [ ] **Tastatur:** alles erreichbar, Escape schließt Fenster und Menüs, der Fokus kehrt dorthin zurück, wo er war.
   - **Fenster** (`role="dialog"`) nutzen `useFensterFokus()` aus `src/dialoge.tsx`: Fokus beim Öffnen hinein, Tab bleibt drin, Escape schließt, danach zurück (WCAG 2.4.3). Kein eigener Nachbau.
   - **Angeheftete Leisten** (sticky/fixed) dürfen das fokussierte Element nie verdecken (WCAG 2.4.11). Eine neue angeheftete Leiste kommt in `LEISTEN` in `src/fokusFrei.ts`. `e2e/11-fokus.test.ts` prüft beides.
