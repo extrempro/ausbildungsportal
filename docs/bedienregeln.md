@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 11.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.22.2
+Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.54.3
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md), Farben und Bausteine in [gestaltung.md](gestaltung.md).
 
@@ -31,9 +31,9 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
   1. Wenn ja: Das Ereignis kommt in die Glocke (`merkeAktivitaet` in `server/aktivitaet.ts`). Benachrichtigungen per Teams und E-Mail hängen daran und gehen dann von selbst mit.
   2. Eine neue Art von Ereignis braucht einen Text in der Glocke (`src/glocke.tsx`) und einen für die Nachricht (`TEXT` in `server/benachrichtigung.ts`) – ohne Namen anderer Personen, ohne Inhalte. Sie gehört zu einem Bereich, den man unter „Konto“ wählen kann; ein neuer Bereich kommt dort als eigene Auswahl hinzu.
   3. Wenn nein: im Pull Request in einem Satz sagen, warum nicht (zum Beispiel „betrifft nur die Person selbst“ oder „privat für den Azubi“).
-  4. Was privat für den Azubi ist (Lernstand, Abzeichen, Übungsergebnisse, Termine), wird niemand anderem gemeldet.
-- [ ] **Mitziehen:** Führung (`src/fuehrung.tsx`), Versionshinweise und – bei neuen Daten über Personen – die Leistungsbeschreibung für den Betriebsrat sind angepasst.
-- [ ] **Im Browser durchgespielt** in PC- und Handybreite, nicht nur übersetzt und getestet.
+  4. Was privat für den Azubi ist (Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer, Begleiter, Termine), wird niemand anderem gemeldet.
+- [ ] **Mitziehen:** Führung (`src/fuehrung.tsx`), Versionshinweise, die E2E-Tests (`e2e/`) und – bei neuen Daten über Personen – die Leistungsbeschreibung für den Betriebsrat sind angepasst. Sieht eine Ansicht merklich anders aus, sind die Bildschirmfotos in `docs/bilder/` fällig (`npm run bilder`).
+- [ ] **Im Browser durchgespielt** in PC- und Handybreite, nicht nur übersetzt und getestet. Die E2E-Tests (`npm run e2e`) ersetzen das nicht.
 
 ## Wenn eine Regel nicht passt
 

@@ -1,7 +1,7 @@
 {
   "name": "Ausbildungsportal",
   "short_name": "Ausbildung",
-  "description": "Ausbildungsplan und Berichtsheft",
+  "description": "Ausbildungsplan, Berichtsheft, Urlaub und Lernen",
   "lang": "de",
   "id": "/",
   "start_url": "/",

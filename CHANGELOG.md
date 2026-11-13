@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.54.3] – 2026-11-13
+
+### Geändert
+
+- **Dokumentation auf dem aktuellen Stand:** README, Sicherheitshinweise und Regeln beschrieben an mehreren Stellen einen älteren Stand (zum Beispiel ein Lernmodul „Stufe 3 von 4“, „Planvorlagen“ statt Planbausteine, das Farbschema „oben rechts“). Das ist berichtigt; die Bereiche Urlaub und Lernmodul haben im README eigene Abschnitte. Am Portal selbst ändert sich nichts.
+
 ## [0.54.2] – 2026-11-13
 
 ### Behoben

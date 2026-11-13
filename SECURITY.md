@@ -74,7 +74,7 @@ Traefik (Labels, Version 3; in Version 2 heißt die Middleware `ipWhiteList`):
 
 ## Kalender-Abo
 
-Der Kalender-Link (`/api/abo/<Geheimnis>.ics`) ist der einzige Weg, ohne Anmeldung Daten zu lesen. Er enthält ein zufälliges Geheimnis mit 256 Bit, gibt nur Lesezugriff auf Schulblöcke, Einsätze und Prüfungstermine und prüft bei jedem Abruf die Rechte des Kontos.
+Der Kalender-Link (`/api/abo/<Geheimnis>.ics`) ist der einzige Weg, ohne Anmeldung Daten zu lesen. Er enthält ein zufälliges Geheimnis mit 256 Bit, gibt nur Lesezugriff auf Schulblöcke, Einsätze, Prüfungstermine und genehmigten Urlaub (im eigenen Abo eines Azubis auch auf seine privaten Termine) und prüft bei jedem Abruf die Rechte des Kontos.
 
 - **Das Geheimnis steht in der Adresse – und damit in den Zugriffs-Logs des Reverse Proxys.** Die Logs genauso schützen wie die Datenbank, oder den Pfad `/api/abo/` vom Logging ausnehmen bzw. kürzen.
 - Wer den Link in Outlook (neu/Web) oder Google Kalender einträgt, gibt ihn und die Termine an Microsoft bzw. Google weiter; deren Server rufen ihn ab.
@@ -83,8 +83,8 @@ Der Kalender-Link (`/api/abo/<Geheimnis>.ics`) ist der einzige Weg, ohne Anmeldu
 
 ## Lernmodul
 
-- Die Lerninhalte (`LERN_DIR`) sind Dateien, die der Betreiber einbindet. Das Portal behandelt sie als vertrauenswürdig, bereinigt die Grafiken aber trotzdem: `<script>`, `<foreignObject>`, Ereignis-Attribute, `javascript:` und Verweise nach außen werden aus den SVGs entfernt, bevor sie in die Seite eingebettet werden. Texte werden nie als HTML ausgegeben. Nur Inhalte aus Quellen einbinden, denen man vertraut.
-- Der Lernstand (Ampel, Lernpunkt, Notiz) ist privat: Es gibt ausschließlich Routen für den Azubi selbst. Wer den Server betreibt, kann ihn wie alles in der Datenbank lesen.
+- Die Lerninhalte sind Dateien: Der Betreiber bindet sie als Ordner ein (`LERN_DIR`), oder ein Ausbilder reicht sie als ZIP-Datei ein und der Super-Admin lädt sie nach Prüfung hoch. Das Portal prüft ein eingereichtes Archiv (Größe, Zahl und Art der Dateien, keine Pfade nach außen) und übernimmt nur Dateien, die zu einem Inhaltspaket gehören. Es behandelt die Inhalte als vertrauenswürdig, bereinigt die Grafiken aber trotzdem: `<script>`, `<foreignObject>`, Ereignis-Attribute, `javascript:` und Verweise nach außen werden aus den SVGs entfernt, bevor sie in die Seite eingebettet werden. Texte werden nie als HTML ausgegeben. Nur Inhalte aus Quellen einbinden, denen man vertraut.
+- Lernstand (Ampel, Lernpunkt, Notiz), Abzeichen, Übungsergebnisse, die Eintragungen im Planer für die Prüfung und der Begleiter sind privat: Es gibt ausschließlich Routen für den Azubi selbst. Wer den Server betreibt, kann ihn wie alles in der Datenbank lesen.
 
 ## Was die App selbst tut
 

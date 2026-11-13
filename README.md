@@ -1,8 +1,8 @@
 # Ausbildungsportal
 
-Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
+Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.54.2.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.54.3.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -16,10 +16,10 @@ Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung
 
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
-| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, Fehlermeldungen bearbeiten, das Logo des Betriebs hinterlegen – kein Zugriff auf Pläne, Berichte und Stammdaten |
-| Ausbilder | Microsoft | **nur die eigenen Azubis** (im Profil als zuständig eingetragen) und Azubis ohne Ausbilder: Berichte abzeichnen, zurückgeben und eine Abzeichnung aufheben, Ausbildungsplan und Profil pflegen, Beauftragte und Vertretungen zuweisen, Konten dieser Azubis und der Beauftragten anlegen, sperren und löschen; für alle: Stammdaten und Planbausteine. Als **Vertretung** (Zuweisung mit Zeitraum) dieselben Rechte wie Beauftragte. Mit **Gesamtsicht** (setzt der Super-Admin) volle Rechte bei allen Azubis |
-| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Nachweise für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, während der Zuweisung Aufgaben und Notizen im Plan anlegen |
-| Azubi | Microsoft | nur die eigenen Daten; Nachweise schreiben und einreichen, im Plan eigene Aufgaben, Notizen und Termine eintragen und Aufgaben abhaken |
+| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, Fehlermeldungen bearbeiten, eingereichte Lerninhalte prüfen und hochladen, das Logo des Betriebs hinterlegen, den Begleiter der Azubis für das Portal ein- oder ausschalten – kein Zugriff auf Pläne, Berichte, Urlaub und Stammdaten |
+| Ausbilder | Microsoft | **nur die eigenen Azubis** (im Profil als zuständig eingetragen) und Azubis ohne Ausbilder: Berichte abzeichnen, zurückgeben und eine Abzeichnung aufheben, Urlaub genehmigen, Ausbildungsplan und Profil pflegen, Beauftragte und Vertretungen zuweisen, Konten dieser Azubis und der Beauftragten anlegen, sperren und löschen; für alle: Stammdaten, Planbausteine, Sammelplanung, Lerninhalte ansehen und einreichen. Als **Vertretung** (Zuweisung mit Zeitraum) dieselben Rechte wie Beauftragte. Mit **Gesamtsicht** (setzt der Super-Admin) volle Rechte bei allen Azubis |
+| Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Berichte für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, Urlaub bestätigen, während der Zuweisung Aufgaben und Notizen im Plan anlegen, Lerninhalte ansehen |
+| Azubi | Microsoft | nur die eigenen Daten; Berichte schreiben und einreichen, Urlaub beantragen, im Plan eigene Aufgaben, Notizen und Termine eintragen und Aufgaben abhaken, lernen – Lernstand, Planer und Begleiter sieht nur der Azubi selbst |
 
 Rechte werden ausschließlich im Server geprüft (`server/rechte.ts`, `server/api.ts`); die Oberfläche blendet nur aus.
 
@@ -208,14 +208,37 @@ Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Au
 - **Termine:** Einzelne Tage mit freiwilliger Uhrzeit (z. B. JAV-Sitzung, Gespräch mit der Personalabteilung). Nur der Azubi selbst trägt sie ein – und **nur er sieht sie**: Für Ausbilder und Beauftragte gibt es sie weder im Plan noch in Übersicht, Glocke oder Kalender-Abo. Im eigenen Kalender-Abo des Azubis stehen sie. (Der Serverbetreiber kann sie wie alles in der Datenbank lesen.)
 - **Prüfungen:** Prüfungstermine stehen im Azubi-Profil (Bezeichnung frei, z. B. „Abschlussprüfung Teil 1“). Sie erscheinen in ihrer Woche, im Wochenband und oben in der Kachel „Wochen bis zur Prüfung“; ohne Termin zählt die Kachel bis zum Ende der Ausbildung.
 - **Zuständig:** Bei Einsätzen und Aufgaben lässt sich eine zuständige Person wählen – Ausbilder oder Ausbildungsbeauftragte. Ist es ein Beauftragter, kann der Ausbilder ihn beim Speichern gleich für den Zeitraum zuweisen.
-- **Planvorlagen:** Abläufe in Wochen ab Ausbildungsbeginn (z. B. „Woche 1–8 Einsatz IT-Support“), je Beruf oder für alle. Eine Vorlage wird in den Plan eines Azubis kopiert; danach ist der Plan unabhängig von ihr.
+- **Planbausteine** (früher „Planvorlagen“): Abläufe in Wochen (z. B. „Woche 1–8 Einsatz IT-Support“), je Beruf oder für alle. Ein Baustein wird in den Plan eines Azubis kopiert; danach ist der Plan unabhängig von ihm.
+- **Sammelplanung:** Ausbilder legen Einträge für mehrere Azubis auf einmal an – zum Beispiel einen Schulblock für eine ganze Klasse. Eine Sammelplanung lässt sich als Ganzes zurücknehmen.
 - Beim Schreiben eines Berichts steht dabei, was laut Plan in der Woche ansteht.
 
-Unten auf jeder Seite führt „Versionshinweise“ zu den Änderungen je Version (aus `CHANGELOG.md`). Das Farbschema lässt sich oben rechts zwischen hell und dunkel umschalten; „automatisch“ steht unter „Konto“.
+Unten auf jeder Seite führt „Versionshinweise“ zu den Änderungen je Version (aus `CHANGELOG.md`). Hell und dunkel lässt sich im Menü am Namen (am Handy unter „Mehr“) umschalten; „automatisch“ steht unter „Konto“.
 
 ### Firmentermine
 
 Ausbilder tragen unter **Stammdaten → Firmentermine** ganztägige Termine ein, die für alle im Betrieb gelten (Titel als freier Text, erster und letzter Tag, freiwilliger Hinweis) – etwa eine Betriebsschließung. Alle Fachrollen sehen sie im Ausbildungsplan in der betroffenen Woche und im Jahreskalender. Es ist eine reine Übersicht: Firmentermine stehen nicht im Berichtsheft, ändern keinen Urlaub, lösen keine Benachrichtigung aus und stehen nicht im Kalender-Abo.
+
+## Urlaub, Jahreskalender und Weiteres
+
+- **Jahreskalender:** ein Kalenderjahr auf einer Seite. Azubis sehen ihr Jahr Tag für Tag (Monate als Spalten), Ausbilder und Beauftragte alle ihre Azubis als Zeilen mit Balken für Berufsschule, Einsätze, Urlaub (genehmigte Anträge und Abwesenheiten aus eingereichten Berichten; beantragter Urlaub gestreift; Krankheit erscheint nicht) und Prüfungen. Nur zum Lesen.
+- **Abteilungen:** Stammdaten mit Beauftragten und freiwilliger Stellvertretung. Ein Einsatz im Ausbildungsplan kann einer Abteilung gehören; deren Personen sind dann für die Dauer automatisch zugewiesen (Plan und Berichte sehen, abzeichnen, Urlaub bestätigen – beim Urlaub genügt eine Bestätigung je Abteilung).
+- **Urlaub beantragen:** Azubis stellen den Antrag im Portal (Zeitraum, freiwillige Bemerkung). Alle, denen der Azubi im Zeitraum zugewiesen ist, bestätigen; danach genehmigt der zuständige Ausbilder. Ablehnen und Stornieren nur mit Begründung, jeder Schritt steht im Verlauf des Antrags. Das Portal zählt Arbeitstage (Montag bis Freitag ohne Feiertage des Betriebs), führt je Azubi ein Urlaubskonto pro Kalenderjahr (Anspruch im Profil) und warnt bei Berufsschule, Prüfung oder zu wenig freien Tagen – es sperrt nichts. Genehmigter Urlaub steht im Jahreskalender, als Abwesenheit im Bericht der Woche und im Kalender-Abo. Keine halben Tage, kein Resturlaub aus dem Vorjahr, keine Krankmeldung. Nach Genehmigung und Storno geht eine Mail an die Personalstelle (Adresse in den Stammdaten, Mailserver in der `.env`).
+- **Kalender-Abo (ICS):** Jedes Konto außer dem Super-Admin kann unter „Konto“ einen persönlichen, nur lesenden Link erstellen (`/api/abo/<Geheimnis>.ics`). Er liefert Schulblöcke, Einsätze, Prüfungstermine (auch die aus dem Planer für die Prüfung) und genehmigten Urlaub als ganztägige Termine – ohne Aufgaben, Notizen und Freitexte; im eigenen Kalender eines Azubis stehen dazu seine privaten Termine. Der Abruf braucht keine Anmeldung, nur den Link; die Rechte des Kontos werden bei jedem Abruf neu geprüft. Damit Outlook (neu/Web) und Google Kalender abrufen können, muss dieser Pfad aus dem Internet erreichbar sein.
+- **Glocke mit Aktivitäten:** Azubis sehen neue Einträge in ihrem Plan, abgezeichnete, zurückgegebene und wieder geöffnete Berichte, jeden Schritt ihrer Urlaubsanträge und die Freischaltung des Planers; Ausbilder und zugewiesene Beauftragte sehen neue Einträge, eingereichte Berichte, Urlaubsanträge und geänderte Prüfungstermine ihrer Azubis. Gespeichert wird nur „wer, was, welche Woche bzw. welcher Zeitraum, wann“ – keine Berichtsinhalte, keine Kommentare und keine Bemerkungen; nach 60 Tagen wird gelöscht. Der Super-Admin sieht davon nichts.
+- **Fehler melden:** Jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt. Freiwillig lässt sich ein Bildschirmfoto anhängen (auswählen, einfügen oder am PC aufnehmen); der Browser verkleinert es auf höchstens 150 KB, die meldende Person sieht es vor dem Senden. Lesen, erledigen und löschen kann nur der Super-Admin. Eine automatische Löschfrist gibt es noch nicht.
+
+## Lernmodul
+
+Lernstoff je Ausbildungsberuf zum Nachlesen und Üben. Alles, was ein Azubi dort über sich festhält, ist privat. Die Inhalte selbst liegen nicht in diesem Repository.
+
+- **Lerninhalte je Ausbildungsberuf:** Ein Ausbilder schaltet in den Stammdaten am Beruf ein Inhaltspaket ein; Azubis dieses Berufs sehen den Menüpunkt „Lernen“ mit Themenfeldern, Cheatsheets (Kernbegriffe, Tabellen, Befehle, Merksätze, Prüfungsfragen, Grafiken) und einer Ampel je Unterthema (Offen / In Arbeit / Sicher) samt Lernpunkt und Notiz. Das **Kompendium** sammelt alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen zum Nachschlagen – mit Suche und Filtern. **Der Lernstand ist privat:** Nur der Azubi selbst sieht ihn (Ampel, Lernpunkt, Notiz, Haken „Gelesen“); für Ausbilder, Beauftragte und Super-Admin gibt es keine Auswertung. Die Inhalte liegen als Dateien in `LERN_DIR` im Format des [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass) – Einrichtung in [lerninhalte/README.md](lerninhalte/README.md). Dazu das **Zusatzwissen** des Lernkompass (Texte, Vergleiche, Checklisten, Abläufe Schritt für Schritt) mit einem privaten Haken „Gelesen“. Eine Prüfungssimulation wie im Lernkompass gibt es im Portal nicht.
+- **Abzeichen im Lernmodul:** je Themenfeld ein Schild in sechs Stufen. Holz, Stein und Bronze hängen an Ampel und Zusatzwissen; Silber, Gold und Meister am Quiz. Dazu ein Rang über alle Themenfelder. Erreichte Abzeichen bleiben. Privat wie der Lernstand, keine Rangliste.
+- **Üben:** Karteikarten (Lernkartei mit fünf Fächern) und Quiz je Unterthema, erzeugt aus den Kernbegriffen und Prüfungsfragen der Cheatsheets. Privat wie der Lernstand.
+- **Anleitungen für alle Berufe:** Ausbilder können ein Lernmodul festlegen, das alle Azubis unter „Lernen“ sehen – zum Beispiel „Arbeiten und Prüfung“ (strukturiert arbeiten, auf eine Prüfung vorbereiten, in der Prüfung). Nur zum Lesen: ohne Ampel, Üben und Abzeichen; es wird nichts über die Azubis gespeichert. Die Inhalte kommen wie jedes Lernmodul als Ordner oder ZIP-Datei – sie liegen nicht in diesem Repository.
+- **Planer für die Prüfung:** Azubis planen ihr Prüfungsvorhaben (Abschlussprojekt, Gesellenstück, Fachaufgabe …): nächster Termin, Checklisten, Zeitplanung mit geplanten und tatsächlichen Stunden, Fragen zum Üben mit Uhr für den Vortrag, Notizen. Was der Planer enthält, steht je Beruf im Inhaltspaket (`planer.md`); Ausbilder schalten ihn je Azubi im Profil frei. **Die Eintragungen sind privat für den Azubi** – nur die Termine stehen im Ausbildungsplan und sind dort für seine Ausbilder und Beauftragten sichtbar.
+- **Begleiter:** Azubis können sich eine kleine Figur aussuchen (Eule, Fuchs, Roboter, Biber oder Pinguin) und ihr einen Namen geben. Sie bekommt neun Teile Zubehör, gleichmäßig verteilt über die Ausbildungszeit – unabhängig davon, was der Azubi im Portal macht: keine Punkte, keine Serien, kein Vergleich. Er erinnert höchstens einmal am Tag an das, was ansteht (fehlender Bericht, Berufsschule, Firmentermin, Prüfungstermin, Urlaub) – jede Art einzeln abschaltbar, nie ans Lernen. Freiwillig und **privat für den Azubi**; der Super-Admin kann den Begleiter für das ganze Portal ausschalten.
+- **Lerninhalte ansehen:** Ausbilder und Ausbildungsbeauftragte lesen alle Lernmodule (Themenfelder, Cheatsheets, Zusatzwissen, Kompendium) – nur die Inhalte, nie den Lernstand einzelner Azubis.
+- **Lerninhalte einreichen:** Ausbilder laden ein Inhaltspaket als ZIP hoch; das Portal prüft den Aufbau sofort. Der Super-Admin gibt es mit Rückmeldung zurück oder lädt es hoch. Hochgeladene Pakete liegen unter `<DATA_DIR>/lerninhalte/` und gehen vor gleichnamige aus `LERN_DIR`.
 
 ## Geräte und Bedienbarkeit
 
@@ -239,20 +262,7 @@ Die Oberfläche wurde anhand der Interaktionsprinzipien der ISO 9241-110 durchge
 - Sitzungen liegen im Server (SQLite, nur als Hash); Cookie `HttpOnly`, `SameSite=Lax`, über HTTPS zusätzlich `Secure` und `__Host-`. Ende nach 8 Stunden ohne Aktivität, spätestens nach 24 Stunden. Sperren wirkt sofort.
 - Schreibende Anfragen nur von der eigenen Adresse (`Origin`-Prüfung), strenge Content-Security-Policy.
 - Protokoll über Anmeldungen und Änderungen (Konten, Zuweisungen, Stammdaten, Azubi-Profile), ohne Passwörter. Berichte und Pläne erscheinen dort nicht – auch nicht, wer wann eingereicht oder abgezeichnet hat; das steht nur im Verlauf des jeweiligen Berichts. Einsehen kann das Protokoll nur der Super-Admin.
-- Fehler melden: Jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt. Freiwillig lässt sich ein Bildschirmfoto anhängen (auswählen, einfügen oder am PC aufnehmen); der Browser verkleinert es auf höchstens 150 KB, die meldende Person sieht es vor dem Senden. Lesen, erledigen und löschen kann nur der Super-Admin. Eine automatische Löschfrist gibt es noch nicht.
-- **Jahreskalender:** ein Kalenderjahr auf einer Seite. Azubis sehen ihr Jahr Tag für Tag (Monate als Spalten), Ausbilder und Beauftragte alle ihre Azubis als Zeilen mit Balken für Berufsschule, Einsätze, Urlaub (genehmigte Anträge und Abwesenheiten aus eingereichten Berichten; beantragter Urlaub gestreift; Krankheit erscheint nicht) und Prüfungen. Nur zum Lesen. Er ersetzt die frühere „Übersicht“ über 26 Wochen.
-- **Abteilungen:** Stammdaten mit Beauftragten und freiwilliger Stellvertretung. Ein Einsatz im Ausbildungsplan kann einer Abteilung gehören; deren Personen sind dann für die Dauer automatisch zugewiesen (Plan und Berichte sehen, abzeichnen, Urlaub bestätigen – beim Urlaub genügt eine Bestätigung je Abteilung).
-- **Urlaub beantragen:** Azubis stellen den Antrag im Portal (Zeitraum, freiwillige Bemerkung). Alle, denen der Azubi im Zeitraum zugewiesen ist, bestätigen; danach genehmigt der zuständige Ausbilder. Ablehnen und Stornieren nur mit Begründung, jeder Schritt steht im Verlauf des Antrags. Das Portal zählt Arbeitstage (Montag bis Freitag ohne Feiertage des Betriebs), führt je Azubi ein Urlaubskonto pro Kalenderjahr (Anspruch im Profil) und warnt bei Berufsschule, Prüfung oder zu wenig freien Tagen – es sperrt nichts. Genehmigter Urlaub steht im Jahreskalender, als Abwesenheit im Bericht der Woche und im Kalender-Abo. Keine halben Tage, kein Resturlaub aus dem Vorjahr, keine Krankmeldung. Nach Genehmigung und Storno geht eine Mail an die Personalstelle (Adresse in den Stammdaten, Mailserver in der `.env`).
-- **Lernmodul (Stufe 3 von 4; offen: Prüfungssimulation und Prüfungsseite):** Lerninhalte je Ausbildungsberuf. Ein Ausbilder schaltet in den Stammdaten am Beruf ein Inhaltspaket ein; Azubis dieses Berufs sehen den Menüpunkt „Lernen“ mit Themenfeldern, Cheatsheets (Kernbegriffe, Tabellen, Befehle, Merksätze, Prüfungsfragen, Grafiken) und einer Ampel je Unterthema (Offen / In Arbeit / Sicher) samt Lernpunkt und Notiz. Das **Kompendium** sammelt alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen zum Nachschlagen – mit Suche und Filtern. **Der Lernstand ist privat:** Nur der Azubi selbst sieht ihn (Ampel, Lernpunkt, Notiz, Haken „Gelesen“); für Ausbilder, Beauftragte und Super-Admin gibt es keine Auswertung. Die Inhalte liegen als Dateien in `LERN_DIR` im Format des [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass) – Einrichtung in [lerninhalte/README.md](lerninhalte/README.md). Dazu das **Zusatzwissen** des Lernkompass (Texte, Vergleiche, Checklisten, Abläufe Schritt für Schritt) mit einem privaten Haken „Gelesen“. Üben und Prüfungsseite folgen in weiteren Stufen.
-- **Abzeichen im Lernmodul:** je Themenfeld ein Schild in sechs Stufen. Holz, Stein und Bronze hängen an Ampel und Zusatzwissen; Silber, Gold und Meister am Quiz. Dazu ein Rang über alle Themenfelder. Erreichte Abzeichen bleiben. Privat wie der Lernstand, keine Rangliste.
-- **Üben:** Karteikarten (Lernkartei mit fünf Fächern) und Quiz je Unterthema, erzeugt aus den Kernbegriffen und Prüfungsfragen der Cheatsheets. Privat wie der Lernstand.
-- **Anleitungen für alle Berufe:** Ausbilder können ein Lernmodul festlegen, das alle Azubis unter „Lernen“ sehen – zum Beispiel „Arbeiten und Prüfung“ (strukturiert arbeiten, auf eine Prüfung vorbereiten, in der Prüfung). Nur zum Lesen: ohne Ampel, Üben und Abzeichen; es wird nichts über die Azubis gespeichert. Die Inhalte kommen wie jedes Lernmodul als Ordner oder ZIP-Datei – sie liegen nicht in diesem Repository.
-- **Planer für die Prüfung:** Azubis planen ihr Prüfungsvorhaben (Abschlussprojekt, Gesellenstück, Fachaufgabe …): nächster Termin, Checklisten, Zeitplanung mit geplanten und tatsächlichen Stunden, Fragen zum Üben mit Uhr für den Vortrag, Notizen. Was der Planer enthält, steht je Beruf im Inhaltspaket (`planer.md`); Ausbilder schalten ihn je Azubi im Profil frei. **Die Eintragungen sind privat für den Azubi** – nur die Termine stehen im Ausbildungsplan und sind dort für seine Ausbilder und Beauftragten sichtbar.
-- **Begleiter:** Azubis können sich eine kleine Figur aussuchen (Eule, Fuchs, Roboter, Biber oder Pinguin) und ihr einen Namen geben. Sie bekommt neun Teile Zubehör, gleichmäßig verteilt über die Ausbildungszeit – unabhängig davon, was der Azubi im Portal macht: keine Punkte, keine Serien, kein Vergleich. Er erinnert höchstens einmal am Tag an das, was ansteht (fehlender Bericht, Berufsschule, Firmentermin, Prüfungstermin, Urlaub) – jede Art einzeln abschaltbar, nie ans Lernen. Freiwillig und **privat für den Azubi**; der Super-Admin kann den Begleiter für das ganze Portal ausschalten.
-- **Lerninhalte ansehen:** Ausbilder und Ausbildungsbeauftragte lesen alle Lernmodule (Themenfelder, Cheatsheets, Zusatzwissen, Kompendium) – nur die Inhalte, nie den Lernstand einzelner Azubis.
-- **Lerninhalte einreichen:** Ausbilder laden ein Inhaltspaket als ZIP hoch; das Portal prüft den Aufbau sofort. Der Super-Admin gibt es mit Rückmeldung zurück oder lädt es hoch. Hochgeladene Pakete liegen unter `<DATA_DIR>/lerninhalte/` und gehen vor gleichnamige aus `LERN_DIR`.
-- Kalender-Abo (ICS): Jedes Konto außer dem Super-Admin kann unter „Konto“ einen persönlichen, nur lesenden Link erstellen (`/api/abo/<Geheimnis>.ics`). Er liefert Schulblöcke, Einsätze und Prüfungstermine als ganztägige Termine – ohne Aufgaben, Notizen und Freitexte; im eigenen Kalender eines Azubis stehen dazu seine privaten Termine. Der Abruf braucht keine Anmeldung, nur den Link; die Rechte des Kontos werden bei jedem Abruf neu geprüft. Damit Outlook (neu/Web) und Google Kalender abrufen können, muss dieser Pfad aus dem Internet erreichbar sein.
-- Glocke mit Aktivitäten: Azubis sehen neue Einträge in ihrem Plan sowie abgezeichnete und zurückgegebene Berichte; Ausbilder und zugewiesene Beauftragte sehen neue Einträge und eingereichte Berichte ihrer Azubis. Gespeichert wird nur „wer, was, welche Woche, wann“ – keine Berichtsinhalte und keine Kommentare; nach 60 Tagen wird gelöscht. Der Super-Admin sieht davon nichts.
+- Was privat für den Azubi ist – Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer, Begleiter, private Termine und Entwürfe –, hat keine Route für andere Rollen. Der Serverbetreiber kann es wie alles in der Datenbank lesen.
 
 Der Server nutzt außer Node.js selbst nur **eine** Bibliothek: `openid-client` für die Microsoft-Anmeldung. Mehr dazu und der Meldeweg für Lücken: [SECURITY.md](SECURITY.md).
 
@@ -273,22 +283,29 @@ Datenbank-Änderungen kommen als nummerierte Migrationen (`server/migrations/`);
 
 ```
 server/
-  index.ts        Start
-  http.ts         Webserver: /api und das gebaute Frontend
-  api.ts          alle Routen mit ihren Rechten, ein einziger Einstieg (behandle)
-  rechte.ts       zentrale Rechteprüfung
-  stammdaten.ts   Betrieb, Berufe, Berufsschulen, Azubi-Profil, Kalender
-  kalender.ts     Ausbildungsdauer; feiertage.ts, ferien.ts
-  entra.ts        Anmeldung über Microsoft Entra ID (openid-client)
-  passwort.ts     scrypt, Passwortregeln
-  sitzung.ts      Sitzungen
-  protokoll.ts    Protokoll
-  migrations/     Datenbank-Schema
-  test/           Tests, u. a. jede Route × jede Rolle
-src/              Oberfläche (React)
-scripts/          build, dev, backup, admin-reset
-content/          gepflegte Inhalte: Schulferien je Bundesland
-docs/             Entra-Einrichtung
+  index.ts          Start
+  http.ts           Webserver: /api und das gebaute Frontend
+  api.ts            alle Routen mit ihren Rechten, ein einziger Einstieg (behandle)
+  rechte.ts         zentrale Rechteprüfung
+  stammdaten.ts     Betrieb, Berufe, Berufsschulen, Azubi-Profil; abteilung.ts, firmentermin.ts
+  plan.ts           Ausbildungsplan, Planbausteine, Sammelplanung; jahr.ts Jahreskalender
+  berichte.ts       Berichtsheft; bericht-anhang.ts, bericht-pdf.ts, pdf.ts
+  urlaub.ts         Urlaubsanträge; urlaub-mail.ts Mail an die Personalstelle
+  lernen.ts         Lernmodul; lernen/ Einleser, Üben, Abzeichen; lern-einreichung.ts; planer.ts
+  begleiter.ts      Begleiter der Azubis; begleiter-erinnerung.ts
+  aktivitaet.ts     Glocke; benachrichtigung.ts Teams und E-Mail; smtp.ts, mail-gestalt.ts
+  abo.ts            Kalender-Abo
+  kalender.ts       Ausbildungsdauer; feiertage.ts, ferien.ts
+  entra.ts          Anmeldung über Microsoft Entra ID (openid-client)
+  passwort.ts       scrypt, Passwortregeln; sitzung.ts Sitzungen; protokoll.ts Protokoll
+  migrations/       Datenbank-Schema
+  test/             Tests, u. a. jede Route × jede Rolle
+src/                Oberfläche (React); pages/ je Seite eine Datei
+e2e/                Abläufe im Browser (Playwright) und das Skript für die Bildschirmfotos
+scripts/            build, dev, backup, admin-reset
+content/            gepflegte Inhalte: Schulferien je Bundesland
+lerninhalte/        Platz für Inhaltspakete des Lernmoduls (nicht im Repository)
+docs/               Entra-Einrichtung, Bedienregeln, Gestaltung, Handbuch-Regeln, ISO 9241, Bildschirmfotos
 Dockerfile, docker-compose.yml, docker-compose.override.example.yml
 ```
 
