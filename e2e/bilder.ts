@@ -354,6 +354,14 @@ async function main() {
         await s.click('.lern-navi-klapp summary');
       },
     });
+    await foto(s, '/', 'handy-06-plan-inhalt', 'Ausbildungsplan: Inhalt am Handy', 'Die Zeile „Inhalt“ bleibt beim Rollen stehen und zeigt Jahr und KW. Aufgeklappt springt man zu einem Jahr oder zu „Diese Woche“; dort stehen auch die Abteilungen und die Farben.', {
+      vorher: async () => {
+        // so weit rollen, dass die Zeile oben angeheftet ist
+        await s.evaluate(() => window.scrollTo(0, (document.querySelector('.plan-inhalt') as HTMLElement).getBoundingClientRect().top + window.scrollY + 900));
+        await s.waitForTimeout(400);
+        await s.click('.plan-inhalt summary');
+      },
+    });
     await s.context().close();
     s = await p.seite(PETRA, { ...HANDY, schaerfe: 2 });
     await foto(s, '/abzeichnen', 'handy-04-abzeichnen', 'Abzeichnen am Handy', 'Auch Ausbilder und Beauftragte können alles am Handy erledigen.');
