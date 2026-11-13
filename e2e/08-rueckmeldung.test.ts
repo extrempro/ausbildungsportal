@@ -34,6 +34,8 @@ test(
     assert.deepEqual(await arten(anna), ['Fehler melden', 'Idee fürs Portal', 'Lerninhalt besser erklären']);
     assert.equal(await anna.inputValue('#melden-thema'), 'lernen|grundlagen|');
     assert.match(await text(anna, '[role=dialog]'), /Ohne deinen Namen/);
+    // auf einen Abschnitt eingrenzen
+    await anna.selectOption('#melden-thema', 'lernen|grundlagen|ablauf');
     await sende(anna, 'Den zweiten Abschnitt verstehe ich nicht, ein Beispiel würde helfen.');
 
     // von einer anderen Seite: erst wählen, dann schreiben
@@ -65,6 +67,15 @@ test(
     assert.doesNotMatch(seite, /lädt bei mir sehr langsam/, 'Fehler gehen nur an den Super-Admin');
     const wunsch = pe.locator('.meldung:has-text("Den zweiten Abschnitt")');
     assert.doesNotMatch((await wunsch.textContent()) ?? '', /Anna/, 'der Wunsch nennt niemanden');
+    // „Zum Thema springen“ führt an die Stelle im Lernmodul
+    await wunsch.locator('a:has-text("Zum Thema springen")').click();
+    await pe.waitForURL(/\/lerninhalte\/muster\/grundlagen#u-ablauf$/);
+    await pe.locator('main h1:has-text("Grundlagen")').waitFor();
+    await pe.waitForFunction(() => {
+      const r = document.getElementById('u-ablauf')?.getBoundingClientRect();
+      return !!r && r.top >= 0 && r.top < 200;
+    });
+    await oeffne(pe, p.url, '/rueckmeldungen');
     await wunsch.locator('button:has-text("Als erledigt markieren")').click();
     await pe.waitForSelector('summary:has-text("Erledigt (1)")');
 

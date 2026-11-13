@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.56.2] – 2026-11-13
+
+### Behoben
+
+- **Rückmeldungen (Ausbilder):** Der Knopf an einem Wunsch zu den Lerninhalten öffnete nur die Übersicht des Lernmoduls. Er heißt jetzt „Zum Thema springen“ und führt an das Themenfeld – und, wenn der Azubi einen Abschnitt gewählt hat, genau dorthin. Das gilt auch für Wünsche, die schon da sind.
+
 ## [0.56.1] – 2026-11-13
 
 ### Geändert

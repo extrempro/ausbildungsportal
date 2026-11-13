@@ -139,6 +139,7 @@ interface Zeile {
   art: MeldungArt;
   paket: string;
   thema: string;
+  ziel: string;
 }
 
 /** mehrzeiliger Text ohne andere Steuerzeichen, auf die Höchstlänge gekürzt */
@@ -152,7 +153,7 @@ function ansicht(z: Zeile) {
   return { id: z.id, art: z.art, zeit: z.zeit, name: z.benutzer_name, rolle: z.rolle, text: z.text, seite: z.seite, version: z.version, browser: z.browser, fenster: z.fenster, technik: z.technik, status: z.status, erledigtAm: z.erledigt_am, hatBild: z.hat_bild === 1 };
 }
 
-const SPALTEN = 'id, zeit, benutzer_name, rolle, text, seite, version, browser, fenster, technik, status, erledigt_am, bild IS NOT NULL AS hat_bild, art, paket, thema';
+const SPALTEN = 'id, zeit, benutzer_name, rolle, text, seite, version, browser, fenster, technik, status, erledigt_am, bild IS NOT NULL AS hat_bild, art, paket, thema, ziel';
 
 /** Liste des Super-Admins: Fehler und Ideen – Wünsche zu Lerninhalten sieht er nicht. */
 function liste(c: Ctx) {
@@ -166,8 +167,23 @@ function listeAusbilder(c: Ctx) {
   const hole = (art: MeldungArt) => c.k.db.prepare(`SELECT ${SPALTEN} FROM fehlermeldung WHERE art = ? ORDER BY status = 'erledigt', id DESC LIMIT ?`).all(art, MAX_LISTE) as unknown as Zeile[];
   const pakete = lernpakete(c.k);
   const inhalte = hole('inhalt');
+  /** Wohin der Knopf „Zum Thema“ springt: gespeicherte Kennungen, bei älteren Wünschen über die Titel gesucht – und nur, wenn es die Stelle im Paket noch gibt. */
+  const stelle = (z: Zeile): { feld: string; unterthema: string } | null => {
+    const p = pakete.get(z.paket);
+    if (!p) return null;
+    let [feldId, unterId] = z.ziel.split('|');
+    if (!feldId && z.thema) {
+      const [ft, ut] = z.thema.split(' › ');
+      const f = p.inhalte.themenfelder.find((x) => x.titel === ft);
+      feldId = f?.id ?? '';
+      unterId = (ut && f?.unterthemen.find((x) => x.titel === ut)?.id) || '';
+    }
+    const feld = p.inhalte.themenfelder.find((x) => x.id === feldId);
+    if (!feld) return null;
+    return { feld: feld.id, unterthema: unterId && feld.unterthemen.some((x) => x.id === unterId) ? unterId : '' };
+  };
   return {
-    inhalte: inhalte.map((z) => ({ id: z.id, tag: z.zeit.slice(0, 10), paket: z.paket, paketTitel: pakete.get(z.paket)?.titel ?? z.paket, thema: z.thema, text: z.text, status: z.status, erledigtAm: z.erledigt_am })),
+    inhalte: inhalte.map((z) => ({ id: z.id, tag: z.zeit.slice(0, 10), paket: z.paket, paketTitel: pakete.get(z.paket)?.titel ?? z.paket, thema: z.thema, stelle: stelle(z), text: z.text, status: z.status, erledigtAm: z.erledigt_am })),
     ideen: hole('idee').map((z) => ({ id: z.id, zeit: z.zeit, name: z.benutzer_name, rolle: z.rolle, text: z.text, seite: z.seite, status: z.status, erledigtAm: z.erledigt_am })),
     offen: inhalte.filter((z) => z.status === 'offen').length,
   };
@@ -189,17 +205,17 @@ function lernBereiche(c: Ctx): { bereich: 'lernen' | 'anleitungen'; p: Paket }[]
 }
 
 /** „bereich|themenfeld|unterthema“ aus dem Formular → Lernmodul und lesbares Thema. Leer heißt: nichts Bestimmtes. */
-function themaAus(c: Ctx, x: unknown): { paket: string; thema: string } {
+function themaAus(c: Ctx, x: unknown): { paket: string; thema: string; ziel: string } {
   const bereiche = lernBereiche(c);
   if (bereiche.length === 0) throw new Fehler(409, 'Für dich sind im Portal keine Lerninhalte eingerichtet');
   const [bereich, feldId, unterId] = (typeof x === 'string' ? x : '').split('|');
   const b = bereiche.find((y) => y.bereich === bereich) ?? (bereich ? null : bereiche[0]);
   if (!b) throw new Fehler(400, 'Dieses Thema gibt es nicht');
-  if (!feldId) return { paket: b.p.id, thema: '' };
+  if (!feldId) return { paket: b.p.id, thema: '', ziel: '' };
   const feld = b.p.inhalte.themenfelder.find((f) => f.id === feldId);
   const unter = unterId ? feld?.unterthemen.find((u) => u.id === unterId) : undefined;
   if (!feld || (unterId && !unter)) throw new Fehler(400, 'Dieses Thema gibt es nicht');
-  return { paket: b.p.id, thema: unter ? `${feld.titel} › ${unter.titel}` : feld.titel };
+  return { paket: b.p.id, thema: unter ? `${feld.titel} › ${unter.titel}` : feld.titel, ziel: unter ? `${feld.id}|${unter.id}` : feld.id };
 }
 
 /**
@@ -232,10 +248,10 @@ export const MELDUNG_ROUTEN: Route[] = [
       const jetzt = c.k.jetzt();
       const zuViel = new Fehler(429, `Du hast heute schon ${JE_TAG} Meldungen geschickt. Bitte sprich deinen Ausbilder oder den Betreiber des Portals direkt an.`);
       if (art === 'inhalt') {
-        const { paket, thema } = themaAus(c, roh.thema);
+        const { paket, thema, ziel } = themaAus(c, roh.thema);
         if (!zaehleInhalt(c.k.db, c.b.id, jetzt.getTime())) throw zuViel;
         // ohne Person: kein Konto, kein Name, keine Seite, keine Technik – und nur der Tag
-        c.k.db.prepare("INSERT INTO fehlermeldung (zeit, benutzer_id, benutzer_name, rolle, text, art, paket, thema) VALUES (?, NULL, '', 'azubi', ?, 'inhalt', ?, ?)").run(jetzt.toISOString().slice(0, 10), text, paket, thema);
+        c.k.db.prepare("INSERT INTO fehlermeldung (zeit, benutzer_id, benutzer_name, rolle, text, art, paket, thema, ziel) VALUES (?, NULL, '', 'azubi', ?, 'inhalt', ?, ?, ?)").run(jetzt.toISOString().slice(0, 10), text, paket, thema, ziel);
         return { status: 201, body: { ok: true } };
       }
       const seit = new Date(jetzt.getTime() - 86_400_000).toISOString();

@@ -1547,7 +1547,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>
                   Unter „Planung“ <Link zu="/rueckmeldungen">Rückmeldungen</Link> öffnen. Die Zahl am Menüpunkt zeigt die offenen Wünsche.
                 </li>
-                <li>Den Wunsch lesen: Oben steht das Thema, darunter das Lernmodul und der Tag.</li>
+                <li>Den Wunsch lesen: Oben steht das Thema, darunter das Lernmodul und der Tag. „Zum Thema springen“ öffnet das Lernmodul genau an dieser Stelle.</li>
                 <li>Die Lerninhalte anpassen und neu einreichen – siehe „Lerninhalte für einen Beruf erstellen“.</li>
                 <li>„Als erledigt markieren“. Erledigte Wünsche stehen eingeklappt darunter.</li>
               </ol>

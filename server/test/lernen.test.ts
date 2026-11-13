@@ -642,7 +642,12 @@ test('Rückmeldung: Wünsche zu Lerninhalten ohne Person an die Ausbilder, Ideen
     ['Fachinformatiker Systemintegration', 'Wirtschaft', 'Das ganze Themenfeld ist mir zu knapp.'],
     ['Fachinformatiker Systemintegration', '', 'Mir fehlt ein Thema zu Druckern.'],
   ]);
-  assert.deepEqual(Object.keys(a.inhalte[0]).sort(), ['erledigtAm', 'id', 'paket', 'paketTitel', 'status', 'tag', 'text', 'thema'], 'kein Name, keine Rolle, keine Uhrzeit');
+  assert.deepEqual(Object.keys(a.inhalte[0]).sort(), ['erledigtAm', 'id', 'paket', 'paketTitel', 'status', 'stelle', 'tag', 'text', 'thema'], 'kein Name, keine Rolle, keine Uhrzeit');
+  // die Stelle zum Hinspringen: Themenfeld und – wenn gewählt – Unterthema
+  assert.deepEqual(a.inhalte.map((x: any) => x.stelle).reverse(), [{ feld: 'netz', unterthema: 'subnetting' }, { feld: 'wiso', unterthema: '' }, null]);
+  // ein älterer Wunsch ohne gespeicherte Kennungen findet die Stelle über die Titel
+  w.u.db.prepare("UPDATE fehlermeldung SET ziel = '' WHERE thema = 'Netzwerkgrundlagen › Subnetting'").run();
+  assert.deepEqual((await fuerAusbilder()).inhalte.at(-1).stelle, { feld: 'netz', unterthema: 'subnetting' });
   for (const wer of [w.bea, w.anna, chef]) assert.equal((await ruf(w.u, 'GET', '/api/rueckmeldungen', { cookies: als(w, wer) })).status, 403);
   assert.deepEqual((await fuerChef()).meldungen, [], 'der Super-Admin sieht Wünsche zu Lerninhalten nicht');
   const wunsch = a.inhalte[0].id;
