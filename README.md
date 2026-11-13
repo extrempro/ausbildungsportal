@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.55.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.56.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -16,7 +16,7 @@ Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrie
 
 | Rolle | Anmeldung | Darf |
 | --- | --- | --- |
-| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, Fehlermeldungen bearbeiten, eingereichte Lerninhalte prüfen und hochladen, das Logo des Betriebs hinterlegen, den Begleiter der Azubis für das Portal ein- oder ausschalten – kein Zugriff auf Pläne, Berichte, Urlaub und Stammdaten |
+| Super-Admin | lokal mit Passwort | Konten anlegen, sperren und löschen, das Protokoll einsehen, Fehler und Ideen fürs Portal bearbeiten, eingereichte Lerninhalte prüfen und hochladen, das Logo des Betriebs hinterlegen, den Begleiter der Azubis für das Portal ein- oder ausschalten – kein Zugriff auf Pläne, Berichte, Urlaub und Stammdaten |
 | Ausbilder | Microsoft | **nur die eigenen Azubis** (im Profil als zuständig eingetragen) und Azubis ohne Ausbilder: Berichte abzeichnen, zurückgeben und eine Abzeichnung aufheben, Urlaub genehmigen, Ausbildungsplan und Profil pflegen, Beauftragte und Vertretungen zuweisen, Konten dieser Azubis und der Beauftragten anlegen, sperren und löschen; für alle: Stammdaten, Planbausteine, Sammelplanung, Lerninhalte ansehen und einreichen. Als **Vertretung** (Zuweisung mit Zeitraum) dieselben Rechte wie Beauftragte. Mit **Gesamtsicht** (setzt der Super-Admin) volle Rechte bei allen Azubis |
 | Ausbildungsbeauftragte | Microsoft | nur zugewiesene Azubis sehen, Berichte für Wochen im Zeitraum der Zuweisung abzeichnen oder zurückgeben, Urlaub bestätigen, während der Zuweisung Aufgaben und Notizen im Plan anlegen, Lerninhalte ansehen |
 | Azubi | Microsoft | nur die eigenen Daten; Berichte schreiben und einreichen, Urlaub beantragen, im Plan eigene Aufgaben, Notizen und Termine eintragen und Aufgaben abhaken, lernen – Lernstand, Planer und Begleiter sieht nur der Azubi selbst |
@@ -92,7 +92,7 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `ENTRA_PROFILBILD` | `true` holt bei der Anmeldung das Profilbild aus Microsoft 365; braucht die Berechtigung User.Read (siehe `docs/entra-einrichtung.md`). Standard: aus |
 | `ADMIN_BENUTZER`, `ADMIN_PASSWORT` | nur für den ersten Start |
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
-| `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
+| `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung und jeder neuen Idee fürs Portal benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
 | `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung nach Teams; Standard `false` |
 | `TEAMS_CHAT_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der eine Nachricht als Chat an eine einzelne Person schickt (siehe „Benachrichtigungen per Teams und E-Mail“) |
 | `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle und für Benachrichtigungen per E-Mail (siehe „Mail an die Personalstelle“) |
@@ -107,7 +107,7 @@ Freiwillig: Sobald jemand im Portal einen Fehler meldet, erscheint ein Hinweis i
 
 1. In Teams am gewünschten Kanal **… → Workflows** öffnen und eine Vorlage mit dem Auslöser **„Beim Empfang einer Teams-Webhookanforderung“** wählen (englisch: *When a Teams webhook request is received*), zum Beispiel „In einem Kanal posten, wenn eine Webhookanforderung empfangen wird“. Die genauen Namen der Vorlagen können je nach Teams-Version abweichen.
 2. Die angezeigte Adresse kopieren und in der `.env` als `FEHLER_WEBHOOK_URL` eintragen, dann `docker compose up -d`.
-3. Als Super-Admin unter **Fehlermeldungen** auf „Testnachricht senden“ klicken.
+3. Als Super-Admin unter **Rückmeldungen** auf „Testnachricht senden“ klicken.
 
 Gut zu wissen:
 
@@ -225,7 +225,7 @@ Ausbilder tragen unter **Stammdaten → Firmentermine** ganztägige Termine ein,
 - **Urlaub beantragen:** Azubis stellen den Antrag im Portal (Zeitraum, freiwillige Bemerkung). Alle, denen der Azubi im Zeitraum zugewiesen ist, bestätigen; danach genehmigt der zuständige Ausbilder. Ablehnen und Stornieren nur mit Begründung, jeder Schritt steht im Verlauf des Antrags. Das Portal zählt Arbeitstage (Montag bis Freitag ohne Feiertage des Betriebs), führt je Azubi ein Urlaubskonto pro Kalenderjahr (Anspruch im Profil) und warnt bei Berufsschule, Prüfung oder zu wenig freien Tagen – es sperrt nichts. Genehmigter Urlaub steht im Jahreskalender, als Abwesenheit im Bericht der Woche und im Kalender-Abo. Keine halben Tage, kein Resturlaub aus dem Vorjahr, keine Krankmeldung. Nach Genehmigung und Storno geht eine Mail an die Personalstelle (Adresse in den Stammdaten, Mailserver in der `.env`).
 - **Kalender-Abo (ICS):** Jedes Konto außer dem Super-Admin kann unter „Konto“ einen persönlichen, nur lesenden Link erstellen (`/api/abo/<Geheimnis>.ics`). Er liefert Schulblöcke, Einsätze, Prüfungstermine (auch die aus dem Planer für die Prüfung) und genehmigten Urlaub als ganztägige Termine – ohne Aufgaben, Notizen und Freitexte; im eigenen Kalender eines Azubis stehen dazu seine privaten Termine. Der Abruf braucht keine Anmeldung, nur den Link; die Rechte des Kontos werden bei jedem Abruf neu geprüft. Damit Outlook (neu/Web) und Google Kalender abrufen können, muss dieser Pfad aus dem Internet erreichbar sein.
 - **Glocke mit Aktivitäten:** Azubis sehen neue Einträge in ihrem Plan, abgezeichnete, zurückgegebene und wieder geöffnete Berichte, jeden Schritt ihrer Urlaubsanträge und die Freischaltung des Planers; Ausbilder und zugewiesene Beauftragte sehen neue Einträge, eingereichte Berichte, Urlaubsanträge und geänderte Prüfungstermine ihrer Azubis. Gespeichert wird nur „wer, was, welche Woche bzw. welcher Zeitraum, wann“ – keine Berichtsinhalte, keine Kommentare und keine Bemerkungen; nach 60 Tagen wird gelöscht. Der Super-Admin sieht davon nichts.
-- **Fehler melden:** Jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt. Freiwillig lässt sich ein Bildschirmfoto anhängen (auswählen, einfügen oder am PC aufnehmen); der Browser verkleinert es auf höchstens 150 KB, die meldende Person sieht es vor dem Senden. Lesen, erledigen und löschen kann nur der Super-Admin. Eine automatische Löschfrist gibt es noch nicht.
+- **Rückmeldung geben** (Daumen hoch und Daumen runter in der Kopfzeile), drei Arten: **Fehler** – jedes angemeldete Konto kann ein Problem beschreiben; Name, Rolle, Seite, Version, Browser, Fenstergröße und die letzten Fehlermeldungen des Browsers werden mitgeschickt, freiwillig ein Bildschirmfoto (auswählen, einfügen oder am PC aufnehmen; der Browser verkleinert es auf höchstens 150 KB, die meldende Person sieht es vor dem Senden). Lesen, erledigen und löschen kann nur der Super-Admin. **Idee fürs Portal** – von jedem Konto, mit Name, Rolle und Seite, ohne Technik und Bild; der Super-Admin bearbeitet, die Ausbilder lesen mit. **Lerninhalt besser erklären** – nur Azubis; gespeichert werden Text, Lernmodul, Thema und der Tag, **keine Person** (kein Konto, kein Name, keine Uhrzeit, keine technischen Angaben). Das lesen, erledigen und löschen nur die Ausbilder; der Super-Admin und die Ausbildungsbeauftragten sehen diese Art nicht. Eine automatische Löschfrist gibt es für alle drei noch nicht.
 
 ## Lernmodul
 

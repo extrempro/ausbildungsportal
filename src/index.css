@@ -2826,13 +2826,46 @@ td.aktion {
   }
 }
 
-/* ---------- Glocke: Aktivitäten ---------- */
-.menue.glocke {
+/* ---------- Kopfzeile rechts: Begleiter (am Handy), Rückmeldung, Glocke – dicht beieinander ---------- */
+.leiste-rechts {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
 }
 
-.menue.glocke + .menue.ich {
+.leiste-rechts + .menue.ich {
   margin-left: 0;
+}
+
+@media (max-width: 699px) {
+  .leiste-innen {
+    gap: 8px 12px;
+  }
+
+  /* am Handy bleibt für den Schriftzug wenig Platz: Er darf schrumpfen und wird notfalls gekürzt, statt die Knöpfe aus dem Bild zu schieben */
+  .marke {
+    min-width: 0;
+  }
+
+  .marke-name,
+  .marke-klein {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* mit Logo des Betriebs: das Logo steht für sich, „Ausbildungsportal“ daneben entfällt */
+  .marke .logo {
+    max-width: 132px;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .marke .logo + .marke-klein {
+    display: none;
+  }
 }
 
 .glocke-knopf {
@@ -3134,6 +3167,73 @@ td.aktion {
   margin-top: 0;
 }
 
+/* Rückmeldung geben: Knopf in der Kopfzeile (wie die Glocke) und die Auswahl der Art */
+.rueck-knopf {
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  color: var(--c-text);
+}
+
+.melden-art {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.melden-art legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.melden-art label {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 12px 10px 38px;
+  border: 2px solid var(--c-border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.melden-art label.gewaehlt {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+}
+
+.melden-art input {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--c-accent);
+}
+
+.melden select {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.meldung-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: 320px;
+  margin: 16px 0;
+}
+
 .melden textarea {
   width: 100%;
   min-height: 140px;
@@ -3205,7 +3305,7 @@ td.aktion {
   gap: 4px 12px;
 }
 
-.meldung-kopf .pille {
+.meldung-kopf > .pille:last-child {
   margin-left: auto;
 }
 
@@ -9243,16 +9343,6 @@ body:has(.begleiter-ecke.klein) .nach-oben {
   75% { transform: rotate(6deg); }
 }
 
-@media (max-width: 1023px) {
-  .leiste-innen .begleiter-kopf {
-    margin-left: auto;
-  }
-
-  /* die Glocke rückt direkt neben den Kopf, statt sich den freien Platz zu teilen */
-  .begleiter-kopf + .menue.glocke {
-    margin-left: 4px;
-  }
-}
 
 .begleiter-spruch {
   margin: 0 0 8px;

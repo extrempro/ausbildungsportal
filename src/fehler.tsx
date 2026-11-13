@@ -1,14 +1,58 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClipboardEvent, FormEvent } from 'react';
 import { api } from './api';
+import type { Rolle } from './api';
 import { rueckfrage } from './dialoge';
 import { useUngespeichert } from './router';
 import { HandbuchLink } from './handbuchLink';
 
 /**
- * „Fehler melden“: kurzer Text vom Menschen, dazu automatisch ein paar technische Angaben,
- * damit sich das Problem nachstellen lässt. Lesen kann die Meldungen nur der Super-Admin.
+ * „Rückmeldung geben“ – ein Fenster, drei Arten; jede geht an die, die damit etwas anfangen können:
+ * - Fehler: kurzer Text, dazu automatisch ein paar technische Angaben, damit sich das Problem nachstellen lässt. Liest nur der Super-Admin.
+ * - Idee fürs Portal: Text, Name und Seite. Lesen Super-Admin und Ausbilder.
+ * - Lerninhalt besser erklären (nur Azubis): Text und Thema, OHNE Namen. Lesen nur die Ausbilder.
  */
+type Art = 'fehler' | 'idee' | 'inhalt';
+interface Bereich {
+  bereich: 'lernen' | 'anleitungen';
+  titel: string;
+  felder: { id: string; titel: string; themen: { id: string; titel: string }[] }[];
+}
+
+const ARTEN: Record<Art, { wahl: string; wozu: string; frage: string; beispiel: string; hilfe: string; danke: string }> = {
+  fehler: {
+    wahl: 'Fehler melden',
+    wozu: 'Etwas funktioniert nicht oder sieht falsch aus.',
+    frage: 'Was ist passiert?',
+    beispiel: 'Zum Beispiel: Ich wollte meinen Bericht einreichen. Nach dem Klick auf „Einreichen“ passiert nichts.',
+    hilfe: 'Hilfreich ist: Was wolltest du tun? Was ist stattdessen passiert? Bitte schreibe keine Inhalte aus Berichten und keine Passwörter hinein.',
+    danke: 'Der Betreiber des Portals sieht sie und kümmert sich darum. Eine Antwort bekommst du hier im Portal nicht – wenn es eilt, sprich bitte zusätzlich deinen Ausbilder an.',
+  },
+  idee: {
+    wahl: 'Idee fürs Portal',
+    wozu: 'Dir fehlt etwas, oder etwas ginge einfacher.',
+    frage: 'Was wünschst du dir?',
+    beispiel: 'Zum Beispiel: Ich würde gern sehen, wie viele Berichte mir bis zum Ende der Ausbildung noch fehlen.',
+    hilfe: 'Hilfreich ist: Was möchtest du tun können, und wobei würde es dir helfen?',
+    danke: 'Der Betreiber des Portals und die Ausbilder lesen sie. Eine Antwort bekommst du hier im Portal nicht – und nicht jede Idee lässt sich umsetzen.',
+  },
+  inhalt: {
+    wahl: 'Lerninhalt besser erklären',
+    wozu: 'Etwas im Lernmodul ist unklar, zu knapp oder fehlt.',
+    frage: 'Was ist unklar oder fehlt?',
+    beispiel: 'Zum Beispiel: Beim Subnetting verstehe ich nicht, wie man von /26 auf 62 Hosts kommt. Ein Rechenbeispiel Schritt für Schritt würde helfen.',
+    hilfe: 'Je genauer, desto besser: Welche Stelle? Was hast du erwartet? Schreib nichts hinein, woran man dich erkennt, wenn du das nicht möchtest.',
+    danke: 'Die Ausbilder lesen deinen Wunsch – ohne deinen Namen – und bessern die Lerninhalte nach, wenn es geht. Das kann etwas dauern. Wenn du es gleich wissen musst, frag deinen Ausbilder direkt.',
+  },
+};
+
+/** Thema, das zur offenen Seite gehört – als „bereich|themenfeld|“, sonst leer */
+function themaDerSeite(pfad: string, bereiche: Bereich[]): string {
+  const m = /^\/(lernen|anleitungen)\/([a-z0-9-]{1,40})$/.exec(pfad);
+  if (!m) return '';
+  const b = bereiche.find((x) => x.bereich === m[1]);
+  return b?.felder.some((f) => f.id === m[2]) ? `${m[1]}|${m[2]}|` : '';
+}
 const MAX_TEXT = 2000;
 /** wie auf dem Server: so groß darf das verkleinerte Bild höchstens sein */
 const MAX_BILD = 150 * 1024;
@@ -82,8 +126,12 @@ export function merkeBrowserFehler(): void {
   window.addEventListener('unhandledrejection', (e) => merke(String((e.reason as Error | undefined)?.message ?? e.reason)));
 }
 
-export function FehlerMelden({ version, onZu }: { version: string; onZu: () => void }) {
+export function RueckmeldungFenster({ version, rolle, onZu }: { version: string; rolle: Rolle; onZu: () => void }) {
   const [text, setText] = useState('');
+  const [art, setArt] = useState<Art | null>(null);
+  // Azubis: die Themen ihrer Lerninhalte – null, solange sie laden; leer, wenn es für sie keine gibt
+  const [bereiche, setBereiche] = useState<Bereich[] | null>(rolle === 'azubi' ? null : []);
+  const [thema, setThema] = useState('');
   const [fehler, setFehler] = useState('');
   const [laeuft, setLaeuft] = useState(false);
   const [fertig, setFertig] = useState(false);
@@ -100,11 +148,27 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
   useUngespeichert(hatEingabe.current);
   const schliesse = useCallback(() => {
     if (!hatEingabe.current) onZu();
-    else void rueckfrage('Meldung verwerfen?\n\nDein Text und das Bild sind noch nicht gesendet.', { ja: 'Verwerfen', gefahr: true }).then((ja) => ja && onZu());
+    else void rueckfrage('Rückmeldung verwerfen?\n\nDein Text ist noch nicht gesendet.', { ja: 'Verwerfen', gefahr: true }).then((ja) => ja && onZu());
   }, [onZu]);
   const seite = window.location.pathname;
   const fenster = `${window.innerWidth} × ${window.innerHeight}`;
   const technik = letzteFehler.join('\n');
+
+  // Wer im Lernmodul steht, meint meist einen Lerninhalt: Art und Thema sind dann vorausgewählt
+  useEffect(() => {
+    if (rolle !== 'azubi') return;
+    api<{ bereiche: Bereich[] }>('GET', '/api/rueckmeldungen/themen').then(
+      (r) => {
+        setBereiche(r.bereiche);
+        if (r.bereiche.length === 0 || !/^\/(lernen|anleitungen)(\/|$)/.test(seite)) return;
+        setArt((alt) => alt ?? 'inhalt');
+        setThema(themaDerSeite(seite, r.bereiche));
+      },
+      () => setBereiche([]),
+    );
+  }, [rolle, seite]);
+  const arten: Art[] = ['fehler', 'idee', ...(bereiche && bereiche.length > 0 ? (['inhalt'] as const) : [])];
+  const a = art ? ARTEN[art] : null;
 
   useEffect(() => {
     document.body.classList.add('dialog-offen');
@@ -112,7 +176,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
     const taste = (e: KeyboardEvent) => {
       if (e.key === 'Escape') schliesse();
       if (e.key !== 'Tab' || !flaeche.current) return;
-      const ziele = [...flaeche.current.querySelectorAll<HTMLElement>('button, textarea, summary, a[href]')].filter((el) => !el.hasAttribute('disabled') && !el.hidden);
+      const ziele = [...flaeche.current.querySelectorAll<HTMLElement>('button, textarea, input, select, summary, a[href]')].filter((el) => !el.hasAttribute('disabled') && !el.hidden);
       const erstes = ziele[0];
       const letztes = ziele.at(-1);
       if (e.shiftKey && document.activeElement === erstes) {
@@ -136,7 +200,7 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
     setLaeuft(true);
     setFehler('');
     try {
-      await api('POST', '/api/fehlermeldungen', { text, seite, fenster, technik, bild });
+      await api('POST', '/api/fehlermeldungen', art === 'inhalt' ? { art, text, thema } : art === 'idee' ? { art, text, seite } : { art, text, seite, fenster, technik, bild });
       setFertig(true);
     } catch (err) {
       setFehler(err instanceof Error ? err.message : 'Die Meldung konnte nicht gesendet werden');
@@ -172,14 +236,14 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
 
   return (
     <div className={`dialog-hintergrund${nimmtAuf ? ' unsichtbar' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && schliesse()}>
-      <section ref={flaeche} className="karte dialog melden" role="dialog" aria-modal="true" aria-labelledby="melden-titel" onPaste={fertig ? undefined : einfuegen}>
-        <h2 id="melden-titel">Fehler melden</h2>
+      <section ref={flaeche} className="karte dialog melden" role="dialog" aria-modal="true" aria-labelledby="melden-titel" onPaste={fertig || art !== 'fehler' ? undefined : einfuegen}>
+        <h2 id="melden-titel">Rückmeldung geben</h2>
         {fertig ? (
           <>
             <p className="hinweis gut" role="status">
-              Danke! Deine Meldung ist angekommen.
+              Danke! Deine Rückmeldung ist angekommen.
             </p>
-            <p className="leise">Der Betreiber des Portals sieht sie und kümmert sich darum. Eine Antwort bekommst du hier im Portal nicht – wenn es eilt, sprich bitte zusätzlich deinen Ausbilder an.</p>
+            <p className="leise">{a?.danke}</p>
             <div className="aktionen links">
               <button type="button" className="knopf" autoFocus onClick={onZu}>
                 Schließen
@@ -189,24 +253,48 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
         ) : (
           <form onSubmit={sende}>
             <p className="leise">
-              Etwas funktioniert nicht oder sieht falsch aus? Beschreibe es kurz. Die Meldung geht an den Betreiber des Portals. <HandbuchLink kapitel="fehler">Fehler melden</HandbuchLink>
+              Sag uns, was nicht klappt, was dir fehlt oder was du besser erklärt haben möchtest. <HandbuchLink kapitel="fehler">Rückmeldung geben</HandbuchLink>
             </p>
-            <label htmlFor="melden-text">Was ist passiert?</label>
-            <textarea
-              id="melden-text"
-              rows={6}
-              value={text}
-              maxLength={MAX_TEXT}
-              required
-              minLength={10}
-              autoFocus
-              aria-describedby="melden-hilfe"
-              placeholder={'Zum Beispiel: Ich wollte meinen Bericht einreichen. Nach dem Klick auf „Einreichen“ passiert nichts.'}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <p id="melden-hilfe" className="leise klein">
-              Hilfreich ist: Was wolltest du tun? Was ist stattdessen passiert? Bitte schreibe keine Inhalte aus Berichten und keine Passwörter hinein. {text.length} von {MAX_TEXT} Zeichen.
-            </p>
+            <fieldset className="melden-art">
+              <legend>Worum geht es?</legend>
+              {arten.map((x) => (
+                <label key={x} className={art === x ? 'gewaehlt' : ''}>
+                  <input type="radio" name="melden-art" checked={art === x} onChange={() => setArt(x)} />
+                  <strong>{ARTEN[x].wahl}</strong>
+                  <span className="leise klein">{ARTEN[x].wozu}</span>
+                </label>
+              ))}
+            </fieldset>
+            {art && a && (
+              <>
+                {art === 'inhalt' && bereiche && (
+                  <>
+                    <label htmlFor="melden-thema">Um welches Thema geht es?</label>
+                    <select id="melden-thema" value={thema} onChange={(e) => setThema(e.target.value)}>
+                      <option value="">Kein bestimmtes Thema</option>
+                      {bereiche.map((b) =>
+                        b.felder.map((f) => (
+                          <optgroup key={`${b.bereich}|${f.id}`} label={bereiche.length > 1 ? `${b.titel}: ${f.titel}` : f.titel}>
+                            <option value={`${b.bereich}|${f.id}|`}>{f.titel} – insgesamt</option>
+                            {f.themen.map((t) => (
+                              <option key={t.id} value={`${b.bereich}|${f.id}|${t.id}`}>
+                                {t.titel}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )),
+                      )}
+                    </select>
+                  </>
+                )}
+                <label htmlFor="melden-text">{a.frage}</label>
+                <textarea id="melden-text" rows={6} value={text} maxLength={MAX_TEXT} required minLength={10} autoFocus aria-describedby="melden-hilfe" placeholder={a.beispiel} onChange={(e) => setText(e.target.value)} />
+                <p id="melden-hilfe" className="leise klein">
+                  {a.hilfe} {text.length} von {MAX_TEXT} Zeichen.
+                </p>
+              </>
+            )}
+            {art === 'fehler' && (
             <fieldset className="melden-bild">
               <legend>Bildschirmfoto (freiwillig)</legend>
               {bild ? (
@@ -248,33 +336,47 @@ export function FehlerMelden({ version, onZu }: { version: string; onZu: () => v
                 </>
               )}
             </fieldset>
-            <details className="klapp melden-technik">
-              <summary>Das wird automatisch mitgeschickt</summary>
-              <dl>
-                <dt>Dein Name und deine Rolle</dt>
-                <dd>damit man nachfragen kann</dd>
-                <dt>Seite</dt>
-                <dd>{seite}</dd>
-                <dt>Version</dt>
-                <dd>{version}</dd>
-                <dt>Fenstergröße</dt>
-                <dd>{fenster}</dd>
-                <dt>Browser</dt>
-                <dd>{navigator.userAgent}</dd>
-                <dt>Bildschirmfoto</dt>
-                <dd>{bild ? 'ja – siehe Vorschau oben' : 'nein'}</dd>
-                <dt>Letzte Fehlermeldungen des Browsers</dt>
-                <dd>{technik ? <pre>{technik}</pre> : 'keine'}</dd>
-              </dl>
-            </details>
+            )}
+            {art === 'inhalt' && (
+              <p className="hinweis klein">
+                <strong>Ohne deinen Namen.</strong> Die Ausbilder sehen deinen Text, das Thema und den Tag – nicht, von wem der Wunsch kommt. Gibt es in deinem Beruf nur wenige Azubis, lässt es sich trotzdem manchmal erraten.
+              </p>
+            )}
+            {art && art !== 'inhalt' && (
+              <details className="klapp melden-technik">
+                <summary>Das wird automatisch mitgeschickt</summary>
+                <dl>
+                  <dt>Dein Name und deine Rolle</dt>
+                  <dd>damit man nachfragen kann</dd>
+                  <dt>Seite</dt>
+                  <dd>{seite}</dd>
+                  {art === 'fehler' && (
+                    <>
+                      <dt>Version</dt>
+                      <dd>{version}</dd>
+                      <dt>Fenstergröße</dt>
+                      <dd>{fenster}</dd>
+                      <dt>Browser</dt>
+                      <dd>{navigator.userAgent}</dd>
+                      <dt>Bildschirmfoto</dt>
+                      <dd>{bild ? 'ja – siehe Vorschau oben' : 'nein'}</dd>
+                      <dt>Letzte Fehlermeldungen des Browsers</dt>
+                      <dd>{technik ? <pre>{technik}</pre> : 'keine'}</dd>
+                    </>
+                  )}
+                  <dt>Wer liest das?</dt>
+                  <dd>{art === 'fehler' ? 'der Betreiber des Portals (Super-Admin)' : 'der Betreiber des Portals (Super-Admin) und die Ausbilder'}</dd>
+                </dl>
+              </details>
+            )}
             {fehler && (
               <p className="hinweis fehler" role="alert">
                 {fehler}
               </p>
             )}
             <div className="aktionen links">
-              <button type="submit" className="knopf" disabled={laeuft || text.trim().length < 10}>
-                {laeuft ? 'Sendet …' : 'Meldung senden'}
+              <button type="submit" className="knopf" disabled={laeuft || !art || text.trim().length < 10}>
+                {laeuft ? 'Sendet …' : 'Rückmeldung senden'}
               </button>
               <button type="button" className="knopf schlicht" onClick={schliesse}>
                 Abbrechen

@@ -1,5 +1,21 @@
 # Änderungen
 
+## [0.56.0] – 2026-11-13
+
+### Neu
+
+- **Rückmeldung geben:** Oben in der Leiste stehen zwei kleine Daumen, einer hoch und einer runter (neben der Glocke). Sie öffnen ein Fenster mit drei Arten:
+  - **Fehler melden** – wie bisher, mit Bildschirmfoto und technischen Angaben. Geht an den Betreiber des Portals (Super-Admin).
+  - **Idee fürs Portal** – wenn dir etwas fehlt oder etwas einfacher ginge. Mit Name und Seite, ohne Bild und Technik. Lesen der Super-Admin und die Ausbilder.
+  - **Lerninhalt besser erklären** (nur Azubis) – wenn etwas im Lernmodul unklar ist oder fehlt. Wer gerade im Lernmodul ist, bekommt die Art und das Thema vorausgewählt. Der Wunsch geht **ohne Namen** an die Ausbilder; gespeichert werden nur Text, Lernmodul, Thema und der Tag.
+- **Ausbilder:** neue Seite „Rückmeldungen“ unter „Planung“ mit den Wünschen zu den Lerninhalten (abhaken, löschen) und den Ideen fürs Portal zum Mitlesen. Die Zahl am Menüpunkt zeigt die offenen Wünsche.
+
+### Geändert
+
+- „Fehler melden“ steht nicht mehr im Menü am Namen, sondern im neuen Fenster „Rückmeldung geben“.
+- **Super-Admin:** Der Menüpunkt „Fehlermeldungen“ heißt „Rückmeldungen“ und zeigt Fehler und Ideen; bei beidem lässt sich filtern. Die Benachrichtigung im Teams-Kanal kommt auch bei einer neuen Idee. Wünsche zu Lerninhalten sieht der Super-Admin nicht.
+- Führung und Handbuch sind angepasst (Kapitel „Rückmeldung geben“, „Rückmeldungen lesen“, „Rückmeldungen bearbeiten“).
+
 ## [0.55.1] – 2026-11-13
 
 ### Behoben

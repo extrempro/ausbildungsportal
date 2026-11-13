@@ -31,7 +31,8 @@ import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
 import { Dialoge } from './dialoge';
-import { FehlerMelden } from './fehler';
+import { RueckmeldungFenster } from './fehler';
+import { Rueckmeldungen } from './pages/Rueckmeldungen';
 import { Glocke } from './glocke';
 import { Meldungen } from './pages/Meldungen';
 import { Avatar } from './avatar';
@@ -111,13 +112,15 @@ export function App() {
   // interaktive Führung: läuft gerade / wird beim ersten Besuch einmal angeboten
   const [fuehrung, setFuehrung] = useState(false);
   const [angebot, setAngebot] = useState(false);
-  // Fenster „Fehler melden“ und (Super-Admin) Zahl der offenen Meldungen
+  // Fenster „Rückmeldung geben“ und (Super-Admin) Zahl der offenen Fehler und Ideen
   const [melden, setMelden] = useState(false);
   // holt das Portal Profilbilder aus Microsoft? (Schalter unter „Konto“)
   const [profilbild, setProfilbild] = useState(false);
   const [offeneMeldungen, setOffeneMeldungen] = useState(0);
   // Super-Admin: eingereichte Lerninhalte, die auf die Prüfung warten
   const [offeneEinreichungen, setOffeneEinreichungen] = useState(0);
+  // Ausbilder: offene Wünsche der Azubis zu den Lerninhalten
+  const [offeneWuensche, setOffeneWuensche] = useState(0);
   const schliesseMelden = useCallback(() => setMelden(false), []);
   // Ausbilder und Beauftragte: Urlaubsanträge, bei denen sie selbst etwas tun müssen
   const [urlaubZuTun, setUrlaubZuTun] = useState(0);
@@ -206,6 +209,7 @@ export function App() {
   }, [konto?.rolle, konto?.passwortWechsel, pfad]);
   useEffect(() => {
     if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
+    if (konto?.rolle === 'ausbilder') api<{ offen: number }>('GET', '/api/rueckmeldungen').then((r) => setOffeneWuensche(r.offen), () => {});
   }, [konto?.rolle, pfad, ladeUrlaubZuTun]);
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
@@ -353,6 +357,7 @@ export function App() {
   else if (pfad === '/verwaltung/protokoll' && konto.rolle === 'admin') seite = <Protokoll />;
   else if (pfad === '/verwaltung/lerninhalte' && konto.rolle === 'admin') seite = <LernEinreichungen onGeaendert={setOffeneEinreichungen} />;
   else if (pfad === '/verwaltung/meldungen' && konto.rolle === 'admin') seite = <Meldungen onGeaendert={setOffeneMeldungen} />;
+  else if (pfad === '/rueckmeldungen' && konto.rolle === 'ausbilder') seite = <Rueckmeldungen onGeaendert={setOffeneWuensche} />;
   else if (pfad === '/lerninhalte' && betreut) seite = <LerninhalteListe ausbilder={konto.rolle === 'ausbilder'} />;
   else if (lesePfad && betreut)
     seite = <Leseansicht paket={lesePfad[1]}>{!lesePfad[2] ? <LerninhalteUebersicht /> : lesePfad[2] === 'kompendium' ? <LernKompendium /> : <LernThema key={lesePfad[2]} id={lesePfad[2]} />}</Leseansicht>;
@@ -385,7 +390,7 @@ export function App() {
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
-          { zu: '/verwaltung/meldungen', text: 'Fehlermeldungen', kurz: 'Meldungen', icon: 'kaefer', zahl: offeneMeldungen },
+          { zu: '/verwaltung/meldungen', text: 'Rückmeldungen', kurz: 'Meldungen', icon: 'kaefer', zahl: offeneMeldungen },
           { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'bild' },
           { zu: '/verwaltung/lerninhalte', text: 'Lerninhalte', icon: 'lernen', mehr: true, zahl: offeneEinreichungen },
         ]
@@ -427,6 +432,7 @@ export function App() {
           { zu: '/planung/sammelplanung', text: 'Sammelplanung', icon: 'sammel' },
           { zu: '/planung/bausteine', text: 'Planbausteine', icon: 'baustein' },
           { zu: '/lerninhalte', text: 'Lerninhalte', icon: 'lernen', aktivAb: '/lerninhalte' },
+          { zu: '/rueckmeldungen', text: 'Rückmeldungen', icon: 'ruf', zahl: offeneWuensche },
         ]
       : [];
   const gruppen: { id: 'planung' | 'verwaltung'; text: string; punkte: Punkt[] }[] = [
@@ -454,18 +460,6 @@ export function App() {
         <button type="button" onClick={starteFuehrung}>
           <Icon name="fuehrung" />
           Führung starten
-        </button>
-      </li>
-      <li>
-        <button
-          type="button"
-          onClick={() => {
-            setMenue(null);
-            setMelden(true);
-          }}
-        >
-          <Icon name="kaefer" />
-          Fehler melden
         </button>
       </li>
       {installation && (
@@ -552,8 +546,24 @@ export function App() {
               </div>
             ))}
           </nav>
+          {/* rechts beieinander: Begleiter (am Handy), Rückmeldung, Glocke */}
+          <div className="leiste-rechts">
           {begleiter.kopf}
+          <button
+            type="button"
+            className="menue-knopf rueck-knopf"
+            aria-label="Rückmeldung geben"
+            title="Rückmeldung geben: Fehler, Idee oder Wunsch zu den Lerninhalten"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setMenue(null);
+              setMelden(true);
+            }}
+          >
+            <Icon name="ruf" groesse={30} />
+          </button>
           {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
+          </div>
           <div className="menue ich">
             <button type="button" className="menue-knopf" aria-expanded={menue === 'ich'} aria-controls="menue-ich" aria-label={`Menü für ${konto.anzeigename}`} onClick={() => schalte('ich')}>
               <Avatar name={konto.anzeigename} bild={konto.bild} />
@@ -615,7 +625,7 @@ export function App() {
         </button>
       )}
       {fuehrung && <Fuehrung rolle={konto.rolle} bereiche={[...(lernen ? ['lernen' as const] : anleitungen ? ['anleitungen' as const] : []), ...(planer ? ['planer' as const] : [])]} onEnde={beendeFuehrung} />}
-      {melden && <FehlerMelden version={version} onZu={schliesseMelden} />}
+      {melden && <RueckmeldungFenster version={version} rolle={konto.rolle} onZu={schliesseMelden} />}
       <Dialoge />
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}

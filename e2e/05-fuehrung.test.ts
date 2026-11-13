@@ -68,7 +68,7 @@ test(
     const bea = await durchlauf(BEA, HANDY);
     assert.ok(bea.includes('Berichte abzeichnen') && !bea.includes('Verwaltung'), bea.join(' › '));
     const chef = await durchlauf(ADMIN.name, PC);
-    for (const station of ['Konten', 'Protokoll', 'Fehlermeldungen', 'Lerninhalte', 'Erscheinungsbild']) assert.ok(chef.includes(station), `Station „${station}“ fehlt: ${chef.join(' › ')}`);
+    for (const station of ['Konten', 'Protokoll', 'Rückmeldungen', 'Lerninhalte', 'Erscheinungsbild']) assert.ok(chef.includes(station), `Station „${station}“ fehlt: ${chef.join(' › ')}`);
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );

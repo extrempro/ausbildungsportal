@@ -81,6 +81,7 @@ Unter [docs/bilder/](docs/bilder/README.md) liegen Bildschirmfotos aller Bereich
 ## Datenschutz und Recht
 
 - **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung, der Begleiter, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
+- **Wünsche zu Lerninhalten ohne Person.** Was Azubis über „Rückmeldung geben“ zu den Lerninhalten schreiben, wird ohne Konto, Namen und Uhrzeit gespeichert und geht nur an die Ausbilder.
 - **Neue Daten über Personen** nennst du im Pull Request ausdrücklich (was, wie lange, wer sieht es). Der Betreiber ergänzt damit die Leistungsbeschreibung für den Betriebsrat.
 - **Meldungen nach außen** (Teams, Mail) enthalten so wenig wie möglich – keine Namen in Teams-Karten für Kanäle, keine Bemerkungen in Mails. Persönliche Benachrichtigungen sprechen nur die Person an, an die sie gehen, und nennen niemanden sonst.
 - **Keine Geheimnisse im Repository.** Es ist öffentlich. `.env`, der Ordner `data/`, Zugangsdaten, Webhook-Adressen und echte Namen oder Mailadressen gehören nicht hinein – auch nicht in Tests, Commits oder Pull Requests.

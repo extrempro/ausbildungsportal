@@ -601,3 +601,82 @@ test('Quiz: Der gesuchte Begriff wird ausgeblendet – aber nur als ganzes Wort'
   assert.equal(maskiere('Ein Hub verteilt an alle; Schubfächer gibt es nicht.', 'Hub'), 'Ein … verteilt an alle; Schubfächer gibt es nicht.');
   assert.equal(maskiere('C++ (und C) sind Sprachen.', 'C++'), '… (und C) sind Sprachen.');
 });
+
+test('Rückmeldung: Wünsche zu Lerninhalten ohne Person an die Ausbilder, Ideen an Super-Admin und Ausbilder, Fehler nur an den Super-Admin', async () => {
+  const w = await welt();
+  const chef = admin(w.u.db);
+  const sende = (wer: BenutzerZeile, body: Record<string, unknown>) => ruf(w.u, 'POST', '/api/fehlermeldungen', { cookies: als(w, wer), body });
+  const fuerAusbilder = async (wer = w.ausbilder) => koerper(await ruf(w.u, 'GET', '/api/rueckmeldungen', { cookies: als(w, wer) }));
+  const fuerChef = async () => koerper(await ruf(w.u, 'GET', '/api/fehlermeldungen', { cookies: als(w, chef) }));
+
+  // Themen für das Formular: nur für Azubis, nur Titel
+  const themen = koerper(await ruf(w.u, 'GET', '/api/rueckmeldungen/themen', { cookies: als(w, w.anna) })).bereiche;
+  assert.deepEqual(themen.map((b: any) => [b.bereich, b.titel]), [['lernen', 'Fachinformatiker Systemintegration']]);
+  assert.deepEqual(themen[0].felder[0], { id: 'netz', titel: 'Netzwerkgrundlagen', themen: [{ id: 'subnetting', titel: 'Subnetting' }, { id: 'vlan', titel: 'VLAN' }] });
+  assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/rueckmeldungen/themen', { cookies: als(w, w.maler) })).bereiche, [], 'Beruf ohne Lernmodul');
+  assert.equal((await ruf(w.u, 'GET', '/api/rueckmeldungen/themen', { cookies: als(w, w.ausbilder) })).status, 403);
+
+  // Wunsch zu einem Lerninhalt: nur Azubis mit Lerninhalten, nur vorhandene Themen
+  assert.equal((await sende(w.ausbilder, { art: 'inhalt', text: 'Bitte Subnetting genauer erklären.' })).status, 403);
+  assert.equal((await sende(w.maler, { art: 'inhalt', text: 'Bitte Subnetting genauer erklären.' })).status, 409);
+  for (const thema of ['lernen|gibtsnicht|', 'lernen|netz|gibtsnicht', 'anleitungen|netz|']) assert.equal((await sende(w.anna, { art: 'inhalt', text: 'Bitte Subnetting genauer erklären.', thema })).status, 400, thema);
+  assert.equal((await sende(w.anna, { art: 'quatsch', text: 'Bitte Subnetting genauer erklären.' })).status, 400);
+  assert.equal((await sende(w.anna, { art: 'inhalt', text: 'kurz', thema: 'lernen|netz|subnetting' })).status, 400);
+  assert.equal((await sende(w.anna, { art: 'inhalt', text: 'Wie komme ich von /26 auf 62 Hosts?', thema: 'lernen|netz|subnetting', seite: '/lernen/thema/netz', fenster: '390 × 800', technik: 'x', bild: 'data:image/png;base64,AAAA' })).status, 201);
+  assert.equal((await sende(w.ben, { art: 'inhalt', text: 'Das ganze Themenfeld ist mir zu knapp.', thema: 'lernen|wiso|' })).status, 201);
+  assert.equal((await sende(w.ben, { art: 'inhalt', text: 'Mir fehlt ein Thema zu Druckern.' })).status, 201);
+
+  // gespeichert ist nichts, woran man die Person erkennt
+  const roh = w.u.db.prepare("SELECT * FROM fehlermeldung WHERE art = 'inhalt' ORDER BY id").all() as any[];
+  assert.equal(roh.length, 3);
+  for (const z of roh) {
+    assert.deepEqual([z.benutzer_id, z.benutzer_name, z.seite, z.browser, z.fenster, z.technik, z.bild, z.version], [null, '', '', '', '', '', null, '']);
+    assert.match(z.zeit, /^\d{4}-\d{2}-\d{2}$/, 'nur der Tag');
+  }
+
+  // Ausbilder lesen und haken ab; sonst niemand
+  const a = await fuerAusbilder();
+  assert.equal(a.offen, 3);
+  assert.deepEqual(a.inhalte.map((x: any) => [x.paketTitel, x.thema, x.text]).reverse(), [
+    ['Fachinformatiker Systemintegration', 'Netzwerkgrundlagen › Subnetting', 'Wie komme ich von /26 auf 62 Hosts?'],
+    ['Fachinformatiker Systemintegration', 'Wirtschaft', 'Das ganze Themenfeld ist mir zu knapp.'],
+    ['Fachinformatiker Systemintegration', '', 'Mir fehlt ein Thema zu Druckern.'],
+  ]);
+  assert.deepEqual(Object.keys(a.inhalte[0]).sort(), ['erledigtAm', 'id', 'paket', 'paketTitel', 'status', 'tag', 'text', 'thema'], 'kein Name, keine Rolle, keine Uhrzeit');
+  for (const wer of [w.bea, w.anna, chef]) assert.equal((await ruf(w.u, 'GET', '/api/rueckmeldungen', { cookies: als(w, wer) })).status, 403);
+  assert.deepEqual((await fuerChef()).meldungen, [], 'der Super-Admin sieht Wünsche zu Lerninhalten nicht');
+  const wunsch = a.inhalte[0].id;
+  for (const [m, body] of [['PATCH', { status: 'erledigt' }], ['DELETE', undefined]] as const) assert.equal((await ruf(w.u, m, `/api/fehlermeldungen/${wunsch}`, { cookies: als(w, chef), body })).status, 404, `${m} als Super-Admin`);
+  assert.equal((await ruf(w.u, 'GET', `/api/fehlermeldungen/${wunsch}/bild`, { cookies: als(w, chef) })).status, 404);
+  assert.equal((await ruf(w.u, 'PATCH', `/api/rueckmeldungen/${wunsch}`, { cookies: als(w, w.bea), body: { status: 'erledigt' } })).status, 403);
+  assert.equal((await ruf(w.u, 'PATCH', `/api/rueckmeldungen/${wunsch}`, { cookies: als(w, w.ausbilder), body: { status: 'egal' } })).status, 400);
+  const e = koerper(await ruf(w.u, 'PATCH', `/api/rueckmeldungen/${wunsch}`, { cookies: als(w, w.ausbilder), body: { status: 'erledigt' } }));
+  assert.equal(e.offen, 2);
+  assert.equal(e.inhalte.at(-1).status, 'erledigt', 'offene zuerst');
+  assert.equal(koerper(await ruf(w.u, 'DELETE', `/api/rueckmeldungen/${wunsch}`, { cookies: als(w, w.ausbilder) })).inhalte.length, 2);
+  assert.equal((await ruf(w.u, 'DELETE', `/api/rueckmeldungen/${wunsch}`, { cookies: als(w, w.ausbilder) })).status, 404);
+
+  // Idee fürs Portal: von jedem Konto, mit Name und Seite, ohne Technik und Bild
+  assert.equal((await sende(w.bea, { art: 'idee', text: 'Ein Wochenüberblick für alle Azubis wäre gut.', seite: '/azubis', fenster: '1280 × 800', technik: 'x', bild: 'kein Bild' })).status, 201);
+  const idee = w.u.db.prepare("SELECT * FROM fehlermeldung WHERE art = 'idee'").get() as any;
+  assert.deepEqual([idee.benutzer_name, idee.rolle, idee.seite, idee.browser, idee.fenster, idee.technik, idee.bild], ['Bea', 'beauftragter', '/azubis', '', '', '', null]);
+  const c = await fuerChef();
+  assert.deepEqual(c.meldungen.map((m: any) => [m.art, m.name]), [['idee', 'Bea']]);
+  const b = await fuerAusbilder();
+  assert.deepEqual(b.ideen.map((x: any) => [x.name, x.rolle, x.seite, x.status]), [['Bea', 'beauftragter', '/azubis', 'offen']]);
+  assert.equal(b.offen, 2, 'Ideen zählen bei den Ausbildern nicht als offen – sie lesen nur mit');
+  // Ausbilder können eine Idee weder abhaken noch löschen
+  for (const m of ['PATCH', 'DELETE'] as const) assert.equal((await ruf(w.u, m, `/api/rueckmeldungen/${idee.id}`, { cookies: als(w, w.ausbilder), body: m === 'PATCH' ? { status: 'erledigt' } : undefined })).status, 404);
+  assert.equal(koerper(await ruf(w.u, 'PATCH', `/api/fehlermeldungen/${idee.id}`, { cookies: als(w, chef), body: { status: 'erledigt' } })).offen, 0);
+  assert.equal((await fuerAusbilder()).ideen[0].status, 'erledigt');
+
+  // ein Fehler bleibt beim Super-Admin
+  assert.equal((await sende(w.anna, { text: 'Der Knopf reagiert nicht mehr.' })).status, 201);
+  assert.deepEqual((await fuerChef()).meldungen.map((m: any) => m.art), ['fehler', 'idee']);
+  assert.equal((await fuerAusbilder()).ideen.length, 1);
+
+  // Grenze je Tag gilt auch ohne gespeicherte Person
+  for (let i = 0; i < 9; i++) assert.equal((await sende(w.anna, { art: 'inhalt', text: `Noch ein Wunsch Nummer ${i}.` })).status, 201);
+  assert.equal((await sende(w.anna, { art: 'inhalt', text: 'Und noch einer zu viel.' })).status, 429);
+  assert.equal((await sende(w.ben, { art: 'inhalt', text: 'Ben darf noch schreiben.' })).status, 201);
+});

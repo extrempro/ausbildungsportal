@@ -182,7 +182,7 @@ const BEDIENUNG: Kapitel = {
         <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
       <li>Dieses Handbuch hat links ein Inhaltsverzeichnis mit Suchfeld (am Handy oben unter „Inhalt und Suche“ – die Zeile bleibt beim Rollen stehen). Jedes Kapitel ist gleich aufgebaut: erst wozu es da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.</li>
         <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
-        <li>Etwas funktioniert nicht? Im Menü an deinem Namen bzw. unter „Mehr“ steht „Fehler melden“. Beschreibe kurz, was passiert ist. Wenn du magst, hängst du ein Bildschirmfoto an – du siehst es vorher und kannst es wieder entfernen. Mehr dazu im Kapitel „Fehler melden“. Die Meldung geht an den Betreiber des Portals; Seite, Version und Browser werden automatisch mitgeschickt.</li>
+        <li>Etwas funktioniert nicht, oder dir fehlt etwas? Das Symbol mit den zwei Daumen oben in der Leiste öffnet „Rückmeldung geben“. Dort meldest du einen Fehler – wenn du magst, mit Bildschirmfoto – oder schickst eine Idee fürs Portal. Mehr dazu im Kapitel „Rückmeldung geben“.</li>
         <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
         <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
         <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
@@ -193,34 +193,55 @@ const BEDIENUNG: Kapitel = {
   ),
 };
 
-const FEHLER: Kapitel = {
+const FEHLER = (rolle: Rolle): Kapitel => ({
   id: 'fehler',
-  titel: 'Fehler melden',
+  titel: 'Rückmeldung geben',
   gruppe: 'Hilfe',
   inhalt: (
     <>
-      <p>Etwas funktioniert nicht oder sieht falsch aus? Dann melde es – so wird es behoben.</p>
+      <p>
+        Etwas funktioniert nicht, dir fehlt etwas{rolle === 'azubi' ? ', oder du möchtest etwas im Lernmodul besser erklärt haben' : ''}? Dafür gibt es „Rückmeldung geben“ – das Symbol mit den zwei Daumen oben in der Leiste{rolle === 'admin' ? '' : ', neben der Glocke'}.
+      </p>
       <h3>So geht's</h3>
       <ol className="schritte">
-        <li>Im Menü an deinem Namen (am Handy unter „Mehr“) „Fehler melden“ wählen. Das geht von jeder Seite aus.</li>
-        <li>Kurz beschreiben: Was wolltest du tun? Was ist stattdessen passiert?</li>
-        <li>Wenn du magst, ein Bildschirmfoto anhängen: auswählen, einfügen (Strg + V) oder am PC direkt aufnehmen. Du siehst das Bild vor dem Senden und kannst es wieder entfernen.</li>
-        <li>„Meldung senden“.</li>
+        <li>Oben in der Leiste auf die zwei Daumen tippen. Das geht von jeder Seite aus.</li>
+        <li>Wählen, worum es geht: „Fehler melden“{rolle === 'azubi' ? ', „Idee fürs Portal“ oder „Lerninhalt besser erklären“' : ' oder „Idee fürs Portal“'}.</li>
+        <li>Kurz beschreiben. Bei einem Fehler: Was wolltest du tun? Was ist stattdessen passiert?</li>
+        <li>Bei einem Fehler kannst du ein Bildschirmfoto anhängen: auswählen, einfügen (Strg + V) oder am PC direkt aufnehmen. Du siehst das Bild vor dem Senden und kannst es wieder entfernen.</li>
+        <li>„Rückmeldung senden“.</li>
       </ol>
+      <h3>Begriffe</h3>
+      <dl className="begriffe">
+        <Begriff wort="Fehler melden">Etwas funktioniert nicht oder sieht falsch aus. Liest der Betreiber des Portals (Super-Admin).</Begriff>
+        <Begriff wort="Idee fürs Portal">Dir fehlt etwas, oder etwas ginge einfacher. Lesen der Betreiber des Portals und die Ausbilder.</Begriff>
+        {rolle !== 'admin' && (
+          <Begriff wort="Lerninhalt besser erklären">
+            {rolle === 'azubi'
+              ? 'Etwas im Lernmodul ist unklar, zu knapp oder fehlt. Lesen nur die Ausbilder – ohne deinen Namen. Bist du gerade im Lernmodul, sind diese Art und das Thema schon ausgewählt; du kannst beides ändern.'
+              : 'Das können nur Azubis wählen: Sie schreiben, was sie im Lernmodul besser erklärt haben möchten. Diese Wünsche gehen ohne Namen an die Ausbilder.'}
+          </Begriff>
+        )}
+      </dl>
       <h3>Gut zu wissen</h3>
       <ul className="punkte">
         <li>
-          <strong>Das wird mitgeschickt:</strong> dein Name und deine Rolle, die Seite, auf der du warst, die Version des Portals, dein Browser, die Größe des Fensters und die letzten Fehlermeldungen des Browsers. Im Fenster steht das unter „Das wird automatisch mitgeschickt“.
+          <strong>Das wird bei einem Fehler mitgeschickt:</strong> dein Name und deine Rolle, die Seite, auf der du warst, die Version des Portals, dein Browser, die Größe des Fensters und die letzten Fehlermeldungen des Browsers. Im Fenster steht das unter „Das wird automatisch mitgeschickt“. Der Betreiber sieht auch alles, was auf einem Bildschirmfoto steht – zum Beispiel Texte aus einem Bericht. Entferne das Bild, wenn etwas darauf nicht für ihn gedacht ist.
         </li>
         <li>
-          <strong>Wer liest das?</strong> Der Betreiber des Portals (Super-Admin). Er sieht auch alles, was auf einem Bildschirmfoto steht – zum Beispiel Texte aus einem Bericht. Entferne das Bild, wenn etwas darauf nicht für ihn gedacht ist.
+          <strong>Bei einer Idee</strong> gehen nur dein Name, deine Rolle und die Seite mit – kein Bild, nichts Technisches.
         </li>
-        <li>Eine Antwort bekommst du im Portal nicht. Wenn es eilt, sprich zusätzlich deinen Ausbilder oder die IT an.</li>
+        {rolle === 'azubi' && (
+          <li>
+            <strong>Bei einem Wunsch zu den Lerninhalten</strong> wird dein Name nicht gespeichert – auch nicht für den Betreiber des Portals. Die Ausbilder sehen deinen Text, das Thema und den Tag. Gibt es in deinem Beruf nur wenige Azubis, lässt sich trotzdem manchmal erraten, von wem ein Wunsch kommt. Schreib nichts hinein, woran man dich erkennt, wenn du das nicht möchtest.
+          </li>
+        )}
+        <li>Eine Antwort bekommst du im Portal nicht, und nicht jede Idee lässt sich umsetzen. Wenn es eilt, sprich zusätzlich deinen Ausbilder oder die IT an.</li>
         <li>Fragen zur Ausbildung oder zu einem Bericht gehören nicht hierher – die klärst du mit deinem Ausbilder.</li>
+        <li>Am Tag gehen höchstens zehn Rückmeldungen je Art.</li>
       </ul>
     </>
   ),
-};
+});
 
 const DRUCKEN = (rolle: Rolle): Kapitel => ({
   id: 'drucken',
@@ -981,7 +1002,7 @@ const AZUBI: Kapitel[] = [
   GLOCKE('azubi'),
   BENACHRICHTIGUNGEN('azubi'),
   PROFILBILD('azubi'),
-  FEHLER,
+  FEHLER('azubi'),
   APP,
   BEDIENUNG,
 ];
@@ -1513,6 +1534,40 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           ),
         },
         {
+          id: 'rueckmeldungen',
+          titel: 'Rückmeldungen lesen',
+          gruppe: 'Lernen und Prüfung',
+          inhalt: (
+            <>
+              <p>
+                Über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) schreiben Azubis, was sie im Lernmodul besser erklärt haben möchten. Diese Wünsche gehen an euch Ausbilder, weil ihr die Lerninhalte schreibt. Dazu lest ihr die Ideen fürs Portal mit.
+              </p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>
+                  Unter „Planung“ <Link zu="/rueckmeldungen">Rückmeldungen</Link> öffnen. Die Zahl am Menüpunkt zeigt die offenen Wünsche.
+                </li>
+                <li>Den Wunsch lesen: Oben steht das Thema, darunter das Lernmodul und der Tag.</li>
+                <li>Die Lerninhalte anpassen und neu einreichen – siehe „Lerninhalte für einen Beruf erstellen“.</li>
+                <li>„Als erledigt markieren“. Erledigte Wünsche stehen eingeklappt darunter.</li>
+              </ol>
+              <h3>Begriffe</h3>
+              <dl className="begriffe">
+                <Begriff wort="Wünsche zu den Lerninhalten">Kommen ohne Namen an. Gespeichert sind nur Text, Lernmodul, Thema und der Tag – auch der Betreiber des Portals erfährt nicht, wer geschrieben hat.</Begriff>
+                <Begriff wort="Ideen fürs Portal">Wünsche an das Portal selbst, mit Namen. Ihr lest sie mit; bearbeitet und auf „erledigt“ gesetzt werden sie vom Betreiber des Portals (Super-Admin).</Begriff>
+              </dl>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>Nachfragen kannst du bei einem Wunsch nicht, und eine Antwort im Portal gibt es nicht. Sprich das Thema lieber allgemein an, statt zu rätseln, von wem der Wunsch kommt.</li>
+                <li>Bei wenigen Azubis in einem Beruf lässt sich manchmal erraten, wer geschrieben hat. Geh damit so um, wie du es dir selbst wünschen würdest.</li>
+                <li>Alle Ausbilder sehen dieselbe Liste. Ausbildungsbeauftragte und der Super-Admin sehen die Wünsche zu den Lerninhalten nicht.</li>
+                <li>„Wunsch löschen“ entfernt ihn endgültig. Eine automatische Löschfrist gibt es nicht.</li>
+                <li>Fehler, die jemand meldet, gehen nur an den Betreiber des Portals.</li>
+              </ul>
+            </>
+          ),
+        },
+        {
           id: 'lerninhalte',
           titel: 'Lerninhalte für einen Beruf erstellen',
           gruppe: 'Lernen und Prüfung',
@@ -1821,7 +1876,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   GLOCKE(rolle),
   BENACHRICHTIGUNGEN(rolle),
   PROFILBILD(rolle),
-  FEHLER,
+  FEHLER(rolle),
   APP,
   BEDIENUNG,
 ];
@@ -1833,7 +1888,7 @@ const ADMIN: Kapitel[] = [
     gruppe: 'Erste Schritte',
     inhalt: (
       <p>
-        Du verwaltest Konten, siehst das Protokoll, bearbeitest <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link>, prüfst eingereichte Lerninhalte und lädst sie hoch, stellst das Logo ein und entscheidest, ob es den Begleiter der Azubis gibt. Ausbildungspläne, Berichte und Stammdaten siehst du nicht. Fehlermeldungen kommen von allen Nutzern über „Fehler melden“; die Zahl am Menüpunkt zeigt die
+        Du verwaltest Konten, siehst das Protokoll, bearbeitest <Link zu="/verwaltung/meldungen">Rückmeldungen</Link> (Fehler und Ideen fürs Portal), prüfst eingereichte Lerninhalte und lädst sie hoch, stellst das Logo ein und entscheidest, ob es den Begleiter der Azubis gibt. Ausbildungspläne, Berichte und Stammdaten siehst du nicht. Fehlermeldungen kommen von allen Nutzern über „Fehler melden“; die Zahl am Menüpunkt zeigt die
         offenen. „Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben.
       </p>
     ),
@@ -1889,7 +1944,7 @@ const ADMIN: Kapitel[] = [
         </dl>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
-          <li>Ist die Benachrichtigung in Teams eingerichtet (siehe „Fehlermeldungen“), erscheint dort ein Hinweis, sobald jemand Lerninhalte einreicht.</li>
+          <li>Ist die Benachrichtigung in Teams eingerichtet (siehe „Rückmeldungen bearbeiten“), erscheint dort ein Hinweis, sobald jemand Lerninhalte einreicht.</li>
           <li>Ein neues Lernmodul sehen Azubis erst, wenn ein Ausbilder es in den Stammdaten an einem Beruf einschaltet.</li>
           <li>Hochgeladene Pakete liegen im Datenordner des Portals unter <code>lerninhalte/</code> und sind damit in der Datensicherung. Sie gehen vor ein gleichnamiges Paket, das als Ordner auf dem Server eingebunden ist.</li>
           <li>Zu einem Paket kann ein Planer für die Prüfung gehören (Datei <code>planer.md</code>, z. B. für das Abschlussprojekt). Die Einreichung zeigt dann „Planer: …“. Prüfe ihn wie die Cheatsheets: eigener Text, keine Personen, Links nur zu vertrauenswürdigen Seiten.</li>
@@ -1902,19 +1957,25 @@ const ADMIN: Kapitel[] = [
   },
   {
     id: 'meldungen',
-    titel: 'Fehlermeldungen bearbeiten',
+    titel: 'Rückmeldungen bearbeiten',
     gruppe: 'Verwaltung',
     inhalt: (
       <>
-        <p>Über „Fehler melden“ erreichen dich Hinweise der Nutzer, wenn im Portal etwas nicht funktioniert.</p>
+        <p>Über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) erreichen dich Fehler und Ideen fürs Portal.</p>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Fehler">Etwas funktioniert nicht. Mit Seite, Version, Browser, Fenstergröße und – wenn angehängt – einem Bildschirmfoto. Nur du liest das.</Begriff>
+          <Begriff wort="Idee">Ein Wunsch ans Portal, mit Name, Rolle und Seite, ohne technische Angaben. Die Ausbilder lesen die Ideen mit; auf „erledigt“ setzen und löschen kannst nur du.</Begriff>
+          <Begriff wort="Wünsche zu Lerninhalten">Die dritte Art siehst du nicht: Azubis schreiben, was sie im Lernmodul besser erklärt haben möchten. Das geht ohne Namen nur an die Ausbilder – wie der Lernstand ist es nicht für den Betreiber gedacht.</Begriff>
+        </dl>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>
-            Jede angemeldete Person kann über „Fehler melden“ ein Problem beschreiben, auf Wunsch mit Bildschirmfoto. Die Meldungen stehen unter <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link>; die Zahl am Menüpunkt zeigt die offenen.
+            Jede angemeldete Person kann einen Fehler melden oder eine Idee schicken. Beides steht unter <Link zu="/verwaltung/meldungen">Rückmeldungen</Link>; die Zahl am Menüpunkt zeigt die offenen. Gibt es beides, kannst du oben nach Fehlern oder Ideen filtern.
           </li>
           <li>Ein Bildschirmfoto erscheint erst nach einem Klick. Es kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</li>
-          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig.</li>
-          <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
+          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig. Eine automatische Löschfrist gibt es nicht.</li>
+          <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten; sie kommt bei jedem neuen Fehler und jeder neuen Idee. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
           <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
         </ul>
       </>
@@ -1954,7 +2015,7 @@ const ADMIN: Kapitel[] = [
       </>
     ),
   },
-  FEHLER,
+  FEHLER('admin'),
   APP,
   BEDIENUNG,
 ];
