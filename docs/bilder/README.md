@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.59.0 (erzeugt am 13.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.61.0 (erzeugt am 13.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
@@ -263,3 +263,9 @@ Auch Ausbilder und Beauftragte können alles am Handy erledigen.
 Aufgeklappt führt „Inhalt“ zu jedem Themenfeld und Unterthema.
 
 ![Inhalt am Handy](handy-05-lernen-inhalt.png)
+
+### Ausbildungsplan: Inhalt am Handy
+
+Die Zeile „Inhalt“ bleibt beim Rollen stehen und zeigt Jahr und KW. Aufgeklappt springt man zu einem Jahr oder zu „Diese Woche“; dort stehen auch die Abteilungen und die Farben.
+
+![Ausbildungsplan: Inhalt am Handy](handy-06-plan-inhalt.png)
