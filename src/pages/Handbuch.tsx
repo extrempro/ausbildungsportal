@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { ROLLE_TEXT } from '../api';
 import type { Rolle } from '../api';
 import { Link } from '../router';
-import { AnsichtKnoepfe } from '../ansicht';
+import { AnsichtKnoepfe, NaviKnopf, setzeNaviZu, useAnsicht } from '../ansicht';
+import { Icon } from '../icons';
 
 /**
  * Handbuch je Rolle. Für Azubis bewusst in kurzen Sätzen und mit erklärten Begriffen –
@@ -189,6 +190,9 @@ const BEDIENUNG: Kapitel = {
         <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
         <li>
           <strong>Volle Breite:</strong> Auf einem großen Bildschirm nutzt das Portal sonst nur die Mitte. Im Menü an deinem Namen schaltest du „Volle Breite“ ein – dann geht jede Seite über das ganze Fenster. Dein Browser merkt sich das. Auf Lernseiten und im Handbuch steht der Knopf auch oben neben der Überschrift. Bei kleinen Fenstern gibt es ihn nicht, da ist die Seite ohnehin voll.
+        </li>
+        <li>
+          <strong>Navigation einklappen:</strong> Am PC steht im Lernmodul und hier im Handbuch links eine Navigation. Mit dem kleinen Knopf oben rechts darin klappst du sie zu einer schmalen Leiste ein, dann hat der Text mehr Platz. Im Lernmodul stehen in der Leiste die Themenfelder als Nummern (mit dem Punkt der Ampel); zeigst du mit der Maus darauf, erscheint der Name. Im Handbuch bringt dich die Lupe direkt zur Suche. Derselbe Knopf klappt die Navigation wieder aus; dein Browser merkt sich, wie du es eingestellt hast.
         </li>
         <li>
           <strong>Lesemodus:</strong> Auf Lernseiten, bei den Anleitungen und hier im Handbuch blendet „Lesemodus“ (oben neben der Überschrift) alles aus, was beim Lesen stört – Menü, Inhaltsverzeichnis, Fußzeile. Die Schrift wird etwas größer. Zurück geht es mit „Lesemodus beenden“ oben rechts oder mit Escape. Wechselst du auf eine andere Seite, endet er von selbst.
@@ -2055,6 +2059,7 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
   const [aktiv, setAktiv] = useState<string | null>(null);
   const [inhaltOffen, setInhaltOffen] = useState(false);
   const breit = useBreit();
+  const { naviZu } = useAnsicht();
   const kapitel = useMemo(() => kapitelVon(ansicht), [ansicht]);
   // Text jedes Kapitels in Kleinbuchstaben – für die Suche; wird gelesen, solange alle Kapitel angezeigt sind
   const texte = useRef(new Map<string, string>());
@@ -2203,10 +2208,29 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
           ))}
         </div>
       )}
-      <div className="handbuch">
-        {breit ? (
+      <div className={`handbuch${breit && naviZu ? ' navi-zu' : ''}`}>
+        {breit && naviZu ? (
+          <nav aria-label="Inhalt des Handbuchs" className="karte handbuch-inhalt schmal nicht-drucken">
+            <NaviKnopf was="Inhalt" />
+            <button
+              type="button"
+              className="navi-knopf"
+              aria-label="Im Handbuch suchen"
+              title="Im Handbuch suchen"
+              onClick={() => {
+                setzeNaviZu(false);
+                requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.handbuch-suche input')?.focus());
+              }}
+            >
+              <Icon name="suche" groesse={20} />
+            </button>
+          </nav>
+        ) : breit ? (
           <nav aria-label="Inhalt des Handbuchs" className="karte handbuch-inhalt nicht-drucken">
-            <h2>Inhalt</h2>
+            <div className="navi-kopf">
+              <h2>Inhalt</h2>
+              <NaviKnopf was="Inhalt" />
+            </div>
             {verzeichnis}
           </nav>
         ) : (

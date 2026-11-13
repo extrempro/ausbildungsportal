@@ -11,7 +11,7 @@ import type { Bild, Tabelle } from '../lernen/teile';
 import { ZusatzBereich } from '../lernen/zusatz';
 import type { Verweis, Zusatz } from '../lernen/zusatz';
 import { Link, useUngespeichert } from '../router';
-import { AnsichtKnoepfe } from '../ansicht';
+import { AnsichtKnoepfe, NaviKnopf, useAnsicht } from '../ansicht';
 import { AbzeichenFeier, Schild } from '../lernen/abzeichen';
 import type { Erfolg, FeldAbzeichen } from '../lernen/abzeichen';
 import { useLern } from '../lernen/basis';
@@ -129,6 +129,7 @@ export function LernThema({ id }: { id: string }) {
   }, [daten, id]);
 
   const geladen = daten?.thema.id === id ? daten : null;
+  const { naviZu } = useAnsicht();
   const aktiv = useAktivesUnterthema(geladen?.thema ?? null);
 
   if (fehler) return <Ladefehler titel="Lernen" text={fehler} />;
@@ -139,13 +140,22 @@ export function LernThema({ id }: { id: string }) {
   const hier = geladen ? [...geladen.thema.unterthemen.map((u) => ({ marke: `u-${u.id}`, titel: u.titel })), ...geladen.thema.zusatz.map((x) => ({ marke: `z-${x.id}`, titel: x.titel }))].find((x) => x.marke === aktiv)?.titel : undefined;
 
   return (
-    <div className="lern-layout">
-      {navi && (
-        <aside className="karte lern-navi" aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>
-          <h2>{anleitungen ? 'Anleitungen' : 'Themenfelder'}</h2>
-          {navi}
-        </aside>
-      )}
+    <div className={`lern-layout${navi && naviZu ? ' navi-zu' : ''}`}>
+      {navi &&
+        (naviZu ? (
+          <aside className="karte lern-navi schmal" aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>
+            <NaviKnopf was={anleitungen ? 'Anleitungen' : 'Themenfelder'} />
+            <SchmaleNavi felder={felder} id={id} />
+          </aside>
+        ) : (
+          <aside className="karte lern-navi" aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>
+            <div className="navi-kopf">
+              <h2>{anleitungen ? 'Anleitungen' : 'Themenfelder'}</h2>
+              <NaviKnopf was={anleitungen ? 'Anleitungen' : 'Themenfelder'} />
+            </div>
+            {navi}
+          </aside>
+        ))}
       <div className="lern-haupt">
         <p className="klein">
           <Link zu={basis}>{anleitungen ? '← Alle Anleitungen' : '← Alle Themenfelder'}</Link>
@@ -208,6 +218,27 @@ function useAktivesUnterthema(t: Thema | null): string | null {
     };
   }, [t]);
   return aktiv;
+}
+
+/** Eingeklappte Navigation am PC: je Themenfeld seine Nummer und – im Lernmodul – ein Punkt in der Farbe der Ampel. Der Name steht im Tooltip und für den Vorleser. */
+function SchmaleNavi({ felder, id }: { felder: NavFeld[]; id: string }) {
+  const { basis, lesen } = useLern();
+  return (
+    <ul className="lern-navi-schmal">
+      {felder.map((f, i) => {
+        const a = ampelVon(zaehle(f.unterthemen));
+        const name = lesen ? f.titel : `${f.titel}, ${AMPEL_TEXT[a]}`;
+        return (
+          <li key={f.id}>
+            <Link zu={`${basis}/${f.id}`} className="lern-navi-nr" titel={f.titel} vorlesen={name}>
+              {i + 1}
+              {!lesen && <span className={`lern-punkt klein ${a}`} aria-hidden="true" />}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 /** Navigation am Rand: alle Themenfelder mit Stand; beim geöffneten Themenfeld darunter seine Unterthemen. */

@@ -33,6 +33,9 @@ const PFADE = {
   urlaub: 'M4 8.5h16V19H4zM9 8.5V5.5h6v3M4 13h16M12 12v2',
   glocke: 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2.2 2.2 0 0 0 4 0',
   // Volle Breite: Pfeile nach links und rechts
+  'navi-zu': 'M4 4h16v16H4zM9 4v16M16 9.5 13.5 12l2.5 2.5',
+  'navi-auf': 'M4 4h16v16H4zM9 4v16M13.5 9.5 16 12l-2.5 2.5',
+  suche: 'M10.5 17.5a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM15.5 15.5 20.5 20.5',
   breit: 'M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4',
   // Lesemodus: ein offenes Buch mit Lesezeichen
   lesen: 'M3 5.5C5.5 4.5 9 4.5 12 6.5c3-2 6.5-2 9-1v13c-2.5-1-6-1-9 1-3-2-6.5-2-9-1zM12 6.5v13',
