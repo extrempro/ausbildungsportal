@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.68.0] – 2026-11-14
+
+### Geändert
+
+- **Abwesenheit ohne Krankheit:** Im Bericht gibt es bei „Abwesenheit“ nur noch die Gründe Urlaub, Feiertag und **Abwesend**. „Krank“ und „Sonstiges“ entfallen – ein Grund mit Gesundheitsbezug gehört nicht in den Bericht. Vorhandene Berichte werden beim Update umgestellt: Aus „Krank“ und „Sonstiges“ wird „Abwesend“, auch in abgezeichneten Berichten und im PDF. Der freiwillige Hinweis bleibt, mit dem Platzhalter „nichts zu Gesundheit oder Privatem“.
+
 ## [0.67.0] – 2026-11-14
 
 ### Neu

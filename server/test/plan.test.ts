@@ -521,7 +521,7 @@ test('Jahreskalender: ein Jahr mit Schule, Einsatz, Urlaub, Prüfung und Feierta
   await lege(w, w.ausbilder, EINSATZ); // 09.11.–06.12.2026 (ganze Wochen)
   await lege(w, w.ausbilder, { art: 'schule', von: '2026-12-28', bis: '2027-01-04', titel: 'Blockunterricht' }); // über den Jahreswechsel
   await lege(w, w.azubi, { art: 'termin', titel: 'JAV-Sitzung', tag: '2026-11-18', zeitVon: '14:00' });
-  await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/berichte/2026-11-02`, { cookies: als(w, w.azubi), body: { inhalt: { betrieb: [{ text: 'x', stunden: 24 }], abwesenheit: [{ tag: '2026-11-05', grund: 'urlaub', stunden: 8 }, { tag: '2026-11-04', grund: 'krank', stunden: 8 }] } } });
+  await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/berichte/2026-11-02`, { cookies: als(w, w.azubi), body: { inhalt: { betrieb: [{ text: 'x', stunden: 24 }], abwesenheit: [{ tag: '2026-11-05', grund: 'urlaub', stunden: 8 }, { tag: '2026-11-04', grund: 'abwesend', stunden: 8 }] } } });
   const profil = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/profil`, { cookies: c })).profil;
   assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/profil`, { cookies: c, body: { ...profil, pruefungen: [{ bezeichnung: 'AP Teil 1', datum: '2027-03-09' }] } })).status, 200);
 
@@ -554,7 +554,7 @@ test('Jahreskalender: ein Jahr mit Schule, Einsatz, Urlaub, Prüfung und Feierta
   assert.equal((await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/berichte/2026-11-02/einreichen`, { cookies: als(w, w.azubi) })).status, 200);
   const danach = koerper(await ruf(w.u, 'GET', '/api/jahreskalender?jahr=2026', { cookies: c }));
   assert.deepEqual(danach.azubis.find((x: { id: number }) => x.id === w.azubi.id).urlaub, ['2026-11-05']);
-  assert.ok(!JSON.stringify(danach).includes('krank'), 'Krankheit erscheint nicht im Jahreskalender');
+  assert.ok(!JSON.stringify(danach).includes('2026-11-04'), 'andere Abwesenheit erscheint nicht im Jahreskalender');
   const einzeln = koerper(await ruf(w.u, 'GET', `/api/jahreskalender?azubi=${w.ben.id}`, { cookies: c }));
   assert.deepEqual([einzeln.einzeln, einzeln.azubis.length, einzeln.azubis[0].anzeigename], [true, 1, 'Ben Azubi']);
 

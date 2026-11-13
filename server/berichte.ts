@@ -30,7 +30,10 @@ import type { BenutzerZeile } from './typen';
  * Die Form steht im Bericht selbst. Ein einmal gespeicherter Bericht behält seine Form, auch wenn später umgestellt wird.
  */
 export type BerichtStatus = 'entwurf' | 'eingereicht' | 'zurueck' | 'abgezeichnet';
-const GRUENDE = ['urlaub', 'krank', 'feiertag', 'sonstiges'] as const;
+/** Gründe einer Abwesenheit. Bewusst ohne „krank“: Ein Grund mit Gesundheitsbezug gehört nicht in den Bericht (Migration 034). */
+const GRUENDE = ['urlaub', 'feiertag', 'abwesend'] as const;
+/** Eine noch offene, ältere Oberfläche schickt vielleicht die früheren Gründe – sie werden zu „abwesend“. */
+const FRUEHER: Record<string, Grund> = { krank: 'abwesend', sonstiges: 'abwesend' };
 type Grund = (typeof GRUENDE)[number];
 
 export const BERICHT_FORMEN = ['woche', 'tag'] as const;
@@ -121,8 +124,9 @@ export function pruefeInhalt(roh: unknown, montag: string, form: BerichtForm = '
   const abwesenheit = liste.map((a): Abwesenheit => {
     if (!istObjekt(a)) throw new Fehler(400, 'Abwesenheit: ungültiger Eintrag');
     if (!gueltigesDatum(a.tag) || a.tag < montag || a.tag > sonntag) throw new Fehler(400, 'Abwesenheit: Der Tag muss in der Berichtswoche liegen');
-    if (!GRUENDE.includes(a.grund as Grund)) throw new Fehler(400, 'Abwesenheit: unbekannter Grund');
-    return { tag: a.tag, grund: a.grund as Grund, stunden: stunden(a.stunden ?? 0, 'Abwesenheit'), text: freitext(a.text, 200, 'Abwesenheit') };
+    const grund = FRUEHER[String(a.grund)] ?? a.grund;
+    if (!GRUENDE.includes(grund as Grund)) throw new Fehler(400, 'Abwesenheit: unbekannter Grund');
+    return { tag: a.tag, grund: grund as Grund, stunden: stunden(a.stunden ?? 0, 'Abwesenheit'), text: freitext(a.text, 200, 'Abwesenheit') };
   });
   abwesenheit.sort((a, b) => a.tag.localeCompare(b.tag));
   return {

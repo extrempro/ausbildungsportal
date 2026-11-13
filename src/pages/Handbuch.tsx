@@ -610,7 +610,7 @@ const AZUBI: Kapitel[] = [
                 <strong>Berufsschule</strong> – die Themen aus dem Unterricht.
               </li>
               <li>
-                <strong>Abwesenheit</strong> – Urlaub, Krankheit, Feiertag.
+                <strong>Abwesenheit</strong> – Urlaub, Feiertag oder einfach „Abwesend“, zum Beispiel wenn du krank warst.
               </li>
             </ul>
           </li>
@@ -652,7 +652,7 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Stunden kannst du in Viertelstunden eintragen: 0,25 ist eine Viertelstunde, 1,5 sind anderthalb Stunden.</li>
           <li>Hast du am Samstag oder Sonntag gearbeitet, wähle unter den Tagen „Wochenende anzeigen“.</li>
-          <li>Urlaub, Krankheit und Feiertage trägst du weiter unten bei „Abwesenheit“ ein. Im Kasten des Tages steht dann ein gelber Hinweis.</li>
+          <li>Urlaub, Feiertage und andere Abwesenheit trägst du weiter unten bei „Abwesenheit“ ein. Im Kasten des Tages steht dann ein gelber Hinweis.</li>
           <li>Unter „Deine Woche“ siehst du zusätzlich die Stunden je Tag – und welche Tage noch leer sind.</li>
           <li>Es bleibt ein Bericht für die ganze Woche: Du reichst ihn einmal ein, und er wird einmal abgezeichnet.</li>
           <li>Berichte, die du schon gespeichert hast, behalten ihre alte Form – auch wenn dein Betrieb umstellt.</li>
@@ -1054,7 +1054,7 @@ const AZUBI: Kapitel[] = [
         <dl className="begriffe breit">
           <Begriff wort="Ich habe Wochen vergessen. Was jetzt?">Schreib sie nach – die fehlenden Wochen stehen im Berichtsheft unter „Fehlt“. Je früher, desto leichter erinnerst du dich.</Begriff>
           <Begriff wort="Ich habe einen Fehler eingereicht.">Öffne den Bericht und wähle „Zurückziehen“. Das geht, solange er nicht abgezeichnet ist. Danach bitte deinen Ausbilder, die Abzeichnung aufzuheben.</Begriff>
-          <Begriff wort="Ich war die ganze Woche krank oder im Urlaub.">Schreib trotzdem einen Bericht: Trag die Tage unter „Abwesenheit“ ein und reiche ihn ein. Genehmigter Urlaub steht dort schon.</Begriff>
+          <Begriff wort="Ich war die ganze Woche krank oder im Urlaub.">Schreib trotzdem einen Bericht: Trag die Tage unter „Abwesenheit“ ein und reiche ihn ein. Genehmigter Urlaub steht dort schon. Warst du krank, wählst du „Abwesend“ – einen Grund musst du nicht nennen, und in den Hinweis gehört nichts zu deiner Gesundheit.</Begriff>
           <Begriff wort="„Einreichen“ geht nicht.">Meist fehlt die Unterschrift. Hinterlege sie unter „Konto“. Außerdem müssen Stunden eingetragen sein.</Begriff>
           <Begriff wort="Kann ich meine Unterschrift ändern?">Ja, unter „Konto“. Schon unterschriebene Berichte behalten die alte Unterschrift.</Begriff>
           <Begriff wort="Wer sieht meine Berichte?">Du, deine Ausbilder und die Ausbildungsbeauftragten, denen du zugeteilt bist. Andere Azubis sehen sie nicht.</Begriff>
@@ -1352,7 +1352,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
         <dl className="begriffe">
           <Begriff wort="Obere Balken (violett)">Berufsschule.</Begriff>
           <Begriff wort="Mittlere Balken (grün)">Einsätze, mit Namen. Ist der Balken zu kurz für den Namen: mit der Maus darauf zeigen.</Begriff>
-          <Begriff wort="Schmale Balken unten (gelb)">Urlaub: genehmigte Urlaubsanträge und Urlaub, den der Azubi in einem eingereichten Bericht unter „Abwesenheit“ eingetragen hat. Gestreift mit gestricheltem Rand ist beantragter Urlaub, über den noch nicht entschieden ist. Krankheit erscheint im Jahreskalender nicht.</Begriff>
+          <Begriff wort="Schmale Balken unten (gelb)">Urlaub: genehmigte Urlaubsanträge und Urlaub, den der Azubi in einem eingereichten Bericht unter „Abwesenheit“ eingetragen hat. Gestreift mit gestricheltem Rand ist beantragter Urlaub, über den noch nicht entschieden ist. Andere Abwesenheit erscheint im Jahreskalender nicht.</Begriff>
           <Begriff wort="Rote Linie mit Raute">Prüfungstermin.</Begriff>
           <Begriff wort="Türkiser Strich ganz unten">Schulferien (nach dem Bundesland der Berufsschule).</Begriff>
           <Begriff wort="Schraffiert">Der Azubi ist in dieser Zeit nicht in der Ausbildung.</Begriff>

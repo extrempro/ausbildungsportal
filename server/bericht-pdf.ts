@@ -32,7 +32,7 @@ export interface HeftAngaben {
 const RAND = 48;
 const BREITE = A4.breite - 2 * RAND;
 const UNTEN = A4.hoehe - 56;
-const GRUND_TEXT: Record<string, string> = { urlaub: 'Urlaub', krank: 'Krank', feiertag: 'Feiertag', sonstiges: 'Sonstiges' };
+const GRUND_TEXT: Record<string, string> = { urlaub: 'Urlaub', feiertag: 'Feiertag', abwesend: 'Abwesend' };
 const ABSCHNITTE = [
   { schluessel: 'betrieb', titel: 'Betriebliche Tätigkeiten' },
   { schluessel: 'unterweisung', titel: 'Unterweisungen und Schulungen' },

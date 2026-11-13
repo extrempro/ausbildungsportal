@@ -375,7 +375,8 @@ function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAen
           </legend>
           {t.abwesend.map((a, i) => (
             <p key={i} className="bericht-tag-abwesend klein">
-              <strong>Abwesend:</strong> {GRUND_TEXT[a.grund]}
+              <strong>Abwesend</strong>
+              {a.grund !== 'abwesend' && `: ${GRUND_TEXT[a.grund]}`}
               {a.text ? ` (${a.text})` : ''} · {std(a.stunden)} <span className="leise">– ändern unten bei „Abwesenheit“</span>
             </p>
           ))}
@@ -432,7 +433,7 @@ function AbwesenheitListe({ nr, montag, tagSoll, liste, onAendern }: { nr: numbe
   return (
     <fieldset className="abschnitt karte teil abwesenheit">
       <TeilKopf nr={nr} titel="Abwesenheit" stunden={liste.reduce((n, a) => n + (Number(a.stunden) || 0), 0)} />
-      <p className="leise klein abschnitt-hilfe">Urlaub, krank oder Feiertag? Trag jeden Tag einzeln ein. Die Stunden für einen ganzen Tag ({std(tagSoll)}) stehen schon drin.</p>
+      <p className="leise klein abschnitt-hilfe">Urlaub, Feiertag oder anders abwesend? Trag jeden Tag einzeln ein; warst du krank, wähle „Abwesend“. Die Stunden für einen ganzen Tag ({std(tagSoll)}) stehen schon drin.</p>
       {liste.map((a, i) => (
         <div className="bericht-zeile abwesend" key={i}>
           <span className="bericht-zeile-nr" aria-hidden="true">
@@ -464,7 +465,7 @@ function AbwesenheitListe({ nr, montag, tagSoll, liste, onAendern }: { nr: numbe
           </label>
           <label className="bericht-hinweis">
             <span className="klein">Hinweis (freiwillig)</span>
-            <input value={a.text} maxLength={200} onChange={(ev) => setze(i, { text: ev.target.value })} />
+            <input value={a.text} maxLength={200} placeholder="nichts zu Gesundheit oder Privatem" onChange={(ev) => setze(i, { text: ev.target.value })} />
           </label>
           <button type="button" className="knopf schlicht klein bericht-weg" aria-label={`Abwesenheit ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
             Entfernen
@@ -708,7 +709,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
               <TeilZu
                 nr={abwNr}
                 titel="Abwesenheit"
-                frage="Urlaub, krank oder Feiertag in dieser Woche?"
+                frage="Urlaub, Feiertag oder anders abwesend in dieser Woche?"
                 knopf="Eintragen"
                 onAuf={() => {
                   setAuf(new Set(auf).add('abwesenheit'));

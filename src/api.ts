@@ -361,7 +361,7 @@ export function standText(s: Pick<Stand, 'phase' | 'ausbildungsjahr' | 'beginn' 
 // ---------- Berichtsheft ----------
 
 export type BerichtStatus = 'fehlt' | 'entwurf' | 'eingereicht' | 'zurueck' | 'abgezeichnet';
-export type Grund = 'urlaub' | 'krank' | 'feiertag' | 'sonstiges';
+export type Grund = 'urlaub' | 'feiertag' | 'abwesend';
 
 export interface BerichtEintrag {
   text: string;
@@ -466,7 +466,7 @@ export const STATUS_FARBE: Record<BerichtStatus, string> = {
   abgezeichnet: 'gruen',
 };
 
-export const GRUND_TEXT: Record<Grund, string> = { urlaub: 'Urlaub', krank: 'Krank', feiertag: 'Feiertag', sonstiges: 'Sonstiges' };
+export const GRUND_TEXT: Record<Grund, string> = { urlaub: 'Urlaub', feiertag: 'Feiertag', abwesend: 'Abwesend' };
 
 /** Stunden mit Komma: 7,5 statt 7.5 */
 export function h(n: number): string {
