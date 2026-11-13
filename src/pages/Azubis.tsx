@@ -21,8 +21,8 @@ export function Azubis({ ich }: { ich: Konto }) {
     <>
       <h1>Azubis</h1>
       <p className="leise">
-        {ich.rolle !== 'ausbilder' ? 'Die Auszubildenden, die dir zugewiesen sind.' : ich.alleAzubis ? 'Alle Auszubildenden des Betriebs.' : 'Die Auszubildenden, für die du zuständig bist oder die du vertrittst – und alle, die noch keinen Ausbilder haben.'} Je Azubi siehst du den Stand der Ausbildung und der Berichte; darunter geht es direkt zu Profil, Ausbildungsplan und
-        Berichtsheft.{' '}
+        {ich.rolle !== 'ausbilder' ? 'Die Auszubildenden, die dir zugewiesen sind.' : ich.alleAzubis ? 'Alle Auszubildenden des Betriebs.' : 'Die Auszubildenden, für die du zuständig bist oder die du vertrittst – und alle, die noch keinen Ausbilder haben.'} Je Azubi siehst du den Stand der Ausbildung und der Berichte; darunter geht es direkt zu Profil, Ausbildungsplan,
+        Berichtsheft und Urlaub.{' '}
         <HandbuchLink kapitel={ich.rolle === 'ausbilder' ? 'zustaendig' : 'aufgabe'}>{ich.rolle === 'ausbilder' ? 'Meine Azubis, Übernehmen, Vertretung' : 'Deine Aufgaben'}</HandbuchLink>
       </p>
       {fehler && (

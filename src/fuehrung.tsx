@@ -82,7 +82,7 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
   { titel: 'Was ist zu tun?', text: 'Die Kacheln zeigen, wie viele Berichte auf deine Unterschrift und wie viele Urlaubsanträge auf dich warten, und führen direkt dorthin.', pfad: '/', ziel: ['.kacheln'] },
   {
     titel: rolle === 'ausbilder' ? 'Deine Azubis' : 'Die dir zugewiesenen Azubis',
-    text: 'Jede Karte zeigt den Stand der Ausbildung und der Berichte. Darunter geht es zu Profil, Ausbildungsplan und Berichtsheft.',
+    text: 'Jede Karte zeigt den Stand der Ausbildung und der Berichte. Darunter geht es zu Profil, Ausbildungsplan, Berichtsheft und Urlaub – dieselben Reiter stehen oben auf jeder Seite des Azubis.',
     pfad: '/',
     // gibt es (noch) keine Karte, wird der ganze Bereich „Azubis“ gezeigt – nicht die Begrüßung
     ziel: ['.start-azubis .azubi-karte', '.start-azubis'],

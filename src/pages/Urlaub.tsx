@@ -6,6 +6,7 @@ import type { Konto, UrlaubAntrag, UrlaubKonto, UrlaubStatus } from '../api';
 import { Ladefehler, melde, rueckfrage } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { Link, useUngespeichert } from '../router';
+import { AzubiReiter, ZurueckZuAzubis } from '../azubiReiter';
 
 /**
  * Urlaub beantragen und entscheiden.
@@ -428,12 +429,9 @@ export function UrlaubAzubi({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      {!d.eigenes && (
-        <p className="klein">
-          <Link zu="/urlaub">← Alle Urlaubsanträge</Link>
-        </p>
-      )}
+      {!d.eigenes && <ZurueckZuAzubis />}
       <h1>{d.eigenes ? 'Urlaub' : `Urlaub von ${d.azubi.anzeigename}`}</h1>
+      {!d.eigenes && <AzubiReiter id={azubiId} name={d.azubi.anzeigename} />}
       <p className="leise">
         {d.eigenes
           ? 'Hier beantragst du Urlaub. Erst bestätigen deine Ausbildungsbeauftragten, dann genehmigt dein Ausbilder. Genehmigter Urlaub steht von selbst im Jahreskalender und im Berichtsheft.'

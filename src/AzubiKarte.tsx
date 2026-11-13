@@ -73,11 +73,16 @@ export function AzubiKarte({ a }: { a: AzubiKurz }) {
         </Link>
         <Link zu={`/azubis/${a.id}/plan`}>
           <Icon name="plan" groesse={18} />
-          Ausbildungsplan
+          {/* in der schmalen Karte die Kurzform – wie „Plan“ in der Leiste unten */}
+          Plan
         </Link>
         <Link zu={`/azubis/${a.id}/berichtsheft`}>
           <Icon name="heft" groesse={18} />
           Berichtsheft
+        </Link>
+        <Link zu={`/azubis/${a.id}/urlaub`}>
+          <Icon name="urlaub" groesse={18} />
+          Urlaub
         </Link>
       </nav>
     </li>

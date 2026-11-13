@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.61.0] – 2026-11-13
+
+### Geändert
+
+- **Ein Azubi (Ausbilder und Beauftragte):** Profil, Ausbildungsplan, Berichtsheft und Urlaub eines Azubis haben oben dieselben Reiter. So wechselst du direkt vom Plan zum Berichtsheft desselben Azubis. Der Zurück-Link führt überall zu „Alle Azubis“. Die Knöpfe im Profil sind dafür weggefallen, und die Karten unter „Azubis“ haben jetzt auch den Weg zum Urlaub.
+- **Ausbildungsplan:**
+  - Am PC heißt die Leiste links „Inhalt“ und lässt sich wie im Lernmodul einklappen; dann bleiben die Jahre als Nummern.
+  - Unter 1024 px steht oben die Zeile „Inhalt“. Sie bleibt beim Rollen stehen, zeigt Jahr und KW und führt zu den Jahren, zu „Diese Woche“ und zu den Abteilungen. Dort steht unter „Farben“ auch die Legende.
+  - Die Knöpfe „1. Jahr · 2. Jahr · Diese Woche“ und der aufklappbare Kasten „Abteilungen“ sind darin aufgegangen.
+- **Symbole:** „Planung“ und „Verwaltung“ haben eigene Symbole statt der von „Sammelplanung“ und „Stammdaten“. „Rückmeldungen“ hat beim Super-Admin jetzt die zwei Daumen wie überall.
+- **Super-Admin am Handy:** In der Leiste unten stehen „Konten · Protokoll · Meldungen · Lerninhalte“. „Erscheinungsbild“ steht unter „Mehr“, mit vollem Namen statt „Logo“.
+
 ## [0.60.0] – 2026-11-13
 
 ### Geändert

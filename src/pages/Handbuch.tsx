@@ -489,7 +489,7 @@ const AZUBI: Kapitel[] = [
         <dl className="begriffe">
           <Begriff wort="Berufsschule">Du bist in der Schule. Die Woche hat links einen violetten Streifen.</Begriff>
           <Begriff wort="Einsatz">In dieser Abteilung oder an diesem Ort arbeitest du. Dabei steht oft, wer für dich zuständig ist.</Begriff>
-          <Begriff wort="Neue Abteilung">Beginnt ein Einsatz in einer Abteilung, steht darüber ein gelber Streifen. Die Karte zeigt deine Ansprechpersonen dort – die Stellvertretung hat einen hellen Kreis – und in welcher Woche des Einsatzes du bist. Links (am Handy unter „Abteilungen“) siehst du alle Abteilungen der Reihe nach.</Begriff>
+          <Begriff wort="Neue Abteilung">Beginnt ein Einsatz in einer Abteilung, steht darüber ein gelber Streifen. Die Karte zeigt deine Ansprechpersonen dort – die Stellvertretung hat einen hellen Kreis – und in welcher Woche des Einsatzes du bist. Unter „Inhalt“ (am PC links, am Handy in der Zeile oben) siehst du alle Abteilungen der Reihe nach.</Begriff>
           <Begriff wort="Aufgabe">Etwas, das du erledigen sollst. Wenn du fertig bist, setzt du den Haken.</Begriff>
           <Begriff wort="Notiz">Ein Hinweis ohne Haken.</Begriff>
           <Begriff wort="Termin">Ein einzelner Tag, den du selbst eingetragen hast – mit Datum und, wenn du willst, Uhrzeit.</Begriff>
@@ -504,6 +504,9 @@ const AZUBI: Kapitel[] = [
           <strong>Termine:</strong> Einzelne Tage wie eine JAV-Sitzung trägst du als Termin ein. Mehr dazu im Kapitel „Eigene Termine eintragen“.
         </p>
         <p>Was dein Ausbilder oder deine Ausbildungsbeauftragten eingetragen haben, kannst du nicht ändern – nur abhaken.</p>
+        <p>
+          <strong>Inhalt:</strong> Am PC steht links, wo du gerade liest, wie weit deine Ausbildung ist und je Ausbildungsjahr ein Band aller Wochen – ein Klick springt hin. Mit dem kleinen Knopf neben „Inhalt“ klappst du die Leiste ein; dann bleiben nur die Jahre als Nummern. Am Handy steht oben die Zeile „Inhalt“: Sie bleibt beim Rollen stehen und zeigt Jahr und KW. Aufgeklappt springst du zu einem Jahr oder zu „Diese Woche“, siehst die Abteilungen und unter „Farben“, was die Farben bedeuten.
+        </p>
       </>
     ),
   },
@@ -1081,7 +1084,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     inhalt: (
       <>
         <p>
-          Über <Link zu="/azubis">Azubis</Link> den Azubi öffnen, dann „Ausbildungsplan“. Oben stehen diese und die nächste Woche, links die Übersicht über die Ausbildungsjahre, rechts alle Kalenderwochen.
+          Über <Link zu="/azubis">Azubis</Link> den Azubi öffnen, dann den Reiter „Ausbildungsplan“. Oben stehen diese und die nächste Woche, links unter „Inhalt“ die Übersicht über die Ausbildungsjahre (am Handy die Zeile „Inhalt“ oben), rechts alle Kalenderwochen.
         </p>
         <h3>Gut zu wissen</h3>
         {rolle === 'ausbilder' ? (
@@ -1945,7 +1948,7 @@ const ADMIN: Kapitel[] = [
     inhalt: (
       <>
         <p>
-          Ausbilder reichen Lerninhalte für das Lernmodul als ZIP-Datei ein. Unter <Link zu="/verwaltung/lerninhalte">Lerninhalte</Link> (am Handy unter „Mehr“) stehen oben die Einreichungen, die auf dich warten; eine Zahl am Menüpunkt zeigt, wie viele es sind. Was erledigt ist, steht darunter zugeklappt im „Verlauf“ – eine Zeile je Schritt.
+          Ausbilder reichen Lerninhalte für das Lernmodul als ZIP-Datei ein. Unter <Link zu="/verwaltung/lerninhalte">Lerninhalte</Link> stehen oben die Einreichungen, die auf dich warten; eine Zahl am Menüpunkt zeigt, wie viele es sind. Was erledigt ist, steht darunter zugeklappt im „Verlauf“ – eine Zeile je Schritt.
         </p>
         <h3>Begriffe</h3>
         <dl className="begriffe">
@@ -2000,7 +2003,7 @@ const ADMIN: Kapitel[] = [
     gruppe: 'Verwaltung',
     inhalt: (
       <p>
-        Unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> hinterlegst du das Logo des Betriebs (PNG, JPEG oder WebP, höchstens 150 KB) – eines für die helle und, wenn du möchtest, eines für die dunkle Darstellung. Es steht in der Kopfzeile und auf der Anmeldeseite; „Ausbildungsportal“ bleibt klein daneben stehen.
+        Unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> (am Handy unter „Mehr“) hinterlegst du das Logo des Betriebs (PNG, JPEG oder WebP, höchstens 150 KB) – eines für die helle und, wenn du möchtest, eines für die dunkle Darstellung. Es steht in der Kopfzeile und auf der Anmeldeseite; „Ausbildungsportal“ bleibt klein daneben stehen.
       </p>
     ),
   },

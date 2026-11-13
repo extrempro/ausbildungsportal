@@ -397,9 +397,10 @@ export function App() {
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/protokoll', text: 'Protokoll', icon: 'protokoll' },
-          { zu: '/verwaltung/meldungen', text: 'Rückmeldungen', kurz: 'Meldungen', icon: 'kaefer', zahl: offeneMeldungen },
-          { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', kurz: 'Logo', icon: 'bild' },
-          { zu: '/verwaltung/lerninhalte', text: 'Lerninhalte', icon: 'lernen', mehr: true, zahl: offeneEinreichungen },
+          { zu: '/verwaltung/meldungen', text: 'Rückmeldungen', kurz: 'Meldungen', icon: 'ruf', zahl: offeneMeldungen },
+          { zu: '/verwaltung/lerninhalte', text: 'Lerninhalte', icon: 'lernen', zahl: offeneEinreichungen },
+          // selten gebraucht – am Handy unter „Mehr“
+          { zu: '/verwaltung/erscheinungsbild', text: 'Erscheinungsbild', icon: 'bild', mehr: true },
         ]
       : konto.rolle === 'azubi'
         ? [
@@ -560,7 +561,7 @@ export function App() {
               <div className="menue" key={g.id}>
                 <button type="button" className={`menue-knopf${inGruppe(g) ? ' aktiv' : ''}`} aria-expanded={menue === g.id} aria-controls={`menue-${g.id}`} onClick={() => schalte(g.id)}>
                   <span className="nav-symbol" aria-hidden="true">
-                    <Icon name={g.id === 'planung' ? 'sammel' : 'stammdaten'} groesse={20} />
+                    <Icon name={g.id} groesse={20} />
                   </span>
                   <span className="nav-text">
                     {g.text}
