@@ -560,7 +560,7 @@ export function App() {
               setMelden(true);
             }}
           >
-            <Icon name="ruf" />
+            <Icon name="ruf" groesse={30} />
           </button>
           {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
           </div>

@@ -96,7 +96,7 @@ export function Rueckmeldungen({ onGeaendert }: { onGeaendert: (offen: number) =
     <>
       <h1>Rückmeldungen</h1>
       <p className="leise">
-        Was über „Rückmeldung geben“ (der Zettel mit Stift oben neben der Glocke) für euch Ausbilder angekommen ist. <HandbuchLink kapitel="rueckmeldungen">Rückmeldungen lesen</HandbuchLink>
+        Was über „Rückmeldung geben“ (das Symbol mit den zwei Gesichtern oben neben der Glocke) für euch Ausbilder angekommen ist. <HandbuchLink kapitel="rueckmeldungen">Rückmeldungen lesen</HandbuchLink>
       </p>
       {fehler && (
         <p className="hinweis fehler" role="alert">

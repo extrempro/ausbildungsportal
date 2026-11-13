@@ -32,8 +32,8 @@ const PFADE = {
   haken: 'M5 12.5l4.5 4.5L19 7.5',
   urlaub: 'M4 8.5h16V19H4zM9 8.5V5.5h6v3M4 13h16M12 12v2',
   glocke: 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2.2 2.2 0 0 0 4 0',
-  // Rückmeldung geben: ein beschriebener Zettel mit Stift – selbst gezeichnet
-  ruf: 'M12.5 5H5.5A1.5 1.5 0 0 0 4 6.5v12A1.5 1.5 0 0 0 5.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13M7.5 10h2.5M7.5 13.5h2.5M7.5 17h7M18.2 3.3l2.5 2.5-6.2 6.2-3 .5.5-3z',
+  // Rückmeldung geben: ein frohes und ein trauriges Gesicht – selbst gezeichnet (für 24 px gedacht)
+  ruf: 'M6.6 16.6a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2zM4.9 12.9a2 2 0 0 0 3.4 0M5.2 10.7h.01M8 10.7h.01M17.4 16.6a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2zM15.7 14a2 2 0 0 1 3.4 0M16 10.7h.01M18.8 10.7h.01',
 } as const;
 
 export type IconName = keyof typeof PFADE;
