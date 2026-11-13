@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.57.0] – 2026-11-13
+
+### Neu
+
+- **Glocke „Lerninhalte aktualisiert“:** Kommt eine neue Fassung der Lerninhalte ins Portal (hochgeladen oder als Ordner geändert), bekommen alle Azubis des Berufs einen Eintrag in der Glocke – mit der Zahl der geänderten Abschnitte und den Themenfeldern. Beim Paket für alle Berufe bekommen ihn alle Azubis („Anleitungen aktualisiert“).
+  - Nur in der Glocke, **nicht per Teams oder E-Mail** – Lerninhalte werden oft nachgebessert.
+  - Ausbilder und Ausbildungsbeauftragte sehen diese Einträge nicht.
+  - Änderungen mit `<!-- kein-hinweis -->` (Tippfehler, Formulierung) lösen nichts aus, ebenso umbenannte Abschnitte mit gleichem Inhalt.
+  - Beim ersten Einlesen eines Pakets merkt sich das Portal nur den Stand.
+
 ## [0.56.2] – 2026-11-13
 
 ### Behoben

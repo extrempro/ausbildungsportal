@@ -78,6 +78,9 @@ const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
   urlaub_zurueckgezogen: ['Dein Urlaubsantrag wurde zurückgezogen.', '{n} deiner Urlaubsanträge wurden zurückgezogen.', 'Ein Urlaubsantrag wurde zurückgezogen.', '{n} Urlaubsanträge wurden zurückgezogen.'],
   planer_frei: ['Für dich ist ein Planer für deine Prüfung freigeschaltet. Du findest ihn im Menü.', 'Für dich ist ein Planer für deine Prüfung freigeschaltet. Du findest ihn im Menü.', 'Für einen Azubi wurde der Planer für die Prüfung freigeschaltet.', 'Für {n} Azubis wurde der Planer für die Prüfung freigeschaltet.'],
   planer_termine: ['Du hast Termine in deinem Planer geändert.', 'Du hast Termine in deinem Planer geändert.', 'Ein Azubi hat Termine für seine Prüfung eingetragen oder geändert. Sie stehen im Ausbildungsplan.', 'Azubis haben Termine für ihre Prüfung eingetragen oder geändert. Sie stehen im Ausbildungsplan.'],
+  // gehen nie per Teams oder E-Mail hinaus (merkeLernAktualisierung stellt nichts ein) – nur der Vollständigkeit halber
+  lernen_aktualisiert: ['Deine Lerninhalte wurden aktualisiert.', 'Deine Lerninhalte wurden aktualisiert.', '', ''],
+  anleitungen_aktualisiert: ['Die Anleitungen für alle Berufe wurden aktualisiert.', 'Die Anleitungen für alle Berufe wurden aktualisiert.', '', ''],
   urlaub_storniert: ['Dein genehmigter Urlaub wurde storniert.', '{n} deiner genehmigten Urlaube wurden storniert.', 'Ein genehmigter Urlaub wurde storniert.', '{n} genehmigte Urlaube wurden storniert.'],
 };
 

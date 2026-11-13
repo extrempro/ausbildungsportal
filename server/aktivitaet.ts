@@ -25,7 +25,10 @@ export type AktivitaetArt =
   | 'urlaub_storniert'
   // Planer für das Prüfungsvorhaben: freigeschaltet (durch den Ausbilder) bzw. Termine geändert (durch den Azubi)
   | 'planer_frei'
-  | 'planer_termine';
+  | 'planer_termine'
+  // Lerninhalte des Berufs bzw. die Anleitungen für alle Berufe wurden aktualisiert – nur für den Azubi selbst, nur in der Glocke
+  | 'lernen_aktualisiert'
+  | 'anleitungen_aktualisiert';
 
 const AUFBEWAHRUNG_TAGE = 60;
 /** so viele Aktivitäten werden höchstens gelesen und zusammengefasst */
@@ -33,6 +36,17 @@ const MAX_GELESEN = 300;
 /** so viele Zeilen zeigt die Glocke höchstens */
 const MAX_GRUPPEN = 30;
 const MAX_TITEL = 3;
+
+/**
+ * Lerninhalte wurden aktualisiert: ein Eintrag je Azubi, ohne handelnde Person und ohne Teams/E-Mail
+ * (das wurde so entschieden – Inhalte werden oft nachgebessert). Betreuende sehen den Eintrag nicht.
+ */
+export function merkeLernAktualisierung(db: DB, jetzt: Date, art: 'lernen_aktualisiert' | 'anleitungen_aktualisiert', azubiIds: number[], titel: string, anzahl: number): void {
+  const grenze = new Date(jetzt.getTime() - AUFBEWAHRUNG_TAGE * 86_400_000).toISOString();
+  db.prepare('DELETE FROM aktivitaet WHERE zeit < ?').run(grenze);
+  const neu = db.prepare("INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl) VALUES (?, ?, NULL, '', ?, NULL, ?, ?)");
+  for (const id of azubiIds) neu.run(jetzt.toISOString(), id, art, titel.slice(0, 200), anzahl);
+}
 
 export function merkeAktivitaet(
   db: DB,
@@ -102,9 +116,10 @@ function sichtbar(db: DB, wer: BenutzerZeile, tag: string): Zeile[] {
     .prepare(
       `SELECT a.*, b.anzeigename AS azubi_name FROM aktivitaet a JOIN benutzer b ON b.id = a.azubi_id
         WHERE a.azubi_id IN (${ids.map(() => '?').join(',')}) AND (a.akteur_id IS NULL OR a.akteur_id <> ?)
+          AND (a.art NOT IN ('lernen_aktualisiert', 'anleitungen_aktualisiert') OR a.azubi_id = ?)
         ORDER BY a.id DESC LIMIT ?`,
     )
-    .all(...ids, wer.id, MAX_GELESEN) as unknown as Zeile[];
+    .all(...ids, wer.id, wer.id, MAX_GELESEN) as unknown as Zeile[];
 }
 
 /**

@@ -256,6 +256,40 @@ test('Geänderte Inhalte: Hinweis „Inhalt aktualisiert“, bis der Azubi ihn b
   assert.equal((await erstes())[0].inhaltAktualisiert, false);
 });
 
+test('Geänderte Inhalte: Glocke für alle Azubis des Berufs – nicht für andere, nicht bei „kein-hinweis“, nicht beim ersten Einlesen', async () => {
+  const w = await welt();
+  const glocke = async (wer: BenutzerZeile) => (koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: als(w, wer) })).gruppen as any[]).filter((g) => g.art.endsWith('_aktualisiert'));
+  // erstes Einlesen: nur der Stand wird gemerkt
+  assert.equal((await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.anna) })).status, 200);
+  assert.deepEqual(await glocke(w.anna), []);
+  assert.ok((w.u.db.prepare("SELECT COUNT(*) AS n FROM lern_paket_stand WHERE paket = 'fisi'").get() as { n: number }).n > 0);
+
+  const p = join(w.dir, 'fisi');
+  const aendere = (text: string) => {
+    writeFileSync(join(p, 'themen', 'netz.md'), text);
+    const spaeter = new Date(Date.now() + 120_000 + Math.random() * 60_000);
+    utimesSync(join(p, 'themen', 'netz.md'), spaeter, spaeter);
+    vergissLernpakete();
+  };
+  // ein Unterthema geändert, eins nur umbenannt (gleicher Inhalt)
+  aendere(NETZ.replace('Blockgröße = 256', 'Die Blockgröße ist 256').replace('{#vlan}', '{#vlans}'));
+  writeFileSync(join(p, 'umbenennungen.json'), JSON.stringify({ 'netz.vlan': 'netz.vlans' }));
+  await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.anna) });
+  for (const a of [w.anna, w.ben]) {
+    const g = await glocke(a);
+    assert.deepEqual(g.map((x) => [x.art, x.anzahl, x.titel[0], x.akteurName]), [['lernen_aktualisiert', 1, '„Netzwerkgrundlagen“', '']]);
+  }
+  assert.deepEqual(await glocke(w.maler), [], 'anderer Beruf');
+  assert.deepEqual(await glocke(w.ausbilder), [], 'Betreuende sehen das nicht');
+  assert.deepEqual(await glocke(w.bea), []);
+  assert.equal((w.u.db.prepare('SELECT COUNT(*) AS n FROM benachrichtigung_warte').get() as { n: number }).n, 0, 'nichts für Teams oder E-Mail');
+
+  // reine Korrektur mit <!-- kein-hinweis -->: kein neuer Eintrag
+  aendere(NETZ.replace('Blockgröße = 256', 'Die Blockgröße beträgt 256').replace('{#vlan}', '{#vlans}').replace('## Subnetting {#subnetting}\n', '## Subnetting {#subnetting}\n\n<!-- kein-hinweis -->\n'));
+  await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.anna) });
+  assert.equal((await glocke(w.anna))[0].anzahl, 1, 'kein weiterer Abschnitt');
+});
+
 test('Ohne Ordner oder mit kaputtem Paket startet das Portal trotzdem', async () => {
   vergissLernpakete();
   const u = await umgebung({ LERN_DIR: join(tmpdir(), 'gibt-es-nicht-' + Date.now()) });
