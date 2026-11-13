@@ -117,12 +117,12 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
           pfad: '/',
           ziel: ['button[aria-controls="menue-planung"]', '.tabs button'],
         },
-        { titel: 'Verwaltung', text: 'Konten anlegen und Stammdaten pflegen (Betrieb, Berufe, Berufsschulen, Abteilungen, Firmentermine) – unter „Verwaltung“ bzw. „Mehr“.', pfad: '/', ziel: ['button[aria-controls="menue-verwaltung"]', '.tabs button'] },
+        { titel: 'Verwaltung', text: 'Konten anlegen, Stammdaten pflegen (Betrieb, Berufe, Berufsschulen, Abteilungen, Firmentermine) und die Rückmeldungen lesen – unter „Verwaltung“ bzw. „Mehr“. Eine Zahl am Knopf zeigt, dass darin etwas offen ist.', pfad: '/', ziel: ['button[aria-controls="menue-verwaltung"]', '.tabs button'] },
       ]
     : []),
   RUECK(
     rolle === 'ausbilder'
-      ? 'Über die zwei Daumen oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Was Azubis an den Lerninhalten besser erklärt haben möchten, liest du unter „Planung“ → „Rückmeldungen“.'
+      ? 'Über die zwei Daumen oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Was Azubis an den Lerninhalten besser erklärt haben möchten, liest du unter „Verwaltung“ → „Rückmeldungen“.'
       : 'Über die zwei Daumen oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Das geht von jeder Seite aus.',
   ),
   ENDE,

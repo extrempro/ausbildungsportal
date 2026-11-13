@@ -425,6 +425,7 @@ export function App() {
       ? [
           { zu: '/verwaltung/konten', text: 'Konten', icon: 'konten' },
           { zu: '/verwaltung/stammdaten', text: 'Stammdaten', icon: 'stammdaten' },
+          { zu: '/rueckmeldungen', text: 'Rückmeldungen', icon: 'ruf', zahl: offeneWuensche },
         ]
       : [];
   const persoenlich: Punkt[] = [
@@ -439,7 +440,6 @@ export function App() {
           { zu: '/planung/sammelplanung', text: 'Sammelplanung', icon: 'sammel' },
           { zu: '/planung/bausteine', text: 'Planbausteine', icon: 'baustein' },
           { zu: '/lerninhalte', text: 'Lerninhalte', icon: 'lernen', aktivAb: '/lerninhalte' },
-          { zu: '/rueckmeldungen', text: 'Rückmeldungen', icon: 'ruf', zahl: offeneWuensche },
         ]
       : [];
   const gruppen: { id: 'planung' | 'verwaltung'; text: string; punkte: Punkt[] }[] = [
@@ -451,6 +451,15 @@ export function App() {
   const inMehr = gruppen.some(inGruppe) || persoenlich.some((p) => p.zu === pfad) || hauptMehr.some((p) => p.zu === pfad || (!!p.aktivAb && pfad.startsWith(`${p.aktivAb}/`)));
   const logo = logoFuer(logos, dunkel);
   const schalte = (m: Menue) => setMenue((alt) => (alt === m ? null : m));
+  // Was in einem Menü offen ist, zeigt der Knopf davor als Summe – sonst merkt man es erst beim Aufklappen
+  const summe = (punkte: Punkt[]) => punkte.reduce((n, p) => n + (p.zahl ?? 0), 0);
+  const zahlKnopf = (n: number) =>
+    n > 0 && (
+      <span className="nav-zahl" aria-label={`${n} offen`}>
+        {n}
+      </span>
+    );
+  const mehrZahl = summe(hauptMehr) + gruppen.reduce((n, g) => n + summe(g.punkte), 0);
 
   const liste = (punkte: Punkt[]) =>
     punkte.map((p) => (
@@ -458,6 +467,11 @@ export function App() {
         <Link zu={p.zu} aktivAb={p.aktivAb} auch={p.auch}>
           <Icon name={p.icon} />
           {p.text}
+          {!!p.zahl && (
+            <span className="nav-zahl" aria-label={`${p.zahl} offen`}>
+              {p.zahl}
+            </span>
+          )}
         </Link>
       </li>
     ));
@@ -552,6 +566,7 @@ export function App() {
                     {g.text}
                     <Icon name="unten" groesse={14} />
                   </span>
+                  {zahlKnopf(summe(g.punkte))}
                 </button>
                 {menue === g.id && (
                   <ul id={`menue-${g.id}`} className="menue-flaeche">
@@ -671,6 +686,7 @@ export function App() {
         <button type="button" className={inMehr ? 'aktiv' : undefined} aria-expanded={menue === 'mehr'} aria-controls="menue-mehr" onClick={() => schalte('mehr')}>
           <Icon name="mehr" groesse={22} />
           <span>Mehr</span>
+          {zahlKnopf(mehrZahl)}
         </button>
       </nav>
       {menue === 'mehr' && (

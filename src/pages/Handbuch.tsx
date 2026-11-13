@@ -192,7 +192,7 @@ const BEDIENUNG: Kapitel = {
           <strong>Volle Breite:</strong> Auf einem großen Bildschirm nutzt das Portal sonst nur die Mitte. Im Menü an deinem Namen schaltest du „Volle Breite“ ein – dann geht jede Seite über das ganze Fenster. Dein Browser merkt sich das. Auf Lernseiten und im Handbuch steht der Knopf auch oben neben der Überschrift. Bei kleinen Fenstern gibt es ihn nicht, da ist die Seite ohnehin voll.
         </li>
         <li>
-          <strong>Navigation einklappen:</strong> Am PC steht im Lernmodul und hier im Handbuch links eine Navigation. Mit dem kleinen Knopf oben rechts darin klappst du sie zu einer schmalen Leiste ein, dann hat der Text mehr Platz. Im Lernmodul stehen in der Leiste die Themenfelder als Nummern (mit dem Punkt der Ampel); zeigst du mit der Maus darauf, erscheint der Name. Im Handbuch bringt dich die Lupe direkt zur Suche. Derselbe Knopf klappt die Navigation wieder aus; dein Browser merkt sich, wie du es eingestellt hast.
+          <strong>Navigation einklappen:</strong> Am PC steht im Lernmodul und hier im Handbuch links eine Navigation. Mit dem kleinen Knopf oben rechts neben „Inhalt“ klappst du sie zu einer schmalen Leiste ein, dann hat der Text mehr Platz. Im Lernmodul stehen in der Leiste die Themenfelder als Nummern (mit dem Punkt der Ampel); zeigst du mit der Maus darauf, erscheint der Name. Im Handbuch bringt dich die Lupe direkt zur Suche. Derselbe Knopf klappt die Navigation wieder aus; dein Browser merkt sich, wie du es eingestellt hast.
         </li>
         <li>
           <strong>Lesemodus:</strong> Auf Lernseiten, bei den Anleitungen und hier im Handbuch blendet „Lesemodus“ (oben neben der Überschrift) alles aus, was beim Lesen stört – Menü, Inhaltsverzeichnis, Fußzeile. Die Schrift wird etwas größer. Zurück geht es mit „Lesemodus beenden“ oben rechts oder mit Escape. Wechselst du auf eine andere Seite, endet er von selbst.
@@ -1557,7 +1557,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <h3>So geht's</h3>
               <ol className="schritte">
                 <li>
-                  Unter „Planung“ <Link zu="/rueckmeldungen">Rückmeldungen</Link> öffnen. Die Zahl am Menüpunkt zeigt die offenen Wünsche.
+                  Unter „Verwaltung“ (am Handy unter „Mehr“) <Link zu="/rueckmeldungen">Rückmeldungen</Link> öffnen. Die Zahl am Menüpunkt zeigt die offenen Wünsche; sie steht auch am Knopf „Verwaltung“ bzw. „Mehr“.
                 </li>
                 <li>Den Wunsch lesen: Oben steht das Thema, darunter das Lernmodul und der Tag. „Zum Thema springen“ öffnet das Lernmodul genau an dieser Stelle.</li>
                 <li>Die Lerninhalte anpassen und neu einreichen – siehe „Lerninhalte für einen Beruf erstellen“.</li>
@@ -2228,7 +2228,7 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
         ) : breit ? (
           <nav aria-label="Inhalt des Handbuchs" className="karte handbuch-inhalt nicht-drucken">
             <div className="navi-kopf">
-              <h2>Inhalt</h2>
+              <h2>Inhalt und Suche</h2>
               <NaviKnopf was="Inhalt" />
             </div>
             {verzeichnis}

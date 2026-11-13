@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.54.3
+Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.60.0
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md), Farben und Bausteine in [gestaltung.md](gestaltung.md).
 
@@ -16,7 +16,13 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
 - [ ] **Gleiche Felder, gleiche Bausteine:** Plan-Einträge immer über `EintragFelder`. Bevor ein Formular ein zweites Mal entsteht, wird das vorhandene wiederverwendet.
 - [ ] **Aufklappen** sieht überall gleich aus und ist als solches erkennbar: eingeklappt eine leicht blau getönte Fläche ohne Schatten, links der Titel, rechts „Anzeigen“ mit Pfeil, der ganze Kopf reagiert beim Überfahren; aufgeklappt eine weiße Karte mit größerem Titel, „Einklappen“ und einer Linie unter dem Kopf (das ursprüngliche Aussehen von „Was bewirkt was?“) (in `index.css` unter „Einklappen: ein Aussehen für alles“). Drei Bauformen: `details.karte` (eine ganze Karte), `details.klapp` (Kasten innerhalb einer Karte oder eines Fensters; `frei` ohne Rahmen, `schmal` nur mit Pfeil für schmale Spalten) und `.anleitung` (Karte, die sich ihren Zustand merkt). Hilfetexte bekommen vorn `<Icon name="hilfe" />`. Das Wort heißt immer „Einklappen“, nie „Zuklappen“ oder „Schließen“. 
 - [ ] **Erklärungen in Fenstern und Formularen:** höchstens der eine Satz, den man zum Entscheiden braucht (z. B. „Termine siehst nur du.“). Alles Weitere steht im Handbuch und wird mit `<HandbuchLink kapitel="…">` verlinkt (`src/handbuchLink.tsx`; öffnet in neuem Fenster, damit Eingaben stehen bleiben). Jedes Kapitel hat dafür die Sprungmarke `#kapitel-<id>`. Ausnahmen: Was vor dem Absenden gewusst werden muss, steht an Ort und Stelle (z. B. „Das wird automatisch mitgeschickt“ beim Fehler-Melden); Seiten mit vielen Folgen behalten ihre Anleitung als Karte (Berichtsheft, Konten).
-- [ ] **Navigation:** Neue Seiten gehören in eine vorhandene Gruppe (Hauptleiste, „Planung“, „Verwaltung“, Menü am Namen). Zurück-Links nur auf echten Unterseiten (Azubi → Plan, Berichtsheft → Bericht).
+- [ ] **Navigation ist überall gleich** – in jeder Rolle und auf jedem Gerät. Die Punkte stehen nur an einer Stelle, in `src/App.tsx` (`haupt`, `planung`, `verwaltung`, `persoenlich`); PC-Leiste, Leiste unten und „Mehr“ werden daraus gebaut, nie von Hand doppelt gepflegt.
+  1. **Gleich erreichbar:** Was am PC erreichbar ist, ist am Tablet und am Handy genauso erreichbar – höchstens an anderer Stelle („Mehr“ statt Hauptleiste). Der Test `e2e/10-navigation.test.ts` prüft das für jede Rolle.
+  2. **Gleicher Ort für Gleiches:** Neue Seiten gehören in eine vorhandene Gruppe – Hauptleiste (tägliche Arbeit), „Planung“ (Pläne über einzelne Azubis hinaus, Lerninhalte), „Verwaltung“ (Konten, Stammdaten, Rückmeldungen), Menü am Namen (Persönliches). Dieselbe Art Seite steht bei allen Rollen in derselben Gruppe, soweit die Rolle Gruppen hat.
+  3. **Zahlen gehen nicht verloren:** Ein Menüpunkt mit Zahl zeigt sie auch in „Planung“, „Verwaltung“ und „Mehr“; der Knopf davor zeigt die Summe.
+  4. **Eine Grenze:** Unter 1024 px wechselt *alles* zur Darstellung für Tablet und Handy – Leiste unten statt oben, Zeile „Inhalt“ statt Seitenleiste (Lernmodul, Handbuch), Ausbildungsplan ohne Seitenleiste. Keine eigenen Grenzen für einzelne Navigationen.
+  5. **Seiten-Navigation heißt gleich:** „Inhalt“ – am PC als Seitenleiste (einklappbar, siehe `NaviKnopf` in `src/ansicht.tsx`), am Handy als angeheftete Zeile, die zeigt, wo man liest. Mit Suchfeld heißt sie „Inhalt und Suche“. Neue lange Leseseiten bekommen dieselbe Bauform, keine eigene.
+  6. Zurück-Links nur auf echten Unterseiten (Azubi → Plan, Berichtsheft → Bericht, Themenfeld → alle Themenfelder).
 - [ ] **Begriffe:** Bericht (nicht Nachweis), Azubi, Ausbildungsbeauftragte, Planbaustein, Sammelplanung; gegenüber Azubis „Betreiber des Portals“, als Rolle „Super-Admin“. Anrede durchgehend „du“. Kurze Sätze, erklärte Fachwörter – die Leser sind zwischen 16 und 30 Jahre alt.
 - [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px, Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.
 - [ ] **Tastatur:** alles erreichbar, Escape schließt Fenster und Menüs, der Fokus kehrt dorthin zurück, wo er war.

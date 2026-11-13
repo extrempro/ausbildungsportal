@@ -144,14 +144,14 @@ export function LernThema({ id }: { id: string }) {
       {navi &&
         (naviZu ? (
           <aside className="karte lern-navi schmal" aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>
-            <NaviKnopf was={anleitungen ? 'Anleitungen' : 'Themenfelder'} />
+            <NaviKnopf was="Inhalt" />
             <SchmaleNavi felder={felder} id={id} />
           </aside>
         ) : (
           <aside className="karte lern-navi" aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>
             <div className="navi-kopf">
-              <h2>{anleitungen ? 'Anleitungen' : 'Themenfelder'}</h2>
-              <NaviKnopf was={anleitungen ? 'Anleitungen' : 'Themenfelder'} />
+              <h2>Inhalt</h2>
+              <NaviKnopf was="Inhalt" />
             </div>
             {navi}
           </aside>

@@ -49,7 +49,7 @@ test(
     await oeffne(anna, p.url, '/lernen/grundlagen');
     const textbreite = () => anna.evaluate('Math.round(document.querySelector(".lern-haupt").getBoundingClientRect().width)') as Promise<number>;
     const vorher = await textbreite();
-    await anna.click('button[aria-label="Themenfelder einklappen"]');
+    await anna.click('button[aria-label="Inhalt einklappen"]');
     assert.equal(await anna.locator('.lern-navi-nr').count(), 2);
     assert.ok((await textbreite()) > vorher + 150, 'der Text bekommt den Platz');
     await anna.click('.lern-navi-nr >> nth=1');
