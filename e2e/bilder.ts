@@ -183,6 +183,10 @@ async function fuelle(url: string, api: () => Api, g: { petra: number; bea: numb
   await anna.ruf('PUT', '/api/planer/angaben', { name: 'Neues Regalsystem für das Kleinteilelager' });
   await anna.ruf('PUT', '/api/planer/termine', { termine: { abgabe: inTagen(120) } });
   await anna.ruf('PATCH', '/api/planer/haken', { id: 'vorbereitung.thema', an: true });
+  // Rückmeldungen: ein Wunsch zu den Lerninhalten (ohne Person), eine Idee, ein Fehler
+  await anna.ruf('POST', '/api/fehlermeldungen', { art: 'inhalt', thema: 'lernen|grundlagen|ablauf', text: 'Beim Planen der Schritte würde mir ein Beispiel mit einem echten Auftrag helfen.' });
+  await anna.ruf('POST', '/api/fehlermeldungen', { art: 'idee', seite: '/berichtsheft', text: 'Eine Erinnerung am Freitag, wenn der Bericht der Woche noch fehlt, wäre praktisch.' });
+  await bea.ruf('POST', '/api/fehlermeldungen', { art: 'fehler', seite: '/urlaub', fenster: '1280 × 860', technik: '', text: 'Nach dem Bestätigen eines Antrags springt die Liste ganz nach oben.' });
   const begleiter = await anna.ruf('PUT', '/api/begleiter', { an: true, figur: 'fuchs', name: 'Fiete' });
   await anna.ruf('POST', '/api/begleiter/gefeiert', { stufe: begleiter.stufe });
   return { cem, url };
@@ -274,6 +278,26 @@ async function main() {
     });
     await s.keyboard.press('Escape');
     await foto(s, '/konto', 'azubi-12-konto', 'Konto', 'Eigene Angaben, Ausbildungsdaten, Darstellung, Benachrichtigungen, Begleiter, Kalender-Abo und Unterschrift.', { ganz: true });
+    await foto(s, '/lernen/grundlagen', 'azubi-14-rueckmeldung', 'Rückmeldung geben', 'Die zwei Daumen oben in der Leiste: Fehler melden, eine Idee fürs Portal schicken oder – nur Azubis – einen Lerninhalt besser erklärt haben wollen. Im Lernmodul ist das Thema schon gewählt; dieser Wunsch geht ohne Namen an die Ausbilder.', {
+      vorher: async () => {
+        await s.click('button[aria-label="Rückmeldung geben"]');
+        await s.waitForSelector('[role=dialog] .melden-art');
+      },
+    });
+    await s.keyboard.press('Escape');
+    await foto(s, '/lernen/grundlagen', 'azubi-15-navi-eingeklappt', 'Navigation eingeklappt', 'Am PC lässt sich die Navigation links zu einer schmalen Leiste einklappen; die Themenfelder stehen dann als Nummern mit Ampel-Punkt. Der Browser merkt sich das.', {
+      vorher: async () => {
+        await s.click('button[aria-label="Themenfelder einklappen"]');
+      },
+    });
+    await s.click('button[aria-label="Themenfelder ausklappen"]');
+    await foto(s, '/lernen/grundlagen', 'azubi-16-lesemodus', 'Lesemodus', 'Auf Lernseiten und im Handbuch blendet der Lesemodus Menü und Navigation aus; die Schrift wird größer. Beenden mit dem Knopf oben rechts oder mit Escape.', {
+      vorher: async () => {
+        await s.click('.ansicht-knoepfe button:has-text("Lesemodus")');
+        await s.waitForSelector('.lesemodus-ende');
+      },
+    });
+    await s.keyboard.press('Escape');
     await foto(s, '/handbuch', 'azubi-13-handbuch', 'Handbuch', 'Jede Rolle hat ihr eigenes Handbuch mit Inhaltsverzeichnis und Suche.');
     await s.context().close();
 
@@ -295,6 +319,8 @@ async function main() {
     await foto(s, '/urlaub', 'ausbilder-06-urlaub', 'Urlaubsanträge', 'Erst bestätigen die Ausbildungsbeauftragten, dann genehmigt die Ausbilderin.', { ganz: true });
     await foto(s, '/jahreskalender', 'ausbilder-07-jahreskalender', 'Jahreskalender', 'Wer ist wann wo: je Azubi eine Zeile mit Schule, Einsätzen und Urlaub.');
     await foto(s, '/lerninhalte/muster/grundlagen', 'ausbilder-08-lerninhalte', 'Lerninhalte ansehen', 'Ausbilder und Beauftragte sehen die Lerninhalte nur zum Lesen – ohne Ampel, Notizen und Abzeichen der Azubis.');
+    await foto(s, '/lerninhalte', 'ausbilder-11-lerninhalte-verwalten', 'Lerninhalte verwalten', 'Je Lernmodul eine Karte mit Stand und Berufen. Ausbilder reichen neue Fassungen ein; eine andere Ausbilderin prüft sie, bevor sie ins Portal kommen.', { ganz: true });
+    await foto(s, '/rueckmeldungen', 'ausbilder-12-rueckmeldungen', 'Rückmeldungen', 'Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal zum Mitlesen.', { ganz: true });
     await foto(s, '/verwaltung/stammdaten', 'ausbilder-09-stammdaten', 'Stammdaten', 'Betrieb, Berufe, Berufsschulen, Abteilungen und Firmentermine.');
     await foto(s, '/verwaltung/konten', 'ausbilder-10-konten', 'Konten', 'Ausbilder legen Konten für Azubis und Beauftragte an.');
     await s.context().close();
@@ -312,6 +338,7 @@ async function main() {
     s = await p.seite(ADMIN.name, PC);
     await foto(s, '/verwaltung/konten', 'admin-01-konten', 'Konten', 'Der Super-Admin verwaltet Konten. Berichte, Pläne und Urlaub sieht er nicht.');
     await foto(s, '/verwaltung/protokoll', 'admin-02-protokoll', 'Protokoll', 'Anmeldungen und Änderungen – ohne Inhalte von Berichten und Plänen.');
+    await foto(s, '/verwaltung/meldungen', 'admin-04-meldungen', 'Rückmeldungen', 'Fehlermeldungen und Ideen fürs Portal. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.', { ganz: true });
     await foto(s, '/verwaltung/erscheinungsbild', 'admin-03-erscheinungsbild', 'Erscheinungsbild', 'Logo des Betriebs und der Schalter für den Begleiter der Azubis.', { ganz: true });
     await s.context().close();
 
@@ -321,7 +348,12 @@ async function main() {
     await ruhig(s);
     await foto(s, '/', 'handy-01-ausbildungsplan', 'Ausbildungsplan am Handy', 'Die Navigation steht unten, der Kopf des Begleiters oben neben der Glocke.');
     await foto(s, `/berichtsheft/${woche(0)}`, 'handy-02-bericht', 'Bericht schreiben am Handy', 'Dieselben Felder, untereinander.');
-    await foto(s, '/lernen/grundlagen', 'handy-03-lernen', 'Lernen am Handy', 'Cheatsheet mit Ampel.');
+    await foto(s, '/lernen/grundlagen', 'handy-03-lernen', 'Lernen am Handy', 'Cheatsheet mit Ampel. Die Zeile „Inhalt“ bleibt beim Rollen stehen und zeigt, wo man gerade liest.');
+    await foto(s, '/lernen/grundlagen', 'handy-05-lernen-inhalt', 'Inhalt am Handy', 'Aufgeklappt führt „Inhalt“ zu jedem Themenfeld und Unterthema.', {
+      vorher: async () => {
+        await s.click('.lern-navi-klapp summary');
+      },
+    });
     await s.context().close();
     s = await p.seite(PETRA, { ...HANDY, schaerfe: 2 });
     await foto(s, '/abzeichnen', 'handy-04-abzeichnen', 'Abzeichnen am Handy', 'Auch Ausbilder und Beauftragte können alles am Handy erledigen.');
@@ -346,7 +378,7 @@ async function main() {
       '',
       'In den Beispielen meldet sich jeder über eine Entwicklungsanmeldung an (so steht es auch im Protokoll); im Betrieb läuft die Anmeldung über Microsoft.',
       '',
-      'Wer sieht was? Lernstand, Abzeichen, die Eintragungen im Planer und der Begleiter sind privat für den Azubi. Die Bilder der Ausbilderin, der Beauftragten und des Super-Admins zeigen deshalb nichts davon.',
+      'Wer sieht was? Lernstand, Abzeichen, die Eintragungen im Planer und der Begleiter sind privat für den Azubi. Die Bilder der Ausbilderin, der Beauftragten und des Super-Admins zeigen deshalb nichts davon. Wünsche zu den Lerninhalten sind ohne Namen gespeichert.',
       '',
       ...bilder.flatMap((b) => [`## ${b.gruppe}`, '', ...[...b.liste].sort((x, y) => x.datei.localeCompare(y.datei)).flatMap((x) => [`### ${x.titel}`, '', x.text, '', `![${x.titel}](${x.datei})`, ''])]),
     ];

@@ -1,12 +1,12 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.54.2 (erzeugt am 13.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.59.0 (erzeugt am 13.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
 In den Beispielen meldet sich jeder über eine Entwicklungsanmeldung an (so steht es auch im Protokoll); im Betrieb läuft die Anmeldung über Microsoft.
 
-Wer sieht was? Lernstand, Abzeichen, die Eintragungen im Planer und der Begleiter sind privat für den Azubi. Die Bilder der Ausbilderin, der Beauftragten und des Super-Admins zeigen deshalb nichts davon.
+Wer sieht was? Lernstand, Abzeichen, die Eintragungen im Planer und der Begleiter sind privat für den Azubi. Die Bilder der Ausbilderin, der Beauftragten und des Super-Admins zeigen deshalb nichts davon. Wünsche zu den Lerninhalten sind ohne Namen gespeichert.
 
 ## Azubi
 
@@ -88,6 +88,24 @@ Jede Rolle hat ihr eigenes Handbuch mit Inhaltsverzeichnis und Suche.
 
 ![Handbuch](azubi-13-handbuch.png)
 
+### Rückmeldung geben
+
+Die zwei Daumen oben in der Leiste: Fehler melden, eine Idee fürs Portal schicken oder – nur Azubis – einen Lerninhalt besser erklärt haben wollen. Im Lernmodul ist das Thema schon gewählt; dieser Wunsch geht ohne Namen an die Ausbilder.
+
+![Rückmeldung geben](azubi-14-rueckmeldung.png)
+
+### Navigation eingeklappt
+
+Am PC lässt sich die Navigation links zu einer schmalen Leiste einklappen; die Themenfelder stehen dann als Nummern mit Ampel-Punkt. Der Browser merkt sich das.
+
+![Navigation eingeklappt](azubi-15-navi-eingeklappt.png)
+
+### Lesemodus
+
+Auf Lernseiten und im Handbuch blendet der Lesemodus Menü und Navigation aus; die Schrift wird größer. Beenden mit dem Knopf oben rechts oder mit Escape.
+
+![Lesemodus](azubi-16-lesemodus.png)
+
 ## Ausbilderin
 
 ### Startseite
@@ -150,6 +168,18 @@ Ausbilder legen Konten für Azubis und Beauftragte an.
 
 ![Konten](ausbilder-10-konten.png)
 
+### Lerninhalte verwalten
+
+Je Lernmodul eine Karte mit Stand und Berufen. Ausbilder reichen neue Fassungen ein; eine andere Ausbilderin prüft sie, bevor sie ins Portal kommen.
+
+![Lerninhalte verwalten](ausbilder-11-lerninhalte-verwalten.png)
+
+### Rückmeldungen
+
+Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal zum Mitlesen.
+
+![Rückmeldungen](ausbilder-12-rueckmeldungen.png)
+
 ## Ausbildungsbeauftragte
 
 ### Startseite
@@ -184,6 +214,12 @@ Logo des Betriebs und der Schalter für den Begleiter der Azubis.
 
 ![Erscheinungsbild](admin-03-erscheinungsbild.png)
 
+### Rückmeldungen
+
+Fehlermeldungen und Ideen fürs Portal. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.
+
+![Rückmeldungen](admin-04-meldungen.png)
+
 ## Am Handy und in dunkler Darstellung
 
 ### Dunkle Darstellung
@@ -212,7 +248,7 @@ Dieselben Felder, untereinander.
 
 ### Lernen am Handy
 
-Cheatsheet mit Ampel.
+Cheatsheet mit Ampel. Die Zeile „Inhalt“ bleibt beim Rollen stehen und zeigt, wo man gerade liest.
 
 ![Lernen am Handy](handy-03-lernen.png)
 
@@ -221,3 +257,9 @@ Cheatsheet mit Ampel.
 Auch Ausbilder und Beauftragte können alles am Handy erledigen.
 
 ![Abzeichnen am Handy](handy-04-abzeichnen.png)
+
+### Inhalt am Handy
+
+Aufgeklappt führt „Inhalt“ zu jedem Themenfeld und Unterthema.
+
+![Inhalt am Handy](handy-05-lernen-inhalt.png)
