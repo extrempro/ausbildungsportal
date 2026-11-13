@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { ANNA, BEA, inTagen, mitFoto, oeffne, PETRA, startePortal, text } from './hilfe';
+import { ANNA, BEA, BEN, inTagen, mitFoto, oeffne, PETRA, startePortal, text } from './hilfe';
 import type { Grunddaten, Portal } from './hilfe';
 import type { Page } from 'playwright';
 
@@ -84,6 +84,24 @@ test(
     assert.ok(plan.includes('Abschlussarbeit: Abgabe am') && plan.includes(termin), 'Termin im Plan');
     assert.equal(plan.includes('Geheimes Vorhaben'), false, 'der Titel der Arbeit bleibt privat');
     assert.equal(await petra.status('GET', '/api/planer'), 403);
+    assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
+  }),
+);
+
+test(
+  'Planer freigeschaltet, während das Portal offen ist: Die Glocke führt ohne Neuladen hin',
+  mitFoto(() => p, 'planer-frei', async () => {
+    // Ben hat noch kein Profil – also weder Lernen noch Planer
+    const b = await p.seite(BEN);
+    const petra = await p.api().als(PETRA);
+    await petra.ruf('PUT', `/api/azubis/${g.ben}/profil`, { ausbildungsbeginn: inTagen(-30), berufId: g.beruf, ausbilderId: g.petra, urlaubstage: 30, planerFrei: true });
+    await b.click('.glocke-knopf');
+    await b.click('.menue.glocke :text("Neu für dich: Planer für deine Prüfung")');
+    await b.waitForSelector('main h1:has-text("Abschlussarbeit")');
+    assert.equal((await text(b, 'main')).includes('Seite nicht gefunden'), false);
+    // eine Seite, die es wirklich nicht gibt, bleibt „nicht gefunden“
+    await oeffne(b, p.url, '/planer/gibt-es-nicht');
+    await b.waitForSelector('main h1:has-text("Seite nicht gefunden")');
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );
