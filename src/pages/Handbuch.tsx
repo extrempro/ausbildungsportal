@@ -1924,6 +1924,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   <strong>Sperren</strong> verhindert die Anmeldung, alle Daten bleiben. <strong>Löschen</strong> entfernt bei einem Azubi auch Berichte und Plan – das lässt sich nicht rückgängig machen. Vorher bei Bedarf das Berichtsheft als PDF herunterladen.
                 </li>
                 <li>„Verknüpfung lösen“ brauchst du nur, wenn die IT das Microsoft-Konto einer Person neu angelegt hat. Es gehen keine Daten verloren.</li>
+                <li>Wann sich jemand zuletzt angemeldet hat, siehst du nicht – das sieht nur der Super-Admin. So lässt sich aus dem Portal nicht ablesen, wann jemand arbeitet. Deine eigene letzte Anmeldung steht unter „Konto“.</li>
                 <li>Auf der Seite selbst erklärt „Was bewirkt was?“ jede Rolle und jede Funktion mit ihren Folgen.</li>
               </ul>
             </>
@@ -1980,6 +1981,7 @@ const ADMIN: Kapitel[] = [
           </li>
           <li>Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto an. Beim Anlegen genügt der Microsoft-Anmeldename.</li>
           <li>Nur der Super-Admin meldet sich lokal mit Passwort an (mindestens 14 Zeichen) – unter der Adresse des Portals mit <code>/super</code> am Ende.</li>
+          <li>Die Spalte „Letzte Anmeldung“ siehst nur du. Ausbilder sehen sie nicht – sie verwalten Konten, sollen daraus aber keine Arbeitszeiten ablesen können. Gedacht ist sie, um verwaiste Konten zu finden.</li>
         </ul>
       </>
     ),

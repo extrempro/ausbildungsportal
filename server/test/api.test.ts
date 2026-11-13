@@ -443,6 +443,25 @@ test('Kontenliste: Ausbilder sehen keinen Super-Admin; Azubis und Beauftragte se
   }
 });
 
+test('letzte Anmeldung: nur der Super-Admin sieht sie bei anderen, jede Person bei sich selbst', async () => {
+  const u = await umgebung();
+  const w = alle(u);
+  const zeit = '2026-11-12T08:15:00.000Z';
+  u.db.prepare('UPDATE benutzer SET letzte_anmeldung = ?').run(zeit);
+  const liste = async (wer: BenutzerZeile) => koerper(await ruf(u, 'GET', '/api/konten', { cookies: sitzung(u, wer) })).konten as { id: number; letzteAnmeldung: string | null }[];
+  // Super-Admin: bei allen
+  for (const k of await liste(w.admin)) assert.equal(k.letzteAnmeldung, zeit);
+  // Ausbilder: nur beim eigenen Konto
+  for (const k of await liste(w.ausbilder)) assert.equal(k.letzteAnmeldung, k.id === w.ausbilder.id ? zeit : null, `Konto ${k.id}`);
+  // auch nicht in den Antworten auf Ändern und Anlegen
+  const geaendert = koerper(await ruf(u, 'PATCH', `/api/konten/${w.azubi.id}`, { cookies: sitzung(u, w.ausbilder), body: { anzeigename: 'Anna Neu' } }));
+  assert.equal(geaendert.konto.letzteAnmeldung, null);
+  const neu = koerper(await ruf(u, 'POST', '/api/konten', { cookies: sitzung(u, w.ausbilder), body: { rolle: 'azubi', anmeldename: 'neu@firma.test', anzeigename: 'Neu Azubi' } }));
+  assert.equal(neu.konto.letzteAnmeldung, null);
+  // die eigene sieht jede Person unter „Konto“
+  for (const wer of [w.ausbilder, w.beauftragter, w.azubi]) assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies: sitzung(u, wer) })).konto.letzteAnmeldung, zeit);
+});
+
 test('Ausbilder ändern keine Ausbilder (403) und finden den Super-Admin nicht (404)', async () => {
   const u = await umgebung();
   const w = alle(u);

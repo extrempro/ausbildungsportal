@@ -29,7 +29,7 @@ import { PLAN_ROUTEN } from './plan';
 import { BEGLEITER_ROUTEN } from './begleiter';
 import { PLANER_ROUTEN, planerFuer } from './planer';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
-import { alsKonto, ROLLEN } from './typen';
+import { alsKonto, kontoFuer, ROLLEN } from './typen';
 import type { BenutzerZeile, Rolle, Zuweisung } from './typen';
 
 
@@ -364,7 +364,7 @@ export const ROUTEN: Route[] = [
         body: {
           konten: alle
             .filter((z) => darfKontoSehen(c.k.db, c.b, z))
-            .map((z) => ({ ...alsKonto(z), verwaltbar: darfKontoVerwalten(c.k.db, c.b, z) && z.id !== c.b.id, loeschbar: darfKontoLoeschen(c.k.db, c.b, z) && z.id !== c.b.id })),
+            .map((z) => ({ ...kontoFuer(c.b, z), verwaltbar: darfKontoVerwalten(c.k.db, c.b, z) && z.id !== c.b.id, loeschbar: darfKontoLoeschen(c.k.db, c.b, z) && z.id !== c.b.id })),
           rollen: ROLLEN.filter((r) => darfRolleVergeben(c.b, r)),
         },
       };
@@ -397,7 +397,7 @@ export const ROUTEN: Route[] = [
       // Wer als Ausbilder einen Azubi anlegt, ist gleich für ihn zuständig – sonst sähen ihn zunächst alle Ausbilder
       if (rolle === 'azubi' && c.b.rolle === 'ausbilder') setzeZustaendig(c.k.db, jetzt, neu.id, c.b.id);
       protokolliere(c.k.db, jetzt, 'konto', 'konto_angelegt', c.b, neu, `Rolle ${rolle}`);
-      return { status: 201, body: { konto: alsKonto(neu), ...(startpasswort ? { startpasswort } : {}) } };
+      return { status: 201, body: { konto: kontoFuer(c.b, neu), ...(startpasswort ? { startpasswort } : {}) } };
     },
   },
 
@@ -464,7 +464,7 @@ export const ROUTEN: Route[] = [
           }
         }
       });
-      return { status: 200, body: { konto: alsKonto(holeBenutzer(db, ziel.id)!) } };
+      return { status: 200, body: { konto: kontoFuer(c.b, holeBenutzer(db, ziel.id)!) } };
     },
   },
 
@@ -479,7 +479,7 @@ export const ROUTEN: Route[] = [
       c.k.db.prepare('UPDATE benutzer SET entra_oid = NULL WHERE id = ?').run(ziel.id);
       beendeAlleSitzungen(c.k.db, ziel.id);
       protokolliere(c.k.db, c.k.jetzt(), 'konto', 'entra_geloest', c.b, ziel);
-      return { status: 200, body: { konto: alsKonto(holeBenutzer(c.k.db, ziel.id)!) } };
+      return { status: 200, body: { konto: kontoFuer(c.b, holeBenutzer(c.k.db, ziel.id)!) } };
     },
   },
 

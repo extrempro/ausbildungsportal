@@ -267,7 +267,7 @@ export function Konten({ ich }: { ich: Konto }) {
               <th>Name</th>
               <th>Rolle</th>
               <th>Stand</th>
-              <th>Letzte Anmeldung</th>
+              {ich.rolle === 'admin' && <th>Letzte Anmeldung</th>}
               <th>
                 <span className="nur-vorleser">Aktionen</span>
               </th>
@@ -283,49 +283,51 @@ export function Konten({ ich }: { ich: Konto }) {
                   <span className="leise klein">{k.anmeldename}</span>
                 </td>
                 <td data-label="Rolle">
-                  {k.verwaltbar && k.rolle !== 'admin' ? (
-                    <select
-                      aria-label={`Rolle von ${k.anzeigename}`}
-                      value={k.rolle}
-                      onChange={(e) => {
-                        const neu = e.target.value as Rolle;
-                        void rueckfrage(`„${k.anzeigename}“ wird ${ROLLE_TEXT[neu]}. Fortfahren?\n\nDie Person wird abgemeldet und sieht danach die neue Ansicht.\n\nAlle Zuweisungen dieses Kontos entfallen und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert.`, { ja: 'Rolle ändern' }).then(async (ja) => {
-                          if (ja && (await tue(() => api('PATCH', `/api/konten/${k.id}`, { rolle: neu }))) !== undefined) melde(`„${k.anzeigename}“ ist jetzt ${ROLLE_TEXT[neu]}.`);
-                        });
-                      }}
-                    >
-                      {(daten?.rollen ?? []).filter((r) => r !== 'admin').map((r) => (
-                        <option key={r} value={r}>
-                          {ROLLE_TEXT[r]}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    ROLLE_TEXT[k.rolle]
-                  )}
-                  {k.rolle === 'ausbilder' &&
-                    (ich.rolle === 'admin' ? (
-                      <label className="haken klein">
-                        <input
-                          type="checkbox"
-                          checked={k.alleAzubis}
-                          onChange={() => {
-                            const an = !k.alleAzubis;
-                            void rueckfrage(
-                              an
-                                ? `„${k.anzeigename}“ die Gesamtsicht geben?\n\nDie Person sieht und bearbeitet dann alle Azubis des Betriebs – Profile, Pläne und Berichte –, nicht nur die eigenen.`
-                                : `„${k.anzeigename}“ die Gesamtsicht nehmen?\n\nDie Person sieht dann nur noch die eigenen Azubis, Azubis ohne Ausbilder und Vertretungen.`,
-                              { ja: an ? 'Gesamtsicht geben' : 'Gesamtsicht nehmen' },
-                            ).then(async (ja) => {
-                              if (ja && (await tue(() => api('PATCH', `/api/konten/${k.id}`, { alleAzubis: an }))) !== undefined) melde(an ? `„${k.anzeigename}“ sieht jetzt alle Azubis.` : `„${k.anzeigename}“ sieht jetzt nur noch die eigenen Azubis.`);
-                            });
-                          }}
-                        />
-                        sieht alle Azubis
-                      </label>
+                  <div className="konto-rolle">
+                    {k.verwaltbar && k.rolle !== 'admin' ? (
+                      <select
+                        aria-label={`Rolle von ${k.anzeigename}`}
+                        value={k.rolle}
+                        onChange={(e) => {
+                          const neu = e.target.value as Rolle;
+                          void rueckfrage(`„${k.anzeigename}“ wird ${ROLLE_TEXT[neu]}. Fortfahren?\n\nDie Person wird abgemeldet und sieht danach die neue Ansicht.\n\nAlle Zuweisungen dieses Kontos entfallen und müssen neu gesetzt werden. Berichte und Plan bleiben gespeichert.`, { ja: 'Rolle ändern' }).then(async (ja) => {
+                            if (ja && (await tue(() => api('PATCH', `/api/konten/${k.id}`, { rolle: neu }))) !== undefined) melde(`„${k.anzeigename}“ ist jetzt ${ROLLE_TEXT[neu]}.`);
+                          });
+                        }}
+                      >
+                        {(daten?.rollen ?? []).filter((r) => r !== 'admin').map((r) => (
+                          <option key={r} value={r}>
+                            {ROLLE_TEXT[r]}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
-                      k.alleAzubis && <span className="leise klein"> · sieht alle Azubis</span>
-                    ))}
+                      ROLLE_TEXT[k.rolle]
+                    )}
+                    {k.rolle === 'ausbilder' &&
+                      (ich.rolle === 'admin' ? (
+                        <label className="haken klein">
+                          <input
+                            type="checkbox"
+                            checked={k.alleAzubis}
+                            onChange={() => {
+                              const an = !k.alleAzubis;
+                              void rueckfrage(
+                                an
+                                  ? `„${k.anzeigename}“ die Gesamtsicht geben?\n\nDie Person sieht und bearbeitet dann alle Azubis des Betriebs – Profile, Pläne und Berichte –, nicht nur die eigenen.`
+                                  : `„${k.anzeigename}“ die Gesamtsicht nehmen?\n\nDie Person sieht dann nur noch die eigenen Azubis, Azubis ohne Ausbilder und Vertretungen.`,
+                                { ja: an ? 'Gesamtsicht geben' : 'Gesamtsicht nehmen' },
+                              ).then(async (ja) => {
+                                if (ja && (await tue(() => api('PATCH', `/api/konten/${k.id}`, { alleAzubis: an }))) !== undefined) melde(an ? `„${k.anzeigename}“ sieht jetzt alle Azubis.` : `„${k.anzeigename}“ sieht jetzt nur noch die eigenen Azubis.`);
+                              });
+                            }}
+                          />
+                          sieht alle Azubis
+                        </label>
+                      ) : (
+                        k.alleAzubis && <span className="leise klein"> · sieht alle Azubis</span>
+                      ))}
+                  </div>
                 </td>
                 <td data-label="Stand">
                   {k.status === 'gesperrt' ? (
@@ -336,7 +338,12 @@ export function Konten({ ich }: { ich: Konto }) {
                     <span className="pille gelb">wartet auf erste Anmeldung</span>
                   )}
                 </td>
-                <td className="eng" data-label="Letzte Anmeldung">{zeit(k.letzteAnmeldung)}</td>
+                {/* Nutzungszeiten anderer sieht nur der Super-Admin – Ausbilder nicht (Leistungs- und Verhaltenskontrolle) */}
+                {ich.rolle === 'admin' && (
+                  <td className="eng" data-label="Letzte Anmeldung">
+                    {zeit(k.letzteAnmeldung)}
+                  </td>
+                )}
                 <td>
                   {k.verwaltbar && (
                     <div className="aktionen">

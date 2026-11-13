@@ -56,6 +56,15 @@ export interface Konto {
   bildZeigen: boolean;
 }
 
+/**
+ * Ein Konto, wie es `fuer` sehen darf: Die letzte Anmeldung sieht nur der Super-Admin – und jede Person ihre eigene.
+ * Ausbilder verwalten Konten, sollen aber keine Nutzungszeiten anderer sehen (Leistungs- und Verhaltenskontrolle).
+ */
+export function kontoFuer(fuer: Pick<BenutzerZeile, 'id' | 'rolle'>, z: BenutzerZeile): Konto {
+  const k = alsKonto(z);
+  return fuer.rolle === 'admin' || fuer.id === z.id ? k : { ...k, letzteAnmeldung: null };
+}
+
 export function alsKonto(z: BenutzerZeile): Konto {
   return {
     id: z.id,
