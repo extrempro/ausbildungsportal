@@ -76,6 +76,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 - **Ungespeichertes:** `useUngespeichert()`; Seitenwechsel nur über `geheZu` oder `<Link>`.
 - **Knöpfe:** Tätigkeit + Gegenstand. Hauptknopf `.knopf`, Nebenknopf `.knopf.schlicht`. Gefüllter roter Knopf ist `knopf rot`; `.gefahr` ist nur rote Schrift für schlichte Knöpfe.
 - **Aufklappen:** `details.karte` oder `details.klapp` – keine eigene Bauform.
+- **Navigation überall gleich** (jede Rolle, PC, Tablet, Handy): Punkte nur in `src/App.tsx` pflegen, gleiche Seitenart in derselben Gruppe, Zahlen auch in Menüs und am Knopf davor, eine Grenze bei 1024 px, Seiten-Navigation heißt „Inhalt“. `e2e/10-navigation.test.ts` prüft es. Einzelheiten in `docs/bedienregeln.md`.
 - **Plan-Einträge:** immer über `EintragFelder` (`src/eintragFelder.tsx`).
 - **Personen:** `<Avatar>` aus `src/avatar.tsx`.
 - **Farben:** nur über die Variablen `--c-…` in `src/index.css` (hell und dunkel sind dort festgelegt). Keine festen Farbwerte in neuen Regeln. Einzige Ausnahme: die Figuren des Begleiters haben eigene Farben `--bf-…`.

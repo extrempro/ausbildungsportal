@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.60.0] – 2026-11-13
+
+### Geändert
+
+- **Navigation überall gleich:** in jeder Rolle, am PC, am Tablet und am Handy.
+  - **Zahlen gehen nicht mehr verloren:** Steht ein Menüpunkt mit Zahl unter „Planung“, „Verwaltung“ oder am Handy unter „Mehr“, zeigt der Knopf davor jetzt die Summe, und im geöffneten Menü steht die Zahl am Punkt. Bisher sah man zum Beispiel offene Wünsche zu den Lerninhalten erst nach dem Aufklappen.
+  - **Rückmeldungen (Ausbilder)** stehen jetzt unter „Verwaltung“ statt unter „Planung“.
+  - **Eine Grenze:** Unter 1024 px Fensterbreite wechseln Lernmodul, Handbuch und Ausbildungsplan zur Darstellung für Tablet und Handy – gleichzeitig mit der Leiste unten. Bisher lag die Grenze im Lernmodul und im Ausbildungsplan bei 1000 px.
+  - **Gleiche Namen:** Die Navigation im Lernmodul heißt auch am PC „Inhalt“, die im Handbuch auch am PC „Inhalt und Suche“.
+- Die Regel steht in `docs/bedienregeln.md`; ein neuer Browser-Test prüft sie für jede Rolle.
+
 ## [0.59.0] – 2026-11-13
 
 ### Neu

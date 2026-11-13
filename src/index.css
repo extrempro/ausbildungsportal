@@ -1420,7 +1420,7 @@ a.bericht-link:hover {
   margin: 0;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1023px) {
   .plan-oben {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3152,8 +3152,15 @@ td.aktion {
   text-align: center;
 }
 
-.tabs a {
+.tabs a,
+.tabs button {
   position: relative;
+}
+
+/* in den Menülisten steht die Zahl rechts am Rand */
+.menue-flaeche a .nav-zahl,
+.bogen-liste a .nav-zahl {
+  margin-left: auto;
 }
 
 .tabs .nav-zahl {
@@ -5689,7 +5696,7 @@ html.dark {
   font-weight: 600;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1023px) {
   .lern-layout {
     display: block;
   }
@@ -7971,7 +7978,7 @@ details.abt-durchlauf-schmal {
   margin-bottom: 16px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1023px) {
   details.abt-durchlauf-schmal {
     display: block;
   }
@@ -8333,7 +8340,8 @@ p.aktionen.links {
   }
 
   /* die Zahl sitzt wie am Handy oben rechts am Symbol */
-  .haupt-nav > a .nav-zahl {
+  .haupt-nav > a .nav-zahl,
+  .haupt-nav .menue-knopf > .nav-zahl {
     position: absolute;
     top: 0;
     left: calc(50% + 6px);
@@ -9514,7 +9522,7 @@ nav.handbuch-inhalt .navi-kopf {
 }
 
 /* schmal nur am PC – darunter ist die Navigation die Zeile „Inhalt“ */
-@media (min-width: 1001px) {
+@media (min-width: 1024px) {
   .lern-navi.schmal {
     display: flex;
   }

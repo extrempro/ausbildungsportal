@@ -287,10 +287,10 @@ async function main() {
     await s.keyboard.press('Escape');
     await foto(s, '/lernen/grundlagen', 'azubi-15-navi-eingeklappt', 'Navigation eingeklappt', 'Am PC lässt sich die Navigation links zu einer schmalen Leiste einklappen; die Themenfelder stehen dann als Nummern mit Ampel-Punkt. Der Browser merkt sich das.', {
       vorher: async () => {
-        await s.click('button[aria-label="Themenfelder einklappen"]');
+        await s.click('button[aria-label="Inhalt einklappen"]');
       },
     });
-    await s.click('button[aria-label="Themenfelder ausklappen"]');
+    await s.click('button[aria-label="Inhalt ausklappen"]');
     await foto(s, '/lernen/grundlagen', 'azubi-16-lesemodus', 'Lesemodus', 'Auf Lernseiten und im Handbuch blendet der Lesemodus Menü und Navigation aus; die Schrift wird größer. Beenden mit dem Knopf oben rechts oder mit Escape.', {
       vorher: async () => {
         await s.click('.ansicht-knoepfe button:has-text("Lesemodus")');
