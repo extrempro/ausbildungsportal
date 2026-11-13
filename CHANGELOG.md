@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.58.0] – 2026-11-13
+
+### Neu
+
+- **Volle Breite:** Auf einem großen Bildschirm (ab etwa 1300 Pixel Breite) kannst du im Menü an deinem Namen „Volle Breite“ einschalten. Dann nutzt jede Seite das ganze Fenster statt nur die Mitte. Der Browser merkt sich die Einstellung; Fließtext bleibt trotzdem gut lesbar breit. Auf Lernseiten und im Handbuch steht der Knopf zusätzlich neben der Überschrift.
+- **Lesemodus:** Auf den Seiten eines Themenfelds im Lernmodul, bei den Anleitungen, in „Lerninhalte ansehen“ und im Handbuch blendet „Lesemodus“ Menü, Inhaltsverzeichnis und Fußzeile aus und vergrößert die Schrift etwas. Beenden mit „Lesemodus beenden“ oben rechts oder mit Escape; beim Wechsel auf eine andere Seite endet er von selbst. Geht auch am Handy.
+
 ## [0.57.0] – 2026-11-13
 
 ### Neu

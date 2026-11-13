@@ -9366,3 +9366,101 @@ body:has(.begleiter-ecke.klein) .nach-oben {
   margin: 0 0 8px;
   font-size: 18px;
 }
+
+/* ---------- Ansicht: Volle Breite und Lesemodus (src/ansicht.tsx) ---------- */
+.ansicht-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.ansicht-kopf h1 {
+  margin-bottom: 8px;
+}
+
+.ansicht-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ansicht-knoepfe .knopf {
+  gap: 6px;
+}
+
+/* Volle Breite: kein fester Rand mehr – Fließtext bleibt trotzdem gut lesbar (etwa 80 bis 90 Zeichen je Zeile) */
+:root[data-breite='voll'] main,
+:root[data-breite='voll'] .leiste-innen,
+:root[data-breite='voll'] .fuss {
+  max-width: none;
+}
+
+@media (min-width: 1300px) {
+  :root[data-breite='voll'] main,
+  :root[data-breite='voll'] .leiste-innen,
+  :root[data-breite='voll'] .fuss {
+    padding-right: 32px;
+    padding-left: 32px;
+  }
+}
+
+:root[data-breite='voll'] main p,
+:root[data-breite='voll'] main li {
+  max-width: 90ch;
+}
+
+/* Lesemodus: nur der Text – Kopfzeile, Menüs, Seitenleisten und Fußzeile treten zurück */
+:root[data-lesemodus='an'] .leiste,
+:root[data-lesemodus='an'] .tabs,
+:root[data-lesemodus='an'] .fuss,
+:root[data-lesemodus='an'] .lern-navi,
+:root[data-lesemodus='an'] .lern-navi-klapp,
+:root[data-lesemodus='an'] .handbuch-inhalt,
+:root[data-lesemodus='an'] .fuehrung-angebot,
+:root[data-lesemodus='an'] .begleiter-ecke,
+:root[data-lesemodus='an'] .sprung {
+  display: none !important;
+}
+
+:root[data-lesemodus='an'] {
+  --kopf: 0px;
+}
+
+:root[data-lesemodus='an'] body {
+  padding-bottom: 0;
+}
+
+:root[data-lesemodus='an'] main {
+  max-width: 820px;
+  padding-top: 64px;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+:root[data-lesemodus='an'][data-breite='voll'] main {
+  max-width: 1040px;
+}
+
+:root[data-lesemodus='an'] .lern-layout,
+:root[data-lesemodus='an'] .handbuch {
+  display: block;
+}
+
+.lesemodus-ende {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 30;
+  gap: 6px;
+  background: var(--c-card);
+  box-shadow: 0 4px 12px var(--c-schatten);
+}
+
+@media print {
+  .lesemodus-ende,
+  .ansicht-knoepfe {
+    display: none;
+  }
+}

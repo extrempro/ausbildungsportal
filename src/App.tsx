@@ -32,6 +32,7 @@ import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
 import { Dialoge } from './dialoge';
 import { RueckmeldungFenster } from './fehler';
+import { LESESEITE, LesemodusEnde, setzeBreit, setzeLesemodus, useAnsicht, useBreitesFenster } from './ansicht';
 import { Rueckmeldungen } from './pages/Rueckmeldungen';
 import { Glocke } from './glocke';
 import { Meldungen } from './pages/Meldungen';
@@ -214,6 +215,12 @@ export function App() {
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
   useEffect(() => setMenue(null), [pfad]);
+  // Ansicht: volle Breite (alle Seiten) und Lesemodus (nur Leseseiten – auf anderen Seiten endet er)
+  const ansicht = useAnsicht();
+  const grossesFenster = useBreitesFenster();
+  useEffect(() => {
+    if (ansicht.lesen && !LESESEITE.test(pfad)) setzeLesemodus(false);
+  }, [pfad, ansicht.lesen]);
   useEffect(() => {
     if (!menue) return;
     const taste = (e: KeyboardEvent) => e.key === 'Escape' && setMenue(null);
@@ -477,6 +484,14 @@ export function App() {
           </button>
         </li>
       )}
+      {grossesFenster && (
+        <li>
+          <button type="button" aria-pressed={ansicht.breit} onClick={() => setzeBreit(!ansicht.breit)}>
+            <Icon name="breit" />
+            {ansicht.breit ? 'Normale Breite' : 'Volle Breite'}
+          </button>
+        </li>
+      )}
       <li>
         <button type="button" onClick={() => void wechsleTheme()}>
           <Icon name={dunkel ? 'sonne' : 'mond'} />
@@ -626,6 +641,7 @@ export function App() {
       )}
       {fuehrung && <Fuehrung rolle={konto.rolle} bereiche={[...(lernen ? ['lernen' as const] : anleitungen ? ['anleitungen' as const] : []), ...(planer ? ['planer' as const] : [])]} onEnde={beendeFuehrung} />}
       {melden && <RueckmeldungFenster version={version} rolle={konto.rolle} onZu={schliesseMelden} />}
+      <LesemodusEnde />
       <Dialoge />
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}
