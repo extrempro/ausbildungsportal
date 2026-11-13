@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.66.0] – 2026-11-13
+
+### Geändert
+
+- **Letzte Anmeldung nur für den Super-Admin:** In der Kontenliste sehen Ausbilder nicht mehr, wann sich andere zuletzt angemeldet haben – die Spalte gibt es bei ihnen nicht, und der Server schickt den Zeitpunkt auch nicht mit. Der Super-Admin sieht sie weiter für alle Konten; jede Person sieht ihre eigene unter „Konto“. Das Protokoll mit den Anmeldungen sieht schon seit Version 0.9.0 nur der Super-Admin.
+
+### Behoben
+
+- **Konten am Handy (Super-Admin):** Der Haken „sieht alle Azubis“ wurde neben der Rollenauswahl zusammengequetscht. Er steht jetzt darunter.
+
 ## [0.65.0] – 2026-11-13
 
 ### Neu

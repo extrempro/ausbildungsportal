@@ -592,6 +592,20 @@ div.reihe {
   margin-top: 0;
 }
 
+/* Konten: Rolle und darunter „sieht alle Azubis“ – am Handy rechtsbündig untereinander statt nebeneinander gequetscht */
+.konto-rolle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+@media (max-width: 700px) {
+  table.stapel .konto-rolle {
+    align-items: flex-end;
+  }
+}
+
 /* mehrere Formulare untereinander (Stammdaten) klar trennen */
 .karte > form.reihe + form.reihe,
 .karte > div.reihe + div.reihe {
