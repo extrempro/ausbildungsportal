@@ -1,6 +1,6 @@
 # Barrierefreiheit nach WCAG 2.2
 
-Stand: 13.11.2026 · Prüfung an Version 0.61.0, Maßnahmen in 0.61.1 (Tastatur), 0.61.2 (Darstellung) 0.62.0 (Zeitbegrenzung) und 0.64.0 (Unterschrift)
+Stand: 13.11.2026 · Prüfung an Version 0.61.0, Maßnahmen in 0.61.1 (Tastatur), 0.61.2 (Darstellung) 0.62.0 (Zeitbegrenzung), 0.64.0 (Unterschrift) und 0.65.0 (Erklärung im Handbuch)
 
 ## Ziel
 
@@ -47,6 +47,10 @@ Aus der Prüfung an Version 0.61.0 ist nichts mehr offen. Neue Befunde kommen hi
 - Karteikarten, Quiz, Planer, Begleiter und Jahreskalender im Einzelnen mit der Tastatur.
 - Inhalte der Lernmodule (Bilder, Tabellen, Grafiken) – sie kommen aus den Inhaltspaketen und werden dort gepflegt.
 - Die Anmeldung über Microsoft liegt außerhalb des Portals.
+
+## Erklärung im Portal
+
+Das Handbuch-Kapitel „Barrierefreiheit: Was das Portal kann und was noch fehlt“ (Gruppe „Hilfe“, für alle Rollen) sagt in einfachen Worten, was erfüllt ist und was nicht geprüft wurde. Ändert sich hier etwas, wird es dort mitgezogen (Regel in [bedienregeln.md](bedienregeln.md)).
 
 ## Barrieren melden
 

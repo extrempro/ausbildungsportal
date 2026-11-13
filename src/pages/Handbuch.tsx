@@ -197,10 +197,59 @@ const BEDIENUNG: Kapitel = {
         <li>
           <strong>Lesemodus:</strong> Auf Lernseiten, bei den Anleitungen und hier im Handbuch blendet „Lesemodus“ (oben neben der Überschrift) alles aus, was beim Lesen stört – Menü, Inhaltsverzeichnis, Fußzeile. Die Schrift wird etwas größer. Zurück geht es mit „Lesemodus beenden“ oben rechts oder mit Escape. Wechselst du auf eine andere Seite, endet er von selbst.
         </li>
-        <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
+        <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster. Mehr im Kapitel „Barrierefreiheit“.</li>
         <li>
           <strong>Abmelden:</strong> Nach acht Stunden ohne Eingabe meldet dich das Portal aus Sicherheitsgründen ab, spätestens nach 24 Stunden. Fünf Minuten vorher erscheint ein Hinweis mit der verbleibenden Zeit; mit „Angemeldet bleiben“ geht es weiter (nach 24 Stunden nicht – dann speichere und melde dich neu an). Wirst du abgemeldet, während du etwas eingibst, bleibt es auf der Seite stehen: Melde dich in einem neuen Tab an, komm zurück, wähle „Ich bin wieder angemeldet“ und speichere.
         </li>
+      </ul>
+    </>
+  ),
+};
+
+const BARRIEREFREIHEIT: Kapitel = {
+  id: 'barrierefreiheit',
+  titel: 'Barrierefreiheit: Was das Portal kann und was noch fehlt',
+  gruppe: 'Hilfe',
+  inhalt: (
+    <>
+      <p>
+        Jeder soll Bericht, Plan und Urlaub selbst erledigen können – auch ohne Maus, mit Vorleseprogramm oder stark vergrößerter Schrift. Das Portal richtet sich deshalb nach der WCAG 2.2, Stufe AA. Hier steht, was das heißt, was erfüllt ist und was noch nicht geprüft wurde.
+      </p>
+      <h3>So geht's</h3>
+      <ol className="schritte">
+        <li>Stößt du auf eine Hürde, öffne oben in der Leiste „Rückmeldung geben“ (die zwei Daumen).</li>
+        <li>Wähle „Fehler melden“ und beschreibe, was nicht geht – zum Beispiel: „Mit der Tastatur komme ich im Urlaubsantrag nicht zum Knopf Absenden.“</li>
+        <li>Schreib dazu, womit du arbeitest, wenn es eine Rolle spielt: Tastatur, Vorleseprogramm, Vergrößerung, Handy.</li>
+        <li>„Rückmeldung senden“. Die Meldung geht an den Betreiber des Portals.</li>
+      </ol>
+      <h3>Begriffe</h3>
+      <dl className="begriffe">
+        <Begriff wort="WCAG 2.2 AA">
+          Die „Web Content Accessibility Guidelines“ des W3C – weltweit die Regeln für barrierefreie Webseiten. Stufe AA ist das übliche Ziel, auch in der europäischen Norm EN 301 549.
+        </Begriff>
+        <Begriff wort="Vorleseprogramm">Liest vor, was auf dem Bildschirm steht, und sagt, welcher Knopf gerade gewählt ist – zum Beispiel NVDA oder JAWS am PC, VoiceOver am iPhone, TalkBack unter Android. Englisch: Screenreader.</Begriff>
+      </dl>
+      <h3>Gut zu wissen</h3>
+      <ul className="punkte">
+        <li>
+          <strong>Alles geht mit der Tastatur:</strong> Tab wechselt, Enter löst aus, Escape schließt Fenster und Menüs. „Zum Inhalt springen“ ist das Erste, was Tab erreicht. Fenster halten den Fokus, und angeheftete Leisten verdecken das gewählte Feld nicht.
+        </li>
+        <li>
+          <strong>Unterschrift ohne Zeichnen:</strong> Unter „Konto“ erzeugst du die Unterschrift mit „Unterschrift aus meinem Namen erzeugen“ – ganz ohne Maus, Finger oder Stift.
+        </li>
+        <li>
+          <strong>Lesen und Vergrößern:</strong> Kontraste reichen hell und dunkel. Bis 400 % Vergrößerung (wie ein Handy mit 320 px Breite) läuft keine Seite aus dem Bild. Im Lernmodul und hier im Handbuch blendet der „Lesemodus“ alles Störende aus.
+        </li>
+        <li>
+          <strong>Keine Hektik:</strong> Bevor dich das Portal nach langer Pause abmeldet, warnt es fünf Minuten vorher. Was du gerade eingibst, geht nicht verloren – mehr im Kapitel „Bedienung auf PC, Tablet und Handy“.
+        </li>
+        <li>
+          <strong>Vorleseprogramme:</strong> Knöpfe, Felder und Symbole haben Namen, „Gespeichert“ und Fehler werden angesagt. Mit einem echten Vorleseprogramm ist das Portal aber noch nicht getestet – deine Rückmeldung hilft hier besonders.
+        </li>
+        <li>
+          <strong>Noch nicht geprüft:</strong> Safari und Firefox, echte Handys und Tablets, der Kontrastmodus von Windows; Karteikarten, Quiz, Planer, Begleiter und Jahreskalender im Einzelnen mit der Tastatur. Bilder und Tabellen in den Lerninhalten kommen aus den Lernmodulen und werden dort gepflegt.
+        </li>
+        <li>Die Anmeldung über Microsoft gehört nicht zum Portal; für ihre Barrierefreiheit ist Microsoft zuständig.</li>
       </ul>
     </>
   ),
@@ -1020,6 +1069,7 @@ const AZUBI: Kapitel[] = [
   BENACHRICHTIGUNGEN('azubi'),
   PROFILBILD('azubi'),
   FEHLER('azubi'),
+  BARRIEREFREIHEIT,
   APP,
   BEDIENUNG,
 ];
@@ -1895,6 +1945,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   BENACHRICHTIGUNGEN(rolle),
   PROFILBILD(rolle),
   FEHLER(rolle),
+  BARRIEREFREIHEIT,
   APP,
   BEDIENUNG,
 ];
@@ -2034,6 +2085,7 @@ const ADMIN: Kapitel[] = [
     ),
   },
   FEHLER('admin'),
+  BARRIEREFREIHEIT,
   APP,
   BEDIENUNG,
 ];

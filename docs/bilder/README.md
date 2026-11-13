@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.61.0 (erzeugt am 13.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.65.0 (erzeugt am 13.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
@@ -105,6 +105,18 @@ Am PC lässt sich die Navigation links zu einer schmalen Leiste einklappen; die 
 Auf Lernseiten und im Handbuch blendet der Lesemodus Menü und Navigation aus; die Schrift wird größer. Beenden mit dem Knopf oben rechts oder mit Escape.
 
 ![Lesemodus](azubi-16-lesemodus.png)
+
+### Warnung vor dem Abmelden
+
+Fünf Minuten bevor das Portal nach langer Pause abmeldet, erscheint dieses Fenster mit der verbleibenden Zeit. „Angemeldet bleiben“ verlängert.
+
+![Warnung vor dem Abmelden](azubi-17-abmelde-warnung.png)
+
+### Barrierefreiheit im Handbuch
+
+Was das Portal für Tastatur, Vorleseprogramm und Vergrößerung bietet, was noch nicht geprüft ist und wie man eine Hürde meldet – für alle Rollen.
+
+![Barrierefreiheit im Handbuch](azubi-18-barrierefreiheit.png)
 
 ## Ausbilderin
 
@@ -269,3 +281,9 @@ Aufgeklappt führt „Inhalt“ zu jedem Themenfeld und Unterthema.
 Die Zeile „Inhalt“ bleibt beim Rollen stehen und zeigt Jahr und KW. Aufgeklappt springt man zu einem Jahr oder zu „Diese Woche“; dort stehen auch die Abteilungen und die Farben.
 
 ![Ausbildungsplan: Inhalt am Handy](handy-06-plan-inhalt.png)
+
+### Unterschrift aus dem Namen erzeugen
+
+Wer nicht zeichnen kann oder will, lässt die Unterschrift aus dem eigenen Namen erzeugen – auch nur mit der Tastatur. Danach „Unterschrift speichern“.
+
+![Unterschrift aus dem Namen erzeugen](handy-07-unterschrift-erzeugen.png)

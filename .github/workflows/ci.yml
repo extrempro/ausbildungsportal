@@ -1,4 +1,4 @@
-# Prüft jeden Push und Pull Request: Typen, Tests (inkl. Rechte- und Anmeldetests), Build – und die wichtigsten Abläufe im Browser (E2E).
+# Prüft jeden Push und Pull Request: Typen, Tests (inkl. Rechte- und Anmeldetests), Build, bekannte Sicherheitslücken in Paketen – und die wichtigsten Abläufe im Browser (E2E).
 name: CI
 
 on:
@@ -24,6 +24,19 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  abhaengigkeiten:
+    # Bekannte Sicherheitslücken in den Paketen, die im Betrieb laufen (OWASP A03:2025, Lieferkette). Ohne package-lock.json im Repository
+    # wird der Stand hier frisch aufgelöst – genau der, den npm install im Docker-Image auch bekäme.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --package-lock-only --no-audit --no-fund
+      - name: Sicherheitslücken (nur Pakete für den Betrieb, ab „hoch“)
+        run: npm audit --omit=dev --audit-level=high
 
   e2e:
     # Spielt die wichtigsten Abläufe im echten Browser durch: je Testdatei ein frisches Portal mit erfundenen Daten.
@@ -83,6 +96,10 @@ jobs:
           grep -q 'Ausbildungsportal' /tmp/konten.html
           # die App (Prozess 1) läuft als UID 1000, nicht als root
           test "$(docker compose exec -T app stat -c %u /proc/1)" = "1000"
+          # gehärtet: keine zusätzlichen Rechte, nur die nötigen Linux-Rechte
+          docker inspect -f '{{.HostConfig.SecurityOpt}} {{.HostConfig.CapDrop}}' ausbildungsportal | tee /tmp/haertung.txt
+          grep -q 'no-new-privileges:true' /tmp/haertung.txt
+          grep -q 'ALL' /tmp/haertung.txt
           grep -q "Rechte am Datenordner" /tmp/start.log
           grep -q 'Super-Admin „admin“ angelegt' /tmp/start.log
           sudo test -f data/ausbildungsportal.db

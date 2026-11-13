@@ -133,6 +133,14 @@ test('Einleser: Unterthemen mit Begriffen, Tabelle, Befehl, Merksatz, Prüfungsf
   assert.ok(kaputt[0].zeile && kaputt[0].zeile > 30);
 });
 
+test('Einleser: Links nur mit http(s) – „javascript:“ und „data:“ werden abgelehnt und nie zum Link', () => {
+  for (const url of ['javascript:alert(1)', 'JavaScript:void0', 'data:text/html,x', '//boese.example']) {
+    const { thema, meldungen } = parseThemaMarkdown(NETZ.replace('https://www.elektronik-kompendium.de/', url), 'themen/netz.md');
+    assert.deepEqual(thema.links, [], url);
+    assert.ok(meldungen.some((m) => m.level === 'fehler' && /Link/.test(m.text)), url);
+  }
+});
+
 test('Grafiken werden bereinigt: kein Skript, keine Ereignisse, keine fremden Verweise', () => {
   const svg = bereinigeSvg(SVG);
   assert.ok(svg.startsWith('<svg') && svg.includes('class="sv-box"'));

@@ -299,6 +299,25 @@ async function main() {
     });
     await s.keyboard.press('Escape');
     await foto(s, '/handbuch', 'azubi-13-handbuch', 'Handbuch', 'Jede Rolle hat ihr eigenes Handbuch mit Inhaltsverzeichnis und Suche.');
+    await foto(s, '/berichtsheft', 'azubi-17-abmelde-warnung', 'Warnung vor dem Abmelden', 'Fünf Minuten bevor das Portal nach langer Pause abmeldet, erscheint dieses Fenster mit der verbleibenden Zeit. „Angemeldet bleiben“ verlängert.', {
+      vorher: async () => {
+        // der Server soll sagen, die Sitzung ende in vier Minuten – so muss niemand acht Stunden warten
+        await s.route('**/api/**', async (route) => {
+          const antwort = await route.fetch();
+          const ende = new Date(Date.parse(antwort.headers().date ?? new Date().toUTCString()) + 4 * 60 * 1000).toISOString();
+          await route.fulfill({ response: antwort, headers: { ...antwort.headers(), 'x-sitzung-ende': ende } });
+        });
+        await s.reload();
+        await s.waitForSelector('[role=alertdialog] #sitzung-kopf');
+      },
+    });
+    await s.unrouteAll();
+    await foto(s, '/handbuch#kapitel-barrierefreiheit', 'azubi-18-barrierefreiheit', 'Barrierefreiheit im Handbuch', 'Was das Portal für Tastatur, Vorleseprogramm und Vergrößerung bietet, was noch nicht geprüft ist und wie man eine Hürde meldet – für alle Rollen.', {
+      vorher: async () => {
+        await s.evaluate(() => document.getElementById('kapitel-barrierefreiheit')?.scrollIntoView({ block: 'start' }));
+        await s.waitForTimeout(300);
+      },
+    });
     await s.context().close();
 
     // ---------- Ausbilder ----------
@@ -360,6 +379,19 @@ async function main() {
         await s.evaluate(() => window.scrollTo(0, (document.querySelector('.plan-inhalt') as HTMLElement).getBoundingClientRect().top + window.scrollY + 900));
         await s.waitForTimeout(400);
         await s.click('.plan-inhalt summary');
+      },
+    });
+    await foto(s, '/konto', 'handy-07-unterschrift-erzeugen', 'Unterschrift aus dem Namen erzeugen', 'Wer nicht zeichnen kann oder will, lässt die Unterschrift aus dem eigenen Namen erzeugen – auch nur mit der Tastatur. Danach „Unterschrift speichern“.', {
+      vorher: async () => {
+        const neu = s.locator('button:has-text("Neu unterschreiben")');
+        if (await neu.count()) await neu.click();
+        await s.click('button:has-text("Unterschrift aus meinem Namen erzeugen")');
+        await s.evaluate(() => {
+          const karte = [...document.querySelectorAll('section.karte')].find((k) => k.querySelector('h2')?.textContent === 'Unterschrift');
+          karte?.scrollIntoView({ block: 'start' });
+          window.scrollBy(0, -70);
+        });
+        await s.waitForTimeout(300);
       },
     });
     await s.context().close();

@@ -1,6 +1,6 @@
 # Sicherheit
 
-Das Ausbildungsportal speichert personenbezogene Daten von Beschäftigten. Bitte beim Betrieb beachten:
+Das Ausbildungsportal speichert personenbezogene Daten von Beschäftigten. Was das Portal selbst gegen die häufigsten Schwachstellen tut und was offen ist, steht in [docs/sicherheit-owasp.md](docs/sicherheit-owasp.md). Bitte beim Betrieb beachten:
 
 - **Nur über HTTPS betreiben** (Reverse Proxy mit Zertifikat). `APP_URL` muss die Adresse sein, die die Nutzer im Browser sehen.
 - **Am besten nur im VPN erreichbar machen.** Die Anmeldung schützt die App, ein VPN zusätzlich vor allem, was die Anmeldung nicht abfängt.

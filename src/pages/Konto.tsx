@@ -1,6 +1,6 @@
 import { BegleiterKonto } from '../begleiter';
 import { melde, rueckfrage } from '../dialoge';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Konto, ProfilAntwort, Theme } from '../api';
@@ -63,6 +63,11 @@ function Unterschrift({ konto }: { konto: Konto }) {
   const [fehler, setFehler] = useState('');
   // ohne Zeichnen: aus dem Namen erzeugt (Tastatur, Vorleseprogramm, ohne Maus oder Finger)
   const [erzeugt, setErzeugt] = useState<string | null>(null);
+  // nach dem Erzeugen verschwindet der Knopf – der Fokus geht weiter zu „Unterschrift speichern“
+  const speichernKnopf = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (erzeugt) speichernKnopf.current?.focus();
+  }, [erzeugt]);
   const erzeuge = () => {
     const pfad = unterschriftAusName(konto.anzeigename);
     setErzeugt(pfad || null);
@@ -99,7 +104,7 @@ function Unterschrift({ konto }: { konto: Konto }) {
 
   if (gespeichert === undefined) return <p className="leise">Lädt …</p>;
   return (
-    <>
+    <div className="unterschrift-bereich">
       <p className="leise klein">
         {konto.rolle === 'azubi'
           ? 'Unterschreibe hier einmal mit dem Finger, einem Stift oder der Maus – oder lass sie aus deinem Namen erzeugen. Wenn du einen Bericht einreichst, kommt diese Unterschrift darunter. Änderst du sie später, bleiben alte Berichte, wie sie sind.'
@@ -127,15 +132,7 @@ function Unterschrift({ konto }: { konto: Konto }) {
               <UnterschriftBild pfad={erzeugt} titel={`Erzeugte Unterschrift: ${konto.anzeigename}`} />
             </div>
           ) : (
-            <>
-              <UnterschriftFeld onAendern={setNeu} />
-              <p className="leise klein">Ohne Zeichnen – zum Beispiel nur mit der Tastatur:</p>
-              <div className="aktionen links">
-                <button type="button" className="knopf schlicht" onClick={erzeuge}>
-                  Unterschrift aus meinem Namen erzeugen
-                </button>
-              </div>
-            </>
+            <UnterschriftFeld onAendern={setNeu} />
           )}
           {fehler && (
             <p className="hinweis fehler" role="alert">
@@ -143,7 +140,7 @@ function Unterschrift({ konto }: { konto: Konto }) {
             </p>
           )}
           <div className="aktionen links">
-            <button type="button" className="knopf" disabled={!neu} onClick={() => void speichere()}>
+            <button ref={speichernKnopf} type="button" className="knopf" disabled={!neu} onClick={() => void speichere()}>
               Unterschrift speichern
             </button>
             {erzeugt && (
@@ -164,9 +161,19 @@ function Unterschrift({ konto }: { konto: Konto }) {
               </button>
             )}
           </div>
+          {!erzeugt && (
+            <div className="unterschrift-ohne-zeichnen">
+              <p className="leise klein">Lieber nicht zeichnen – zum Beispiel nur mit der Tastatur?</p>
+              <div className="aktionen links">
+                <button type="button" className="knopf schlicht" onClick={erzeuge}>
+                  Unterschrift aus meinem Namen erzeugen
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
-    </>
+    </div>
   );
 }
 
@@ -286,6 +293,9 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
         <p className="leise klein">
           Gemeint sind „Das Portal wurde aktualisiert – Seite neu laden“ und „Das Portal wurde auf Version … aktualisiert“. Ist der Haken aus, kommt keiner davon; lade die Seite dann nach einem Update selbst neu, falls etwas nicht richtig funktioniert. Neuerungen stehen immer unter <Link zu="/versionen">Versionshinweise</Link>.
         </p>
+        <p className="hilfe-zeile klein abstand-oben">
+          <HandbuchLink kapitel="barrierefreiheit">Barrierefreiheit</HandbuchLink>
+        </p>
       </section>
 
       {konto.rolle !== 'admin' && <Benachrichtigungen rolle={konto.rolle} />}
@@ -303,7 +313,7 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
         <section className="karte">
           <h2>Unterschrift</h2>
           <Unterschrift konto={konto} />
-          <p className="hilfe-zeile klein">
+          <p className="hilfe-zeile klein abstand-oben">
             <HandbuchLink kapitel={konto.rolle === 'azubi' ? 'konto' : 'unterschrift'}>{konto.rolle === 'azubi' ? 'Dein Konto und deine Unterschrift' : 'Unterschrift hinterlegen'}</HandbuchLink>
           </p>
         </section>
