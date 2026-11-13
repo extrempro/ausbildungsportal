@@ -182,7 +182,7 @@ const BEDIENUNG: Kapitel = {
         <li>Am PC steht das Menü oben. Auf Tablet und Handy steht es unten; weitere Punkte findest du unter „Mehr“.</li>
       <li>Dieses Handbuch hat links ein Inhaltsverzeichnis mit Suchfeld (am Handy oben unter „Inhalt und Suche“ – die Zeile bleibt beim Rollen stehen). Jedes Kapitel ist gleich aufgebaut: erst wozu es da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.</li>
         <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
-        <li>Etwas funktioniert nicht, oder dir fehlt etwas? Das Symbol mit den zwei Gesichtern oben in der Leiste öffnet „Rückmeldung geben“. Dort meldest du einen Fehler – wenn du magst, mit Bildschirmfoto – oder schickst eine Idee fürs Portal. Mehr dazu im Kapitel „Rückmeldung geben“.</li>
+        <li>Etwas funktioniert nicht, oder dir fehlt etwas? Das Symbol mit den zwei Daumen oben in der Leiste öffnet „Rückmeldung geben“. Dort meldest du einen Fehler – wenn du magst, mit Bildschirmfoto – oder schickst eine Idee fürs Portal. Mehr dazu im Kapitel „Rückmeldung geben“.</li>
         <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
         <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
         <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
@@ -200,11 +200,11 @@ const FEHLER = (rolle: Rolle): Kapitel => ({
   inhalt: (
     <>
       <p>
-        Etwas funktioniert nicht, dir fehlt etwas{rolle === 'azubi' ? ', oder du möchtest etwas im Lernmodul besser erklärt haben' : ''}? Dafür gibt es „Rückmeldung geben“ – das Symbol mit den zwei Gesichtern oben in der Leiste{rolle === 'admin' ? '' : ', neben der Glocke'}.
+        Etwas funktioniert nicht, dir fehlt etwas{rolle === 'azubi' ? ', oder du möchtest etwas im Lernmodul besser erklärt haben' : ''}? Dafür gibt es „Rückmeldung geben“ – das Symbol mit den zwei Daumen oben in der Leiste{rolle === 'admin' ? '' : ', neben der Glocke'}.
       </p>
       <h3>So geht's</h3>
       <ol className="schritte">
-        <li>Oben in der Leiste auf die zwei Gesichter tippen. Das geht von jeder Seite aus.</li>
+        <li>Oben in der Leiste auf die zwei Daumen tippen. Das geht von jeder Seite aus.</li>
         <li>Wählen, worum es geht: „Fehler melden“{rolle === 'azubi' ? ', „Idee fürs Portal“ oder „Lerninhalt besser erklären“' : ' oder „Idee fürs Portal“'}.</li>
         <li>Kurz beschreiben. Bei einem Fehler: Was wolltest du tun? Was ist stattdessen passiert?</li>
         <li>Bei einem Fehler kannst du ein Bildschirmfoto anhängen: auswählen, einfügen (Strg + V) oder am PC direkt aufnehmen. Du siehst das Bild vor dem Senden und kannst es wieder entfernen.</li>
@@ -1540,7 +1540,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           inhalt: (
             <>
               <p>
-                Über „Rückmeldung geben“ (das Symbol mit den zwei Gesichtern oben in der Leiste) schreiben Azubis, was sie im Lernmodul besser erklärt haben möchten. Diese Wünsche gehen an euch Ausbilder, weil ihr die Lerninhalte schreibt. Dazu lest ihr die Ideen fürs Portal mit.
+                Über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) schreiben Azubis, was sie im Lernmodul besser erklärt haben möchten. Diese Wünsche gehen an euch Ausbilder, weil ihr die Lerninhalte schreibt. Dazu lest ihr die Ideen fürs Portal mit.
               </p>
               <h3>So geht's</h3>
               <ol className="schritte">
@@ -1961,7 +1961,7 @@ const ADMIN: Kapitel[] = [
     gruppe: 'Verwaltung',
     inhalt: (
       <>
-        <p>Über „Rückmeldung geben“ (das Symbol mit den zwei Gesichtern oben in der Leiste) erreichen dich Fehler und Ideen fürs Portal.</p>
+        <p>Über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) erreichen dich Fehler und Ideen fürs Portal.</p>
         <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Fehler">Etwas funktioniert nicht. Mit Seite, Version, Browser, Fenstergröße und – wenn angehängt – einem Bildschirmfoto. Nur du liest das.</Begriff>

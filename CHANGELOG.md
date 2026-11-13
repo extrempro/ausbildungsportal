@@ -4,7 +4,7 @@
 
 ### Neu
 
-- **Rückmeldung geben:** Oben in der Leiste stehen zwei kleine Gesichter, ein frohes und ein trauriges (neben der Glocke). Sie öffnen ein Fenster mit drei Arten:
+- **Rückmeldung geben:** Oben in der Leiste stehen zwei kleine Daumen, einer hoch und einer runter (neben der Glocke). Sie öffnen ein Fenster mit drei Arten:
   - **Fehler melden** – wie bisher, mit Bildschirmfoto und technischen Angaben. Geht an den Betreiber des Portals (Super-Admin).
   - **Idee fürs Portal** – wenn dir etwas fehlt oder etwas einfacher ginge. Mit Name und Seite, ohne Bild und Technik. Lesen der Super-Admin und die Ausbilder.
   - **Lerninhalt besser erklären** (nur Azubis) – wenn etwas im Lernmodul unklar ist oder fehlt. Wer gerade im Lernmodul ist, bekommt die Art und das Thema vorausgewählt. Der Wunsch geht **ohne Namen** an die Ausbilder; gespeichert werden nur Text, Lernmodul, Thema und der Tag.

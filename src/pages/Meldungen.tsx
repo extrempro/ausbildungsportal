@@ -165,7 +165,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
     <>
       <h1>Rückmeldungen</h1>
       <p className="leise">
-        Fehler und Ideen fürs Portal, die über „Rückmeldung geben“ (das Symbol mit den zwei Gesichtern oben in der Leiste) gekommen sind. Sie bleiben gespeichert, bis du sie löschst. Die Ideen lesen auch die Ausbilder; Wünsche zu Lerninhalten gehen nur an sie.{' '}
+        Fehler und Ideen fürs Portal, die über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) gekommen sind. Sie bleiben gespeichert, bis du sie löschst. Die Ideen lesen auch die Ausbilder; Wünsche zu Lerninhalten gehen nur an sie.{' '}
         <HandbuchLink kapitel="meldungen">Rückmeldungen bearbeiten</HandbuchLink>
       </p>
       {fehler && (

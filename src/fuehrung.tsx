@@ -27,11 +27,11 @@ interface Schritt {
 const MENUE = ['.menue.ich .menue-knopf', '.tabs button'];
 const ENDE: Schritt = {
   titel: 'Das war es schon',
-  text: 'Handbuch, Konto und diese Führung findest du jederzeit hier im Menü – am PC an deinem Namen, auf dem Handy unter „Mehr“. Und wenn etwas nicht funktioniert oder dir etwas fehlt: Das Symbol mit den zwei Gesichtern oben in der Leiste öffnet „Rückmeldung geben“.',
+  text: 'Handbuch, Konto und diese Führung findest du jederzeit hier im Menü – am PC an deinem Namen, auf dem Handy unter „Mehr“. Und wenn etwas nicht funktioniert oder dir etwas fehlt: Das Symbol mit den zwei Daumen oben in der Leiste öffnet „Rückmeldung geben“.',
   ziel: MENUE,
 };
 
-/** Rückmeldung geben: der Knopf mit den zwei Gesichtern in der Kopfzeile – für alle Rollen */
+/** Rückmeldung geben: der Knopf mit Daumen hoch und Daumen runter in der Kopfzeile – für alle Rollen */
 const RUECK = (text: string): Schritt => ({ titel: 'Rückmeldung geben', text, pfad: '/', ziel: ['.rueck-knopf'] });
 const GLOCKE = (text: string): Schritt => ({ titel: 'Was gibt es Neues?', text, pfad: '/', ziel: ['.glocke-knopf'] });
 
@@ -73,7 +73,7 @@ const AZUBI: Schritt[] = [
     pfad: '/konto',
     ziel: ['#benachrichtigungen', 'main h1'],
   },
-  RUECK('Etwas funktioniert nicht, dir fehlt etwas, oder du möchtest etwas im Lernmodul besser erklärt haben? Das Symbol mit den zwei Gesichtern öffnet „Rückmeldung geben“. Wünsche zu Lerninhalten gehen ohne deinen Namen an die Ausbilder.'),
+  RUECK('Etwas funktioniert nicht, dir fehlt etwas, oder du möchtest etwas im Lernmodul besser erklärt haben? Das Symbol mit den zwei Daumen öffnet „Rückmeldung geben“. Wünsche zu Lerninhalten gehen ohne deinen Namen an die Ausbilder.'),
   ENDE,
 ];
 
@@ -122,8 +122,8 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     : []),
   RUECK(
     rolle === 'ausbilder'
-      ? 'Über die zwei Gesichter oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Was Azubis an den Lerninhalten besser erklärt haben möchten, liest du unter „Planung“ → „Rückmeldungen“.'
-      : 'Über die zwei Gesichter oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Das geht von jeder Seite aus.',
+      ? 'Über die zwei Daumen oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Was Azubis an den Lerninhalten besser erklärt haben möchten, liest du unter „Planung“ → „Rückmeldungen“.'
+      : 'Über die zwei Daumen oben in der Leiste meldest du einen Fehler oder schickst eine Idee fürs Portal. Das geht von jeder Seite aus.',
   ),
   ENDE,
 ];
@@ -132,7 +132,7 @@ const ADMIN: Schritt[] = [
   { titel: 'Willkommen', text: 'Als Super-Admin betreibst du das Portal: Konten, Protokoll, Rückmeldungen, Lerninhalte und Erscheinungsbild. Eine kurze Führung.', pfad: '/verwaltung/konten' },
   { titel: 'Konten', text: 'Hier legst du Konten an, sperrst oder löschst sie. Die Anmeldung der anderen läuft über Microsoft.', pfad: '/verwaltung/konten', ziel: ['main form', 'main h1'] },
   { titel: 'Protokoll', text: 'Anmeldungen und Änderungen – ohne Inhalte von Berichten und Plänen. Nur du siehst es.', pfad: '/verwaltung/protokoll', ziel: ['main table', 'main h1'] },
-  { titel: 'Rückmeldungen', text: 'Fehler und Ideen fürs Portal, die Nutzer über „Rückmeldung geben“ (das Symbol mit den zwei Gesichtern oben) schicken, landen hier. Die Zahl am Menüpunkt zeigt die offenen.', pfad: '/verwaltung/meldungen', ziel: ['.meldung', '.meldung-teams', 'main h1'] },
+  { titel: 'Rückmeldungen', text: 'Fehler und Ideen fürs Portal, die Nutzer über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben) schicken, landen hier. Die Zahl am Menüpunkt zeigt die offenen.', pfad: '/verwaltung/meldungen', ziel: ['.meldung', '.meldung-teams', 'main h1'] },
   { titel: 'Lerninhalte', text: 'Ausbilder reichen Lerninhalte für einen Beruf ein. Du prüfst sie hier und lädst sie hoch oder gibst sie mit einer Rückmeldung zurück.', pfad: '/verwaltung/lerninhalte', ziel: ['main h1'] },
   { titel: 'Erscheinungsbild', text: 'Das Logo des Betriebs, je eines für die helle und die dunkle Darstellung. Darunter schaltest du den Begleiter der Azubis für das ganze Portal ein oder aus.', pfad: '/verwaltung/erscheinungsbild', ziel: ['.logo-vorschau', 'main h1'] },
   ENDE,
