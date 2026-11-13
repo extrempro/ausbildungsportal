@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { useFensterFokus } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 
 /**
@@ -132,16 +133,11 @@ export function StufenLeiter({ erreicht, hoechste }: { erreicht: number; hoechst
 /** Fenster nach einem neuen Abzeichen: zeigt das Schild groß. Escape, der Knopf oder ein Klick daneben schließen es. */
 export function AbzeichenFeier({ erfolg, onZu }: { erfolg: Erfolg; onZu: () => void }) {
   const knopf = useRef<HTMLButtonElement>(null);
+  // Fokus auf „Weiter“, Tab bleibt im Fenster, Escape schließt, danach zurück
+  useFensterFokus(knopf, onZu);
   useEffect(() => {
-    const vorher = document.activeElement as HTMLElement | null;
     knopf.current?.focus();
-    const taste = (e: KeyboardEvent) => e.key === 'Escape' && onZu();
-    document.addEventListener('keydown', taste);
-    return () => {
-      document.removeEventListener('keydown', taste);
-      vorher?.focus?.();
-    };
-  }, [onZu]);
+  }, []);
   const a = erfolg.abzeichen;
   const stufe = a?.stufe ?? erfolg.rang?.stufe ?? 1;
   return (

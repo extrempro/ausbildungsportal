@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.61.0
+Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.61.1
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md), Farben und Bausteine in [gestaltung.md](gestaltung.md).
 
@@ -28,6 +28,8 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
 - [ ] **Begriffe:** Bericht (nicht Nachweis), Azubi, Ausbildungsbeauftragte, Planbaustein, Sammelplanung; gegenüber Azubis „Betreiber des Portals“, als Rolle „Super-Admin“. Anrede durchgehend „du“. Kurze Sätze, erklärte Fachwörter – die Leser sind zwischen 16 und 30 Jahre alt.
 - [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px, Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.
 - [ ] **Tastatur:** alles erreichbar, Escape schließt Fenster und Menüs, der Fokus kehrt dorthin zurück, wo er war.
+  - **Fenster** (`role="dialog"`) nutzen `useFensterFokus()` aus `src/dialoge.tsx`: Fokus beim Öffnen hinein, Tab bleibt drin, Escape schließt, danach zurück (WCAG 2.4.3). Kein eigener Nachbau.
+  - **Angeheftete Leisten** (sticky/fixed) dürfen das fokussierte Element nie verdecken (WCAG 2.4.11). Eine neue angeheftete Leiste kommt in `LEISTEN` in `src/fokusFrei.ts`. `e2e/11-fokus.test.ts` prüft beides.
 - [ ] **Hooks** stehen vor jedem frühen `return` einer Komponente.
 - [ ] **Handbuch gehört dazu – bei jeder neuen Funktion und jeder Änderung, ohne dass es eigens verlangt wird:**
   1. Das Handbuch (`src/pages/Handbuch.tsx`) beschreibt die Funktion für **jede Rolle, die sie sieht** – als eigenes Kapitel, wenn man danach suchen würde (Titel = das Wort, das auf dem Bildschirm steht), sonst als Absatz im passenden Kapitel. Für Azubis in kurzen Sätzen mit erklärten Begriffen.

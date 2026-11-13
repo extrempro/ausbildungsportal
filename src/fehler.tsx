@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClipboardEvent, FormEvent } from 'react';
 import { api } from './api';
 import type { Rolle } from './api';
-import { rueckfrage } from './dialoge';
+import { rueckfrage, useFensterFokus } from './dialoge';
 import { useUngespeichert } from './router';
 import { HandbuchLink } from './handbuchLink';
 
@@ -140,8 +140,6 @@ export function RueckmeldungFenster({ version, rolle, onZu }: { version: string;
   const [nimmtAuf, setNimmtAuf] = useState(false);
   const datei = useRef<HTMLInputElement>(null);
   const flaeche = useRef<HTMLElement>(null);
-  // wohin der Fokus nach dem Schließen zurückgeht – beim ersten Rendern gemerkt, bevor das Textfeld ihn bekommt
-  const vorher = useRef<HTMLElement | null>(document.activeElement as HTMLElement | null);
   // Schließen fragt nach, sobald Text oder Bild da sind – ein versehentliches Escape kostet sonst die ganze Beschreibung
   const hatEingabe = useRef(false);
   hatEingabe.current = !fertig && (text.trim() !== '' || bild !== null);
@@ -170,30 +168,8 @@ export function RueckmeldungFenster({ version, rolle, onZu }: { version: string;
   const arten: Art[] = ['fehler', 'idee', ...(bereiche && bereiche.length > 0 ? (['inhalt'] as const) : [])];
   const a = art ? ARTEN[art] : null;
 
-  useEffect(() => {
-    document.body.classList.add('dialog-offen');
-    const zurueck = vorher.current;
-    const taste = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') schliesse();
-      if (e.key !== 'Tab' || !flaeche.current) return;
-      const ziele = [...flaeche.current.querySelectorAll<HTMLElement>('button, textarea, input, select, summary, a[href]')].filter((el) => !el.hasAttribute('disabled') && !el.hidden);
-      const erstes = ziele[0];
-      const letztes = ziele.at(-1);
-      if (e.shiftKey && document.activeElement === erstes) {
-        e.preventDefault();
-        letztes?.focus();
-      } else if (!e.shiftKey && document.activeElement === letztes) {
-        e.preventDefault();
-        erstes?.focus();
-      }
-    };
-    window.addEventListener('keydown', taste);
-    return () => {
-      window.removeEventListener('keydown', taste);
-      document.body.classList.remove('dialog-offen');
-      zurueck?.focus?.();
-    };
-  }, [schliesse]);
+  // Fokus ins Fenster, Tab bleibt drin, Escape schließt (mit Nachfrage), danach zurück zum Knopf
+  useFensterFokus(flaeche, schliesse, { sperren: true });
 
   const sende = async (e: FormEvent) => {
     e.preventDefault();

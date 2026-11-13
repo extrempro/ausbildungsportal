@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.61.1] – 2026-11-13
+
+### Behoben
+
+Bedienung mit der Tastatur und mit Vorleseprogrammen (aus der Prüfung nach WCAG 2.2 AA):
+
+- **Leisten verdecken den Fokus nicht mehr:** Wer mit Tab durch eine Seite geht, sah am Handy und Tablet das gewählte Feld oft nicht – es lag unter der Leiste unten (oder unter Kopfzeile, Legende, Zeile „Inhalt“, Leiste im Bericht). Die Seite rollt jetzt so weit, dass es frei steht.
+- **Fenster holen den Fokus:** „Rückmeldung geben“ und „Mehr“ am Handy setzen den Fokus beim Öffnen ins Fenster und halten ihn dort; mit Tab kommt man nicht mehr hinter das Fenster. Beim Schließen steht er wieder auf dem Knopf. Alle Fenster (auch Begleiter, Abzeichen, Großansicht von Bildern) verhalten sich jetzt gleich.
+- **Glocke:** Bei mehr als 99 neuen Einträgen nennt der vorgelesene Name dieselbe Zahl, die man sieht („99+“).
+
 ## [0.61.0] – 2026-11-13
 
 ### Geändert

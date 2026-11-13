@@ -1,7 +1,7 @@
 import { Icon } from '../icons';
 import { Avatar } from '../avatar';
 import { EintragFelder } from '../eintragFelder';
-import { melde, rueckfrage } from '../dialoge';
+import { melde, rueckfrage, useFensterFokus } from '../dialoge';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import type { FormEvent } from 'react';
@@ -42,8 +42,6 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
 
   // Schließen fragt nach, wenn schon etwas eingegeben wurde
   const flaeche = useRef<HTMLElement>(null);
-  // schon beim ersten Rendern merken – danach liegt der Fokus bereits im Titelfeld
-  const vorher = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const geaendert = useRef(false);
   geaendert.current = JSON.stringify(e) !== JSON.stringify(start);
   useUngespeichert(geaendert.current);
@@ -54,29 +52,7 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
 
   // Dialog: Escape schließt, Tab bleibt im Dialog, die Seite dahinter scrollt nicht mit,
   // und nach dem Schließen steht der Fokus wieder dort, wo er vorher war
-  useEffect(() => {
-    document.body.classList.add('dialog-offen');
-    const taste = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') schliesse();
-      if (ev.key !== 'Tab' || !flaeche.current) return;
-      const ziele = [...flaeche.current.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href]')].filter((x) => !x.hasAttribute('disabled'));
-      const erstes = ziele[0];
-      const letztes = ziele[ziele.length - 1];
-      if (ev.shiftKey && document.activeElement === erstes) {
-        ev.preventDefault();
-        letztes?.focus();
-      } else if (!ev.shiftKey && document.activeElement === letztes) {
-        ev.preventDefault();
-        erstes?.focus();
-      }
-    };
-    window.addEventListener('keydown', taste);
-    return () => {
-      window.removeEventListener('keydown', taste);
-      document.body.classList.remove('dialog-offen');
-      vorher.current?.focus();
-    };
-  }, [schliesse]);
+  useFensterFokus(flaeche, schliesse, { sperren: true });
 
   const sende = async (ev: FormEvent) => {
     ev.preventDefault();

@@ -72,6 +72,7 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aussehen). Nimm vorhandene Bausteine, bevor du etwas neu baust.
 
 - **Rückfrage:** `rueckfrage(text, { ja: 'Konto löschen', gefahr: true })` – nie `window.confirm`.
+- **Fenster:** `role="dialog"` immer mit `useFensterFokus()` aus `src/dialoge.tsx` (Fokus hinein, Tab bleibt drin, Escape, zurück). Neue angeheftete Leisten in `LEISTEN` in `src/fokusFrei.ts` eintragen, damit sie den Fokus nicht verdecken.
 - **Bestätigung:** `melde('…')`. **Fehler:** an der Stelle, `.hinweis.fehler` mit `role="alert"`.
 - **Ungespeichertes:** `useUngespeichert()`; Seitenwechsel nur über `geheZu` oder `<Link>`.
 - **Knöpfe:** Tätigkeit + Gegenstand. Hauptknopf `.knopf`, Nebenknopf `.knopf.schlicht`. Gefüllter roter Knopf ist `knopf rot`; `.gefahr` ist nur rote Schrift für schlichte Knöpfe.
