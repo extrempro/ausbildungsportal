@@ -9464,3 +9464,117 @@ body:has(.begleiter-ecke.klein) .nach-oben {
     display: none;
   }
 }
+
+/* Navigation links einklappen (Lernmodul, Handbuch – nur am PC): eine schmale Leiste bleibt stehen */
+.navi-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.navi-kopf h2 {
+  margin-bottom: 0;
+}
+
+.lern-navi .navi-kopf {
+  margin-bottom: 8px;
+}
+
+.lern-navi .navi-kopf h2 {
+  margin: 0 0 0 8px;
+}
+
+nav.handbuch-inhalt .navi-kopf {
+  margin-bottom: 12px;
+}
+
+.navi-knopf {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-muted);
+  cursor: pointer;
+}
+
+.navi-knopf:hover {
+  background: var(--c-chip);
+  color: var(--c-text);
+}
+
+.lern-layout.navi-zu {
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+
+/* schmal nur am PC – darunter ist die Navigation die Zeile „Inhalt“ */
+@media (min-width: 1001px) {
+  .lern-navi.schmal {
+    display: flex;
+  }
+}
+
+nav.handbuch-inhalt.schmal {
+  display: flex;
+}
+
+.lern-navi.schmal,
+nav.handbuch-inhalt.schmal {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.lern-navi-schmal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 4px 0 0;
+  border-top: 1px solid var(--c-border);
+  list-style: none;
+}
+
+.lern-navi-nr {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.lern-navi-nr:hover {
+  background: var(--c-chip);
+  color: var(--c-text);
+}
+
+.lern-navi-nr[aria-current='page'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.lern-navi-nr .lern-punkt {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+@media (min-width: 1024px) {
+  .handbuch.navi-zu {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+}
