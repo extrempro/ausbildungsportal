@@ -361,6 +361,7 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
             <Begriff wort="Bericht abgezeichnet">Der Bericht ist unterschrieben und damit fertig.</Begriff>
             <Begriff wort="Bericht zurückgegeben">Du sollst etwas ändern. Ein Tipp auf die Zeile öffnet den Bericht, dort steht der Grund.</Begriff>
             <Begriff wort="Abzeichnung aufgehoben">Ein schon abgezeichneter Bericht wurde wieder geöffnet, weil noch etwas zu ändern ist. Der Grund steht am Bericht. Danach reichst du ihn neu ein.</Begriff>
+            <Begriff wort="Lerninhalte aktualisiert">In deinen Lerninhalten (oder in den Anleitungen für alle Berufe) wurden Abschnitte geändert oder ergänzt. Ein Tipp führt zu „Lernen“; dort steht am Themenfeld „Inhalt aktualisiert“. Diese Zeile gibt es nur in der Glocke, nicht per Teams oder E-Mail.</Begriff>
             <Begriff wort="Urlaub bestätigt, genehmigt, abgelehnt, storniert">Es hat sich etwas an deinem Urlaubsantrag getan. Die Zeile führt zu „Urlaub“.</Begriff>
             <Begriff wort="Neu für dich: Planer für deine Prüfung">Dein Ausbilder hat für dich den Planer freigeschaltet, zum Beispiel für dein Abschlussprojekt. Die Zeile führt dorthin. Mehr im Kapitel „Planer für deine Prüfung“.</Begriff>
           </>
@@ -703,7 +704,7 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Die Ampel eines Themenfelds ergibt sich aus den Unterthemen: „Sicher“, wenn mindestens 80 von 100 Unterthemen sicher sind und keines offen ist. „Offen“, wenn alle offen sind. Sonst „In Arbeit“.</li>
           <li>Die Prozentzahl: sicher zählt ganz, in Arbeit halb, offen gar nicht.</li>
-          <li>Steht bei einem Unterthema „Inhalt aktualisiert“, wurde das Cheatsheet geändert, seit du es bewertet hast. Lies es noch einmal und wähle „Als gesehen merken“.</li>
+          <li>Steht bei einem Unterthema „Inhalt aktualisiert“, wurde das Cheatsheet geändert, seit du es bewertet hast. Lies es noch einmal und wähle „Als gesehen merken“. Dass sich etwas geändert hat, zeigt dir auch die Glocke.</li>
           <li>Steht an einem Unterthema „Vertiefung“, gibt es dazu Zusatzwissen. Der Link darunter bringt dich hin – manchmal in ein anderes Themenfeld. Beim Zusatzwissen steht umgekehrt unter „Vertieft:“, zu welchen Unterthemen es gehört.</li>
           <li>Bei einem Ablauf gehst du mit „Nächster Schritt“ weiter oder lässt ihn mit „Ablauf abspielen“ von selbst laufen; das Tempo kannst du wählen. Die Tabellen daneben zeigen, was sich in diesem Schritt ändert.</li>
           <li>Hast du ein Zusatzwissen durch, setz den Haken bei „Gelesen“. Auch diesen Haken siehst nur du.</li>
@@ -1612,7 +1613,8 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   <strong>Keine Personen:</strong> In die Inhalte gehören keine Namen oder Daten von Azubis oder Kollegen.
                 </li>
                 <li>Bearbeiten mit einem Texteditor (Editor, Notepad++, VS Code) – nicht mit Word. Zeichensatz UTF-8, damit Umlaute stimmen.</li>
-                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt.</li>
+                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt. Sobald die neue Fassung im Portal ist, bekommen alle Azubis des Berufs außerdem einen Eintrag in der Glocke („Lerninhalte aktualisiert“) – nur dort, nicht per Teams oder E-Mail. Beim Paket für alle Berufe gilt das für alle Azubis.</li>
+                <li>Ist eine Änderung nur eine Kleinigkeit (Tippfehler, Formulierung), schreib in das Unterthema eine eigene Zeile <code>&lt;!-- kein-hinweis --&gt;</code>. Dann gibt es weder den Hinweis noch die Glocke.</li>
                 <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
                 <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>
                 <li>

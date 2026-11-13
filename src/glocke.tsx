@@ -25,7 +25,10 @@ type Art =
   | 'urlaub_zurueckgezogen'
   | 'urlaub_storniert'
   | 'planer_frei'
-  | 'planer_termine';
+  | 'planer_termine'
+  // Lerninhalte des Berufs bzw. die Anleitungen für alle Berufe wurden aktualisiert – nur für den Azubi selbst, nur in der Glocke
+  | 'lernen_aktualisiert'
+  | 'anleitungen_aktualisiert';
 
 interface Gruppe {
   id: number;
@@ -129,6 +132,9 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
       return { icon: 'haken', farbe: 'blau', kopf: azubi ? 'Neu für dich: Planer für deine Prüfung' : 'Planer für die Prüfung freigeschaltet', mitte: g.titel[0] ? `„${g.titel[0]}“` : '', zu: azubi ? '/planer' : `/azubis/${g.azubiId}` };
     case 'planer_termine':
       return { icon: 'plan', farbe: 'blau', kopf: 'Termine für die Prüfung eingetragen oder geändert', mitte: 'Sie stehen im Ausbildungsplan.', zu: azubi ? '/planer' : `/azubis/${g.azubiId}/plan` };
+    case 'lernen_aktualisiert':
+    case 'anleitungen_aktualisiert':
+      return { icon: 'lernen', farbe: 'blau', kopf: g.art === 'lernen_aktualisiert' ? 'Lerninhalte aktualisiert' : 'Anleitungen aktualisiert', mitte: `${n === 1 ? 'Ein Abschnitt' : `${n} Abschnitte`}${g.titel[0] ? ` in ${g.titel[0]}` : ''} – ein zweiter Blick lohnt sich.`, zu: g.art === 'lernen_aktualisiert' ? '/lernen' : '/anleitungen' };
     case 'urlaub_storniert':
       return { icon: 'urlaub', farbe: 'rot', kopf: 'Genehmigter Urlaub storniert', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
     default:
@@ -265,8 +271,14 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
                         </strong>
                         {z.mitte && <span className="glocke-mitte">{z.mitte}</span>}
                         <small>
-                          {wer}
-                          {fuer} · {wann(g.zeit)}
+                          {/* ohne handelnde Person (z. B. aktualisierte Lerninhalte) nur die Zeit */}
+                          {g.akteurName ? (
+                            <>
+                              {wer}
+                              {fuer} ·{' '}
+                            </>
+                          ) : null}
+                          {wann(g.zeit)}
                         </small>
                       </span>
                     </Link>

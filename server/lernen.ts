@@ -6,6 +6,7 @@ import { Fehler } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { transaktion } from './db';
+import { merkeLernAktualisierung } from './aktivitaet';
 import { hoechsteVon, HOECHSTE_STUFE, naechste, OHNE_QUIZ, rangVon, STUFEN, stufeVon } from './lernen/abzeichen';
 import { FAECHER, kartenVon, MEISTER_TAGE, naechstesFach, optionenFuer, QUIZ_BESTANDEN, quizFragen, zufall } from './lernen/ueben';
 import type { FeldStand } from './lernen/abzeichen';
@@ -111,6 +112,7 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
     k.log(`Lernpaket „${paket.titel}“ (${e.name}) geladen: ${inhalte.themenfelder.length} Themenfelder, Stand ${inhalte.meta.stand || 'unbekannt'}${fehler.length ? `, ${fehler.length} Fehler` : ''}`);
     for (const f of fehler.slice(0, 10)) k.log(`  ✖ ${f.datei}${f.zeile ? `:${f.zeile}` : ''}  ${f.text}`);
     uebernimmAenderungen(k.db, paket);
+    meldeAenderungen(k, paket);
   }
   for (const id of [...lager.pakete.keys()]) if (!gefunden.has(id)) lager.pakete.delete(id);
   return lager.pakete;
@@ -146,6 +148,44 @@ function uebernimmAenderungen(db: DB, p: Paket): void {
     }
     for (const [id, info] of unterthemaIndex(p.inhalte)) {
       if (info.keinHinweis) db.prepare('UPDATE lern_status SET inhalt_hash = ? WHERE paket = ? AND unterthema_id = ? AND inhalt_hash IS NOT NULL').run(info.hash, p.id, id);
+    }
+  });
+}
+
+/**
+ * Vergleicht den Inhaltsstand mit dem zuletzt gemerkten und trägt bei geänderten oder neuen Unterthemen
+ * einen Eintrag in die Glocke der betroffenen Azubis ein: beim Paket eines Berufs dessen Azubis, beim Paket
+ * „für alle Berufe“ alle Azubis. Änderungen mit <!-- kein-hinweis --> und umbenannte Unterthemen mit gleichem Inhalt zählen nicht.
+ * Beim allerersten Einlesen eines Pakets wird nur der Stand gemerkt.
+ */
+function meldeAenderungen(k: Kontext, p: Paket): void {
+  const db = k.db;
+  const index = unterthemaIndex(p.inhalte);
+  if (index.size === 0) return; // kaputtes oder leeres Paket: nichts melden und den gemerkten Stand behalten
+  const alt = new Map((db.prepare('SELECT unterthema_id AS id, hash FROM lern_paket_stand WHERE paket = ?').all(p.id) as { id: string; hash: string }[]).map((z) => [z.id, z.hash]));
+  const vorher = new Map(Object.entries(p.inhalte.umbenennungen).map(([a, n]) => [n, a]));
+  const felder = new Set<string>();
+  let anzahl = 0;
+  if (alt.size > 0) {
+    for (const [id, info] of index) {
+      const h = alt.get(id) ?? alt.get(vorher.get(id) ?? '');
+      if (h === info.hash || info.keinHinweis) continue;
+      anzahl++;
+      const feld = p.inhalte.themenfelder.find((f) => id.startsWith(`${f.id}.`));
+      if (feld) felder.add(feld.titel);
+    }
+  }
+  transaktion(db, () => {
+    db.prepare('DELETE FROM lern_paket_stand WHERE paket = ?').run(p.id);
+    const neu = db.prepare('INSERT INTO lern_paket_stand (paket, unterthema_id, hash) VALUES (?, ?, ?)');
+    for (const [id, info] of index) neu.run(p.id, id, info.hash);
+    if (anzahl === 0) return;
+    const titel = [...felder].slice(0, 3).map((t) => `„${t}“`).join(', ') + (felder.size > 3 ? ' und weiteren' : '');
+    const beruf = (db.prepare("SELECT a.benutzer_id AS id FROM azubi_profil a JOIN beruf b ON b.id = a.beruf_id JOIN benutzer u ON u.id = a.benutzer_id WHERE b.lernpaket = ? AND u.status = 'aktiv'").all(p.id) as { id: number }[]).map((z) => z.id);
+    if (beruf.length) merkeLernAktualisierung(db, k.jetzt(), 'lernen_aktualisiert', beruf, titel, anzahl);
+    if (allgemeinesPaketId(db) === p.id) {
+      const alle = (db.prepare("SELECT id FROM benutzer WHERE rolle = 'azubi' AND status = 'aktiv'").all() as { id: number }[]).map((z) => z.id);
+      if (alle.length) merkeLernAktualisierung(db, k.jetzt(), 'anleitungen_aktualisiert', alle, titel, anzahl);
     }
   });
 }
