@@ -30,7 +30,7 @@ Das Inhaltsverzeichnis ordnet die Kapitel in Gruppen, immer in dieser Reihenfolg
 | Verwaltung | Stammdaten, Firmentermine, Konten, Protokoll, Aufgaben des Super-Admins |
 | Dateien und Formate | Aufbau von Dateien zum Import oder Einreichen – getrennt von der Anleitung, wie man vorgeht |
 | Konto und Nachrichten | Konto, Profilbild, Glocke, Benachrichtigungen |
-| Hilfe | Fehler melden, häufige Fragen |
+| Hilfe | Rückmeldung geben, häufige Fragen |
 
 Eine neue Gruppe kommt nur hinzu, wenn mindestens zwei Kapitel in keine vorhandene passen. Sie wird in `GRUPPEN` in `Handbuch.tsx` und hier eingetragen.
 

@@ -6,6 +6,7 @@ import { HandbuchLink } from '../handbuchLink';
 
 interface Meldung {
   id: number;
+  art: 'fehler' | 'idee';
   zeit: string;
   name: string;
   rolle: Rolle;
@@ -30,15 +31,14 @@ interface Antwort {
 /** Text zum Weitergeben, z. B. an die Entwicklung – ohne Namen der meldenden Person. */
 function alsText(m: Meldung): string {
   return [
-    `Fehlermeldung aus dem Ausbildungsportal (Nr. ${m.id}, ${zeit(m.zeit)})`,
+    `${m.art === 'idee' ? 'Idee fürs Ausbildungsportal' : 'Fehlermeldung aus dem Ausbildungsportal'} (Nr. ${m.id}, ${zeit(m.zeit)})`,
     '',
     m.text,
     '',
     `Rolle: ${ROLLE_TEXT[m.rolle] ?? m.rolle}`,
     `Seite: ${m.seite || '–'}`,
     `Version: ${m.version || '–'}`,
-    `Fenster: ${m.fenster || '–'}`,
-    `Browser: ${m.browser || '–'}`,
+    ...(m.art === 'fehler' ? [`Fenster: ${m.fenster || '–'}`, `Browser: ${m.browser || '–'}`] : []),
     ...(m.hatBild ? ['Bildschirmfoto: im Portal vorhanden (nicht in diesem Text)'] : []),
     ...(m.technik ? ['Fehlermeldungen des Browsers:', m.technik] : []),
   ].join('\n');
@@ -48,6 +48,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
   const [daten, setDaten] = useState<Antwort | null>(null);
   const [fehler, setFehler] = useState('');
   const [kopiert, setKopiert] = useState<number | null>(null);
+  const [zeige, setZeige] = useState<'alle' | 'fehler' | 'idee'>('alle');
   // geladene Bildschirmfotos je Meldung – erst auf Klick, die Liste selbst enthält keine Bilder
   const [bilder, setBilder] = useState<Record<number, string>>({});
   const [gross, setGross] = useState<number | null>(null);
@@ -78,7 +79,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
     if (!(await rueckfrage(`Meldung Nr. ${m.id} von ${m.name} endgültig löschen?\n\nText${m.hatBild ? ', Bildschirmfoto' : ''} und technische Angaben sind danach weg.`, { ja: 'Meldung löschen', gefahr: true }))) return;
     await api<Antwort>('DELETE', `/api/fehlermeldungen/${m.id}`).then((r) => {
       nimm(r);
-      melde(`Meldung Nr. ${m.id} gelöscht.`);
+      melde(`Rückmeldung Nr. ${m.id} gelöscht.`);
     }, zeigeFehler);
   };
   const kopiere = async (m: Meldung) => {
@@ -91,8 +92,9 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
   };
 
   const karte = (m: Meldung) => (
-    <article key={m.id} className={`karte meldung ${m.status}`} aria-label={`Meldung Nr. ${m.id} von ${m.name}`}>
+    <article key={m.id} className={`karte meldung ${m.status}`} aria-label={`${m.art === 'idee' ? 'Idee' : 'Fehlermeldung'} Nr. ${m.id} von ${m.name}`}>
       <header className="meldung-kopf">
+        <span className={`pille ${m.art === 'idee' ? 'blau' : 'rot'}`}>{m.art === 'idee' ? 'Idee' : 'Fehler'}</span>
         <strong>{m.name}</strong>
         <span className="leise">
           {ROLLE_TEXT[m.rolle] ?? m.rolle} · {zeit(m.zeit)} · Nr. {m.id}
@@ -105,10 +107,14 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
         <dd>{m.seite || '–'}</dd>
         <dt>Version</dt>
         <dd>{m.version || '–'}</dd>
-        <dt>Fenster</dt>
-        <dd>{m.fenster || '–'}</dd>
-        <dt>Browser</dt>
-        <dd>{m.browser || '–'}</dd>
+        {m.art === 'fehler' && (
+          <>
+            <dt>Fenster</dt>
+            <dd>{m.fenster || '–'}</dd>
+            <dt>Browser</dt>
+            <dd>{m.browser || '–'}</dd>
+          </>
+        )}
         {m.technik && (
           <>
             <dt>Fehler im Browser</dt>
@@ -151,14 +157,16 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
     </article>
   );
 
-  const offen = daten?.meldungen.filter((m) => m.status === 'offen') ?? [];
-  const erledigt = daten?.meldungen.filter((m) => m.status === 'erledigt') ?? [];
+  const gezeigt = daten?.meldungen.filter((m) => zeige === 'alle' || m.art === zeige) ?? [];
+  const offen = gezeigt.filter((m) => m.status === 'offen');
+  const erledigt = gezeigt.filter((m) => m.status === 'erledigt');
+  const ideen = daten?.meldungen.filter((m) => m.art === 'idee').length ?? 0;
   return (
     <>
-      <h1>Fehlermeldungen</h1>
+      <h1>Rückmeldungen</h1>
       <p className="leise">
-        Was Nutzerinnen und Nutzer über „Fehler melden“ geschickt haben. Meldungen bleiben gespeichert, bis du sie löschst.{' '}
-        <HandbuchLink kapitel="meldungen">Fehlermeldungen</HandbuchLink>
+        Fehler und Ideen fürs Portal, die über „Rückmeldung geben“ (das Megafon oben in der Leiste) gekommen sind. Sie bleiben gespeichert, bis du sie löschst. Die Ideen lesen auch die Ausbilder; Wünsche zu Lerninhalten gehen nur an sie.{' '}
+        <HandbuchLink kapitel="meldungen">Rückmeldungen bearbeiten</HandbuchLink>
       </p>
       {fehler && (
         <p className="hinweis fehler" role="alert">
@@ -171,7 +179,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
             <strong>Benachrichtigung in Teams</strong> <span className={`pille ${daten.webhook ? 'gruen' : 'grau'}`}>{daten.webhook ? 'eingerichtet' : 'nicht eingerichtet'}</span>
             <p className="leise klein">
               {daten.webhook
-                ? `Bei jeder neuen Meldung geht ein Hinweis an den Teams-Kanal: Nummer, Rolle, Seite und ein Link hierher – ohne Namen und ohne Bild${daten.webhookMitText ? ', mit dem Text der Meldung' : ', ohne den Text der Meldung'}.`
+                ? `Bei jedem neuen Fehler und jeder neuen Idee geht ein Hinweis an den Teams-Kanal: Nummer, Rolle, Seite und ein Link hierher – ohne Namen und ohne Bild${daten.webhookMitText ? ', mit dem Text der Meldung' : ', ohne den Text der Meldung'}.`
                 : 'Wer den Server betreibt, trägt dafür in der .env die Adresse eines Teams-Workflows als FEHLER_WEBHOOK_URL ein. Die Anleitung steht in der README.'}
             </p>
           </div>
@@ -188,7 +196,17 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
         </section>
       )}
       {daten === null && !fehler && <p className="leise">Lädt …</p>}
-      {daten !== null && daten.meldungen.length === 0 && <p className="karte leise">Noch keine Meldungen.</p>}
+      {daten !== null && daten.meldungen.length === 0 && <p className="karte leise">Noch keine Rückmeldungen.</p>}
+      {daten !== null && ideen > 0 && ideen < daten.meldungen.length && (
+        <label className="meldung-filter">
+          Zeigen
+          <select value={zeige} onChange={(e) => setZeige(e.target.value as typeof zeige)}>
+            <option value="alle">Fehler und Ideen</option>
+            <option value="fehler">nur Fehler</option>
+            <option value="idee">nur Ideen</option>
+          </select>
+        </label>
+      )}
       {offen.length > 0 && (
         <section aria-label="Offene Meldungen">
           <h2>Offen ({offen.length})</h2>

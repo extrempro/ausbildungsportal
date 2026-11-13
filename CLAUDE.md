@@ -35,6 +35,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/test/` | Tests; `api.test.ts` enthält die Rechte-Tabelle aller Routen, `handbuch.test.ts` prüft die Handbuch-Verweise |
 | `server/berichte.ts`, `server/bericht-anhang.ts` | Berichtsheft (Wochen- und Tagesform) und Fotos/Dateien an Berichten – Dateityp am Dateianfang geprüft, Rechte wie der Bericht |
 | `server/firmentermin.ts` | Firmentermine für alle (Stammdaten) – reine Übersicht in Plan und Jahreskalender, bewusst ohne Glocke und nicht im Berichtsheft |
+| `server/meldungen.ts`, `src/fehler.tsx`, `src/pages/Rueckmeldungen.tsx`, `src/pages/Meldungen.tsx` | „Rückmeldung geben“ (Megafon in der Kopfzeile), drei Arten: Fehler (nur Super-Admin), Idee fürs Portal (Super-Admin bearbeitet, Ausbilder lesen mit), Wunsch zu Lerninhalten (nur Azubis; **ohne Person gespeichert**, nur für Ausbilder) |
 | `server/mail-gestalt.ts` | das gemeinsame Aussehen aller Mails (`gestalteMail`) – neue Mails nicht von Hand gestalten |
 | `server/aktivitaet.ts`, `server/benachrichtigung.ts` | Glocke und – daran angehängt – Benachrichtigungen per Teams und E-Mail (ohne Namen, nur für Berechtigte) |
 | `server/lernen.ts`, `server/lernen/` | Lernmodul (Inhaltspakete, Lernstand, Abzeichen, Üben); dazu ein Paket „für alle Berufe“ (Einstellung `lern_allgemein`, in den Stammdaten festgelegt), das jeder Azubi unter `/anleitungen` nur liest – ohne Lernstand, nichts wird gespeichert |
@@ -86,6 +87,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 ## Datenschutz und Recht – nicht verhandelbar
 
 - Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung (außer seinen Terminen), der Begleiter (ob, welche Figur, Name), private Termine und Entwürfe sind **privat für den Azubi**: keine Route und keine Ansicht für Ausbilder, Beauftragte oder Super-Admin, keine Rangliste.
+- Wünsche zu Lerninhalten („Lerninhalt besser erklären“) werden **ohne Person** gespeichert: kein Konto, kein Name, keine Uhrzeit, keine technischen Angaben. Nur Ausbilder lesen sie – nicht der Super-Admin, nicht die Beauftragten. Nichts ergänzen, was die Person erkennbar macht (auch keine Glocke: Aktivitäten speichern, wer etwas getan hat).
 - Teams-Karten ohne Namen. Benachrichtigungen nennen nur die Person, an die sie gehen (Anrede mit Vornamen) – keine anderen Namen, keine Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
 - Geheimnisse (Webhook-Adressen, SMTP-Zugang, Kalender-Link) stehen nur in `.env` und werden nie protokolliert.
 - Das Repository ist **öffentlich**: keine privaten Daten, keine echten Namen oder Mailadressen, kein `data/`, keine `.env` – auch nicht in Tests, Commits und Pull-Request-Texten.
