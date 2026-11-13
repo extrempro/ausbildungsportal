@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
-import { EinreichungKarte } from '../lernen/einreichung';
+import { EinreichungKarte, EinreichungVerlauf } from '../lernen/einreichung';
 import type { Einreichung } from '../lernen/einreichung';
 
 /** Super-Admin: eingereichte Lerninhalte prüfen – hochladen oder mit Rückmeldung zurückgeben. */
@@ -24,7 +24,6 @@ export function LernEinreichungen({ onGeaendert }: { onGeaendert: (offen: number
   if (fehler && !d) return <Ladefehler titel="Lerninhalte" text={fehler} />;
   if (!d) return <p className="leise">Lädt …</p>;
   const offen = d.einreichungen.filter((e) => e.status === 'eingereicht');
-  const erledigt = d.einreichungen.filter((e) => e.status !== 'eingereicht');
   return (
     <>
       <h1>Lerninhalte</h1>
@@ -44,16 +43,7 @@ export function LernEinreichungen({ onGeaendert }: { onGeaendert: (offen: number
           </ul>
         )}
       </section>
-      {erledigt.length > 0 && (
-        <details className="karte">
-          <summary>Erledigte Einreichungen ({erledigt.length})</summary>
-          <ul className="antrag-liste">
-            {erledigt.map((e) => (
-              <EinreichungKarte key={e.id} e={e} onGeaendert={lade} />
-            ))}
-          </ul>
-        </details>
-      )}
+      <EinreichungVerlauf einreichungen={d.einreichungen} />
     </>
   );
 }

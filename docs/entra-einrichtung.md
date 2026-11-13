@@ -1,6 +1,6 @@
 # Anmeldung über Microsoft Entra ID einrichten
 
-Stand: 10.11.2026 · passt zu Version 0.54.6
+Stand: 10.11.2026 · passt zu Version 0.55.0
 
 Diese Anleitung beschreibt, wie das Ausbildungsportal im eigenen Entra-Mandanten als Anwendung angelegt wird, damit sich Azubis, Ausbildungsbeauftragte und Ausbilder mit ihrem Microsoft-Konto anmelden können. Der Super-Admin meldet sich weiterhin lokal an und braucht nichts davon.
 

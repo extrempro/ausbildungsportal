@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, datum } from '../api';
+import { api, datum, zeit } from '../api';
 import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { useLern } from '../lernen/basis';
-import { EinreichenFormular, EinreichungKarte } from '../lernen/einreichung';
+import { EinreichenFormular, EinreichungTeil, EinreichungVerlauf } from '../lernen/einreichung';
 import type { Einreichung } from '../lernen/einreichung';
 import { LernReiter } from '../lernen/teile';
 import { Link } from '../router';
@@ -44,7 +44,24 @@ export function LerninhalteListe({ ausbilder }: { ausbilder: boolean }) {
         Hier liest du, was die Azubis im Lernmodul lernen: Themenfelder, Cheatsheets, Zusatzwissen und das Kompendium. Den Lernstand einzelner Azubis siehst du nicht – der gehört ihnen allein.{' '}
         <HandbuchLink kapitel="lernansicht">Lerninhalte ansehen</HandbuchLink>
       </p>
-      {pakete.length === 0 ? (
+      {ausbilder && einr ? (
+        <>
+          {karten(pakete, einr.einreichungen).length === 0 ? (
+            <p className="karte leise">Im Portal liegen noch keine Lerninhalte. Reiche unten das erste Lernmodul ein.</p>
+          ) : (
+            <ul className="antrag-liste lern-paket-liste">
+              {karten(pakete, einr.einreichungen).map((k) => (
+                <PaketKarte key={k.kennung} k={k} maxMb={einr.maxMb} onGeaendert={lade} />
+              ))}
+            </ul>
+          )}
+          <details className="karte">
+            <summary>Neues Lernmodul einreichen</summary>
+            <EinreichenFormular maxMb={einr.maxMb} onEingereicht={lade} />
+          </details>
+          <EinreichungVerlauf einreichungen={einr.einreichungen} />
+        </>
+      ) : pakete.length === 0 ? (
         <p className="karte leise">Auf dem Server liegen noch keine Lerninhalte. Der Betreiber des Portals bindet sie als Ordner ein.</p>
       ) : (
         <ul className="lern-pakete">
@@ -52,30 +69,12 @@ export function LerninhalteListe({ ausbilder }: { ausbilder: boolean }) {
             <li key={p.id}>
               <Link zu={`/lerninhalte/${p.id}`} className="karte lern-kachel">
                 <strong>{p.titel}</strong>
-                <span className="leise klein">
-                  {p.themenfelder} Themenfelder · {p.unterthemen} Unterthemen{p.stand ? ` · Stand ${datum(p.stand)}` : ''}
-                </span>
-                <span className="klein">{p.berufe.length ? `Eingeschaltet für: ${p.berufe.join(', ')}` : 'Für noch keinen Beruf eingeschaltet – Azubis sehen dieses Lernmodul nicht.'}</span>
+                <span className="leise klein">{umfang(p)}</span>
+                <span className="klein">{fuerWen(p)}</span>
               </Link>
             </li>
           ))}
         </ul>
-      )}
-
-      {ausbilder && einr && (
-        <>
-          <EinreichenFormular maxMb={einr.maxMb} onEingereicht={lade} />
-          {einr.einreichungen.length > 0 && (
-            <section>
-              <h2 className="abschnitt-titel">Einreichungen</h2>
-              <ul className="antrag-liste">
-                {einr.einreichungen.map((e) => (
-                  <EinreichungKarte key={e.id} e={e} onGeaendert={lade} />
-                ))}
-              </ul>
-            </section>
-          )}
-        </>
       )}
       {!ausbilder && (
         <p className="hinweis" role="note">
@@ -83,6 +82,98 @@ export function LerninhalteListe({ ausbilder }: { ausbilder: boolean }) {
         </p>
       )}
     </>
+  );
+}
+
+const umfang = (p: PaketZeile) => `${p.themenfelder} Themenfelder · ${p.unterthemen} Unterthemen${p.stand ? ` · Stand ${datum(p.stand)}` : ''}`;
+const fuerWen = (p: PaketZeile) => (p.berufe.length ? `Eingeschaltet für: ${p.berufe.join(', ')}` : 'Für noch keinen Beruf eingeschaltet – Azubis sehen dieses Lernmodul nicht.');
+
+/** Eine Karte je Lernmodul: das Paket im Portal (wenn es schon eins gibt) und die jüngste Einreichung dazu. */
+interface Karte {
+  kennung: string;
+  paket: PaketZeile | null;
+  letzte: Einreichung | null;
+}
+function karten(pakete: PaketZeile[], einreichungen: Einreichung[]): Karte[] {
+  // die Liste kommt so vom Server: wartende zuerst, dann die neuesten – der erste Treffer je Kennung ist der, der zählt
+  const letzte = (kennung: string) => einreichungen.find((e) => e.kennung === kennung) ?? null;
+  const out: Karte[] = pakete.map((p) => ({ kennung: p.id, paket: p, letzte: letzte(p.id) }));
+  // noch nicht im Portal: neue Lernmodule, die auf die Prüfung warten oder zurückgegeben wurden
+  for (const e of einreichungen) {
+    if (out.some((k) => k.kennung === e.kennung)) continue;
+    const l = letzte(e.kennung)!;
+    if (l.status === 'eingereicht' || l.status === 'zurueck') out.push({ kennung: e.kennung, paket: null, letzte: l });
+  }
+  return out;
+}
+
+function PaketKarte({ k, maxMb, onGeaendert }: { k: Karte; maxMb: number; onGeaendert: () => Promise<void> | void }) {
+  const [neu, setNeu] = useState(false);
+  const { paket: p, letzte: e } = k;
+  const wartet = e?.status === 'eingereicht';
+  const zurueck = e?.status === 'zurueck';
+  const pille = wartet
+    ? { farbe: 'gelb', text: p ? 'Neue Fassung wartet auf Prüfung' : 'Wartet auf Prüfung – noch nicht im Portal' }
+    : zurueck
+      ? { farbe: 'rot', text: p ? 'Neue Fassung zurückgegeben' : 'Zurückgegeben – noch nicht im Portal' }
+      : { farbe: 'gruen', text: 'Im Portal' };
+  return (
+    <li className="karte antrag">
+      <div className="antrag-kopf">
+        <h2>
+          {p?.titel ?? e?.titel ?? k.kennung} <code>{k.kennung}</code>
+        </h2>
+        <span className={`pille ${pille.farbe}`}>{pille.text}</span>
+      </div>
+      {p && (
+        <p className="antrag-zeile">
+          <span className="leise">{umfang(p)}</span>
+          <br />
+          <span className="klein">{fuerWen(p)}</span>
+        </p>
+      )}
+      {e?.status === 'hochgeladen' && (
+        <p className="leise klein">
+          Zuletzt hochgeladen von {e.geprueftVon} am {zeit(e.geprueftAm)}
+          {e.rueckmeldung ? ` – „${e.rueckmeldung}“` : '.'}
+        </p>
+      )}
+      {e && (wartet || zurueck) && (
+        <div className="lern-paket-einr">
+          <h3>{wartet ? 'Eingereichte Fassung' : 'Zurückgegebene Fassung'}</h3>
+          <EinreichungTeil e={e} onGeaendert={onGeaendert} />
+        </div>
+      )}
+      {neu ? (
+        <div className="lern-paket-einr">
+          <h3>Lerninhalte aktualisieren</h3>
+          <EinreichenFormular
+            maxMb={maxMb}
+            fest={k.kennung}
+            onAbbrechen={() => setNeu(false)}
+            onEingereicht={async () => {
+              setNeu(false);
+              await onGeaendert();
+            }}
+          />
+        </div>
+      ) : (
+        <p className="aktionen links">
+          {p && (
+            <Link zu={`/lerninhalte/${p.id}`} className="knopf schlicht">
+              Lerninhalte ansehen
+            </Link>
+          )}
+          {wartet ? (
+            <span className="leise klein">Aktualisieren geht wieder, sobald über die eingereichte Fassung entschieden ist.</span>
+          ) : (
+            <button type="button" className={`knopf${p && !zurueck ? ' schlicht' : ''}`} onClick={() => setNeu(true)}>
+              {p ? 'Lerninhalte aktualisieren' : 'Neue Fassung einreichen'}
+            </button>
+          )}
+        </p>
+      )}
+    </li>
   );
 }
 
