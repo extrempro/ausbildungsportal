@@ -10,6 +10,7 @@ import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 import { HandbuchLink } from '../handbuchLink';
 import { Avatar } from '../avatar';
 import { Benachrichtigungen } from '../benachrichtigungen';
+import { Link } from '../router';
 
 export function PasswortFormular({ onFertig }: { onFertig: () => void | Promise<void> }) {
   const [meldung, setMeldung] = useState<{ text: string; fehler: boolean } | null>(null);
@@ -165,6 +166,11 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
     await api('PUT', '/api/ich/theme', { theme });
     await onGeaendert();
   };
+  const setzeVersionshinweis = async (an: boolean) => {
+    await api('PUT', '/api/ich/versionshinweis', { an });
+    await onGeaendert();
+    melde('Gespeichert.');
+  };
 
   return (
     <>
@@ -232,6 +238,13 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
             <option value="dark">Dunkel</option>
           </select>
         </label>
+        <label className="haken abstand-oben">
+          <input type="checkbox" checked={konto.versionshinweis !== false} onChange={(e) => void setzeVersionshinweis(e.target.checked)} />
+          Hinweis zeigen, wenn das Portal aktualisiert wurde
+        </label>
+        <p className="leise klein">
+          Gemeint sind „Das Portal wurde aktualisiert – Seite neu laden“ und „Das Portal wurde auf Version … aktualisiert“. Ist der Haken aus, kommt keiner davon; lade die Seite dann nach einem Update selbst neu, falls etwas nicht richtig funktioniert. Neuerungen stehen immer unter <Link zu="/versionen">Versionshinweise</Link>.
+        </p>
       </section>
 
       {konto.rolle !== 'admin' && <Benachrichtigungen rolle={konto.rolle} />}

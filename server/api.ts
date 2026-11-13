@@ -297,7 +297,7 @@ export const ROUTEN: Route[] = [
     },
   },
 
-  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: alsKonto(c.b), version: c.k.version, lernen: paketVon(c.k, c.b) !== null, anleitungen: c.b.rolle === 'azubi' ? (allgemeinesPaket(c.k)?.titel ?? null) : null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
+  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: { ...alsKonto(c.b), versionshinweis: c.b.versionshinweis === 1 }, version: c.k.version, lernen: paketVon(c.k, c.b) !== null, anleitungen: c.b.rolle === 'azubi' ? (allgemeinesPaket(c.k)?.titel ?? null) : null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
 
   {
     m: 'PUT',
@@ -328,6 +328,18 @@ export const ROUTEN: Route[] = [
       const theme = koerper(c).theme;
       if (theme !== 'auto' && theme !== 'light' && theme !== 'dark') throw new Fehler(400, 'Unbekanntes Farbschema');
       c.k.db.prepare('UPDATE benutzer SET theme = ? WHERE id = ?').run(theme, c.b.id);
+      return { status: 200, body: { ok: true } };
+    },
+  },
+
+  {
+    m: 'PUT',
+    p: '/api/ich/versionshinweis',
+    wer: 'alle',
+    h: (c) => {
+      const an = koerper(c).an;
+      if (typeof an !== 'boolean') throw new Fehler(400, 'Bitte an oder aus angeben');
+      c.k.db.prepare('UPDATE benutzer SET versionshinweis = ? WHERE id = ?').run(an ? 1 : 0, c.b.id);
       return { status: 200, body: { ok: true } };
     },
   },

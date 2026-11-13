@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.63.0] – 2026-11-13
+
+### Neu
+
+- **Hinweise auf neue Versionen abschaltbar:** Unter „Konto“ → „Darstellung“ lässt sich für jede Rolle einstellen, ob „Das Portal wurde aktualisiert“ erscheint. Standard: an.
+
+### Behoben
+
+- **Update-Hinweis in der App am Handy:** Kehrst du in die App zurück, prüft das Portal jetzt sofort, ob es eine neue Version gibt – auch ohne Glocke (Super-Admin). Bisher kam der Hinweis „Das Portal wurde aktualisiert“ manchmal erst nach dem nächsten Klick.
+- **Update ohne Hinweis:** Startet die App am Handy frisch, lädt sie die neue Version gleich mit – bisher ohne jeden Hinweis. Jetzt steht einmal unten „Das Portal wurde auf Version … aktualisiert“ mit „Was ist neu?“ (führt zu den Versionshinweisen). Der Browser merkt sich dafür nur die zuletzt gesehene Versionsnummer.
+
 ## [0.62.0] – 2026-11-13
 
 ### Neu

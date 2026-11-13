@@ -9688,3 +9688,8 @@ button.lern-navi-feld[aria-current='location'] {
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
+
+/* Abstand nach oben, z. B. ein Haken unter einer Auswahl in derselben Karte */
+.abstand-oben {
+  margin-top: 16px;
+}

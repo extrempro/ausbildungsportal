@@ -58,6 +58,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'PUT /api/ich/bild': 'alle',
     'GET /api/benutzer/:id/bild': 'alle',
     'PUT /api/ich/theme': 'alle',
+    'PUT /api/ich/versionshinweis': 'alle',
     'GET /api/konten': 'admin,ausbilder',
     'POST /api/konten': 'admin,ausbilder',
     'PATCH /api/konten/:id': 'admin,ausbilder',
@@ -708,6 +709,19 @@ test('Farbschema: nur bekannte Werte', async () => {
   assert.equal((await ruf(u, 'PUT', '/api/ich/theme', { cookies, body: { theme: 'dark' } })).status, 200);
   assert.equal((await ruf(u, 'PUT', '/api/ich/theme', { cookies, body: { theme: 'pink' } })).status, 400);
   assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies })).konto.theme, 'dark');
+});
+
+test('Hinweise auf neue Versionen: Standard an, für jede Rolle abschaltbar', async () => {
+  const u = await umgebung();
+  const w = alle(u);
+  for (const wer of [w.azubi, w.beauftragter, w.ausbilder, admin(u.db)]) {
+    const cookies = sitzung(u, wer);
+    if (wer.rolle === 'admin') ohneWechsel(u.db, wer.id);
+    assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies })).konto.versionshinweis, true);
+    assert.equal((await ruf(u, 'PUT', '/api/ich/versionshinweis', { cookies, body: { an: false } })).status, 200);
+    assert.equal(koerper(await ruf(u, 'GET', '/api/ich', { cookies })).konto.versionshinweis, false);
+    assert.equal((await ruf(u, 'PUT', '/api/ich/versionshinweis', { cookies, body: { an: 'manchmal' } })).status, 400);
+  }
 });
 
 test('Entwicklungsanmeldung gibt es nur mit DEV_ANMELDUNG und nie in Produktion', async () => {
