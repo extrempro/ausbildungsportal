@@ -843,7 +843,7 @@ const AZUBI: Kapitel[] = [
         </p>
         <h3>So geht's</h3>
         <ol className="schritte">
-          <li>Öffne „Lernen“. Hast du ein Lernmodul für deinen Beruf, steht der Bereich oben als letzter Reiter. Hast du keins, landest du direkt dort.</li>
+          <li>Öffne „Lernen“. Hast du ein Lernmodul für deinen Beruf, steht der Bereich oben in der Auswahl an letzter Stelle – neben „Themenfelder“, „Kompendium“ und „Üben“. Hast du keins, landest du direkt dort.</li>
           <li>Wähle eine Anleitung. Sie ist in Abschnitte geteilt; jeder Abschnitt hat kurze Stichpunkte und einen Merksatz.</li>
           <li>Unter „Zum Vertiefen“ stehen längere Stücke – zum Beispiel ein Vorgehen in Schritten oder eine Checkliste. Mit „Anzeigen“ klappst du sie auf.</li>
           <li>Am PC wechselst du links zwischen den Anleitungen und springst zu einem Abschnitt. Am Handy geht das über „Anleitung wechseln“.</li>

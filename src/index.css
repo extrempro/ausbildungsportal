@@ -5311,6 +5311,30 @@ html.dark {
   color: var(--c-accent);
 }
 
+/* Handy: Die Reiter brechen in mehrere Zeilen um – als Unterstreichung sind sie dann kaum als Auswahl zu erkennen.
+   Deshalb hier als umrandete Knöpfe, der gewählte gefüllt. */
+@media (max-width: 699px) {
+  .lern-reiter {
+    gap: 8px;
+    border-bottom: 0;
+  }
+
+  .lern-reiter a {
+    padding: 0 14px;
+    margin-bottom: 0;
+    border: 1px solid var(--c-rand-feld);
+    border-radius: 999px;
+    background: var(--c-card);
+    color: var(--c-text);
+  }
+
+  .lern-reiter a[aria-current='page'] {
+    border-color: var(--c-accent);
+    background: var(--c-accent);
+    color: var(--c-on-accent);
+  }
+}
+
 /* ---------- Kompendium ---------- */
 .komp-filter {
   display: flex;
