@@ -1,6 +1,6 @@
 # Bedienregeln
 
-Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.60.0
+Stand: 13.11.2026 · gilt ab Version 0.16.0, zuletzt ergänzt mit 0.61.0
 
 Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funktion und jede Änderung** an der Oberfläche. Hintergrund und Befunde stehen in [iso-9241.md](iso-9241.md), Farben und Bausteine in [gestaltung.md](gestaltung.md).
 
@@ -20,9 +20,11 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
   1. **Gleich erreichbar:** Was am PC erreichbar ist, ist am Tablet und am Handy genauso erreichbar – höchstens an anderer Stelle („Mehr“ statt Hauptleiste). Der Test `e2e/10-navigation.test.ts` prüft das für jede Rolle.
   2. **Gleicher Ort für Gleiches:** Neue Seiten gehören in eine vorhandene Gruppe – Hauptleiste (tägliche Arbeit), „Planung“ (Pläne über einzelne Azubis hinaus, Lerninhalte), „Verwaltung“ (Konten, Stammdaten, Rückmeldungen), Menü am Namen (Persönliches). Dieselbe Art Seite steht bei allen Rollen in derselben Gruppe, soweit die Rolle Gruppen hat.
   3. **Zahlen gehen nicht verloren:** Ein Menüpunkt mit Zahl zeigt sie auch in „Planung“, „Verwaltung“ und „Mehr“; der Knopf davor zeigt die Summe.
-  4. **Eine Grenze:** Unter 1024 px wechselt *alles* zur Darstellung für Tablet und Handy – Leiste unten statt oben, Zeile „Inhalt“ statt Seitenleiste (Lernmodul, Handbuch), Ausbildungsplan ohne Seitenleiste. Keine eigenen Grenzen für einzelne Navigationen.
+  4. **Eine Grenze:** Unter 1024 px wechselt *alles* zur Darstellung für Tablet und Handy – Leiste unten statt oben, Zeile „Inhalt“ statt Seitenleiste (Lernmodul, Handbuch, Ausbildungsplan). Keine eigenen Grenzen für einzelne Navigationen.
   5. **Seiten-Navigation heißt gleich:** „Inhalt“ – am PC als Seitenleiste (einklappbar, siehe `NaviKnopf` in `src/ansicht.tsx`), am Handy als angeheftete Zeile, die zeigt, wo man liest. Mit Suchfeld heißt sie „Inhalt und Suche“. Neue lange Leseseiten bekommen dieselbe Bauform, keine eigene.
-  6. Zurück-Links nur auf echten Unterseiten (Azubi → Plan, Berichtsheft → Bericht, Themenfeld → alle Themenfelder).
+  6. **Reiter oder Zurück-Link:** Reiter (`nav.reiter`) nur zwischen *gleichrangigen* Seiten eines Bereichs – Themenfelder · Kompendium · Üben; Profil · Ausbildungsplan · Berichtsheft · Urlaub eines Azubis (`src/azubiReiter.tsx`). Eine Ebene tiefer gibt es keine Reiter, sondern einen Zurück-Link zur Ebene darüber (Themenfeld → „← Alle Themenfelder“, Bericht einer Woche → „← Berichtsheft“, die Seiten eines Azubis → „← Alle Azubis“).
+  7. **Symbole:** Jeder Menüpunkt und jede Gruppe hat ein eigenes Symbol; dieselbe Seitenart hat bei allen Rollen dasselbe (Rückmeldungen: die zwei Daumen).
+  8. **Kurznamen** in der Leiste unten nur, wo der Platz fehlt – und nur als Kürzung desselben Worts („Plan“, „Jahr“, „Meldungen“), nie ein anderes Wort. Was selten gebraucht wird, steht unter „Mehr“ mit vollem Namen.
 - [ ] **Begriffe:** Bericht (nicht Nachweis), Azubi, Ausbildungsbeauftragte, Planbaustein, Sammelplanung; gegenüber Azubis „Betreiber des Portals“, als Rolle „Super-Admin“. Anrede durchgehend „du“. Kurze Sätze, erklärte Fachwörter – die Leser sind zwischen 16 und 30 Jahre alt.
 - [ ] **Jedes Gerät:** kein waagerechter Überlauf bei 390 px, Bedienflächen mindestens 40 × 40 px, Schrift mindestens 12 px, jedes Feld mit Beschriftung, nichts Wichtiges nur im Tooltip oder nur durch Farbe.
 - [ ] **Tastatur:** alles erreichbar, Escape schließt Fenster und Menüs, der Fokus kehrt dorthin zurück, wo er war.

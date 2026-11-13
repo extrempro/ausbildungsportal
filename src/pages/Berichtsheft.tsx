@@ -5,6 +5,7 @@ import { api, berichtsheftPfad, datum, h, STATUS_FARBE, STATUS_TEXT, wocheText }
 import type { BerichtListe, BerichtStatus, Logos } from '../api';
 import { Icon } from '../icons';
 import { Link } from '../router';
+import { AzubiReiter, ZurueckZuAzubis } from '../azubiReiter';
 import { BerichtBlatt, PdfKnopf } from './Bericht';
 import { HandbuchLink } from '../handbuchLink';
 
@@ -85,12 +86,9 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      {!daten.eigenes && (
-        <p className="klein">
-          <Link zu={`/azubis/${azubiId}`}>← {daten.azubi.anzeigename}</Link>
-        </p>
-      )}
+      {!daten.eigenes && <ZurueckZuAzubis />}
       <h1>Berichtsheft{daten.eigenes ? '' : ` von ${daten.azubi.anzeigename}`}</h1>
+      {!daten.eigenes && <AzubiReiter id={azubiId} name={daten.azubi.anzeigename} />}
       <p className="leise">
         {daten.eigenes
           ? 'Für jede Woche deiner Ausbildung schreibst du einen Bericht (Ausbildungsnachweis): Was hast du gemacht, und wie viele Stunden?'

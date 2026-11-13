@@ -8,7 +8,9 @@ import type { FormEvent } from 'react';
 import { api, ART_TEXT, berichtsheftPfad, datum, plusTage, STATUS_FARBE, STATUS_TEXT } from '../api';
 import type { BerichtListe, BerichtStatus, PlanAntwort, PlanArt, PlanEintrag, PlanWoche, Unteraufgabe } from '../api';
 import { Link, useUngespeichert } from '../router';
+import { AzubiReiter, ZurueckZuAzubis } from '../azubiReiter';
 import { HandbuchLink } from '../handbuchLink';
+import { NaviKnopf, useAnsicht } from '../ansicht';
 
 interface Entwurf {
   id: number | null;
@@ -179,9 +181,10 @@ function merke(schluessel: string, wert: string): void {
   }
 }
 
-/** Höhe dessen, was oben fest stehen bleibt: Kopfzeile und Legende. */
+/** Höhe dessen, was oben fest stehen bleibt: Kopfzeile und – am PC – die Legende bzw. – darunter – die Zeile „Inhalt“. Ausgeblendetes zählt 0. */
 function obenBelegt(): number {
-  return (document.querySelector('.leiste')?.getBoundingClientRect().height ?? 60) + (document.querySelector('.plan-legende')?.getBoundingClientRect().height ?? 0);
+  const hoehe = (sel: string) => document.querySelector(sel)?.getBoundingClientRect().height ?? 0;
+  return (document.querySelector('.leiste')?.getBoundingClientRect().height ?? 60) + hoehe('.plan-legende') + hoehe('.plan-inhalt');
 }
 
 /** Welche Woche steht gerade oben im Fenster? (aus dem FISI-Lernkompass übernommen) */
@@ -528,8 +531,8 @@ interface Abschnitt {
   kwBis: number;
 }
 
-/** Die Abteilungen eines Ausbildungsjahres der Reihe nach – am PC als Liste, am Handy zum Aufklappen. */
-function Durchlauf({ abschnitte, heute, onSpringe, klappbar }: { abschnitte: Abschnitt[]; heute?: string; onSpringe: (montag: string) => void; klappbar?: boolean }) {
+/** Die Abteilungen der Reihe nach – am PC in der Seitenleiste (je Jahr), darunter in der Zeile „Inhalt“. */
+function Durchlauf({ abschnitte, heute, onSpringe }: { abschnitte: Abschnitt[]; heute?: string; onSpringe: (montag: string) => void }) {
   if (!abschnitte.some((x) => x.name !== null)) return null;
   const liste = (
     <ul className="abt-durchlauf">
@@ -553,14 +556,6 @@ function Durchlauf({ abschnitte, heute, onSpringe, klappbar }: { abschnitte: Abs
       })}
     </ul>
   );
-  // schmale Bildschirme haben keine Seitenleiste – dort steht der Durchlauf zum Aufklappen über den Wochen
-  if (klappbar)
-    return (
-      <details className="klapp abt-durchlauf-schmal nicht-drucken">
-        <summary>Abteilungen</summary>
-        {liste}
-      </details>
-    );
   return (
     <div>
       <span className="ueberschrift-klein abt-durchlauf-titel">Abteilungen</span>
@@ -770,6 +765,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
   const istBelegt = (w: Woche) => !!d && (w.montag <= d.heute && w.sonntag >= d.heute ? true : w.nummer === 1 || d2(d.ende, w) || pruefungsWochen.has(w.montag) || d.eintraege.some((e) => e.von <= w.montag && e.bis >= w.montag));
   const sichtbar = nurBelegt ? wochen.filter(istBelegt) : wochen;
   const gelesenId = useAktiverAbschnitt(sichtbar.map((w) => `kw-${w.montag}`));
+  const { naviZu } = useAnsicht();
+  // unter 1024 px: die angeheftete Zeile „Inhalt“ – klappt nach einer Auswahl wieder zu
+  const [inhaltOffen, setInhaltOffen] = useState(false);
 
   if (fehler) {
     return (
@@ -793,6 +791,27 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
 
   const jahre = new Map<number, Woche[]>();
   for (const w of wochen) jahre.set(w.ausbildungsjahr ?? 0, [...(jahre.get(w.ausbildungsjahr ?? 0) ?? []), w]);
+
+  const legende = (
+    <>
+                <span>
+                  <i className="streifen" /> Schulwoche
+                </span>
+                {REIHENFOLGE.filter((art) => art !== 'termin' || d.rechte.arten.includes('termin')).map((art) => (
+                  <span key={art} className={`legende-art ${art}`}>
+                    {ART_TEXT[art]}
+                  </span>
+                ))}
+                {d.pruefungen.length > 0 && <span className="legende-art pruefung">Prüfung</span>}
+                {zeigeFrei && <span className="pille ferien">Schulferien</span>}
+                {zeigeFrei && <span className="pille umrandet">Feiertag</span>}
+    </>
+  );
+  const ort = gelesen ?? aktuelle;
+  const springe = (montag: string) => {
+    setInhaltOffen(false);
+    zeige(montag);
+  };
 
   const offen = d.eintraege.filter((e) => e.art === 'aufgabe' && !e.erledigt);
   const ueberfaellig = offen.filter((e) => dieseWoche && e.bis < dieseWoche);
@@ -855,12 +874,9 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      {!d.eigenes && (
-        <p className="klein nicht-drucken">
-          <Link zu={`/azubis/${azubiId}`}>← {d.azubi.anzeigename}</Link>
-        </p>
-      )}
+      {!d.eigenes && <ZurueckZuAzubis />}
       <h1>Ausbildungsplan{d.eigenes ? '' : ` von ${d.azubi.anzeigename}`}</h1>
+      {!d.eigenes && <AzubiReiter id={azubiId} name={d.azubi.anzeigename} />}
       <p className="leise">
         {d.beruf ? `${d.beruf} · ` : ''}
         {d.eigenes
@@ -977,10 +993,29 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
             </div>
           </section>
 
-          <div className="plan-bereich">
-            <aside className="karte plan-seite nicht-drucken">
-              <PlanKompass jahre={jahre} gelesen={gelesen} heute={aktuelle} gesamt={gesamt} schule={schule} abteilung={abteilungsWochen} durchlauf={durchlauf} ferien={ferienWochen} pruefung={pruefungsWochen} onSpringe={zeige} />
-            </aside>
+          <div className={`plan-bereich${naviZu ? ' navi-zu' : ''}`}>
+            {naviZu ? (
+              <aside className="karte plan-seite schmal nicht-drucken" aria-label="Übersicht Ausbildungsplan">
+                <NaviKnopf was="Inhalt" />
+                <ul className="lern-navi-schmal">
+                  {[...jahre.entries()].map(([j, ws]) => (
+                    <li key={j}>
+                      <button type="button" className="lern-navi-nr" title={jahrTitel(j)} aria-label={jahrTitel(j)} aria-current={(ort?.ausbildungsjahr ?? 0) === j ? 'location' : undefined} onClick={() => zeige(ws[0].montag)}>
+                        {j === 0 ? '–' : j}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+            ) : (
+              <aside className="karte plan-seite nicht-drucken">
+                <div className="navi-kopf">
+                  <h2>Inhalt</h2>
+                  <NaviKnopf was="Inhalt" />
+                </div>
+                <PlanKompass jahre={jahre} gelesen={gelesen} heute={aktuelle} gesamt={gesamt} schule={schule} abteilung={abteilungsWochen} durchlauf={durchlauf} ferien={ferienWochen} pruefung={pruefungsWochen} onSpringe={zeige} />
+              </aside>
+            )}
 
             <div className="plan-wochen">
               <section aria-label="Ansicht" className="filter nicht-drucken">
@@ -1002,21 +1037,44 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
                   </button>
                 )}
               </section>
-              {/* Auf kleinen Bildschirmen ersetzt das die Seitenleiste */}
-              <nav aria-label="Zum Ausbildungsjahr springen" className="filter jahr-sprung nicht-drucken">
-                {[...jahre.entries()].map(([j, ws]) => (
-                  <button key={j} type="button" className="knopf schlicht" onClick={() => zeige(ws[0].montag)}>
-                    {j === 0 ? 'Außerhalb' : `${j}. Jahr`}
-                  </button>
-                ))}
-                {aktuelle && (
-                  <button type="button" className="knopf schlicht" onClick={() => zeige(aktuelle.montag)}>
-                    Diese Woche
-                  </button>
-                )}
-              </nav>
-
-              <Durchlauf abschnitte={durchlauf} heute={aktuelle?.montag} onSpringe={zeige} klappbar />
+              {/* unter 1024 px statt der Seitenleiste: die Zeile „Inhalt“ – bleibt beim Rollen stehen und zeigt, wo man liest */}
+              <details className="karte lern-navi-klapp plan-inhalt nicht-drucken" open={inhaltOffen} onToggle={(e) => setInhaltOffen(e.currentTarget.open)}>
+                <summary>
+                  <span className="handbuch-kopf">
+                    <span>Inhalt</span>
+                    {!inhaltOffen && ort && (
+                      <span className="handbuch-wo">
+                        {jahrTitel(ort.ausbildungsjahr ?? 0)} · KW {ort.kw}
+                      </span>
+                    )}
+                  </span>
+                </summary>
+                <nav aria-label="Übersicht Ausbildungsplan">
+                  <ul className="lern-navi-liste">
+                    {[...jahre.entries()].map(([j, ws]) => (
+                      <li key={j}>
+                        <button type="button" className="lern-navi-feld" aria-current={(ort?.ausbildungsjahr ?? 0) === j ? 'location' : undefined} onClick={() => springe(ws[0].montag)}>
+                          <span className="lern-navi-titel">{jahrTitel(j)}</span>
+                          <span className="lern-navi-prozent">
+                            KW {ws[0].kw}/{ws[0].montag.slice(2, 4)} – {ws[ws.length - 1].kw}/{ws[ws.length - 1].sonntag.slice(2, 4)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                    {aktuelle && (
+                      <li>
+                        <button type="button" className="lern-navi-feld" onClick={() => springe(aktuelle.montag)}>
+                          <span className="lern-navi-titel">Diese Woche</span>
+                          <span className="lern-navi-prozent">KW {aktuelle.kw}</span>
+                        </button>
+                      </li>
+                    )}
+                  </ul>
+                  <Durchlauf abschnitte={durchlauf} heute={aktuelle?.montag} onSpringe={springe} />
+                  <p className="lern-navi-zwischen">Farben</p>
+                  <div className="plan-inhalt-legende leise klein">{legende}</div>
+                </nav>
+              </details>
 
               {d.vorlagen.length > 0 && !d.beginnFehlt && (
                 <div className="filter nicht-drucken baustein-leiste">
@@ -1048,17 +1106,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
               )}
 
               <div className="plan-legende leise klein" aria-label="Legende">
-                <span>
-                  <i className="streifen" /> Schulwoche
-                </span>
-                {REIHENFOLGE.filter((art) => art !== 'termin' || d.rechte.arten.includes('termin')).map((art) => (
-                  <span key={art} className={`legende-art ${art}`}>
-                    {ART_TEXT[art]}
-                  </span>
-                ))}
-                {d.pruefungen.length > 0 && <span className="legende-art pruefung">Prüfung</span>}
-                {zeigeFrei && <span className="pille ferien">Schulferien</span>}
-                {zeigeFrei && <span className="pille umrandet">Feiertag</span>}
+                {legende}
               </div>
               {zeigeFrei && !d.ferienVorhanden && !d.beginnFehlt && <p className="leise klein">Für das Bundesland der Berufsschule sind keine Schulferien hinterlegt.</p>}
 

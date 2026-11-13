@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import { api, berufName, datum, standText } from '../api';
 import type { Konto, Profil, ProfilAntwort, Rolle, Stammdaten, ZuweisungZeile } from '../api';
 import { geheZu, Link, useUngespeichert } from '../router';
+import { AzubiReiter, ZurueckZuAzubis } from '../azubiReiter';
 import { HandbuchLink } from '../handbuchLink';
 
 type Meldung = { text: string; fehler: boolean } | null;
@@ -415,10 +416,9 @@ export function AzubiDetail({ id, ich }: { id: number; ich: Konto }) {
 
   return (
     <>
-      <p className="klein">
-        <Link zu="/azubis">← Alle Azubis</Link>
-      </p>
+      <ZurueckZuAzubis />
       <h1>{p.azubi.anzeigename}</h1>
+      <AzubiReiter id={p.azubi.id} name={p.azubi.anzeigename} />
       <p className="leise">
         {p.azubi.anmeldename}
         {p.azubi.status === 'gesperrt' && <span className="pille grau">gesperrt</span>}
@@ -452,17 +452,6 @@ export function AzubiDetail({ id, ich }: { id: number; ich: Konto }) {
       <section className="karte">
         <h2>Ausbildung</h2>
         <ProfilUebersicht p={p} />
-        <p className="abstand">
-          <Link zu={`/azubis/${p.azubi.id}/berichtsheft`} className="knopf schlicht">
-            Berichtsheft ansehen
-          </Link>{' '}
-          <Link zu={`/azubis/${p.azubi.id}/plan`} className="knopf schlicht">
-            Ausbildungsplan
-          </Link>{' '}
-          <Link zu={`/azubis/${p.azubi.id}/urlaub`} className="knopf schlicht">
-            Urlaub
-          </Link>
-        </p>
       </section>
 
       {p.bearbeitbar && stammdaten && (

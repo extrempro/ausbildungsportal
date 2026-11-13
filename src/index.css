@@ -771,7 +771,8 @@ fieldset.abschnitt legend {
 .wochenkarte .pille,
 .kompass .pille,
 .kw .pille,
-.plan-legende .pille {
+.plan-legende .pille,
+.plan-inhalt-legende .pille {
   margin-left: 0;
 }
 
@@ -868,10 +869,6 @@ fieldset.abschnitt legend {
   margin: 0;
   padding: 20px;
   overflow-y: auto;
-}
-
-.jahr-sprung {
-  display: none;
 }
 
 .kompass {
@@ -988,7 +985,8 @@ fieldset.abschnitt legend {
 
 .jahresband .schule,
 .kompass-legende .schule,
-.plan-legende .streifen {
+.plan-legende .streifen,
+.plan-inhalt-legende .streifen {
   background: var(--c-schule);
 }
 
@@ -1053,7 +1051,8 @@ fieldset.abschnitt legend {
 }
 
 .kompass-legende i,
-.plan-legende i {
+.plan-legende i,
+.plan-inhalt-legende i {
   display: inline-block;
   width: 6px;
   height: 12px;
@@ -1437,9 +1436,9 @@ a.bericht-link:hover {
     display: none;
   }
 
-  .jahr-sprung {
-    display: flex;
-    gap: 16px;
+  /* die Legende steht hier in der Zeile „Inhalt“ (aufgeklappt unter „Farben“) – angeheftet bleibt nur eine Zeile */
+  .plan-wochen > .plan-legende {
+    display: none;
   }
 }
 
@@ -2099,10 +2098,10 @@ td.aktion {
   margin-left: 0;
 }
 
-/* immer dieselben drei Wege, gleich breit */
+/* immer dieselben vier Wege wie die Reiter auf den Seiten des Azubis, gleich breit */
 .azubi-wege {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   margin-top: auto;
   padding-top: 8px;
@@ -2119,7 +2118,7 @@ td.aktion {
   padding: 6px 4px;
   border-radius: 10px;
   color: var(--c-accent);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -5387,8 +5386,8 @@ html.dark {
   border-top: 0;
 }
 
-/* ---------- Lernmodul: Bereiche (Themenfelder, Kompendium) ---------- */
-.lern-reiter {
+/* ---------- Reiter: gleichrangige Seiten eines Bereichs (Lernen; ein Azubi) – eine Ebene tiefer steht ein Zurück-Link ---------- */
+.reiter {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -5396,7 +5395,7 @@ html.dark {
   border-bottom: 1px solid var(--c-border);
 }
 
-.lern-reiter a {
+.reiter a {
   display: flex;
   align-items: center;
   min-height: 44px;
@@ -5408,12 +5407,12 @@ html.dark {
   text-decoration: none;
 }
 
-.lern-reiter a:hover {
+.reiter a:hover {
   color: var(--c-text);
   background: var(--c-accent-soft);
 }
 
-.lern-reiter a[aria-current='page'] {
+.reiter a[aria-current='page'] {
   border-bottom-color: var(--c-accent);
   color: var(--c-accent);
 }
@@ -5421,12 +5420,12 @@ html.dark {
 /* Handy: Die Reiter brechen in mehrere Zeilen um – als Unterstreichung sind sie dann kaum als Auswahl zu erkennen.
    Deshalb hier als umrandete Knöpfe, der gewählte gefüllt. */
 @media (max-width: 699px) {
-  .lern-reiter {
+  .reiter {
     gap: 8px;
     border-bottom: 0;
   }
 
-  .lern-reiter a {
+  .reiter a {
     padding: 0 14px;
     margin-bottom: 0;
     border: 1px solid var(--c-rand-feld);
@@ -5435,7 +5434,7 @@ html.dark {
     color: var(--c-text);
   }
 
-  .lern-reiter a[aria-current='page'] {
+  .reiter a[aria-current='page'] {
     border-color: var(--c-accent);
     background: var(--c-accent);
     color: var(--c-on-accent);
@@ -5713,7 +5712,8 @@ html.dark {
     z-index: 5;
     display: block;
     margin-bottom: 16px;
-    box-shadow: 0 6px 16px var(--c-schatten);
+    /* zweiter Schatten in der Farbe des Hintergrunds: In den runden Ecken oben scheint nichts durch, was darunter rollt */
+    box-shadow: 0 6px 16px var(--c-schatten), 0 -16px 0 0 var(--c-bg);
   }
 
   .lern-navi-klapp[open] {
@@ -7972,18 +7972,6 @@ ul.antrag-hinweise {
   }
 }
 
-/* Durchlauf der Abteilungen über den Wochen – nur wo die Seitenleiste fehlt (siehe .jahr-sprung) */
-details.abt-durchlauf-schmal {
-  display: none;
-  margin-bottom: 16px;
-}
-
-@media (max-width: 1023px) {
-  details.abt-durchlauf-schmal {
-    display: block;
-  }
-}
-
 /* die Zeile mit den Ansprechpersonen beginnt wie die übrigen Zeilen der Karte unter dem Titel */
 .abt-personen {
   margin-left: calc(6.5rem + 10px);
@@ -9585,4 +9573,65 @@ nav.handbuch-inhalt.schmal {
   .handbuch.navi-zu {
     grid-template-columns: 56px minmax(0, 1fr);
   }
+}
+
+/* Ausbildungsplan: Seitenleiste eingeklappt (am PC) und die Zeile „Inhalt“ (darunter) */
+@media (min-width: 1024px) {
+  .plan-bereich.navi-zu {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .plan-seite.schmal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 0;
+  }
+}
+
+.plan-seite .navi-kopf {
+  margin-bottom: 12px;
+}
+
+.plan-seite .navi-kopf h2 {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+button.lern-navi-nr,
+button.lern-navi-feld {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.lern-navi-nr {
+  width: 40px;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.lern-navi-nr[aria-current='location'],
+button.lern-navi-feld[aria-current='location'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.plan-inhalt .abt-durchlauf-titel {
+  display: block;
+  margin: 12px 8px 4px;
+}
+
+.plan-inhalt-legende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 4px 8px 8px;
 }

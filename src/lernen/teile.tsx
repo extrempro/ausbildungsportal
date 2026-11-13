@@ -39,7 +39,7 @@ export function LernReiter() {
   // Azubi: die Reiter des eigenen Lernmoduls und – wenn es eins gibt – das Paket für alle Berufe
   if (azubi) {
     return (
-      <nav className="lern-reiter" aria-label="Bereiche unter Lernen">
+      <nav className="reiter" aria-label="Bereiche unter Lernen">
         {azubi.lernen && (
           <>
             <Link zu="/lernen">Themenfelder</Link>
@@ -58,7 +58,7 @@ export function LernReiter() {
     );
   }
   return (
-    <nav className="lern-reiter" aria-label="Bereiche im Lernmodul">
+    <nav className="reiter" aria-label="Bereiche im Lernmodul">
       <Link zu={basis}>Themenfelder</Link>
       <Link zu={`${basis}/kompendium`}>Kompendium</Link>
       {!lesen && (
