@@ -1,6 +1,6 @@
 # Barrierefreiheit nach WCAG 2.2
 
-Stand: 13.11.2026 · Prüfung an Version 0.61.0, Maßnahmen in 0.61.1 (Tastatur), 0.61.2 (Darstellung) und 0.62.0 (Zeitbegrenzung)
+Stand: 13.11.2026 · Prüfung an Version 0.61.0, Maßnahmen in 0.61.1 (Tastatur), 0.61.2 (Darstellung) 0.62.0 (Zeitbegrenzung) und 0.64.0 (Unterschrift)
 
 ## Ziel
 
@@ -13,7 +13,7 @@ Neue Funktionen halten sich an die Punkte „Tastatur“, „Jedes Gerät“ und
 - **Wer:** eine Durchsicht durch den Entwickler (hier: Claude), keine Zertifizierung durch Dritte.
 - **Umfang:** 45 Seiten aus allen vier Rollen mit erfundenen Beispieldaten, hell und dunkel, bei 1280, 820, 640, 390 und 320 px; drei geöffnete Fenster.
 - **Werkzeuge:** eigene Prüfskripte im Browser (Chromium über Playwright) für Kontrast, Namen und Beschriftungen, Überschriften, Bedienflächen, Seitentitel, Umbruch, Textabstände, verdeckten Fokus und Fokus in Fenstern; dazu eine Durchsicht des Codes (Zeitbegrenzung, Unterschrift, Statusmeldungen, Bewegung, Ausrichtung).
-- **Dauerhaft im Test:** `e2e/11-fokus.test.ts` (Fokus nicht verdeckt, Fenster), `e2e/12-kontrast.test.ts` (Kontrast hell und dunkel, eigenes Skript), `e2e/06-handy.test.ts` (kein Überlauf bei 390 und 320 px), `e2e/10-navigation.test.ts`, `e2e/13-sitzung.test.ts` (Warnung vor dem Abmelden).
+- **Dauerhaft im Test:** `e2e/11-fokus.test.ts` (Fokus nicht verdeckt, Fenster), `e2e/12-kontrast.test.ts` (Kontrast hell und dunkel, eigenes Skript), `e2e/06-handy.test.ts` (kein Überlauf bei 390 und 320 px), `e2e/10-navigation.test.ts`, `e2e/13-sitzung.test.ts` (Warnung vor dem Abmelden), `e2e/15-unterschrift.test.ts` (Unterschrift nur mit der Tastatur).
 
 ## Erfüllt
 
@@ -34,12 +34,11 @@ Neue Funktionen halten sich an die Punkte „Tastatur“, „Jedes Gerät“ und
 | Reduzierte Bewegung wird beachtet, Hoch- und Querformat | 2.3.3, 1.3.4 |
 | Hilfe (Handbuch, Rückmeldung geben) in jeder Ansicht an derselben Stelle | 3.2.6 |
 | Zeitbegrenzung: fünf Minuten vor dem Abmelden ein Fenster mit „Angemeldet bleiben“ (`src/sitzung.tsx`); wer mit ungespeicherten Eingaben abgemeldet wird, behält sie und meldet sich im neuen Tab an – ab 0.62.0 | 2.2.1 |
+| Unterschrift ohne Zeichnen: „Unterschrift aus meinem Namen erzeugen“ unter Konto, auch nur mit der Tastatur (`src/unterschriftErzeugen.ts`) – ab 0.64.0 | 2.1.1, 2.5.7 |
 
 ## Offen
 
-| Befund | WCAG | Plan |
-| --- | --- | --- |
-| Bericht einreichen und abzeichnen nur mit gezeichneter Unterschrift | 2.1.1 / 2.5.7 (formal Ausnahme) | Weg ohne Zeichnen – muss vorher fachlich geklärt werden |
+Aus der Prüfung an Version 0.61.0 ist nichts mehr offen. Neue Befunde kommen hierher.
 
 ## Nicht geprüft
 

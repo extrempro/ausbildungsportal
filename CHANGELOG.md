@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.64.0] – 2026-11-13
+
+### Neu
+
+- **Unterschrift ohne Zeichnen:** Unter „Konto“ → „Unterschrift“ gibt es „Unterschrift aus meinem Namen erzeugen“. Das Portal schreibt deinen Namen in einer einfachen Schreibschrift als Unterschrift; du siehst sie vorher und speicherst sie wie eine gezeichnete. Das geht auch nur mit der Tastatur oder mit einem Vorleseprogramm – wer keine Maus, keinen Finger und keinen Stift führen kann, kann so Berichte einreichen und abzeichnen. Für alle Rollen.
+
 ## [0.63.0] – 2026-11-13
 
 ### Neu

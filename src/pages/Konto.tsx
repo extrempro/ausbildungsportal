@@ -7,6 +7,7 @@ import type { Konto, ProfilAntwort, Theme } from '../api';
 import { KalenderAbo } from '../kalenderAbo';
 import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
+import { unterschriftAusName } from '../unterschriftErzeugen';
 import { HandbuchLink } from '../handbuchLink';
 import { Avatar } from '../avatar';
 import { Benachrichtigungen } from '../benachrichtigungen';
@@ -60,6 +61,18 @@ function Unterschrift({ konto }: { konto: Konto }) {
   const [neu, setNeu] = useState('');
   const [zeichnen, setZeichnen] = useState(false);
   const [fehler, setFehler] = useState('');
+  // ohne Zeichnen: aus dem Namen erzeugt (Tastatur, Vorleseprogramm, ohne Maus oder Finger)
+  const [erzeugt, setErzeugt] = useState<string | null>(null);
+  const erzeuge = () => {
+    const pfad = unterschriftAusName(konto.anzeigename);
+    setErzeugt(pfad || null);
+    setNeu(pfad);
+    if (!pfad) setFehler('Aus deinem Namen ließ sich keine Unterschrift erzeugen. Bitte zeichne sie.');
+  };
+  const zurueckZumZeichnen = () => {
+    setErzeugt(null);
+    setNeu('');
+  };
 
   useEffect(() => {
     api<{ pfad: string | null }>('GET', '/api/ich/unterschrift').then((r) => setGespeichert(r.pfad), () => setGespeichert(null));
@@ -71,7 +84,9 @@ function Unterschrift({ konto }: { konto: Konto }) {
       setGespeichert(r.pfad);
       setZeichnen(false);
       setNeu('');
+      setErzeugt(null);
       setFehler('');
+      melde('Unterschrift gespeichert.');
     } catch (e) {
       setFehler(e instanceof Error ? e.message : 'Fehler');
     }
@@ -87,8 +102,8 @@ function Unterschrift({ konto }: { konto: Konto }) {
     <>
       <p className="leise klein">
         {konto.rolle === 'azubi'
-          ? 'Unterschreibe hier einmal mit dem Finger, einem Stift oder der Maus. Wenn du einen Bericht einreichst, kommt diese Unterschrift darunter. Änderst du sie später, bleiben alte Berichte, wie sie sind.'
-          : 'Mit dieser Unterschrift zeichnest du Berichte ab. Am Bericht wird eine Kopie gespeichert – eine spätere Änderung verändert alte Berichte nicht.'}
+          ? 'Unterschreibe hier einmal mit dem Finger, einem Stift oder der Maus – oder lass sie aus deinem Namen erzeugen. Wenn du einen Bericht einreichst, kommt diese Unterschrift darunter. Änderst du sie später, bleiben alte Berichte, wie sie sind.'
+          : 'Mit dieser Unterschrift zeichnest du Berichte ab – gezeichnet oder aus deinem Namen erzeugt. Am Bericht wird eine Kopie gespeichert; eine spätere Änderung verändert alte Berichte nicht.'}
       </p>
       {gespeichert && !zeichnen && (
         <>
@@ -107,7 +122,21 @@ function Unterschrift({ konto }: { konto: Konto }) {
       )}
       {(!gespeichert || zeichnen) && (
         <>
-          <UnterschriftFeld onAendern={setNeu} />
+          {erzeugt ? (
+            <div className="signatur-feld gross">
+              <UnterschriftBild pfad={erzeugt} titel={`Erzeugte Unterschrift: ${konto.anzeigename}`} />
+            </div>
+          ) : (
+            <>
+              <UnterschriftFeld onAendern={setNeu} />
+              <p className="leise klein">Ohne Zeichnen – zum Beispiel nur mit der Tastatur:</p>
+              <div className="aktionen links">
+                <button type="button" className="knopf schlicht" onClick={erzeuge}>
+                  Unterschrift aus meinem Namen erzeugen
+                </button>
+              </div>
+            </>
+          )}
           {fehler && (
             <p className="hinweis fehler" role="alert">
               {fehler}
@@ -117,8 +146,20 @@ function Unterschrift({ konto }: { konto: Konto }) {
             <button type="button" className="knopf" disabled={!neu} onClick={() => void speichere()}>
               Unterschrift speichern
             </button>
+            {erzeugt && (
+              <button type="button" className="knopf schlicht" onClick={zurueckZumZeichnen}>
+                Doch selbst zeichnen
+              </button>
+            )}
             {zeichnen && (
-              <button type="button" className="knopf schlicht" onClick={() => setZeichnen(false)}>
+              <button
+                type="button"
+                className="knopf schlicht"
+                onClick={() => {
+                  setZeichnen(false);
+                  zurueckZumZeichnen();
+                }}
+              >
                 Abbrechen
               </button>
             )}
