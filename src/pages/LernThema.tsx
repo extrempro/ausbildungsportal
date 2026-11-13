@@ -59,6 +59,9 @@ export function LernThema({ id }: { id: string }) {
   const [felder, setFelder] = useState<NavFeld[]>([]);
 
   const { basis, api: quelle, anleitungen } = useLern();
+  const [naviOffen, setNaviOffen] = useState(false);
+  // nach dem Wechsel in ein anderes Themenfeld ist die Navigation wieder zu
+  useEffect(() => setNaviOffen(false), [id]);
   const ladeFelder = useCallback(() => api<{ themenfelder: NavFeld[] }>('GET', quelle).then((r) => setFelder(r.themenfelder), () => undefined), [quelle]);
   useEffect(() => void ladeFelder(), [ladeFelder]);
   // neu erreichtes Abzeichen oder neuer Rang – wird einmal groß gezeigt
@@ -129,7 +132,10 @@ export function LernThema({ id }: { id: string }) {
 
   if (fehler) return <Ladefehler titel="Lernen" text={fehler} />;
   if (!daten) return <p className="leise">Lädt …</p>;
-  const navi = felder.length > 0 && <ThemenNavi felder={felder} id={id} aktiv={aktiv} />;
+  // Handy und Tablet: Die Navigation steht als Zeile unter der Kopfzeile, bleibt beim Rollen stehen und klappt nach einer Auswahl wieder zu (wie im Handbuch)
+  const zu = () => setNaviOffen(false);
+  const navi = felder.length > 0 && <ThemenNavi felder={felder} id={id} aktiv={aktiv} onGewaehlt={zu} />;
+  const hier = geladen ? [...geladen.thema.unterthemen.map((u) => ({ marke: `u-${u.id}`, titel: u.titel })), ...geladen.thema.zusatz.map((x) => ({ marke: `z-${x.id}`, titel: x.titel }))].find((x) => x.marke === aktiv)?.titel : undefined;
 
   return (
     <div className="lern-layout">
@@ -144,9 +150,20 @@ export function LernThema({ id }: { id: string }) {
           <Link zu={basis}>{anleitungen ? '← Alle Anleitungen' : '← Alle Themenfelder'}</Link>
         </p>
         {navi && (
-          <details className="klapp lern-navi-klapp">
-            <summary>{anleitungen ? 'Anleitung wechseln' : 'Themenfeld wechseln'}</summary>
-            {navi}
+          <details className="karte lern-navi-klapp nicht-drucken" open={naviOffen} onToggle={(e) => setNaviOffen(e.currentTarget.open)}>
+            <summary>
+              <span className="handbuch-kopf">
+                <span>Inhalt</span>
+                {/* angeheftet zeigt die Zeile, wo man gerade liest */}
+                {!naviOffen && geladen && (
+                  <span className="handbuch-wo">
+                    {geladen.thema.titel}
+                    {hier ? ` › ${hier}` : ''}
+                  </span>
+                )}
+              </span>
+            </summary>
+            <nav aria-label={anleitungen ? 'Anleitungen' : 'Themenfelder'}>{navi}</nav>
           </details>
         )}
         {geladen ? <ThemaInhalt t={geladen.thema} paket={geladen.paket} abzeichen={felder.find((f) => f.id === id)?.abzeichen ?? geladen.thema.abzeichen} aendere={aendere} setzeGelesen={setzeGelesen} /> : <p className="leise">Lädt …</p>}
@@ -175,7 +192,7 @@ function useAktivesUnterthema(t: Thema | null): string | null {
       let treffer: string | null = null;
       for (const marke of [...t.unterthemen.map((u) => `u-${u.id}`), ...t.zusatz.map((z) => `z-${z.id}`)]) {
         const el = document.getElementById(marke);
-        if (el && el.getBoundingClientRect().top <= 140) treffer = marke;
+        if (el && el.getBoundingClientRect().top <= 160) treffer = marke;
       }
       setAktiv(treffer);
     };
@@ -193,9 +210,13 @@ function useAktivesUnterthema(t: Thema | null): string | null {
 }
 
 /** Navigation am Rand: alle Themenfelder mit Stand; beim geöffneten Themenfeld darunter seine Unterthemen. */
-function ThemenNavi({ felder, id, aktiv }: { felder: NavFeld[]; id: string; aktiv: string | null }) {
+function ThemenNavi({ felder, id, aktiv, onGewaehlt }: { felder: NavFeld[]; id: string; aktiv: string | null; onGewaehlt?: () => void }) {
   const { basis, lesen, anleitungen } = useLern();
-  const springe = (ziel: string) => document.getElementById(ziel)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  const springe = (ziel: string) => {
+    onGewaehlt?.();
+    // erst zuklappen lassen, dann rollen – sonst stimmt das Ziel nicht, solange die aufgeklappte Navigation noch Platz einnimmt
+    requestAnimationFrame(() => document.getElementById(ziel)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+  };
   return (
     <ul className="lern-navi-liste">
       {felder.map((f) => {

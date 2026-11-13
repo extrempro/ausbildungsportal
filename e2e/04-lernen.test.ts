@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { ANNA, BEA, BEN, inTagen, mitFoto, oeffne, PETRA, startePortal, text } from './hilfe';
+import { ANNA, BEA, BEN, HANDY, inTagen, mitFoto, oeffne, PETRA, startePortal, text, ueberlauf } from './hilfe';
 import type { Grunddaten, Portal } from './hilfe';
 import type { Page } from 'playwright';
 
@@ -102,6 +102,38 @@ test(
     // eine Seite, die es wirklich nicht gibt, bleibt „nicht gefunden“
     await oeffne(b, p.url, '/planer/gibt-es-nicht');
     await b.waitForSelector('main h1:has-text("Seite nicht gefunden")');
+    assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
+  }),
+);
+
+test(
+  'Lernen am Handy: Die Zeile „Inhalt“ bleibt beim Rollen stehen, springt zum Abschnitt und klappt danach zu',
+  mitFoto(() => p, 'lernen-navi-handy', async () => {
+    const s = await p.seite(ANNA, HANDY);
+    await oeffne(s, p.url, '/lernen/grundlagen');
+    const zeile = s.locator('details.lern-navi-klapp');
+    await zeile.waitFor();
+    assert.equal(await s.locator('aside.lern-navi').isVisible(), false, 'die Randleiste gibt es am Handy nicht');
+    assert.match((await zeile.locator('.handbuch-wo').textContent()) ?? '', /Grundlagen/);
+
+    // aufklappen, Abschnitt wählen: Die Zeile klappt zu, bleibt oben stehen und nennt den Abschnitt
+    await zeile.locator('summary').click();
+    await zeile.locator('.lern-navi-unter button:has-text("Ablauf")').click();
+    await s.waitForFunction(() => !document.querySelector<HTMLDetailsElement>('details.lern-navi-klapp')?.open);
+    await s.waitForFunction(() => /Ablauf/.test(document.querySelector('.lern-navi-klapp .handbuch-wo')?.textContent ?? ''));
+    const lage = await s.evaluate(() => {
+      const kopf = document.querySelector('.leiste')!.getBoundingClientRect().bottom;
+      const z = document.querySelector('.lern-navi-klapp')!.getBoundingClientRect();
+      return { abstand: Math.round(z.top - kopf), ziel: Math.round(document.getElementById('u-ablauf')!.getBoundingClientRect().top - z.bottom) };
+    });
+    assert.ok(lage.ziel >= 0, `der Abschnitt beginnt unter der Zeile, nicht dahinter (${lage.ziel} px)`);
+    assert.equal(await ueberlauf(s), 0);
+
+    // in ein anderes Themenfeld wechseln: zu, und die Zeile nennt das neue
+    await zeile.locator('summary').click();
+    await zeile.locator('a:has-text("Praxis")').click();
+    await s.waitForFunction(() => /Praxis/.test(document.querySelector('.lern-navi-klapp .handbuch-wo')?.textContent ?? ''));
+    assert.equal(await zeile.evaluate((e) => (e as HTMLDetailsElement).open), false);
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );

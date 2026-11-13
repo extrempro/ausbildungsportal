@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.56.1] – 2026-11-13
+
+### Geändert
+
+- **Lernen am Handy und Tablet:** In einem Themenfeld (und in einer Anleitung) steht die Navigation jetzt wie im Handbuch als Zeile „Inhalt“ oben. Sie bleibt beim Rollen stehen, zeigt, wo du gerade liest, und klappt nach der Auswahl eines Abschnitts wieder zu. Vorher stand „Themenfeld wechseln“ nur ganz oben auf der Seite.
+
 ## [0.56.0] – 2026-11-13
 
 ### Neu

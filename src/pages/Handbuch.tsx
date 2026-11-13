@@ -682,7 +682,7 @@ const AZUBI: Kapitel[] = [
         </p>
         <h3>So geht's</h3>
         <ol className="schritte">
-          <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste hinter „Themenfeld wechseln“.</li>
+          <li>Unter „Lernen“ ein Themenfeld öffnen. Links stehen dann alle Themenfelder und die Unterthemen des geöffneten – damit springst du direkt hin. Am Handy steckt diese Liste in der Zeile „Inhalt“ oben: Sie bleibt beim Rollen stehen, zeigt, wo du gerade liest, und klappt nach deiner Auswahl wieder zu.</li>
           <li>Das Cheatsheet des Unterthemas lesen. Es steht gleich offen da. Jedes Unterthema hat einen eigenen Kasten mit Nummer und Titel im farbigen Kopf – so siehst du, wo eins aufhört und das nächste anfängt.</li>
           <li>Die Ampel einstellen. Das Portal fragt nach, ob du wirklich umstellen willst – so ändert ein versehentlicher Klick nichts. Nach „Auf … stellen“ ist der neue Stand gespeichert. Sei ehrlich zu dir – die Ampel ist nur für dich.</li>
           <li>Bei „In Arbeit“ den Lernpunkt eintragen und „Lernpunkt speichern“ wählen.</li>
@@ -867,7 +867,7 @@ const AZUBI: Kapitel[] = [
           <li>Öffne „Lernen“. Hast du ein Lernmodul für deinen Beruf, steht der Bereich oben in der Auswahl an letzter Stelle – neben „Themenfelder“, „Kompendium“ und „Üben“. Hast du keins, landest du direkt dort.</li>
           <li>Wähle eine Anleitung. Sie ist in Abschnitte geteilt; jeder Abschnitt hat kurze Stichpunkte und einen Merksatz.</li>
           <li>Unter „Zum Vertiefen“ stehen längere Stücke – zum Beispiel ein Vorgehen in Schritten oder eine Checkliste. Mit „Anzeigen“ klappst du sie auf.</li>
-          <li>Am PC wechselst du links zwischen den Anleitungen und springst zu einem Abschnitt. Am Handy geht das über „Anleitung wechseln“.</li>
+          <li>Am PC wechselst du links zwischen den Anleitungen und springst zu einem Abschnitt. Am Handy geht das über die Zeile „Inhalt“ oben; sie bleibt beim Rollen stehen.</li>
         </ol>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">

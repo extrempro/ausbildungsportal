@@ -5698,9 +5698,27 @@ html.dark {
     display: none;
   }
 
+  /* wie „Inhalt und Suche“ im Handbuch: Die Zeile bleibt beim Rollen unter der Kopfzeile stehen und zeigt, wo man liest.
+     Aufgeklappt rollt die Liste in sich, damit sie nie höher ist als der Bildschirm. */
   .lern-navi-klapp {
+    position: sticky;
+    top: var(--kopf, 60px);
+    z-index: 5;
     display: block;
     margin-bottom: 16px;
+    box-shadow: 0 6px 16px var(--c-schatten);
+  }
+
+  .lern-navi-klapp[open] {
+    max-height: calc(100dvh - var(--kopf, 60px) - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Sprungziele landen unter der angehefteten Zeile, nicht dahinter */
+  .lern-unterthema,
+  .lern-layout .zusatz {
+    scroll-margin-top: calc(var(--kopf, 60px) + 92px);
   }
 
   .lern-navi-unter button {
