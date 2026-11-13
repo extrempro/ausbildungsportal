@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ROLLE_TEXT } from '../api';
 import type { Rolle } from '../api';
 import { Link } from '../router';
+import { AnsichtKnoepfe } from '../ansicht';
 
 /**
  * Handbuch je Rolle. Für Azubis bewusst in kurzen Sätzen und mit erklärten Begriffen –
@@ -186,6 +187,12 @@ const BEDIENUNG: Kapitel = {
         <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
         <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
         <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
+        <li>
+          <strong>Volle Breite:</strong> Auf einem großen Bildschirm nutzt das Portal sonst nur die Mitte. Im Menü an deinem Namen schaltest du „Volle Breite“ ein – dann geht jede Seite über das ganze Fenster. Dein Browser merkt sich das. Auf Lernseiten und im Handbuch steht der Knopf auch oben neben der Überschrift. Bei kleinen Fenstern gibt es ihn nicht, da ist die Seite ohnehin voll.
+        </li>
+        <li>
+          <strong>Lesemodus:</strong> Auf Lernseiten, bei den Anleitungen und hier im Handbuch blendet „Lesemodus“ (oben neben der Überschrift) alles aus, was beim Lesen stört – Menü, Inhaltsverzeichnis, Fußzeile. Die Schrift wird etwas größer. Zurück geht es mit „Lesemodus beenden“ oben rechts oder mit Escape. Wechselst du auf eine andere Seite, endet er von selbst.
+        </li>
         <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
         <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
       </ul>
@@ -2169,7 +2176,10 @@ export function Handbuch({ rolle, onFuehrung }: { rolle: Rolle; onFuehrung: () =
 
   return (
     <>
-      <h1>Handbuch</h1>
+      <div className="ansicht-kopf">
+        <h1>Handbuch</h1>
+        <AnsichtKnoepfe />
+      </div>
       <p className="leise">
         {ansicht === 'azubi' ? 'Hier steht, wie das Portal funktioniert – kurz und der Reihe nach.' : `Anleitung für die Rolle ${ROLLE_TEXT[ansicht]}.`} Jedes Kapitel ist gleich aufgebaut: erst wozu, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.
       </p>

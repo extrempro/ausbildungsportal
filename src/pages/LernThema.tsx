@@ -11,6 +11,7 @@ import type { Bild, Tabelle } from '../lernen/teile';
 import { ZusatzBereich } from '../lernen/zusatz';
 import type { Verweis, Zusatz } from '../lernen/zusatz';
 import { Link, useUngespeichert } from '../router';
+import { AnsichtKnoepfe } from '../ansicht';
 import { AbzeichenFeier, Schild } from '../lernen/abzeichen';
 import type { Erfolg, FeldAbzeichen } from '../lernen/abzeichen';
 import { useLern } from '../lernen/basis';
@@ -277,9 +278,12 @@ function ThemaInhalt({ t, paket, abzeichen, aendere, setzeGelesen }: { t: Thema;
   const { lesen, anleitungen } = useLern();
   return (
     <>
-      <h1>
-        {t.titel} {!lesen && <StatusPille status={ampelVon(z)} />}
-      </h1>
+      <div className="ansicht-kopf">
+        <h1>
+          {t.titel} {!lesen && <StatusPille status={ampelVon(z)} />}
+        </h1>
+        <AnsichtKnoepfe />
+      </div>
       <div className="lern-kopf">
         <span className="lern-marken">
           {t.lernfelder.map((l) => (
