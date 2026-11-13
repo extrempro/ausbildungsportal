@@ -4,7 +4,7 @@
 
 ### Neu
 
-- **Rückmeldung geben:** Oben in der Leiste steht ein Megafon (neben der Glocke). Es öffnet ein Fenster mit drei Arten:
+- **Rückmeldung geben:** Oben in der Leiste steht ein Zettel mit Stift (neben der Glocke). Es öffnet ein Fenster mit drei Arten:
   - **Fehler melden** – wie bisher, mit Bildschirmfoto und technischen Angaben. Geht an den Betreiber des Portals (Super-Admin).
   - **Idee fürs Portal** – wenn dir etwas fehlt oder etwas einfacher ginge. Mit Name und Seite, ohne Bild und Technik. Lesen der Super-Admin und die Ausbilder.
   - **Lerninhalt besser erklären** (nur Azubis) – wenn etwas im Lernmodul unklar ist oder fehlt. Wer gerade im Lernmodul ist, bekommt die Art und das Thema vorausgewählt. Der Wunsch geht **ohne Namen** an die Ausbilder; gespeichert werden nur Text, Lernmodul, Thema und der Tag.

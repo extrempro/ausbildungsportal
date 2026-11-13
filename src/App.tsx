@@ -546,6 +546,8 @@ export function App() {
               </div>
             ))}
           </nav>
+          {/* rechts beieinander: Begleiter (am Handy), Rückmeldung, Glocke */}
+          <div className="leiste-rechts">
           {begleiter.kopf}
           <button
             type="button"
@@ -561,6 +563,7 @@ export function App() {
             <Icon name="ruf" />
           </button>
           {konto.rolle !== 'admin' && <Glocke konto={konto} pfad={pfad} offen={menue === 'glocke'} onSchalte={() => schalte('glocke')} />}
+          </div>
           <div className="menue ich">
             <button type="button" className="menue-knopf" aria-expanded={menue === 'ich'} aria-controls="menue-ich" aria-label={`Menü für ${konto.anzeigename}`} onClick={() => schalte('ich')}>
               <Avatar name={konto.anzeigename} bild={konto.bild} />

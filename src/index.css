@@ -2826,13 +2826,46 @@ td.aktion {
   }
 }
 
-/* ---------- Glocke: Aktivitäten ---------- */
-.menue.glocke {
+/* ---------- Kopfzeile rechts: Begleiter (am Handy), Rückmeldung, Glocke – dicht beieinander ---------- */
+.leiste-rechts {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
 }
 
-.menue.glocke + .menue.ich {
+.leiste-rechts + .menue.ich {
   margin-left: 0;
+}
+
+@media (max-width: 699px) {
+  .leiste-innen {
+    gap: 8px 12px;
+  }
+
+  /* am Handy bleibt für den Schriftzug wenig Platz: Er darf schrumpfen und wird notfalls gekürzt, statt die Knöpfe aus dem Bild zu schieben */
+  .marke {
+    min-width: 0;
+  }
+
+  .marke-name,
+  .marke-klein {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* mit Logo des Betriebs: das Logo steht für sich, „Ausbildungsportal“ daneben entfällt */
+  .marke .logo {
+    max-width: 132px;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .marke .logo + .marke-klein {
+    display: none;
+  }
 }
 
 .glocke-knopf {
@@ -9310,16 +9343,6 @@ body:has(.begleiter-ecke.klein) .nach-oben {
   75% { transform: rotate(6deg); }
 }
 
-@media (max-width: 1023px) {
-  .leiste-innen .begleiter-kopf {
-    margin-left: auto;
-  }
-
-  /* die Glocke rückt direkt neben den Kopf, statt sich den freien Platz zu teilen */
-  .begleiter-kopf + .menue.glocke {
-    margin-left: 4px;
-  }
-}
 
 .begleiter-spruch {
   margin: 0 0 8px;
