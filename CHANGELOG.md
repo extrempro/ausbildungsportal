@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.54.3] – 2026-11-13
+
+### Geändert
+
+- **Dokumentation auf dem aktuellen Stand:** README, Sicherheitshinweise und Regeln beschrieben an mehreren Stellen einen älteren Stand (zum Beispiel ein Lernmodul „Stufe 3 von 4“, „Planvorlagen“ statt Planbausteine, das Farbschema „oben rechts“). Das ist berichtigt; die Bereiche Urlaub und Lernmodul haben im README eigene Abschnitte. Am Portal selbst ändert sich nichts.
+- **Erprobt:** Die Benachrichtigungen per Teams und E-Mail und der Teams-Kanal für Fehlermeldungen laufen mit echten Systemen; die Hinweise „noch nicht erprobt“ dazu sind entfernt.
+- **Handbuch durchgesehen:** Mehrere Kapitel nannten einen älteren Stand. Berichtigt sind: was im Kalender-Abo steht (auch genehmigter Urlaub und die Termine aus dem Planer), der Überblick für Azubis (nicht mehr nur „zwei Teile“), die Glocke („Abzeichnung aufgehoben“ fehlte), die Namen der Stellen beim Begleiter, die Stammdaten (Abteilungen, Firmentermine, Lerninhalte für alle Berufe, Einreichen als ZIP-Datei) und die Aufgaben des Super-Admins.
+
 ## [0.54.2] – 2026-11-13
 
 ### Behoben

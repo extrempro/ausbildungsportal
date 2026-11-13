@@ -20,10 +20,11 @@ Wer mit Claude Code arbeitet: Dieselben Regeln stehen als Arbeitsanweisung in [C
    npm run typecheck
    npm test
    npm run build
+   npm run e2e
    ```
    Danach die Änderung **im Browser durchspielen**, am PC und in Handybreite (390 px), hell und dunkel. Tests allein genügen nicht.
 6. **Pull Request gegen `main`.** Die Vorlage mit der Checkliste erscheint von selbst. In die Beschreibung gehören: was sich ändert, was geprüft wurde, was **nicht** geprüft wurde, und ob neue Daten über Personen gespeichert werden.
-7. **Mergen** tut der Betreiber des Repositorys, wenn die Prüfungen `pruefen` und `docker` grün sind.
+7. **Mergen** tut der Betreiber des Repositorys, wenn die Prüfungen `pruefen` und `docker` grün sind. Die Prüfung `e2e` läuft mit, ist aber noch keine Pflicht.
 
 ## Was jede Änderung einhalten muss
 
@@ -79,7 +80,7 @@ Unter [docs/bilder/](docs/bilder/README.md) liegen Bildschirmfotos aller Bereich
 
 ## Datenschutz und Recht
 
-- **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
+- **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung, der Begleiter, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
 - **Neue Daten über Personen** nennst du im Pull Request ausdrücklich (was, wie lange, wer sieht es). Der Betreiber ergänzt damit die Leistungsbeschreibung für den Betriebsrat.
 - **Meldungen nach außen** (Teams, Mail) enthalten so wenig wie möglich – keine Namen in Teams-Karten für Kanäle, keine Bemerkungen in Mails. Persönliche Benachrichtigungen sprechen nur die Person an, an die sie gehen, und nennen niemanden sonst.
 - **Keine Geheimnisse im Repository.** Es ist öffentlich. `.env`, der Ordner `data/`, Zugangsdaten, Webhook-Adressen und echte Namen oder Mailadressen gehören nicht hinein – auch nicht in Tests, Commits oder Pull Requests.

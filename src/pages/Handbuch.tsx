@@ -279,7 +279,7 @@ const KALENDER = (rolle: Rolle): Kapitel => ({
       </dl>
       <h3>Gut zu wissen</h3>
       <ul className="punkte">
-        <li>Im Kalender stehen Berufsschule, Einsätze und Prüfungstermine als ganztägige Termine. {rolle === 'azubi' ? 'Dazu kommen deine eigenen Termine, mit Uhrzeit, wenn du eine angegeben hast. ' : 'Private Termine der Azubis stehen nicht in deinem Kalender. '}Aufgaben, Notizen und Berichte stehen dort nicht.</li>
+        <li>Im Kalender stehen Berufsschule, Einsätze, genehmigter Urlaub und Prüfungstermine als ganztägige Termine – auch die Termine aus dem Planer für die Prüfung. {rolle === 'azubi' ? 'Dazu kommen deine eigenen Termine, mit Uhrzeit, wenn du eine angegeben hast. ' : 'Private Termine der Azubis stehen nicht in deinem Kalender. '}Aufgaben, Notizen, Firmentermine und Berichte stehen dort nicht.</li>
         {rolle !== 'azubi' && <li>Vor jedem Termin steht der Name des Azubis. Du kannst den Link auch auf einen einzelnen Azubi beschränken. Du siehst nur Azubis, die du auch im Portal siehst.</li>}
         <li>Änderungen kommen mit Verzögerung an – je nach Programm nach einigen Stunden oder am nächsten Tag. Verbindlich ist der Plan im Portal.</li>
         <li>Der Kalender ist nur zum Lesen. Termine änderst du im Portal, nicht im Kalenderprogramm. Wochen gehen im Kalender von Montag bis Sonntag.</li>
@@ -339,6 +339,7 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
             <Begriff wort="Neuer Eintrag im Ausbildungsplan">Dein Ausbilder oder ein Ausbildungsbeauftragter hat etwas in deinen Plan eingetragen.</Begriff>
             <Begriff wort="Bericht abgezeichnet">Der Bericht ist unterschrieben und damit fertig.</Begriff>
             <Begriff wort="Bericht zurückgegeben">Du sollst etwas ändern. Ein Tipp auf die Zeile öffnet den Bericht, dort steht der Grund.</Begriff>
+            <Begriff wort="Abzeichnung aufgehoben">Ein schon abgezeichneter Bericht wurde wieder geöffnet, weil noch etwas zu ändern ist. Der Grund steht am Bericht. Danach reichst du ihn neu ein.</Begriff>
             <Begriff wort="Urlaub bestätigt, genehmigt, abgelehnt, storniert">Es hat sich etwas an deinem Urlaubsantrag getan. Die Zeile führt zu „Urlaub“.</Begriff>
             <Begriff wort="Neu für dich: Planer für deine Prüfung">Dein Ausbilder hat für dich den Planer freigeschaltet, zum Beispiel für dein Abschlussprojekt. Die Zeile führt dorthin. Mehr im Kapitel „Planer für deine Prüfung“.</Begriff>
           </>
@@ -427,7 +428,7 @@ const AZUBI: Kapitel[] = [
     gruppe: 'Erste Schritte',
     inhalt: (
       <>
-        <p>Das Portal hat zwei Teile:</p>
+        <p>Im Portal steht alles zu deiner Ausbildung an einem Ort. Die zwei wichtigsten Teile:</p>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>
@@ -435,6 +436,9 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>
             <strong>Berichtsheft</strong> – hier schreibst du jede Woche auf, was du gemacht hast. Dein Ausbilder liest es und bestätigt es.
+          </li>
+          <li>
+            Dazu kommen <strong>Urlaub</strong> (beantragen und den Stand sehen) und der <strong>Jahreskalender</strong>. Je nachdem, was dein Betrieb eingerichtet hat, gibt es außerdem <strong>Lernen</strong>, einen <strong>Planer für deine Prüfung</strong> und einen <strong>Begleiter</strong>. Zu jedem steht hier ein eigenes Kapitel.
           </li>
         </ul>
         <p>Das Berichtsheft ist Pflicht. Ohne vollständige Berichte wirst du nicht zur Abschlussprüfung zugelassen. Es lohnt sich also, jede Woche dranzubleiben.</p>
@@ -904,7 +908,7 @@ const AZUBI: Kapitel[] = [
         <p>Der Begleiter ist eine kleine Figur, die dich durch die Ausbildung begleitet – einfach zum Spaß. Du suchst dir eine von fünf Figuren aus und gibst ihr einen Namen. Er ist freiwillig: Du kannst ihn jederzeit aus- und wieder einschalten.</p>
         <h3>So geht's</h3>
         <ol className="schritte">
-          <li>Nach der Führung fragt dich das Portal einmal, ob du einen Begleiter willst. Wähle „Begleiter aussuchen“. Später geht das unter <Link zu="/konto">Konto</Link> bei „Dein Begleiter“.</li>
+          <li>Nach der Führung fragt dich das Portal einmal, ob du einen Begleiter willst. Wähle „Begleiter aussuchen“. Später geht das unter <Link zu="/konto">Konto</Link> bei „Begleiter“.</li>
           <li>Wähle Eule, Fuchs, Roboter, Biber oder Pinguin und gib der Figur einen Namen (höchstens 20 Zeichen).</li>
           <li>Wähle „Begleiter einschalten“. Ab jetzt ist er da.</li>
           <li>Tippe auf die Figur: Es öffnet sich „Mein Begleiter“ mit allem, was er schon hat. Dort änderst du auch Figur und Namen oder schaltest ihn aus.</li>
@@ -931,7 +935,7 @@ const AZUBI: Kapitel[] = [
         <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Zubehör">Dein Begleiter bekommt mit der Zeit neun Teile – zum Beispiel einen Ausweis, eine Mütze oder ein Werkzeug. Er behält alles. Welche Teile noch kommen, bleibt eine Überraschung.</Begriff>
-          <Begriff wort="Neues Teil">Kommt ein Teil dazu, zeigt es dir der Begleiter einmal mit einer kurzen Animation. Mit „Weiter“ oder Escape schließt du sie. Unter „Mein Begleiter“ kannst du jedes Teil mit „Ansehen“ noch einmal abspielen.</Begriff>
+          <Begriff wort="Neues Teil">Kommt ein Teil dazu, zeigt es dir der Begleiter einmal mit einer kurzen Animation. Mit „Weiter geht’s“ oder Escape schließt du sie. Unter „Mein Begleiter“ kannst du jedes Teil mit „Ansehen“ noch einmal abspielen.</Begriff>
           <Begriff wort="Sprechblase">Manchmal sagt der Begleiter etwas: einen Gruß am Tag oder einen Satz, wenn du einen Bericht eingereicht oder Urlaub beantragt hast. Die Blase verschwindet von selbst.</Begriff>
           <Begriff wort="Erinnerung">Ein Hinweis auf etwas, das ansteht – zum Beispiel „Der Bericht für diese Woche ist noch nicht eingereicht“. Sie ersetzt an dem Tag den Gruß.</Begriff>
         </dl>
@@ -1454,7 +1458,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           inhalt: (
             <>
               <p>
-                Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> stehen Betrieb, Ausbildungsberufe und Berufsschulen. Sie gelten <strong>für das ganze Portal</strong> – alle Ausbilder arbeiten mit denselben Einträgen.
+                Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> stehen Betrieb, Abteilungen, Ausbildungsberufe, Berufsschulen und Firmentermine. Sie gelten <strong>für das ganze Portal</strong> – alle Ausbilder arbeiten mit denselben Einträgen.
               </p>
               <h3>Begriffe</h3>
               <dl className="begriffe">
@@ -1465,8 +1469,10 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Ausbildungsberufe">Bezeichnung, bei Bedarf Fachrichtung, und Regeldauer in Monaten.</Begriff>
                 <Begriff wort="Lernmodul">
                   Am Beruf lässt sich ein Paket mit Lerninhalten einschalten, sofern eines auf dem Server liegt. Azubis dieses Berufs sehen dann den Menüpunkt „Lernen“ mit Cheatsheets und einer Ampel zur Selbsteinschätzung. Den Lernstand sieht nur der Azubi selbst – du siehst ihn nicht, auch
-                  nicht als Zusammenfassung. Die Inhalte legt der Betreiber des Portals auf dem Server ab; schreiben kannst du sie selbst – siehe „Lerninhalte für einen Beruf erstellen“. Liegen dort noch keine, ist das Feld gesperrt und die Seite sagt, was fehlt.
+                  nicht als Zusammenfassung. Die Inhalte schreibst du selbst und reichst sie als ZIP-Datei ein – siehe „Lerninhalte für einen Beruf erstellen“; der Betreiber des Portals kann sie auch als Ordner auf dem Server ablegen. Liegen noch keine vor, ist das Feld gesperrt und die Seite sagt, was fehlt.
                 </Begriff>
+                <Begriff wort="Lerninhalte für alle Berufe">Ein Lernmodul, das alle Azubis nur lesen – siehe Kapitel „Lerninhalte für alle Berufe festlegen“.</Begriff>
+                <Begriff wort="Abteilungen und Firmentermine">Haben eigene Kapitel: „Abteilungen und Einsätze“ und „Firmentermine für alle“.</Begriff>
                 <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
               </dl>
               <h3>Gut zu wissen</h3>
@@ -1824,7 +1830,7 @@ const ADMIN: Kapitel[] = [
     gruppe: 'Erste Schritte',
     inhalt: (
       <p>
-        Du verwaltest Konten, siehst das Protokoll, bearbeitest <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link> und stellst das Logo ein. Ausbildungspläne, Berichte und Stammdaten siehst du nicht. Fehlermeldungen kommen von allen Nutzern über „Fehler melden“; die Zahl am Menüpunkt zeigt die
+        Du verwaltest Konten, siehst das Protokoll, bearbeitest <Link zu="/verwaltung/meldungen">Fehlermeldungen</Link>, prüfst eingereichte Lerninhalte und lädst sie hoch, stellst das Logo ein und entscheidest, ob es den Begleiter der Azubis gibt. Ausbildungspläne, Berichte und Stammdaten siehst du nicht. Fehlermeldungen kommen von allen Nutzern über „Fehler melden“; die Zahl am Menüpunkt zeigt die
         offenen. „Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben.
       </p>
     ),
