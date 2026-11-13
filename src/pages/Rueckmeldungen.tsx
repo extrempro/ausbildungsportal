@@ -15,6 +15,8 @@ interface Wunsch {
   paket: string;
   paketTitel: string;
   thema: string;
+  /** Stelle im Lernmodul – null, wenn es sie im Paket nicht (mehr) gibt */
+  stelle: { feld: string; unterthema: string } | null;
   text: string;
   status: 'offen' | 'erledigt';
   erledigtAm: string | null;
@@ -79,8 +81,8 @@ export function Rueckmeldungen({ onGeaendert }: { onGeaendert: (offen: number) =
           </button>
         )}
         {w.paket && (
-          <Link zu={`/lerninhalte/${w.paket}`} className="knopf schlicht klein">
-            Lerninhalte ansehen
+          <Link zu={w.stelle ? `/lerninhalte/${w.paket}/${w.stelle.feld}${w.stelle.unterthema ? `#u-${w.stelle.unterthema}` : ''}` : `/lerninhalte/${w.paket}`} className="knopf schlicht klein">
+            {w.stelle ? 'Zum Thema springen' : 'Lerninhalte ansehen'}
           </Link>
         )}
         <button type="button" className="knopf schlicht klein gefahr" onClick={() => void loesche(w)}>
