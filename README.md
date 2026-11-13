@@ -2,7 +2,7 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.53.1.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.54.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -63,6 +63,7 @@ Danach als Super-Admin den ersten Ausbilder anlegen (Microsoft-Anmeldename + Rol
 ```bash
 npm run dev               # baut die Oberfläche bei Änderungen neu und startet den Server neu
 npm test                  # Tests (node:test)
+npm run e2e               # Abläufe im Browser (Playwright; einmalig vorher: npx playwright install chromium)
 npm run typecheck
 ```
 

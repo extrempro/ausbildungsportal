@@ -64,6 +64,15 @@ Bei jeder neuen Funktion fragen: Erfährt dadurch eine andere Person etwas Neues
 - **Gestaltung:** ein Stylesheet (`src/index.css`), Farben nur über die vorhandenen Variablen (`--c-…`), damit hell und dunkel stimmen. Welche Farben und Bausteine es gibt, zeigt [docs/gestaltung.md](docs/gestaltung.md) – erst dort nachsehen, dann neu bauen.
 - **Sprache:** Oberfläche, Kommentare und Bezeichner sind deutsch.
 
+### Abläufe im Browser (E2E-Tests)
+
+Die wichtigsten Abläufe werden im echten Browser durchgespielt: erste Anmeldung, Bericht schreiben bis abzeichnen, Urlaub beantragen bis genehmigen, Lernen, Planer, Begleiter, die Führung jeder Rolle – und jede Seite bei 390 px ohne waagerechten Überlauf. Die Tests liegen in `e2e/` und laufen bei jedem Pull Request als Prüfung `e2e`.
+
+- Lokal: einmalig `npx playwright install chromium`, dann `npm run e2e`. Jede Testdatei startet ein eigenes Portal mit leerem Datenordner; deine Daten bleiben unberührt.
+- Scheitert ein Ablauf, liegen Bildschirmfotos in `e2e/ergebnis/` (auf GitHub als Paket `e2e-bilder` am Lauf).
+- Ändert sich ein abgedeckter Ablauf, wird der Test angepasst. Kommt ein wichtiger Ablauf oder eine neue Seite dazu, wird der Test ergänzt.
+- In den Tests stehen nur erfundene Namen und Inhalte – keine echten Personen, keine echten Lerninhalte.
+
 ## Datenschutz und Recht
 
 - **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.

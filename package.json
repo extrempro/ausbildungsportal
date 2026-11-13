@@ -1,6 +1,6 @@
 {
   "name": "ausbildungsportal",
-  "version": "0.53.1",
+  "version": "0.54.0",
   "private": true,
   "license": "MIT",
   "description": "Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung über Microsoft Entra ID und Rollen",
@@ -14,6 +14,7 @@
     "start": "tsx --env-file-if-exists=.env server/index.ts --production",
     "test": "tsx --test \"server/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "e2e": "tsx scripts/build.ts && tsx --test --test-concurrency=1 \"e2e/*.test.ts\"",
     "backup": "tsx scripts/backup.ts",
     "admin-reset": "tsx scripts/admin-reset.ts"
   },
@@ -28,6 +29,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "esbuild": "^0.28.0",
+    "playwright": "^1.63.0",
     "typescript": "^6.0.0"
   }
 }

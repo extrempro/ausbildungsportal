@@ -2,6 +2,8 @@ node_modules/
 dist/
 data/
 *.log
+# Bildschirmfotos gescheiterter E2E-Tests
+e2e/ergebnis/
 .env
 .DS_Store
 docker-compose.override.yml

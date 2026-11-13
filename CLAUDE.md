@@ -16,6 +16,7 @@ Die Regeln für Menschen stehen in [CONTRIBUTING.md](CONTRIBUTING.md). Diese Dat
 npm run dev         # Entwicklung
 npm run typecheck   # Typen
 npm test            # alle Tests (dauert einige Minuten)
+npm run e2e         # Abläufe im Browser (Playwright); einmalig vorher: npx playwright install chromium
 npm run build       # Oberfläche bauen
 ```
 
@@ -28,6 +29,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `server/api.ts`, `server/api-basis.ts` | Einstieg der API; jede Route hat `m`, `p`, `wer`, `h` |
 | `server/rechte.ts` | Rechte zentral – wer darf welchen Azubi sehen |
 | `server/migrations/` | Datenbank, fortlaufend nummerierte SQL-Dateien |
+| `e2e/` | End-to-End-Tests im Browser (Playwright mit `node:test`): je Datei ein frisches Portal mit erfundenen Daten (`e2e/hilfe.ts`); Abläufe je Rolle, Führung, 390 px ohne Überlauf, Handbuch-Verweise. Bildschirmfotos von Fehlern in `e2e/ergebnis/` |
 | `server/test/` | Tests; `api.test.ts` enthält die Rechte-Tabelle aller Routen, `handbuch.test.ts` prüft die Handbuch-Verweise |
 | `server/berichte.ts`, `server/bericht-anhang.ts` | Berichtsheft (Wochen- und Tagesform) und Fotos/Dateien an Berichten – Dateityp am Dateianfang geprüft, Rechte wie der Bericht |
 | `server/firmentermin.ts` | Firmentermine für alle (Stammdaten) – reine Übersicht in Plan und Jahreskalender, bewusst ohne Glocke und nicht im Berichtsheft |
@@ -46,7 +48,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `docs/gestaltung.md` | Farben, Schrift und vorhandene Bausteine – **vor neuem CSS lesen** |
 | `docs/handbuch-regeln.md` | Aufbau eines Handbuch-Kapitels (Gruppe, Einleitung, „So geht's“, „Begriffe“, „Gut zu wissen“) – **vor jedem neuen oder geänderten Kapitel lesen**; `handbuch.test.ts` prüft es |
 
-Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines CSS, esbuild. **Keine neuen Abhängigkeiten** ohne Rückfrage beim Nutzer.
+Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines CSS, esbuild; für die E2E-Tests Playwright (nur Entwicklung). **Keine neuen Abhängigkeiten** ohne Rückfrage beim Nutzer.
 
 ## Bei jeder Änderung
 
@@ -58,7 +60,7 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 6. **Führung mitziehen** (`src/fuehrung.tsx`): Kommt ein Bereich dazu, den jemand am ersten Tag kennen sollte, oder ändert sich eine Stelle, auf die eine Station zeigt? Dann Station ergänzen oder anpassen – für jede Rolle – und die Führung im Browser durchklicken. Wenn nicht, im Pull Request kurz begründen.
 7. **Benachrichtigungen mitdenken:** Erfährt durch die Änderung eine andere Person etwas Neues? Dann gehört das Ereignis in die Glocke (`merkeAktivitaet`) – Teams und E-Mail gehen von selbst mit; neue Arten brauchen Texte in `src/glocke.tsx` und `server/benachrichtigung.ts`. Wenn nicht, im Pull Request kurz begründen. Einzelheiten in `docs/bedienregeln.md`.
 8. **Neue Route:** `wer` setzen, in die Rechte-Tabelle in `server/test/api.test.ts` eintragen, den verbotenen Zugriff testen. Fremde Kennung → 404, falsche Rolle → 403.
-9. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole.
+9. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build`, `npm run e2e` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole. Ändert sich ein Ablauf, den ein E2E-Test abdeckt, den Test anpassen; kommt ein wichtiger Ablauf oder eine Seite dazu, den Test ergänzen (neue Seiten in die Liste in `e2e/06-handy.test.ts`). Die E2E-Tests ersetzen das Durchspielen nicht.
 10. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
 
 ## Bedienung und Gestaltung – die häufigsten Punkte
