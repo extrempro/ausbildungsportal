@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.54.4] – 2026-11-13
+
+### Behoben
+
+- **Begleiter aussuchen:** Die Auswahlpunkte an den Figuren waren viel zu groß und verdeckten einen Teil der Figur. Sie sind jetzt so klein wie üblich und sitzen in der Ecke der Karte.
+
 ## [0.54.3] – 2026-11-13
 
 ### Geändert

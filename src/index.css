@@ -8868,6 +8868,13 @@ body:has(.begleiter-ecke.klein) .nach-oben {
   position: absolute;
   top: 8px;
   left: 8px;
+  /* die allgemeine Regel für Eingabefelder (volle Breite, 44 px hoch) passt nicht zu einem Auswahlpunkt – getippt wird auf die ganze Karte */
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--c-accent);
 }
 
 /* Fenster „neues Teil“ */
