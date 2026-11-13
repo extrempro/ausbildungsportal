@@ -1641,6 +1641,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>
                   Im Text gehen <code>**fett**</code>, <code>`Code`</code> und Links. Mehr Auszeichnung gibt es nicht.
                 </li>
+                <li>Tabellen dürfen mehrere Spalten haben. Passt eine Tabelle am Handy nicht in die Breite, zeigt das Portal jede Zeile als Karte untereinander – mit der Spaltenüberschrift über jedem Wert. Die erste Spalte steht dabei fett oben; nimm dafür das, woran man die Zeile erkennt.</li>
               </ul>
             </>
           ),

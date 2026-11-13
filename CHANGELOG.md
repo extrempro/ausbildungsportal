@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.54.5] – 2026-11-13
+
+### Geändert
+
+- **Lernen am Handy:** Breite Tabellen in den Lerninhalten musste man zur Seite rollen. Passt eine Tabelle nicht in die Breite, steht jetzt jede Zeile als Karte untereinander – mit der Spaltenüberschrift über jedem Wert. Am PC und bei schmalen Tabellen bleibt alles wie bisher.
+
 ## [0.54.4] – 2026-11-13
 
 ### Behoben

@@ -166,9 +166,60 @@ export interface Tabelle {
   zeilen: string[][];
 }
 
+/**
+ * Tabelle aus den Lerninhalten. Passt sie nicht in die Breite (am Handy bei mehreren Spalten mit Text),
+ * steht jede Zeile als Karte untereinander – mit der Spaltenüberschrift vor jedem Wert. So muss niemand zur Seite rollen.
+ */
 export function TabelleAnsicht({ t }: { t: Tabelle }) {
+  const rahmen = useRef<HTMLDivElement>(null);
+  // so viel Platz braucht die Tabelle mindestens – gemessen, solange sie als Tabelle dasteht
+  const braucht = useRef(0);
+  const [gestapelt, setGestapelt] = useState(false);
+
+  useEffect(() => {
+    const el = rahmen.current;
+    if (!el) return;
+    const miss = () => {
+      if (!el.classList.contains('gestapelt')) {
+        if (el.scrollWidth > el.clientWidth + 1) {
+          braucht.current = el.scrollWidth;
+          setGestapelt(true);
+        }
+      } else if (el.clientWidth >= braucht.current) setGestapelt(false);
+    };
+    miss();
+    if (!('ResizeObserver' in window)) return;
+    const beobachter = new ResizeObserver(miss);
+    beobachter.observe(el);
+    return () => beobachter.disconnect();
+  }, [t, gestapelt]);
+
+  if (gestapelt)
+    return (
+      <div className="tabelle-rahmen gestapelt" ref={rahmen}>
+        <ul className="lern-tabelle-karten">
+          {t.zeilen.map((z, i) => (
+            <li key={i}>
+              <dl>
+                {z.map((zelle, j) => (
+                  <div key={j}>
+                    <dt>
+                      <Inline text={t.kopf[j] ?? ''} />
+                    </dt>
+                    <dd>
+                      <Inline text={zelle} />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+
   return (
-    <div className="tabelle-rahmen">
+    <div className="tabelle-rahmen" ref={rahmen}>
       <table className="lern-tabelle">
         <thead>
           <tr>

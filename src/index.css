@@ -5089,6 +5089,44 @@ html.dark {
   border-bottom: 0;
 }
 
+/* Tabelle, die nicht in die Breite passt: jede Zeile als Karte, die Spaltenüberschrift steht klein über dem Wert */
+.lern-tabelle-karten {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.lern-tabelle-karten li {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.lern-tabelle-karten li:last-child {
+  border-bottom: 0;
+}
+
+.lern-tabelle-karten dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.lern-tabelle-karten dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.lern-tabelle-karten dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.lern-tabelle-karten dl > div:first-child dd {
+  font-weight: 600;
+}
+
 .lern-befehle {
   display: flex;
   flex-direction: column;
