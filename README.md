@@ -2,7 +2,13 @@
 
 Ausbildungsplan und Berichtsheft für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.54.0.** Anmeldung, Konten, Rechte, Protokoll, Stammdaten, Azubi-Profile, das Berichtsheft mit Abzeichnen, der Ausbildungsplan und ein Handbuch je Rolle sind fertig, dazu das Docker-Setup. Offen ist noch der Export je Azubi.
+**Stand: Version 0.54.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+
+**So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
+
+| Ausbildungsplan der Azubis | Berichte abzeichnen | Am Handy |
+| --- | --- | --- |
+| [![Ausbildungsplan](docs/bilder/azubi-01-ausbildungsplan.png)](docs/bilder/README.md) | [![Abzeichnen](docs/bilder/ausbilder-05-abzeichnen.png)](docs/bilder/README.md) | [![Am Handy](docs/bilder/handy-01-ausbildungsplan.png)](docs/bilder/README.md) |
 
 > **Frühe Version – noch nicht für den Echtbetrieb.** Die Anmeldung über Microsoft läuft in einer Installation gegen ein echtes Entra-Verzeichnis; die automatischen Tests nutzen einen nachgebildeten Anbieter. Eine unabhängige Sicherheitsprüfung gab es nicht. Wer die App einsetzt, tut das auf eigene Verantwortung (siehe [LICENSE](LICENSE)).
 
@@ -64,6 +70,7 @@ Danach als Super-Admin den ersten Ausbilder anlegen (Microsoft-Anmeldename + Rol
 npm run dev               # baut die Oberfläche bei Änderungen neu und startet den Server neu
 npm test                  # Tests (node:test)
 npm run e2e               # Abläufe im Browser (Playwright; einmalig vorher: npx playwright install chromium)
+npm run bilder            # Bildschirmfotos in docs/bilder/ neu erzeugen (erfundene Beispieldaten)
 npm run typecheck
 ```
 

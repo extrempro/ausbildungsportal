@@ -58,6 +58,10 @@ test(
     assert.match(await text(pe, '.abz-gruppe'), /Anna Azubi/);
     await pe.click('.abz-gruppe button:has-text("Lesen"), .abz-gruppe summary:has-text("Lesen")');
     await pe.waitForSelector('.abz-gruppe :text("Wareneingang geprüft")');
+    // der aufgeklappte Bericht steht unter seiner Zeile, nicht daneben
+    const zeile = (await pe.locator('.abz-kopf').first().boundingBox())!;
+    const offen = (await pe.locator('.abz-gruppe :text("Betriebliche Tätigkeiten")').first().boundingBox())!;
+    assert.ok(offen.y >= zeile.y + zeile.height - 1, 'Bericht klappt unter der Zeile auf');
     await pe.click('.abz-gruppe button:has-text("Zurückgeben …")');
     await pe.locator('.abz-gruppe textarea, [role=dialog] textarea, [role=alertdialog] textarea').first().fill('Bitte die Tätigkeiten genauer beschreiben.');
     await pe.click('button:has-text("Bericht zurückgeben"), button:has-text("Zurückgeben"):not(:has-text("…"))');

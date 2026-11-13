@@ -143,7 +143,7 @@ export function Lernen() {
                   {punkte > 0 && ` · ${punkte} ${punkte === 1 ? 'Lernpunkt' : 'Lernpunkte'} notiert`}
                   {neu > 0 && ' · Inhalt aktualisiert'}
                 </span>
-                <span className="abz-zeile">
+                <span className="abzeichen-zeile">
                   <Schild stufe={f.abzeichen.stufe} groesse={40} />
                   <span className="klein">
                     <strong>{f.abzeichen.name ? `Abzeichen: ${f.abzeichen.name}` : 'Noch kein Abzeichen'}</strong>

@@ -7186,7 +7186,8 @@ ul.antrag-hinweise {
   margin: 0 0 12px;
 }
 
-.abz-zeile {
+/* Abzeichen in der Kachel eines Themenfelds. Eigener Name: „abz-zeile“ ist die Zeile eines Berichts unter „Abzeichnen“. */
+.abzeichen-zeile {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -7194,7 +7195,7 @@ ul.antrag-hinweise {
   border-top: 1px solid var(--c-border);
 }
 
-.abz-zeile > span,
+.abzeichen-zeile > span,
 .abz-fehlt {
   display: block;
   min-width: 0;
