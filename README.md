@@ -150,7 +150,7 @@ Gut zu wissen:
 - Was kurz nacheinander passiert, sammelt das Portal etwa drei Minuten und schickt es als eine Nachricht je Person.
 - Gespeichert wird die Auswahl je Person und – bis zum Versand – was noch zu verschicken ist. Einen Verlauf verschickter Nachrichten gibt es nicht.
 - Scheitert der Versand, steht der Grund im Log (`docker compose logs app`, ohne Adresse und ohne Empfänger); die Nachricht wird nicht wiederholt, die Glocke zeigt das Ereignis weiterhin.
-- Erprobt ist der Weg über Teams mit einem von Hand aufgerufenen Workflow, der Versand aus dem Portal bisher nur in den Tests.
+- Erprobt ist der Versand per Teams und per E-Mail in einer Installation mit einem echten Teams-Workflow und einem echten Mailserver.
 
 ### Mail an die Personalstelle
 
@@ -178,7 +178,7 @@ Gut zu wissen:
 - Die Mail ist gestaltet wie die Benachrichtigungen: Kopf mit „Ausbildungsportal“, Betriebsname und Logo, dazu eine reine Textfassung. Die Personalstelle ist eine Adresse, keine Person im Portal – deshalb hat die Mail keinen Knopf ins Portal. Sie beginnt mit „Guten Tag,“ oder mit der Anrede, die ein Ausbilder unter **Stammdaten → Betrieb** einträgt (z. B. „Hallo Kim“).
 - Kommt die Mail nicht an, gilt die Genehmigung trotzdem. Am Antrag steht der Grund, im Log (`docker compose logs app`) ebenfalls; der Ausbilder kann erneut senden.
 - Unterstützt wird die Anmeldung mit Benutzer und Passwort (AUTH PLAIN oder LOGIN). **Microsoft 365 / Exchange Online** verlangt dafür „SMTP AUTH“ am Postfach; ist das im Tenant abgeschaltet, braucht es ein internes Relay oder einen Connector. OAuth-Anmeldung kann das Portal nicht.
-- Erprobt ist der Versand mit einem nachgestellten Mailserver in den Tests (auch STARTTLS und TLS), noch nicht mit einem echten Mailserver.
+- Erprobt ist der Versand mit einem nachgestellten Mailserver in den Tests (auch STARTTLS und TLS) und in einer Installation mit einem echten Mailserver.
 
 ## Berufe, Feiertage und Ferien
 
