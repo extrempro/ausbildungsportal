@@ -927,7 +927,7 @@ const AZUBI: Kapitel[] = [
         <h3>Begriffe</h3>
         <dl className="begriffe">
           <Begriff wort="Meine Ausbildung">Beruf, Berufsschule, Ausbildungszeit, Wochenstunden, die Form deines Berichtshefts und Prüfungstermine. Das trägt dein Ausbilder ein. Stimmt etwas nicht, sag ihm Bescheid.</Begriff>
-          <Begriff wort="Unterschrift">Du unterschreibst einmal mit dem Finger, einem Stift oder der Maus. Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie kannst du nicht einreichen. Änderst du sie später, behalten alte Berichte die alte Unterschrift.</Begriff>
+          <Begriff wort="Unterschrift">Du unterschreibst einmal unter „Konto“ mit dem Finger, einem Stift oder der Maus – oder wählst „Unterschrift aus meinem Namen erzeugen“, dann schreibt das Portal deinen Namen als Unterschrift (das geht auch nur mit der Tastatur). Diese Unterschrift kommt unter jeden Bericht, den du einreichst. Ohne sie kannst du nicht einreichen. Änderst du sie später, behalten alte Berichte die alte Unterschrift.</Begriff>
           <Begriff wort="Kalender abonnieren">Dein Plan im eigenen Kalender. Mehr dazu im Kapitel „Kalender abonnieren“.</Begriff>
           <Begriff wort="Benachrichtigungen">Ob du zusätzlich zur Glocke eine Nachricht per Teams oder E-Mail bekommst. Mehr dazu im Kapitel „Benachrichtigungen per Teams und E-Mail“.</Begriff>
           <Begriff wort="Darstellung">Hell, dunkel oder automatisch wie dein Gerät.</Begriff>
@@ -1050,7 +1050,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
     gruppe: 'Erste Schritte',
     inhalt: (
       <p>
-        Unter <Link zu="/konto">Konto</Link> im Feld „Unterschrift“ unterschreiben. Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Beim Abzeichnen wird eine Kopie am Bericht gespeichert; eine spätere Änderung verändert alte Berichte nicht.
+        Unter <Link zu="/konto">Konto</Link> im Feld „Unterschrift“ unterschreiben – oder „Unterschrift aus meinem Namen erzeugen“ wählen (geht auch nur mit der Tastatur). Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Beim Abzeichnen wird eine Kopie am Bericht gespeichert; eine spätere Änderung verändert alte Berichte nicht.
       </p>
     ),
   },
