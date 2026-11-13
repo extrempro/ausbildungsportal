@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import type { RefObject } from 'react';
 import { neueVersion } from './api';
 import { Icon } from './icons';
 
@@ -8,6 +9,64 @@ import { Icon } from './icons';
  * - melde(): kurze Bestätigung an immer derselben Stelle (unten), bleibt einige Sekunden und lässt sich schließen.
  * - Ladefehler: Überschrift bleibt stehen, der Fehler wird vorgelesen, „Erneut versuchen“ lädt neu.
  */
+/** Was in einem Fenster mit Tab erreichbar ist – sichtbar, nicht gesperrt, nicht aus der Tab-Folge genommen. */
+function fokusZiele(flaeche: HTMLElement): HTMLElement[] {
+  return [...flaeche.querySelectorAll<HTMLElement>('button, input, select, textarea, summary, a[href], [tabindex]')].filter(
+    (el) => !el.hasAttribute('disabled') && el.tabIndex >= 0 && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden',
+  );
+}
+
+/**
+ * Der eine Baustein für Fenster (role="dialog", WCAG 2.4.3): Beim Öffnen steht der Fokus im Fenster (auf dem Feld mit
+ * `autoFocus` bzw. `data-start-fokus`, sonst dem ersten Bedienelement), Tab und Umschalt+Tab bleiben darin, Escape schließt,
+ * und nach dem Schließen steht der Fokus wieder dort, wo er vorher war. `sperren`: Die Seite dahinter rollt nicht mit.
+ * `flaeche` ist das Fenster selbst oder ein Element darin (dann gilt das umgebende role="dialog").
+ */
+export function useFensterFokus(flaeche: RefObject<HTMLElement | null>, schliesse: () => void, o: { sperren?: boolean } = {}): void {
+  const zuletzt = useRef(schliesse);
+  zuletzt.current = schliesse;
+  // schon beim ersten Rendern merken – danach kann autoFocus den Fokus bereits ins Fenster gelegt haben
+  const vorherRef = useRef(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  useEffect(() => {
+    const vorher = vorherRef.current;
+    if (o.sperren) document.body.classList.add('dialog-offen');
+    // erst nach dem Zeichnen – autoFocus im Fenster hat dann schon gegriffen
+    // die Fläche ist das Fenster selbst – oder das Fenster, in dem das übergebene Element steht
+    const fenster = () => flaeche.current?.closest<HTMLElement>('[role=dialog],[role=alertdialog]') ?? flaeche.current;
+    const start = requestAnimationFrame(() => {
+      const f = fenster();
+      if (!f || f.contains(document.activeElement)) return;
+      (f.querySelector<HTMLElement>('[data-start-fokus]') ?? fokusZiele(f)[0] ?? f).focus();
+    });
+    const taste = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        zuletzt.current();
+        return;
+      }
+      const f = fenster();
+      if (e.key !== 'Tab' || !f) return;
+      const ziele = fokusZiele(f);
+      if (!ziele.length) return;
+      const erstes = ziele[0];
+      const letztes = ziele[ziele.length - 1];
+      const drin = f.contains(document.activeElement);
+      if (!drin || (e.shiftKey && document.activeElement === erstes) || (!e.shiftKey && document.activeElement === letztes)) {
+        e.preventDefault();
+        (e.shiftKey ? letztes : erstes).focus();
+      }
+    };
+    window.addEventListener('keydown', taste);
+    return () => {
+      cancelAnimationFrame(start);
+      window.removeEventListener('keydown', taste);
+      if (o.sperren) document.body.classList.remove('dialog-offen');
+      vorher?.focus?.();
+    };
+    // ein Fenster öffnet einmal und schließt einmal
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
 interface Frage {
   text: string;
   ja: string;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useFensterFokus } from '../dialoge';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '../icons';
@@ -136,18 +137,17 @@ export function Grafik({ bild }: { bild: Bild }) {
 }
 
 function Lupe({ bild, onZu }: { bild: Bild; onZu: () => void }) {
+  const flaeche = useRef<HTMLDivElement>(null);
+  useFensterFokus(flaeche, onZu);
   useEffect(() => {
-    const taste = (e: KeyboardEvent) => e.key === 'Escape' && onZu();
-    window.addEventListener('keydown', taste);
     const vorher = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener('keydown', taste);
       document.body.style.overflow = vorher;
     };
-  }, [onZu]);
+  }, []);
   return createPortal(
-    <div className="dialog-hintergrund lern-lupe" role="dialog" aria-modal="true" aria-label={bild.alt} onClick={onZu}>
+    <div ref={flaeche} className="dialog-hintergrund lern-lupe" role="dialog" aria-modal="true" aria-label={bild.alt} onClick={onZu}>
       <div className="lern-lupe-inhalt" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="knopf schlicht lern-lupe-zu" autoFocus aria-label="Großansicht schließen" onClick={onZu}>
           <Icon name="zu" />

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { api, logoFuer, ROLLE_TEXT, setzeAbmeldung } from './api';
 import type { Konto, Logos, Theme } from './api';
 import { Anmelden } from './pages/Anmelden';
@@ -30,7 +31,8 @@ import { UrlaubAzubi, UrlaubListe } from './pages/Urlaub';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
-import { Dialoge } from './dialoge';
+import { Dialoge, useFensterFokus } from './dialoge';
+import { halteFokusFrei } from './fokusFrei';
 import { RueckmeldungFenster } from './fehler';
 import { LESESEITE, LesemodusEnde, setzeBreit, setzeLesemodus, useAnsicht, useBreitesFenster } from './ansicht';
 import { Rueckmeldungen } from './pages/Rueckmeldungen';
@@ -212,6 +214,9 @@ export function App() {
     if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
     if (konto?.rolle === 'ausbilder') api<{ offen: number }>('GET', '/api/rueckmeldungen').then((r) => setOffeneWuensche(r.offen), () => {});
   }, [konto?.rolle, pfad, ladeUrlaubZuTun]);
+
+  // angeheftete Leisten verdecken nie das Element mit dem Fokus (WCAG 2.4.11)
+  useEffect(() => halteFokusFrei(), []);
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
   useEffect(() => setMenue(null), [pfad]);
@@ -691,8 +696,7 @@ export function App() {
         </button>
       </nav>
       {menue === 'mehr' && (
-        <div className="bogen-hintergrund" onClick={() => setMenue(null)}>
-          <div id="menue-mehr" className="bogen" role="dialog" aria-label="Weitere Bereiche" onClick={(e) => e.stopPropagation()}>
+        <Bogen onZu={() => setMenue(null)}>
             <div className="bogen-kopf">
               <Avatar name={konto.anzeigename} bild={konto.bild} />
               <span className="ich-name">
@@ -720,9 +724,21 @@ export function App() {
               {liste(persoenlich)}
               {schalter}
             </ul>
-          </div>
-        </div>
+        </Bogen>
       )}
     </>
+  );
+}
+
+/** „Mehr“ am Handy: ein Fenster von unten – der Fokus geht hinein und bleibt darin, bis es zu ist (WCAG 2.4.3). */
+function Bogen({ onZu, children }: { onZu: () => void; children: ReactNode }) {
+  const flaeche = useRef<HTMLDivElement>(null);
+  useFensterFokus(flaeche, onZu);
+  return (
+    <div className="bogen-hintergrund" onClick={onZu}>
+      <div ref={flaeche} id="menue-mehr" className="bogen" role="dialog" aria-modal="true" aria-label="Weitere Bereiche" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
   );
 }

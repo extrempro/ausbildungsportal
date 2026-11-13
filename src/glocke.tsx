@@ -216,7 +216,7 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
         className="menue-knopf glocke-knopf"
         aria-expanded={offen}
         aria-controls="menue-glocke"
-        aria-label={neu > 0 ? `Aktivitäten, ${neu} neu` : 'Aktivitäten, nichts Neues'}
+        aria-label={neu > 0 ? `Aktivitäten, ${zahl} neu` : 'Aktivitäten, nichts Neues'}
         title="Aktivitäten"
         onClick={onSchalte}
       >

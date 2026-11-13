@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { api, datum } from './api';
 import { FIGUR_ART, FIGUR_NAME, FIGUREN, FigurBild, TEIL_NAME, TEILE, teileBis } from './begleiter/figuren';
 import type { Figur, Teil } from './begleiter/figuren';
-import { melde } from './dialoge';
+import { melde, useFensterFokus } from './dialoge';
 import { HandbuchLink } from './handbuchLink';
 import { Link, usePfad } from './router';
 
@@ -350,18 +350,12 @@ export function useBegleiter(aktiv: boolean, ruhig: boolean): { kopf: ReactNode;
   };
 }
 
-/** Schließt ein Fenster mit Escape und gibt den Fokus danach zurück. */
+/** Fenster des Begleiters: Fokus auf `erstes`, Tab bleibt im Fenster, Escape schließt, danach zurück (useFensterFokus). */
 function useFenster(onZu: () => void, erstes: React.RefObject<HTMLElement | null>) {
+  useFensterFokus(erstes, onZu);
   useEffect(() => {
-    const vorher = document.activeElement as HTMLElement | null;
     erstes.current?.focus();
-    const taste = (e: KeyboardEvent) => e.key === 'Escape' && onZu();
-    document.addEventListener('keydown', taste);
-    return () => {
-      document.removeEventListener('keydown', taste);
-      vorher?.focus?.();
-    };
-  }, [onZu, erstes]);
+  }, [erstes]);
 }
 
 /** Fenster „neues Teil“: Das Teil kommt mit einem kleinen Gag ins Bild. Erscheint je Stufe einmal; Antippen schließt. */
