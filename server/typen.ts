@@ -16,6 +16,8 @@ export interface BenutzerZeile {
   fehlversuche: number;
   gesperrt_bis: string | null;
   theme: Theme;
+  /** Hinweise auf neue Versionen zeigen (1) oder nicht (0) */
+  versionshinweis: number;
   erstellt: string;
   erstellt_von: number | null;
   letzte_anmeldung: string | null;

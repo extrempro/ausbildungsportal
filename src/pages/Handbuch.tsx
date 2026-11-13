@@ -185,7 +185,7 @@ const BEDIENUNG: Kapitel = {
       <li>Dieses Handbuch hat links ein Inhaltsverzeichnis mit Suchfeld (am Handy oben unter „Inhalt und Suche“ – die Zeile bleibt beim Rollen stehen). Jedes Kapitel ist gleich aufgebaut: erst wozu es da ist, dann „So geht's“, „Begriffe“ und „Gut zu wissen“.</li>
         <li className="nur-mit-glocke">Die Glocke oben rechts zeigt, was es Neues gibt. Mehr dazu im Kapitel „Die Glocke“.</li>
         <li>Etwas funktioniert nicht, oder dir fehlt etwas? Das Symbol mit den zwei Daumen oben in der Leiste öffnet „Rückmeldung geben“. Dort meldest du einen Fehler – wenn du magst, mit Bildschirmfoto – oder schickst eine Idee fürs Portal. Mehr dazu im Kapitel „Rückmeldung geben“.</li>
-        <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“. Speichere, was du gerade eingibst, und wähle „Seite neu laden“.</li>
+        <li>Wird das Portal aktualisiert, während du es offen hast, erscheint unten der Hinweis „Das Portal wurde aktualisiert“ – spätestens, sobald du in die App zurückkehrst. Speichere, was du gerade eingibst, und wähle „Seite neu laden“. Hat dein Gerät die neue Version schon von selbst geladen (am Handy häufig), steht einmal „Das Portal wurde auf Version … aktualisiert“ da; „Was ist neu?“ führt zu den Versionshinweisen. Abschalten kannst du beide Hinweise unter „Konto“ → „Darstellung“.</li>
         <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
         <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
         <li>

@@ -11,6 +11,8 @@ export interface Konto {
   verknuepft: boolean;
   passwortWechsel: boolean;
   theme: Theme;
+  /** nur am eigenen Konto (/api/ich): Hinweise „Das Portal wurde aktualisiert“ zeigen? (Konto → Darstellung) */
+  versionshinweis?: boolean;
   erstellt: string;
   letzteAnmeldung: string | null;
   /** Ausbilder mit Gesamtsicht: sieht und bearbeitet alle Azubis */
@@ -71,6 +73,20 @@ function pruefeVersion(v: string | null): void {
   serverVersion = neu;
   versionsHoerer.forEach((h) => h());
 }
+/**
+ * Gleich nachsehen, ob es eine neue Version gibt – etwa wenn man in die App zurückkehrt (am Handy liegt sie oft lange im
+ * Hintergrund). Fragt höchstens alle 30 Sekunden und unabhängig davon, ob die Seite selbst gerade etwas lädt.
+ */
+let zuletztGeprueft = 0;
+export function pruefeAufNeueVersion(): void {
+  if (Date.now() - zuletztGeprueft < 30_000) return;
+  zuletztGeprueft = Date.now();
+  fetch('/api/health', { credentials: 'same-origin' }).then(
+    (r) => pruefeVersion(r.headers.get('X-App-Version')),
+    () => undefined,
+  );
+}
+
 export const neueVersion = {
   abonniere: (h: () => void) => {
     versionsHoerer.add(h);

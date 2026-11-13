@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api, logoFuer, ROLLE_TEXT, setzeAbmeldung } from './api';
+import { api, logoFuer, pruefeAufNeueVersion, ROLLE_TEXT, setzeAbmeldung } from './api';
 import type { Konto, Logos, Theme } from './api';
 import { Anmelden } from './pages/Anmelden';
 import { AzubiDetail } from './pages/AzubiDetail';
@@ -217,6 +217,20 @@ export function App() {
     if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
     if (konto?.rolle === 'ausbilder') api<{ offen: number }>('GET', '/api/rueckmeldungen').then((r) => setOffeneWuensche(r.offen), () => {});
   }, [konto?.rolle, pfad, ladeUrlaubZuTun]);
+
+  // neue Version gleich bemerken, wenn man in die App zurückkehrt – am Handy liegt sie oft lange im Hintergrund
+  // (auch ohne Glocke, also beim Super-Admin); „pageshow“: Rückkehr aus dem Zwischenspeicher des Browsers
+  useEffect(() => {
+    const sichtbar = () => document.visibilityState === 'visible' && pruefeAufNeueVersion();
+    document.addEventListener('visibilitychange', sichtbar);
+    window.addEventListener('pageshow', sichtbar);
+    window.addEventListener('online', sichtbar);
+    return () => {
+      document.removeEventListener('visibilitychange', sichtbar);
+      window.removeEventListener('pageshow', sichtbar);
+      window.removeEventListener('online', sichtbar);
+    };
+  }, []);
 
   // angeheftete Leisten verdecken nie das Element mit dem Fokus (WCAG 2.4.11)
   useEffect(() => halteFokusFrei(), []);
@@ -680,7 +694,7 @@ export function App() {
           }}
         />
       )}
-      <Dialoge />
+      <Dialoge versionshinweis={konto.versionshinweis !== false} />
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}
         <span className="fuss-links">

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { RefObject } from 'react';
 import { neueVersion } from './api';
+import { Link } from './router';
 import { Icon } from './icons';
 
 /**
@@ -170,8 +171,8 @@ function FrageFenster({ f }: { f: Frage }) {
   );
 }
 
-/** Einmal in der App eingebunden: zeigt die offene Rückfrage und die Rückmeldungen. */
-export function Dialoge() {
+/** Einmal in der App eingebunden: zeigt die offene Rückfrage und die Rückmeldungen. `versionshinweis`: Einstellung im Konto. */
+export function Dialoge({ versionshinweis = true }: { versionshinweis?: boolean }) {
   const f = useSyncExternalStore(abonniere, () => frage);
   const liste = useSyncExternalStore(abonniere, () => meldungen);
   const version = useSyncExternalStore(neueVersion.abonniere, neueVersion.lies);
@@ -181,7 +182,7 @@ export function Dialoge() {
       {/* immer im Dokument, damit Bildschirmleser neue Meldungen ansagen */}
       <div className="meldungen nicht-drucken" role="status" aria-live="polite">
         {/* bleibt stehen, bis neu geladen oder „Später“ gewählt wird – anders als die kurzen Bestätigungen */}
-        {version && (
+        {versionshinweis && version && (
           <div className="meldung-zeile update">
             <Icon name="versionen" />
             <span>
@@ -197,6 +198,7 @@ export function Dialoge() {
             </span>
           </div>
         )}
+        {!version && <NeuInDieserVersion an={versionshinweis} />}
         {liste.map((m) => (
           <div key={m.id} className="meldung-zeile">
             <Icon name="abzeichnen" />
@@ -208,6 +210,60 @@ export function Dialoge() {
         ))}
       </div>
     </>
+  );
+}
+
+/**
+ * Nach einem Update ohne Hinweis (am Handy startet die App oft frisch und lädt gleich die neue Version):
+ * einmal je Version „Das Portal wurde aktualisiert – Was ist neu?“. Der Browser merkt sich die gesehene Version;
+ * beim allerersten Öffnen gibt es nichts zu melden.
+ */
+const GESEHEN = 'portal-version-gesehen';
+function liesGesehen(): string | null {
+  try {
+    return localStorage.getItem(GESEHEN);
+  } catch {
+    return __APP_VERSION__;
+  }
+}
+function merkeGesehen(): void {
+  try {
+    localStorage.setItem(GESEHEN, __APP_VERSION__);
+  } catch {
+    // ohne Speicher kommt der Hinweis eben nicht
+  }
+}
+function NeuInDieserVersion({ an }: { an: boolean }) {
+  const [zeigen, setZeigen] = useState(() => {
+    const alt = liesGesehen();
+    if (alt === __APP_VERSION__) return false;
+    // ausgeschaltet (oder allererstes Öffnen): gilt trotzdem als gesehen – sonst käme es beim Einschalten nachträglich
+    if (!an || alt === null) {
+      merkeGesehen();
+      return false;
+    }
+    return true;
+  });
+  if (!zeigen) return null;
+  const fertig = () => {
+    merkeGesehen();
+    setZeigen(false);
+  };
+  return (
+    <div className="meldung-zeile update">
+      <Icon name="versionen" />
+      <span>
+        <strong>Das Portal wurde auf Version {__APP_VERSION__} aktualisiert.</strong>
+      </span>
+      <span className="update-knoepfe">
+        <Link zu="/versionen" className="knopf klein" beimKlick={fertig}>
+          Was ist neu?
+        </Link>
+        <button type="button" className="knopf schlicht klein" onClick={fertig}>
+          Schließen
+        </button>
+      </span>
+    </div>
   );
 }
 

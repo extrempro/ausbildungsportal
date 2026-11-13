@@ -113,7 +113,7 @@ window.addEventListener('popstate', (e: PopStateEvent) => {
 });
 
 /** aktivAb: der Link gilt auch auf Unterseiten als aktiv (z. B. /azubis/12 für „Azubis“). titel/vorlesen: für Links ohne lesbaren Text (Tooltip, Name für den Vorleser). */
-export function Link({ zu, children, className, aktivAb, auch, titel, vorlesen }: { zu: string; children: ReactNode; className?: string; aktivAb?: string; /** zweiter Bereich, in dem der Link ebenfalls als aktiv gilt */ auch?: string; titel?: string; vorlesen?: string }) {
+export function Link({ zu, children, className, aktivAb, auch, titel, vorlesen, beimKlick }: { zu: string; children: ReactNode; className?: string; aktivAb?: string; /** zweiter Bereich, in dem der Link ebenfalls als aktiv gilt */ auch?: string; titel?: string; vorlesen?: string; /** zusätzlich beim Anklicken (z. B. einen Hinweis schließen) */ beimKlick?: () => void }) {
   const pfad = usePfad();
   const aktiv = pfad === zu || (!!aktivAb && pfad.startsWith(`${aktivAb}/`)) || (!!auch && (pfad === auch || pfad.startsWith(`${auch}/`)));
   return (
@@ -124,6 +124,7 @@ export function Link({ zu, children, className, aktivAb, auch, titel, vorlesen }
       aria-label={vorlesen}
       aria-current={aktiv ? 'page' : undefined}
       onClick={(e) => {
+        beimKlick?.();
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
         e.preventDefault();
         geheZu(zu);
