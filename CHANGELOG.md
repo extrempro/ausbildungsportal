@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.54.2] – 2026-11-13
+
+### Behoben
+
+- **Bildschirmfotos:** Auf allen Bildern in `docs/bilder/` stand unten der Hinweis „Das Portal wurde aktualisiert“. Die Bilder sind neu erzeugt – ohne den Hinweis.
+
 ## [0.54.1] – 2026-11-13
 
 ### Behoben

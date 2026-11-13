@@ -214,10 +214,22 @@ async function main() {
         await s.evaluate(() => window.scrollTo(0, 0));
       }
       await o.vorher?.();
+      // Passt die gebaute Oberfläche nicht zur Version des Servers, blendet das Portal „Das Portal wurde aktualisiert“ ein –
+      // das stünde dann auf jedem Bild. Deshalb immer über „npm run bilder“ starten: Der Befehl baut vorher neu.
+      if ((await s.locator('.meldung-zeile.update').count()) > 0) throw new Error('Auf der Seite steht „Das Portal wurde aktualisiert“: Die Oberfläche in dist/ ist älter als der Server. Bitte mit „npm run bilder“ starten (baut vorher neu).');
       // Bestätigungen unten („gespeichert“) und der Mauszeiger sollen nicht im Bild sein
       await s.mouse.move(0, 0);
       await s.waitForTimeout(400);
-      await s.screenshot({ path: join(ZIEL, `${datei}.png`), fullPage: o.ganz ?? false, animations: 'disabled' });
+      // Ganze Seite: das Fenster so hoch machen wie die Seite. Mit „fullPage“ stünde Angeheftetes (der Begleiter in der Ecke)
+      // mitten im Bild, nämlich dort, wo das Fenster vorher aufhörte.
+      const fenster = s.viewportSize()!;
+      if (o.ganz) {
+        const hoehe = await s.evaluate(() => document.documentElement.scrollHeight);
+        await s.setViewportSize({ width: fenster.width, height: Math.min(Math.max(hoehe, fenster.height), 6000) });
+        await s.waitForTimeout(300);
+      }
+      await s.screenshot({ path: join(ZIEL, `${datei}.png`), animations: 'disabled' });
+      if (o.ganz) await s.setViewportSize(fenster);
       gruppe.push({ datei: `${datei}.png`, titel, text });
     };
     /** Der Begleiter soll nur auf seinem eigenen Bild etwas sagen. */

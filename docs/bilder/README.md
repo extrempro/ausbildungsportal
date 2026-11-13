@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.54.1 (erzeugt am 13.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.54.2 (erzeugt am 13.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
