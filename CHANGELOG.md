@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.55.0] – 2026-11-13
+
+### Geändert
+
+- **Lerninhalte einreichen (Ausbilder):** Die Seite „Lerninhalte“ ist neu geordnet. Jedes Lernmodul hat eine Karte, an der steht, was gerade gilt: „Im Portal“, „Neue Fassung wartet auf Prüfung“ oder „Zurückgegeben“ mit der Rückmeldung. Dort ist auch der Knopf **„Lerninhalte aktualisieren“** – die Kennung muss man dafür nicht mehr tippen. Ein neues Lernmodul hat schon eine Karte, während es geprüft wird. Das Formular für ein neues Lernmodul ist zugeklappt.
+- **Verlauf statt Liste:** Die bisherige Liste der Einreichungen ist ein zugeklappter „Verlauf“ – eine Zeile je Schritt (eingereicht, zurückgegeben, hochgeladen) mit Notiz und Rückmeldung. Das gilt auch beim Super-Admin für alles Erledigte; was auf seine Prüfung wartet, steht weiter oben als Karte.
+- Für Ausbildungsbeauftragte bleibt die Seite, wie sie war: Sie lesen die Lerninhalte und sehen keine Einreichungen.
+
 ## [0.54.6] – 2026-11-13
 
 ### Geändert

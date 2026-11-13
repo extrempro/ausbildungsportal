@@ -1522,7 +1522,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 Für jeden Ausbildungsberuf kann es ein eigenes <strong>Lernmodul</strong> geben – Cheatsheets, Kompendium und Zusatzwissen wie beim Fachinformatiker. Dafür muss niemand programmieren: Ein Lernmodul ist ein Ordner mit Textdateien in einem festen Aufbau. Die eigentliche Arbeit ist, die Inhalte zu schreiben.
               </p>
               <p className="hinweis">
-                <strong>So kommen die Inhalte ins Portal:</strong> Du packst den fertigen Ordner als ZIP-Datei und reichst ihn unter <Link zu="/lerninhalte">Lerninhalte</Link> ein. Das Portal prüft den Aufbau sofort. Danach sieht der Betreiber des Portals (Super-Admin) die Einreichung und lädt sie hoch oder gibt sie dir mit einer Rückmeldung zurück. Nach dem Hochladen erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Für jede spätere Änderung reichst du das ganze Paket noch einmal mit derselben Kennung ein.
+                <strong>So kommen die Inhalte ins Portal:</strong> Du packst den fertigen Ordner als ZIP-Datei und reichst ihn unter <Link zu="/lerninhalte">Lerninhalte</Link> ein. Das Portal prüft den Aufbau sofort. Danach sieht der Betreiber des Portals (Super-Admin) die Einreichung und lädt sie hoch oder gibt sie dir mit einer Rückmeldung zurück. Nach dem Hochladen erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Für jede spätere Änderung nimmst du unter „Lerninhalte“ an der Karte des Lernmoduls „Lerninhalte aktualisieren“ und lädst das ganze Paket noch einmal hoch.
               </p>
               <h3>So geht's</h3>
               <ol className="schritte">
@@ -1536,7 +1536,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   <strong>Cheatsheets schreiben.</strong> Unterthema für Unterthema füllen: Kernbegriffe, Tabellen, ein Merksatz, eine typische Prüfungsfrage mit Lösungsweg.
                 </li>
                 <li>
-                  <strong>Als ZIP-Datei einreichen.</strong> Den Ordner packen und unter „Lerninhalte“ bei „Lerninhalte einreichen“ hochladen: Kennung eintragen (der Ordnername, z. B. <code>kaufleute-buero</code>), Datei wählen, auf Wunsch eine Notiz.
+                  <strong>Als ZIP-Datei einreichen.</strong> Den Ordner packen und unter „Lerninhalte“ hochladen. Ein neues Lernmodul: „Neues Lernmodul einreichen“ aufklappen, Kennung eintragen (der Ordnername, z. B. <code>kaufleute-buero</code>), Datei wählen, auf Wunsch eine Notiz. Ein vorhandenes: an seiner Karte „Lerninhalte aktualisieren“ – die Kennung steht dann schon fest.
                 </li>
                 <li>
                   <strong>Prüfen und einschalten.</strong> Unter Stammdaten steht das Paket mit der Zahl der Themenfelder. Stimmt in einer Datei etwas nicht, zeigt die Seite den Fehler mit Datei und Zeile. Dann am Beruf einschalten.
@@ -1572,14 +1572,16 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <dl className="begriffe">
                 <Begriff wort="Rückfrage „Trotzdem einreichen?“">Kommt bei einer neuen Fassung, wenn Kennungen fehlen, die es bisher gab (dann wäre Lernstand der Azubis nicht mehr zu sehen), oder wenn der Betreiber ein Lernmodul mit dieser Kennung schon als Ordner einbindet. Die Rückfrage nennt die Folgen. Was du bestätigst, sieht auch der Betreiber an der Einreichung.</Begriff>
                 <Begriff wort="Sofort-Prüfung">Beim Hochladen liest das Portal das Paket ein. Findet es Fehler, nimmt es nichts an und zeigt sie mit Datei und Zeile. Behebe sie und lade neu hoch.</Begriff>
-                <Begriff wort="Eingereicht – wird geprüft">Die Einreichung liegt beim Betreiber des Portals. Solange kannst du sie zurückziehen. Für dieselbe Kennung geht in dieser Zeit keine zweite Einreichung.</Begriff>
-                <Begriff wort="Zurückgegeben">Der Betreiber möchte Änderungen. Seine Rückmeldung steht an der Einreichung. Ändere die Dateien und reiche neu ein.</Begriff>
-                <Begriff wort="Hochgeladen">Die Inhalte sind im Portal. Ein neues Lernmodul schaltest du jetzt am Beruf ein; eine neue Fassung eines vorhandenen Lernmoduls gilt sofort. Der Lernstand der Azubis bleibt erhalten.</Begriff>
+                <Begriff wort="Karte des Lernmoduls">Unter „Lerninhalte“ hat jedes Lernmodul eine Karte. Oben rechts steht, was gerade gilt; darunter stehen die eingereichte Fassung und die Knöpfe. Ein neues Lernmodul hat schon eine Karte, während es noch geprüft wird.</Begriff>
+                <Begriff wort="Wartet auf Prüfung">Die eingereichte Fassung liegt beim Betreiber des Portals. Wer eingereicht hat, kann sie solange zurückziehen. Für dasselbe Lernmodul geht in dieser Zeit keine zweite Einreichung.</Begriff>
+                <Begriff wort="Zurückgegeben">Der Betreiber möchte Änderungen. Seine Rückmeldung steht an der Karte. Ändere die Dateien und nimm „Lerninhalte aktualisieren“.</Begriff>
+                <Begriff wort="Im Portal">Die Inhalte sind hochgeladen. Ein neues Lernmodul schaltest du jetzt am Beruf ein; eine neue Fassung eines vorhandenen Lernmoduls gilt sofort. Der Lernstand der Azubis bleibt erhalten.</Begriff>
               </dl>
               <ul className="punkte">
                 <li>Die ZIP-Datei darf den Ordner selbst enthalten oder direkt seinen Inhalt – das Portal findet das Paket an der Datei <code>themenfelder.json</code>.</li>
                 <li>Übernommen werden nur Dateien, die zu einem Inhaltspaket gehören. Was sonst in der ZIP-Datei liegt, zeigt die Einreichung unter „Nicht übernommene Dateien“.</li>
-                <li>Alle Ausbilder sehen alle Einreichungen, weil die Lernmodule für das ganze Portal gelten.</li>
+                <li>Unter den Karten steht der „Verlauf“, zugeklappt: eine Zeile je Schritt – wer wann eingereicht hat und wann zurückgegeben oder hochgeladen wurde, mit Notiz und Rückmeldung.</li>
+                <li>Alle Ausbilder sehen alle Einreichungen und den ganzen Verlauf, weil die Lernmodule für das ganze Portal gelten.</li>
                 <li>Ausbildungsbeauftragte reichen nicht selbst ein. Sie wenden sich an einen Ausbilder.</li>
               </ul>
               <p>
@@ -1875,7 +1877,7 @@ const ADMIN: Kapitel[] = [
     inhalt: (
       <>
         <p>
-          Ausbilder reichen Lerninhalte für das Lernmodul als ZIP-Datei ein. Unter <Link zu="/verwaltung/lerninhalte">Lerninhalte</Link> (am Handy unter „Mehr“) stehen die Einreichungen; eine Zahl am Menüpunkt zeigt, wie viele warten.
+          Ausbilder reichen Lerninhalte für das Lernmodul als ZIP-Datei ein. Unter <Link zu="/verwaltung/lerninhalte">Lerninhalte</Link> (am Handy unter „Mehr“) stehen oben die Einreichungen, die auf dich warten; eine Zahl am Menüpunkt zeigt, wie viele es sind. Was erledigt ist, steht darunter zugeklappt im „Verlauf“ – eine Zeile je Schritt.
         </p>
         <h3>Begriffe</h3>
         <dl className="begriffe">

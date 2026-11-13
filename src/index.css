@@ -7420,6 +7420,52 @@ ul.antrag-hinweise {
   font-weight: 400;
 }
 
+/* Lerninhalte (Ausbilder): je Lernmodul eine Karte mit Stand, eingereichter Fassung und Knöpfen */
+.lern-paket-liste {
+  margin-bottom: 24px;
+}
+
+.antrag-kopf h2 code {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.lern-paket-einr {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-border);
+}
+
+.lern-paket-einr > h3 {
+  margin: 0 0 8px;
+  padding-top: 0;
+  border-top: 0;
+  font-size: 15px;
+}
+
+/* Verlauf der Einreichungen: eine Zeile je Ereignis, Zeit links */
+.einr-verlauf {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.einr-verlauf li {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: 4px 16px;
+  align-items: baseline;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 699px) {
+  .einr-verlauf li {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Lernmodul: Üben (Karteikarten, Quiz) ---------- */
 .ueben-alle {
   display: flex;

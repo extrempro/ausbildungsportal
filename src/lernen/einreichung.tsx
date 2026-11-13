@@ -65,14 +65,30 @@ function Liste({ titel, zeilen }: { titel: string; zeilen: string[] }) {
   );
 }
 
+/** Eine Einreichung als eigene Karte – so sieht sie der Super-Admin, solange sie auf die Prüfung wartet. */
 export function EinreichungKarte({ e, onGeaendert }: { e: Einreichung; onGeaendert: () => Promise<void> | void }) {
+  const s = STATUS[e.status];
+  return (
+    <li className="karte antrag">
+      <div className="antrag-kopf">
+        <h3>
+          {e.titel || e.kennung} <code>{e.kennung}</code>
+        </h3>
+        <span className={`pille ${s.farbe}`}>{s.text}</span>
+      </div>
+      <EinreichungTeil e={e} onGeaendert={onGeaendert} />
+    </li>
+  );
+}
+
+/** Was zu einer Einreichung gehört: Umfang, Notiz, Rückmeldung, Hinweise der Prüfung und die Knöpfe – ohne Rahmen und Überschrift. */
+export function EinreichungTeil({ e, onGeaendert }: { e: Einreichung; onGeaendert: () => Promise<void> | void }) {
   const [fehler, setFehler] = useState('');
   const [laeuft, setLaeuft] = useState(false);
   // Zurückgeben braucht eine Rückmeldung, Übernehmen erlaubt einen Kommentar – das Feld erscheint an Ort und Stelle
   const [fuer, setFuer] = useState<'zurueckgeben' | 'uebernehmen' | null>(null);
   const [text, setText] = useState('');
   useUngespeichert(fuer !== null && text.trim() !== '');
-  const s = STATUS[e.status];
 
   const sende = async (aktion: string, body: unknown, fertig: string) => {
     setLaeuft(true);
@@ -111,13 +127,7 @@ export function EinreichungKarte({ e, onGeaendert }: { e: Einreichung; onGeaende
 
   const p = e.pruefung;
   return (
-    <li className="karte antrag">
-      <div className="antrag-kopf">
-        <h3>
-          {e.titel || e.kennung} <code>{e.kennung}</code>
-        </h3>
-        <span className={`pille ${s.farbe}`}>{s.text}</span>
-      </div>
+    <>
       <p className="antrag-zeile">
         <strong>
           {p.themenfelder} {p.themenfelder === 1 ? 'Themenfeld' : 'Themenfelder'}, {p.unterthemen} Unterthemen
@@ -213,20 +223,59 @@ export function EinreichungKarte({ e, onGeaendert }: { e: Einreichung; onGeaende
           </p>
         )
       )}
-    </li>
+    </>
   );
 }
 
-/** Formular des Ausbilders: Kennung, ZIP-Datei, Notiz. Fehler des Inhaltspakets stehen direkt darunter. */
-export function EinreichenFormular({ maxMb, onEingereicht }: { maxMb: number; onEingereicht: () => Promise<void> | void }) {
-  const [kennung, setKennung] = useState('');
+/**
+ * Verlauf: was mit den Einreichungen geschah, das Neueste oben – eine Zeile je Ereignis.
+ * Eine zurückgezogene Einreichung hat keinen eigenen Zeitpunkt; das steht an der Zeile des Einreichens.
+ */
+export function EinreichungVerlauf({ einreichungen }: { einreichungen: Einreichung[] }) {
+  const zeilen = einreichungen
+    .flatMap((e) => {
+      const name = `„${e.titel || e.kennung}“`;
+      const out: { id: string; wann: string; farbe: string; was: string; text: string; zusatz: string }[] = [
+        { id: `${e.id}-e`, wann: e.erstellt, farbe: 'gelb', was: 'Eingereicht', text: `${name} von ${e.ausbilder}${e.status === 'zurueckgezogen' ? ' – später zurückgezogen' : ''}`, zusatz: e.notiz },
+      ];
+      if ((e.status === 'zurueck' || e.status === 'hochgeladen') && e.geprueftAm) {
+        out.push({ id: `${e.id}-p`, wann: e.geprueftAm, farbe: STATUS[e.status].farbe, was: STATUS[e.status].text, text: `${name} von ${e.geprueftVon}`, zusatz: e.rueckmeldung });
+      }
+      return out;
+    })
+    .sort((a, b) => b.wann.localeCompare(a.wann));
+  if (zeilen.length === 0) return null;
+  return (
+    <details className="karte">
+      <summary>Verlauf ({zeilen.length})</summary>
+      <ol className="einr-verlauf">
+        {zeilen.map((z) => (
+          <li key={z.id}>
+            <span className="leise klein antrag-zeit">{zeit(z.wann)}</span>
+            <span>
+              <span className={`pille ${z.farbe}`}>{z.was}</span> {z.text}
+              {z.zusatz && <span className="leise"> – „{z.zusatz}“</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
+/**
+ * Formular des Ausbilders: Kennung, ZIP-Datei, Notiz. Fehler des Inhaltspakets stehen direkt darunter.
+ * Mit `fest` (Kennung eines vorhandenen Lernmoduls) entfällt das Feld für die Kennung – so wird ein Lernmodul aktualisiert.
+ */
+export function EinreichenFormular({ maxMb, fest, onEingereicht, onAbbrechen }: { maxMb: number; fest?: string; onEingereicht: () => Promise<void> | void; onAbbrechen?: () => void }) {
+  const [kennung, setKennung] = useState(fest ?? '');
   const [notiz, setNotiz] = useState('');
   const [datei, setDatei] = useState<File | null>(null);
   const [nr, setNr] = useState(0);
   const [fehler, setFehler] = useState('');
   const [liste, setListe] = useState<string[]>([]);
   const [laeuft, setLaeuft] = useState(false);
-  useUngespeichert(kennung !== '' || notiz !== '' || datei !== null);
+  useUngespeichert((!fest && kennung !== '') || notiz !== '' || datei !== null);
   const zuGross = datei !== null && datei.size > maxMb * 1024 * 1024;
 
   const sende = async (ev: FormEvent) => {
@@ -251,7 +300,7 @@ export function EinreichenFormular({ maxMb, onEingereicht }: { maxMb: number; on
         }
         await ladeHoch(`${ziel}&bestaetigt=1`, datei, 'application/zip');
       }
-      setKennung('');
+      setKennung(fest ?? '');
       setNotiz('');
       setDatei(null);
       setNr((n) => n + 1); // leert das Dateifeld
@@ -266,25 +315,35 @@ export function EinreichenFormular({ maxMb, onEingereicht }: { maxMb: number; on
     }
   };
 
+  const dateiFeld = (
+    <label>
+      ZIP-Datei (höchstens {maxMb} MB)
+      <input key={nr} type="file" accept=".zip,application/zip" required onChange={(ev) => setDatei(ev.target.files?.[0] ?? null)} />
+    </label>
+  );
   return (
-    <section className="karte">
-      <h2>Lerninhalte einreichen</h2>
+    <>
       <p className="leise">
-        Lade ein Inhaltspaket als ZIP-Datei hoch. Das Portal prüft es sofort, danach sieht es der Betreiber des Portals und lädt es hoch oder gibt es mit einer Rückmeldung zurück.{' '}
+        {fest
+          ? 'Lade das ganze Inhaltspaket noch einmal als ZIP-Datei hoch. Das Portal prüft es sofort; nach dem Hochladen durch den Betreiber des Portals ersetzt die neue Fassung die alte.'
+          : 'Lade ein Inhaltspaket als ZIP-Datei hoch. Das Portal prüft es sofort, danach sieht es der Betreiber des Portals und lädt es hoch oder gibt es mit einer Rückmeldung zurück.'}{' '}
         <HandbuchLink kapitel="lerninhalte">Lerninhalte für einen Beruf erstellen</HandbuchLink>
       </p>
       <form onSubmit={(ev) => void sende(ev)}>
-        <div className="reihe">
-          <label>
-            Kennung des Lernmoduls
-            <input value={kennung} onChange={(ev) => setKennung(ev.target.value.toLowerCase())} pattern="[a-z0-9][a-z0-9\-]{0,30}" maxLength={31} required placeholder="z. B. kaufleute-buero" autoComplete="off" />
-          </label>
-          <label>
-            ZIP-Datei (höchstens {maxMb} MB)
-            <input key={nr} type="file" accept=".zip,application/zip" required onChange={(ev) => setDatei(ev.target.files?.[0] ?? null)} />
-          </label>
-        </div>
-        <p className="leise klein">Die Kennung ist der Ordnername: Kleinbuchstaben, Ziffern, Bindestriche. Gibt es das Lernmodul schon, nimm dieselbe Kennung – die neue Fassung ersetzt dann die alte.</p>
+        {fest ? (
+          dateiFeld
+        ) : (
+          <>
+            <div className="reihe">
+              <label>
+                Kennung des Lernmoduls
+                <input value={kennung} onChange={(ev) => setKennung(ev.target.value.toLowerCase())} pattern="[a-z0-9][a-z0-9\-]{0,30}" maxLength={31} required placeholder="z. B. kaufleute-buero" autoComplete="off" />
+              </label>
+              {dateiFeld}
+            </div>
+            <p className="leise klein">Die Kennung ist der Ordnername: Kleinbuchstaben, Ziffern, Bindestriche. Sie lässt sich später nicht ändern. Gibt es das Lernmodul schon, nimm oben an seiner Karte „Lerninhalte aktualisieren“.</p>
+          </>
+        )}
         <label>
           Notiz für die Prüfung (freiwillig)
           <input value={notiz} onChange={(ev) => setNotiz(ev.target.value)} maxLength={500} placeholder="z. B. Themenfeld Buchführung ergänzt" />
@@ -309,10 +368,15 @@ export function EinreichenFormular({ maxMb, onEingereicht }: { maxMb: number; on
         )}
         <p className="aktionen links">
           <button className="knopf" disabled={laeuft || zuGross}>
-            {laeuft ? 'Wird hochgeladen und geprüft …' : 'Lerninhalte einreichen'}
+            {laeuft ? 'Wird hochgeladen und geprüft …' : fest ? 'Neue Fassung einreichen' : 'Lerninhalte einreichen'}
           </button>
+          {onAbbrechen && (
+            <button type="button" className="knopf schlicht" disabled={laeuft} onClick={onAbbrechen}>
+              Abbrechen
+            </button>
+          )}
         </p>
       </form>
-    </section>
+    </>
   );
 }

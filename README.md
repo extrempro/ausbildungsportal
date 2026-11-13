@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.54.6.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.55.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -238,7 +238,7 @@ Lernstoff je Ausbildungsberuf zum Nachlesen und Üben. Alles, was ein Azubi dort
 - **Planer für die Prüfung:** Azubis planen ihr Prüfungsvorhaben (Abschlussprojekt, Gesellenstück, Fachaufgabe …): nächster Termin, Checklisten, Zeitplanung mit geplanten und tatsächlichen Stunden, Fragen zum Üben mit Uhr für den Vortrag, Notizen. Was der Planer enthält, steht je Beruf im Inhaltspaket (`planer.md`); Ausbilder schalten ihn je Azubi im Profil frei. **Die Eintragungen sind privat für den Azubi** – nur die Termine stehen im Ausbildungsplan und sind dort für seine Ausbilder und Beauftragten sichtbar.
 - **Begleiter:** Azubis können sich eine kleine Figur aussuchen (Eule, Fuchs, Roboter, Biber oder Pinguin) und ihr einen Namen geben. Sie bekommt neun Teile Zubehör, gleichmäßig verteilt über die Ausbildungszeit – unabhängig davon, was der Azubi im Portal macht: keine Punkte, keine Serien, kein Vergleich. Er erinnert höchstens einmal am Tag an das, was ansteht (fehlender Bericht, Berufsschule, Firmentermin, Prüfungstermin, Urlaub) – jede Art einzeln abschaltbar, nie ans Lernen. Freiwillig und **privat für den Azubi**; der Super-Admin kann den Begleiter für das ganze Portal ausschalten.
 - **Lerninhalte ansehen:** Ausbilder und Ausbildungsbeauftragte lesen alle Lernmodule (Themenfelder, Cheatsheets, Zusatzwissen, Kompendium) – nur die Inhalte, nie den Lernstand einzelner Azubis.
-- **Lerninhalte einreichen:** Ausbilder laden ein Inhaltspaket als ZIP hoch; das Portal prüft den Aufbau sofort. Der Super-Admin gibt es mit Rückmeldung zurück oder lädt es hoch. Hochgeladene Pakete liegen unter `<DATA_DIR>/lerninhalte/` und gehen vor gleichnamige aus `LERN_DIR`.
+- **Lerninhalte einreichen:** Ausbilder laden ein Inhaltspaket als ZIP hoch; das Portal prüft den Aufbau sofort. Jedes Lernmodul hat eine Karte mit seinem Stand und dem Knopf „Lerninhalte aktualisieren“; was geschah, steht im Verlauf. Der Super-Admin gibt es mit Rückmeldung zurück oder lädt es hoch. Hochgeladene Pakete liegen unter `<DATA_DIR>/lerninhalte/` und gehen vor gleichnamige aus `LERN_DIR`.
 
 ## Geräte und Bedienbarkeit
 
