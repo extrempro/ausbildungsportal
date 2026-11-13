@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.54.6] – 2026-11-13
+
+### Geändert
+
+- **Lernen am Handy:** Die Auswahl oben (Themenfelder, Kompendium, Üben und die Anleitungen für alle Berufe) war kaum als Auswahl zu erkennen, vor allem wenn sie in zwei Zeilen umbricht. Am Handy sind es jetzt umrandete Knöpfe; der gewählte ist farbig gefüllt. Am PC bleibt es bei den Reitern.
+
 ## [0.54.5] – 2026-11-13
 
 ### Geändert
