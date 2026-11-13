@@ -31,7 +31,7 @@ import { UrlaubAzubi, UrlaubListe } from './pages/Urlaub';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
-import { Dialoge, useFensterFokus } from './dialoge';
+import { Dialoge, melde, useFensterFokus } from './dialoge';
 import { halteFokusFrei } from './fokusFrei';
 import { RueckmeldungFenster } from './fehler';
 import { LESESEITE, LesemodusEnde, setzeBreit, setzeLesemodus, useAnsicht, useBreitesFenster } from './ansicht';
@@ -41,7 +41,8 @@ import { Meldungen } from './pages/Meldungen';
 import { Avatar } from './avatar';
 import { Icon } from './icons';
 import type { IconName } from './icons';
-import { geheZu, Link, usePfad } from './router';
+import { geheZu, hatUngespeichertes, Link, usePfad } from './router';
+import { AbgemeldetFenster, SitzungsWarnung } from './sitzung';
 
 interface Punkt {
   zu: string;
@@ -156,6 +157,8 @@ export function App() {
   }, []);
 
   // `still`: Nachfragen im laufenden Betrieb – ein Fehler (z. B. kurz kein Netz) meldet dabei niemanden ab
+  // abgelaufen, während ungespeicherte Eingaben auf der Seite stehen: Seite stehen lassen, nicht gleich zur Anmeldung
+  const [abgemeldet, setAbgemeldet] = useState(false);
   const hole = useCallback(async (still: boolean) => {
     try {
       const r = await api<{ konto: Konto; version: string; lernen?: boolean; anleitungen?: string | null; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
@@ -172,7 +175,7 @@ export function App() {
   const lade = useCallback(() => hole(false), [hole]);
 
   useEffect(() => {
-    setzeAbmeldung(() => setKonto(null));
+    setzeAbmeldung(() => (hatUngespeichertes() ? setAbgemeldet(true) : setKonto(null)));
     void lade();
     api<Logos>('GET', '/api/branding').then(setLogos, () => {});
   }, [lade]);
@@ -663,6 +666,20 @@ export function App() {
       {fuehrung && <Fuehrung rolle={konto.rolle} bereiche={[...(lernen ? ['lernen' as const] : anleitungen ? ['anleitungen' as const] : []), ...(planer ? ['planer' as const] : [])]} onEnde={beendeFuehrung} />}
       {melden && <RueckmeldungFenster version={version} rolle={konto.rolle} onZu={schliesseMelden} />}
       <LesemodusEnde />
+      <SitzungsWarnung />
+      {abgemeldet && (
+        <AbgemeldetFenster
+          anmeldeSeite={konto.rolle === 'admin' ? '/super' : '/'}
+          onWieder={() => {
+            setAbgemeldet(false);
+            melde('Du bist wieder angemeldet. Speichere jetzt deine Eingaben.');
+          }}
+          onVerwerfen={() => {
+            setAbgemeldet(false);
+            setKonto(null);
+          }}
+        />
+      )}
       <Dialoge />
       <footer className="fuss leise">
         Ausbildungsportal · Version {version}

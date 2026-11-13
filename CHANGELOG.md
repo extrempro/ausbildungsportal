@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.62.0] – 2026-11-13
+
+### Neu
+
+- **Warnung vor dem Abmelden:** Fünf Minuten bevor das Portal dich abmeldet (nach acht Stunden ohne Eingabe), erscheint ein Fenster mit der verbleibenden Zeit und „Angemeldet bleiben“. Nach 24 Stunden endet jede Anmeldung fest – dann sagt das Fenster, dass du jetzt speichern und dich danach neu anmelden sollst.
+- **Nichts geht verloren:** Wirst du abgemeldet, während du etwas eingibst (zum Beispiel einen Bericht), bleibt die Seite mit deinen Eingaben stehen. Du meldest dich in einem neuen Tab an, kommst zurück, wählst „Ich bin wieder angemeldet“ und speicherst. Bisher sprang das Portal sofort zur Anmeldung, und der Text war weg.
+
 ## [0.61.2] – 2026-11-13
 
 ### Behoben

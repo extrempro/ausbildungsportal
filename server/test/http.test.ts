@@ -75,6 +75,12 @@ test('Anmeldung über HTTP: Cookie wird gesetzt und beim nächsten Aufruf erkann
   assert.equal(ohne.status, 401);
   // jede API-Antwort nennt die Version des Servers – auch Fehler; daran erkennt eine offene Seite ein Update
   for (const antwort of [an, ich, ohne]) assert.match(antwort.headers.get('x-app-version') ?? '', /^\d+\.\d+\.\d+$/);
+  // angemeldet nennt jede Antwort, wann die Sitzung ohne weitere Anfrage endet (Warnung vorher, WCAG 2.2.1): nach 8 Stunden Leerlauf
+  const ende = ich.headers.get('x-sitzung-ende') ?? '';
+  assert.match(ende, /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/);
+  const stunden = (Date.parse(ende) - Date.parse('2026-11-10T09:00:00Z')) / 3_600_000; // die Uhr der Tests (hilfe.ts)
+  assert.ok(stunden > 7.9 && stunden <= 8.01, `Ende in ${stunden} Stunden`);
+  assert.equal(ohne.headers.get('x-sitzung-ende'), null);
 });
 
 test('nur JSON, begrenzte Größe, keine Formulare', async () => {

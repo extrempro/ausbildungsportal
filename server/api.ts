@@ -16,7 +16,7 @@ import { fehlerText, pkceChallenge, zufall } from './entra';
 import { hashePasswort, pruefePasswort, pruefeRegeln, zufallsPasswort } from './passwort';
 import { leseProtokoll, protokolliere } from './protokoll';
 import { betreuung, darfAzubiSehen, darfAzubiVerwalten, darfKontoLoeschen, darfKontoSehen, darfKontoVerwalten, darfRolleVergeben, sichtbareAzubis, zustaendiger } from './rechte';
-import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf } from './sitzung';
+import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf, sitzungsEnde } from './sitzung';
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
 import { ANHANG_ROUTEN } from './bericht-anhang';
@@ -708,7 +708,10 @@ export async function behandle(k: Kontext, a: Anfrage): Promise<Antwort> {
       if (route.wer !== 'alle' && !route.wer.includes(b.rolle)) throw new Fehler(403, 'Dafür fehlt die Berechtigung', 'rolle');
       if (b.passwort_wechsel === 1 && !route.trotzWechsel) throw new Fehler(403, 'Bitte zuerst das Passwort ändern', 'passwort_wechsel');
     }
-    return await route.h({ k, a, b: b as BenutzerZeile, token, p });
+    const antwort = await route.h({ k, a, b: b as BenutzerZeile, token, p });
+    // mit jeder Antwort erfährt die Oberfläche, wann die Sitzung endet – so kann sie vorher warnen
+    const ende = b ? sitzungsEnde(k.db, token) : null;
+    return ende ? { ...antwort, sitzungEnde: ende.fest ? `${ende.ende};fest` : ende.ende } : antwort;
   } catch (e) {
     if (e instanceof Fehler) return { status: e.status, body: { fehler: e.message, ...(e.code ? { code: e.code } : {}) } };
     k.log(`Fehler bei ${a.methode} ${a.pfad}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);

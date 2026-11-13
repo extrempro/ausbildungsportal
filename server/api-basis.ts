@@ -30,6 +30,8 @@ export interface Antwort {
   datei?: { typ: string; inhalt: Buffer; dateiname: string };
   /** statt JSON: ein Bild zum Anzeigen (Profilbild); der Browser darf es kurz zwischenspeichern – die Adresse wechselt mit dem Bild */
   bild?: { typ: string; inhalt: Buffer };
+  /** wann die Sitzung ohne weitere Anfrage endet – geht als Kopfzeile „X-Sitzung-Ende“ mit (ISO-Zeit, bei fester Grenze mit „;fest“) */
+  sitzungEnde?: string;
 }
 
 export interface Kontext {

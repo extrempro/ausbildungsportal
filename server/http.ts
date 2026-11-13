@@ -114,6 +114,7 @@ async function api(k: Kontext, req: IncomingMessage, res: ServerResponse, url: U
   const a = await behandle(k, anfrage);
   const extra: Record<string, string | string[]> = {};
   if (a.cookies?.length) extra['Set-Cookie'] = a.cookies;
+  if (a.sitzungEnde) extra['X-Sitzung-Ende'] = a.sitzungEnde;
   if (a.redirect) return sende(res, a.status, { ...basis, 'Cache-Control': 'no-store', Location: a.redirect, ...extra });
   if (a.text) {
     return sende(res, a.status, { ...basis, 'Cache-Control': 'private, no-store', 'Content-Type': a.text.typ, ...(a.text.dateiname ? { 'Content-Disposition': `inline; filename="${a.text.dateiname}"` } : {}) }, a.text.inhalt);

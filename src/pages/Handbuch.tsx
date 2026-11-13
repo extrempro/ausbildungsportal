@@ -198,7 +198,9 @@ const BEDIENUNG: Kapitel = {
           <strong>Lesemodus:</strong> Auf Lernseiten, bei den Anleitungen und hier im Handbuch blendet „Lesemodus“ (oben neben der Überschrift) alles aus, was beim Lesen stört – Menü, Inhaltsverzeichnis, Fußzeile. Die Schrift wird etwas größer. Zurück geht es mit „Lesemodus beenden“ oben rechts oder mit Escape. Wechselst du auf eine andere Seite, endet er von selbst.
         </li>
         <li>Alles geht auch mit der Tastatur: Tab wechselt das Feld, Enter löst aus, Escape schließt Menüs und Fenster.</li>
-        <li>Nach acht Stunden ohne Eingabe wirst du abgemeldet. Speichere längere Texte zwischendurch.</li>
+        <li>
+          <strong>Abmelden:</strong> Nach acht Stunden ohne Eingabe meldet dich das Portal aus Sicherheitsgründen ab, spätestens nach 24 Stunden. Fünf Minuten vorher erscheint ein Hinweis mit der verbleibenden Zeit; mit „Angemeldet bleiben“ geht es weiter (nach 24 Stunden nicht – dann speichere und melde dich neu an). Wirst du abgemeldet, während du etwas eingibst, bleibt es auf der Seite stehen: Melde dich in einem neuen Tab an, komm zurück, wähle „Ich bin wieder angemeldet“ und speichere.
+        </li>
       </ul>
     </>
   ),

@@ -29,6 +29,10 @@ export function usePfad(): string {
  */
 const offen = new Set<symbol>();
 const ALT = Symbol('alt');
+/** Gibt es gerade ungespeicherte Eingaben? (z. B. bevor die abgelaufene Anmeldung die Seite ersetzt) */
+export function hatUngespeichertes(): boolean {
+  return offen.size > 0;
+}
 /** für Stellen, die den Zustand selbst führen (Bericht) */
 export function setzeUngespeichert(aktiv: boolean): void {
   if (aktiv) offen.add(ALT);
