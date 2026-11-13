@@ -30,6 +30,12 @@ Diese Regeln halten die Bedienung einheitlich. Sie gelten für **jede neue Funkt
 - [ ] **Tastatur:** alles erreichbar, Escape schließt Fenster und Menüs, der Fokus kehrt dorthin zurück, wo er war.
   - **Fenster** (`role="dialog"`) nutzen `useFensterFokus()` aus `src/dialoge.tsx`: Fokus beim Öffnen hinein, Tab bleibt drin, Escape schließt, danach zurück (WCAG 2.4.3). Kein eigener Nachbau.
   - **Angeheftete Leisten** (sticky/fixed) dürfen das fokussierte Element nie verdecken (WCAG 2.4.11). Eine neue angeheftete Leiste kommt in `LEISTEN` in `src/fokusFrei.ts`. `e2e/11-fokus.test.ts` prüft beides.
+- [ ] **Barrierefreiheit nach WCAG 2.2 AA** – für jede neue Funktion, nicht erst bei einer Prüfung:
+  1. Jedes Feld, jeder Knopf und jedes Symbol hat einen Namen, den ein Vorleseprogramm ansagt (sichtbare Beschriftung, sonst `aria-label`; reine Zierde mit `aria-hidden`). Der sichtbare Text steht auch im Namen (WCAG 2.5.3).
+  2. Alles, was mit Maus, Finger oder Ziehen geht, geht auch mit der Tastatur und einem einfachen Klick (WCAG 2.1.1, 2.5.7) – wie die Unterschrift, die sich auch aus dem Namen erzeugen lässt.
+  3. Verschwindet ein Knopf nach dem Klick, kommt der Fokus an eine sinnvolle Stelle (meist der nächste Schritt), nicht ins Leere.
+  4. Nichts nur über Farbe; Statusmeldungen über `melde()` bzw. `role="alert"`; Zeitgrenzen nur mit Warnung vorher.
+  5. Ändert sich, was erfüllt ist oder was fehlt, werden [barrierefreiheit.md](barrierefreiheit.md) und das Handbuch-Kapitel „Barrierefreiheit“ mitgezogen.
 - [ ] **Hooks** stehen vor jedem frühen `return` einer Komponente.
 - [ ] **Handbuch gehört dazu – bei jeder neuen Funktion und jeder Änderung, ohne dass es eigens verlangt wird:**
   1. Das Handbuch (`src/pages/Handbuch.tsx`) beschreibt die Funktion für **jede Rolle, die sie sieht** – als eigenes Kapitel, wenn man danach suchen würde (Titel = das Wort, das auf dem Bildschirm steht), sonst als Absatz im passenden Kapitel. Für Azubis in kurzen Sätzen mit erklärten Begriffen.

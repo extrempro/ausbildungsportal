@@ -12,6 +12,18 @@ services:
     image: ausbildungsportal:latest
     container_name: ausbildungsportal
     restart: unless-stopped
+    # Härtung: Der Prozess kann sich keine Rechte dazuholen, und der Container hat nur die Linux-Rechte, die das
+    # Startskript braucht (Datenordner dem Benutzer „node“ geben, dann zu ihm wechseln). Die App läuft als „node“.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     ports:
       # Adresse und Port auf dem Server kommen aus der .env: BIND_ADRESSE und BIND_PORT.
       # Ohne Angabe: 127.0.0.1:3000 – nur auf diesem Rechner erreichbar, gedacht für einen Reverse Proxy mit HTTPS davor.

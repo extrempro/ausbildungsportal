@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.65.0] – 2026-11-13
+
+### Neu
+
+- **Handbuch-Kapitel „Barrierefreiheit“** für alle Rollen (Gruppe „Hilfe“): was das Portal für Tastatur, Vorleseprogramm und Vergrößerung bietet, was noch nicht geprüft ist und wie du eine Hürde meldest. Der Weg dorthin steht auch unter „Konto“ → „Darstellung“.
+
+### Geändert
+
+- **Sicherheit nach OWASP Top 10 durchgesehen** (`docs/sicherheit-owasp.md`): Ein neuer Test ruft jede Route mit fremden Kennungen auf und prüft, dass kein Abruf etwas verändert. Die CI prüft die Pakete auf bekannte Sicherheitslücken. Der Docker-Container läuft gehärtet (`no-new-privileges`, nur die nötigen Linux-Rechte); das übernimmt das gewohnte `docker compose up -d --build` von selbst.
+- **Links in Lerninhalten** gehen nur noch mit `http://` oder `https://`. Andere Adressen meldet die Prüfung als Fehler, statt sie mit einer Warnung durchzulassen.
+- **Unterschrift am Handy übersichtlicher:** „Unterschrift aus meinem Namen erzeugen“ steht jetzt abgesetzt unter „Unterschrift speichern“, statt direkt daran zu kleben. Nach dem Erzeugen steht der Fokus gleich auf „Unterschrift speichern“ – wer mit der Tastatur arbeitet, drückt nur noch Enter.
+
 ## [0.64.0] – 2026-11-13
 
 ### Neu

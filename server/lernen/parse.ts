@@ -210,6 +210,11 @@ export function parseThemaMarkdown(raw: string, datei: string): { thema: ParsedT
           fehler(`Link nicht im Format "[Titel](https://…) – Beschreibung"`, p.nr);
           continue;
         }
+        // nur Webadressen – „javascript:“, „data:“ und Ähnliches werden nie zum Link (Schutz vor eingeschleustem Code)
+        if (!/^https?:\/\//i.test(m[2])) {
+          fehler(`Link "${m[1]}": nur Adressen mit https:// sind erlaubt`, p.nr);
+          continue;
+        }
         if (!m[2].startsWith('https://')) warnung(`Link "${m[1]}" beginnt nicht mit https://`, p.nr);
         thema.links.push({ titel: m[1], url: m[2], info: (m[3] || '').trim() });
       }

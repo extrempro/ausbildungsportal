@@ -27,7 +27,8 @@ test(
     await s.locator('.unterschrift-feld').waitFor();
     await s.locator('button:has-text("Unterschrift aus meinem Namen erzeugen")').focus();
     await s.keyboard.press('Enter');
-    await s.locator('button:has-text("Unterschrift speichern")').focus();
+    // der Fokus steht danach schon auf „Unterschrift speichern“
+    assert.equal(await s.evaluate('document.activeElement?.textContent?.trim()'), 'Unterschrift speichern');
     await s.keyboard.press('Enter');
     await s.locator('button:has-text("Neu unterschreiben")').waitFor();
     await s.locator('text=Unterschrift gespeichert.').waitFor();

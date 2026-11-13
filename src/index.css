@@ -567,6 +567,31 @@ div.reihe {
   margin-bottom: 16px;
 }
 
+/* Konto, Unterschrift: Knöpfe mit Luft – auch wenn sie am Handy untereinander umbrechen.
+   Der Weg ohne Zeichnen steht abgesetzt unter „Unterschrift speichern“. */
+.unterschrift-bereich div.aktionen {
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.unterschrift-bereich .signatur-feld.gross {
+  margin-bottom: 0;
+}
+
+.unterschrift-ohne-zeichnen {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
+.unterschrift-ohne-zeichnen div.aktionen {
+  margin-top: 8px;
+}
+
+.unterschrift-ohne-zeichnen p {
+  margin-top: 0;
+}
+
 /* mehrere Formulare untereinander (Stammdaten) klar trennen */
 .karte > form.reihe + form.reihe,
 .karte > div.reihe + div.reihe {
