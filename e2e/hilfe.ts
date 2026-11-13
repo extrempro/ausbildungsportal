@@ -125,19 +125,21 @@ export interface Portal {
   /** Legt Konten, Beruf, Profile und Zuweisung an. `adminEingerichtet`: Der Super-Admin hat sein Startpasswort schon geändert (im Test der ersten Anmeldung). */
   grunddaten(o?: { adminEingerichtet?: boolean }): Promise<Grunddaten>;
   /** Neue Sitzung im Browser, angemeldet als dieses Konto. Das Angebot der Führung und des Begleiters ist schon weggeklickt. */
-  seite(wer: string, o?: { breite?: number; hoehe?: number; dunkel?: boolean; mitAngeboten?: boolean }): Promise<Page>;
+  seite(wer: string, o?: { breite?: number; hoehe?: number; dunkel?: boolean; mitAngeboten?: boolean; /** Pixel je Punkt – 2 für scharfe Bildschirmfotos am Handy */ schaerfe?: number }): Promise<Page>;
   /** Neue Sitzung ohne Anmeldung */
   leer(o?: { breite?: number; hoehe?: number }): Promise<Page>;
   stop(): Promise<void>;
 }
 
-export async function startePortal(): Promise<Portal> {
+export async function startePortal(o: { lernmodul?: (ordner: string) => void; deutsch?: boolean } = {}): Promise<Portal> {
   const port = await freierPort();
   const url = `http://127.0.0.1:${port}`;
   const ordner = mkdtempSync(join(tmpdir(), 'portal-e2e-'));
   mkdirSync(join(ordner, 'daten'));
   mkdirSync(join(ordner, 'lernen'));
   schreibeLernmodul(join(ordner, 'lernen'));
+  // z. B. mehr erfundener Inhalt für die Bildschirmfotos
+  o.lernmodul?.(join(ordner, 'lernen', 'muster'));
 
   let ausgabe = '';
   const server: ChildProcess = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], {
@@ -175,12 +177,14 @@ export async function startePortal(): Promise<Portal> {
     await new Promise((r) => setTimeout(r, 200));
   }
 
-  const browser = await chromium.launch();
+  // Für Bildschirmfotos der ganze Browser mit deutscher Oberfläche: Datumsfelder zeigen dann TT.MM.JJJJ, Dateifelder „Datei auswählen“.
+  // Die Tests nehmen den schlanken Standard – dort spielt das keine Rolle.
+  const browser = await chromium.launch(o.deutsch ? { channel: 'chromium', env: { ...process.env, LANGUAGE: 'de', LANG: 'de_DE.UTF-8' } } : {});
   const probleme: string[] = [];
   const seiten: Page[] = [];
 
-  async function neu(opt: { breite?: number; hoehe?: number; dunkel?: boolean } = {}): Promise<Page> {
-    const ctx = await browser.newContext({ viewport: { width: opt.breite ?? PC.breite, height: opt.hoehe ?? PC.hoehe }, colorScheme: opt.dunkel ? 'dark' : 'light', locale: 'de-DE' });
+  async function neu(opt: { breite?: number; hoehe?: number; dunkel?: boolean; schaerfe?: number } = {}): Promise<Page> {
+    const ctx = await browser.newContext({ viewport: { width: opt.breite ?? PC.breite, height: opt.hoehe ?? PC.hoehe }, colorScheme: opt.dunkel ? 'dark' : 'light', locale: 'de-DE', deviceScaleFactor: opt.schaerfe ?? 1 });
     const page = await ctx.newPage();
     page.setDefaultTimeout(10_000);
     // 401/403/404 kommen bei Rechte-Prüfungen absichtlich vor

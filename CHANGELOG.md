@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.54.1] – 2026-11-13
+
+### Behoben
+
+- **Berichte abzeichnen:** Ein aufgeklappter Bericht stand am PC neben seiner Zeile statt darunter, mit einer großen leeren Fläche links. Jetzt klappt er wieder unter der Zeile auf.
+
+### Geändert
+
+- **Bildschirmfotos:** Im Repository liegen jetzt Bildschirmfotos aller Bereiche mit erfundenen Beispieldaten (`docs/bilder/`) – je Rolle, am PC und am Handy.
+
 ## [0.54.0] – 2026-11-12
 
 ### Behoben

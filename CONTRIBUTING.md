@@ -73,6 +73,10 @@ Die wichtigsten Abläufe werden im echten Browser durchgespielt: erste Anmeldung
 - Ändert sich ein abgedeckter Ablauf, wird der Test angepasst. Kommt ein wichtiger Ablauf oder eine neue Seite dazu, wird der Test ergänzt.
 - In den Tests stehen nur erfundene Namen und Inhalte – keine echten Personen, keine echten Lerninhalte.
 
+### Bildschirmfotos
+
+Unter [docs/bilder/](docs/bilder/README.md) liegen Bildschirmfotos aller Bereiche – damit man sehen kann, wie das Portal aussieht, ohne es zu installieren. Sie entstehen automatisch: `npm run bilder` startet ein frisches Portal mit erfundenen Beispieldaten und schreibt den Ordner samt Übersicht neu. Echte Daten können so nicht hineingeraten. Die Bilder werden von Zeit zu Zeit gesammelt erneuert, nicht bei jeder Änderung. Kommt ein Bereich dazu, wird er in `e2e/bilder.ts` ergänzt.
+
 ## Datenschutz und Recht
 
 - **Privat bleibt privat.** Lernstand, Abzeichen, Übungsergebnisse, Eintragungen im Planer für die Prüfung, private Termine und Entwürfe sieht nur der Azubi selbst. Keine Rangliste, keine Auswertung für Ausbilder, Beauftragte oder Super-Admin.
