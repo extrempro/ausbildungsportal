@@ -57,7 +57,7 @@ test(
     assert.equal(await anna.locator('.lern-navi.schmal').count(), 1, 'bleibt eingeklappt');
     await oeffne(anna, p.url, '/handbuch');
     await anna.click('button[aria-label="Im Handbuch suchen"]');
-    await anna.waitForFunction('document.activeElement?.type === "search"');
+    await anna.locator('.handbuch-suche input:focus').waitFor();
     await anna.click('button[aria-label="Inhalt einklappen"]');
     await anna.click('button[aria-label="Inhalt ausklappen"]');
     await anna.locator('nav.handbuch-inhalt .handbuch-suche').waitFor();
