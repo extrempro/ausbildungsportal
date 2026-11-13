@@ -72,6 +72,8 @@ body {
   background: var(--c-bg);
   color: var(--c-text);
   font: 16px/1.6 Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* ein Wort, das nicht in seine Spalte passt, bricht um statt über den Rand zu ragen (WCAG 1.4.10) */
+  overflow-wrap: break-word;
 }
 
 h1 {
@@ -1821,6 +1823,7 @@ a.kachel:hover {
 
 .kachel-text {
   font-weight: 600;
+  hyphens: auto;
 }
 
 .kachel-zusatz {
@@ -2135,6 +2138,7 @@ td.aktion {
 }
 
 .azubi-wege a {
+  hyphens: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
