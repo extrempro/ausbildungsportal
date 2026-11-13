@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.55.1] – 2026-11-13
+
+### Behoben
+
+- **Glocke nach einer Freischaltung:** Wurde der Planer für die Prüfung freigeschaltet, während ein Azubi das Portal offen hatte, führte der Hinweis in der Glocke zu „Seite nicht gefunden“ – erst nach dem Neuladen gab es die Seite. Jetzt fragt das Portal in diesem Fall selbst nach und zeigt den Planer; auch der Menüpunkt erscheint dann. Dasselbe gilt für „Lernen“, wenn es erst im laufenden Betrieb dazukommt.
+
 ## [0.55.0] – 2026-11-13
 
 ### Geändert

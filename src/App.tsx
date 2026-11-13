@@ -69,6 +69,33 @@ function wendeThemeAn(theme: Theme): boolean {
   return dunkel;
 }
 
+/**
+ * Planer, Lernen und Anleitungen gibt es nur, wenn sie für den Azubi freigeschaltet sind – das erfährt die App beim Laden.
+ * Wird etwas freigeschaltet, während das Portal offen ist (die Glocke meldet es und führt hierher), fragt die Seite
+ * einmal nach, bevor sie „nicht gefunden“ sagt. Gibt es die Seite jetzt, zeigt die App sie von selbst.
+ */
+function NichtGefunden({ start, nachfragen }: { start: string; nachfragen: (() => Promise<void>) | null }) {
+  const [fertig, setFertig] = useState(nachfragen === null);
+  useEffect(() => {
+    if (!nachfragen) return;
+    let da = true;
+    void nachfragen().then(() => da && setFertig(true));
+    return () => {
+      da = false;
+    };
+    // nur einmal je Seite – `nachfragen` ist bei jedem Zeichnen eine neue Funktion
+  }, []);
+  if (!fertig) return <p className="leise">Lädt …</p>;
+  return (
+    <>
+      <h1>Seite nicht gefunden</h1>
+      <p>
+        <Link zu={start}>Zur Startseite</Link>
+      </p>
+    </>
+  );
+}
+
 export function App() {
   const pfad = usePfad();
   const [konto, setKonto] = useState<Konto | null | undefined>(undefined); // undefined = lädt
@@ -122,7 +149,8 @@ export function App() {
     };
   }, []);
 
-  const lade = useCallback(async () => {
+  // `still`: Nachfragen im laufenden Betrieb – ein Fehler (z. B. kurz kein Netz) meldet dabei niemanden ab
+  const hole = useCallback(async (still: boolean) => {
     try {
       const r = await api<{ konto: Konto; version: string; lernen?: boolean; anleitungen?: string | null; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
       setKonto(r.konto);
@@ -132,9 +160,10 @@ export function App() {
       setPlaner(r.planer ?? null);
       setVersion(r.version);
     } catch {
-      setKonto(null);
+      if (!still) setKonto(null);
     }
   }, []);
+  const lade = useCallback(() => hole(false), [hole]);
 
   useEffect(() => {
     setzeAbmeldung(() => setKonto(null));
@@ -348,15 +377,7 @@ export function App() {
   else if (lernQuiz && lernen) seite = <LernQuiz key={lernQuiz} id={lernQuiz} />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} profilbild={profilbild} onGeaendert={lade} />;
-  else
-    seite = (
-      <>
-        <h1>Seite nicht gefunden</h1>
-        <p>
-          <Link zu={start}>Zur Startseite</Link>
-        </p>
-      </>
-    );
+  else seite = <NichtGefunden key={pfad} start={start} nachfragen={konto.rolle === 'azubi' && /^\/(planer|lernen|anleitungen)(\/|$)/.test(pfad) ? () => hole(true) : null} />;
 
   // ---------- Navigation je Rolle ----------
   const haupt: Punkt[] =
