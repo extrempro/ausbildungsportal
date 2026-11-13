@@ -23,7 +23,7 @@ Maßstab sind die [OWASP Top 10:2025](https://owasp.org/Top10/2025/) – die zeh
 | A06 Unsicheres Design | Grenzen für Anfragen (256 KB, Uploads 8 bzw. 16 MB), für Anhänge (5 MB, 12 je Bericht) und für ZIP-Dateien (Pfade mit `..`, entpackte Größe). Dateityp der Anhänge am Dateianfang geprüft. Downloads als Anhang mit festem Typ. |
 | A07 Anmeldung | Microsoft Entra mit PKCE, `state` und `nonce` (über `openid-client`), Mandant geprüft. Super-Admin: mindestens 14 Zeichen, nach fünf Fehlversuchen 15 Minuten Pause, Begrenzung je IP. Abmelden nach 8 Stunden ohne Anfrage, spätestens nach 24. Gegen fremde Seiten: Herkunft (`Origin`) bei jeder schreibenden Anfrage. Keine Weiterleitung an fremde Adressen. |
 | A08 Integrität | Lerninhalte gehen erst nach Prüfung durch den Super-Admin ins Portal. Abgezeichnete Berichte sind gesperrt. |
-| A09 Protokoll | Anmeldungen, Fehlversuche (mit IP) und Änderungen an Konten, Rechten und Einstellungen stehen im Protokoll. Geheimnisse (Webhook, SMTP, Kalender-Link) werden nie ausgegeben. |
+| A09 Protokoll | Anmeldungen, Fehlversuche (mit IP) und Änderungen an Konten, Rechten und Einstellungen stehen im Protokoll; nach 90 Tagen wird gelöscht. Geheimnisse (Webhook, SMTP, Kalender-Link) werden nie ausgegeben. |
 | A10 Ausnahmen | Unerwartete Fehler → 500 mit „Interner Fehler“, Einzelheiten nur ins Server-Log. Ausfälle von Teams oder Mail halten nichts auf. |
 
 ## Offen

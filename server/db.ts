@@ -155,7 +155,8 @@ function latestBackupOfArt(dataDir: string, art: BackupArt): number | null {
   if (!existsSync(dir)) return null;
   let best: number | null = null;
   for (const f of readdirSync(dir)) {
-    if (!f.startsWith(`ausbildungsportal-${art}-`)) continue;
+    // nur die Sicherungen selbst – wer eine öffnet, legt daneben -wal/-shm an
+    if (!f.startsWith(`ausbildungsportal-${art}-`) || !f.endsWith('.db')) continue;
     const m = statSync(join(dir, f)).mtimeMs;
     if (best === null || m > best) best = m;
   }

@@ -39,3 +39,12 @@ export function leseProtokoll(db: DB, nurKonto: boolean, limit: number): Protoko
   const sql = `SELECT * FROM protokoll ${nurKonto ? "WHERE bereich = 'konto'" : ''} ORDER BY id DESC LIMIT ?`;
   return db.prepare(sql).all(n) as unknown as ProtokollEintrag[];
 }
+
+/** Nach so vielen Tagen löscht das Portal Protokolleinträge von selbst – alle, auch Anmeldungen (mit dem Betriebsrat abgestimmt). */
+export const PROTOKOLL_TAGE = 90;
+
+/** Löscht Einträge, die älter als PROTOKOLL_TAGE sind; gibt die Zahl der gelöschten zurück. */
+export function loescheAltesProtokoll(db: DB, jetzt: Date): number {
+  const grenze = new Date(jetzt.getTime() - PROTOKOLL_TAGE * 24 * 60 * 60 * 1000).toISOString();
+  return Number(db.prepare('DELETE FROM protokoll WHERE zeit < ?').run(grenze).changes);
+}

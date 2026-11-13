@@ -42,7 +42,7 @@ export function Protokoll() {
   return (
     <>
       <h1>Protokoll</h1>
-      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen hier nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Die neuesten 200 Einträge.{' '}
+      <p className="leise">Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten und Azubi-Profilen. Berichte und Ausbildungspläne erscheinen hier nicht – weder ihr Inhalt noch, wer wann eingereicht oder abgezeichnet hat. Die neuesten 200 Einträge; nach 90 Tagen löscht das Portal jeden Eintrag von selbst.{' '}
         <HandbuchLink kapitel="protokoll">Protokoll</HandbuchLink>
       </p>
       {fehler && (

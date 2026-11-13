@@ -1,8 +1,9 @@
 import { fileURLToPath } from 'node:url';
 import { wechsleZumBesitzer } from './benutzer-wechsel';
 import { loadConfig } from './config';
-import { openDatabase } from './db';
+import { dailyBackup, openDatabase } from './db';
 import { erzeugeServer } from './http';
+import { loescheAltesProtokoll, PROTOKOLL_TAGE } from './protokoll';
 import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
 import { lernpakete } from './lernen';
@@ -23,7 +24,24 @@ console.log(
 );
 if (cfg.devAnmeldung) console.warn('WARNUNG: DEV_ANMELDUNG ist an – Anmeldung als Testkonto ohne Passwort möglich.');
 
-setInterval(() => raeumeAuf(db, new Date()), 60 * 60 * 1000).unref();
+/**
+ * Pflege, beim Start und dann stündlich:
+ * - abgelaufene Sitzungen und Anmeldevorgänge entfernen,
+ * - Protokolleinträge nach 90 Tagen löschen,
+ * - einmal am Tag eine Sicherung anlegen (die letzten sieben bleiben, siehe KEEP in db.ts).
+ */
+const pflege = () => {
+  const jetzt = new Date();
+  raeumeAuf(db, jetzt);
+  const geloescht = loescheAltesProtokoll(db, jetzt);
+  if (geloescht > 0) console.log(`Protokoll: ${geloescht} Einträge älter als ${PROTOKOLL_TAGE} Tage gelöscht`);
+  dailyBackup(db, cfg.dataDir).then(
+    (datei) => datei && console.log(`Tägliche Sicherung angelegt: ${datei}`),
+    (e: unknown) => console.error(`FEHLER: Tägliche Sicherung fehlgeschlagen: ${e instanceof Error ? e.message : String(e)}`),
+  );
+};
+pflege();
+setInterval(pflege, 60 * 60 * 1000).unref();
 // Benachrichtigungen per Teams und E-Mail: jede Minute verschicken, was lange genug gesammelt wurde
 setInterval(() => void verschickeFaellige(k).catch(() => k.log('Benachrichtigungen konnten nicht verschickt werden')), 60 * 1000).unref();
 
