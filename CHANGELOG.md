@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.59.0] – 2026-11-13
+
+### Neu
+
+- **Navigation einklappen:** Am PC lässt sich die Navigation links im Lernmodul (auch bei Anleitungen und „Lerninhalte ansehen“) und im Handbuch mit einem kleinen Knopf zu einer schmalen Leiste einklappen. Der Text bekommt den Platz.
+  - Im Lernmodul stehen in der Leiste die Themenfelder als Nummern, bei Azubis mit dem Punkt der Ampel. Der Name erscheint, wenn man mit der Maus darauf zeigt.
+  - Im Handbuch führt eine Lupe direkt zur Suche.
+  - Der Browser merkt sich die Einstellung. Am Handy und Tablet bleibt alles, wie es war.
+
 ## [0.58.0] – 2026-11-13
 
 ### Neu

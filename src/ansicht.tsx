@@ -7,21 +7,32 @@ import { Icon } from './icons';
  *   merkt sich der Browser (hängt vom Bildschirm ab, nicht vom Konto).
  * - „Lesemodus“: Kopfzeile, Menüs und Seitenleisten treten zurück, der Text steht mittig und etwas größer.
  *   Nur auf Leseseiten (Lernen, Anleitungen, Lerninhalte, Handbuch); endet mit Escape, mit dem Knopf oder beim Verlassen.
- * Beides wirkt über Attribute am <html>-Element – das Stylesheet macht den Rest.
+ * - „Navigation einklappen“: Die Navigation links im Lernmodul und im Handbuch wird am PC zur schmalen Leiste.
+ *   Merkt sich der Browser ebenfalls.
+ * Breite und Lesemodus wirken über Attribute am <html>-Element – das Stylesheet macht den Rest.
  */
 const SCHLUESSEL = 'ansicht-breit';
+const SCHLUESSEL_NAVI = 'ansicht-navi-zu';
 interface Zustand {
   breit: boolean;
   lesen: boolean;
+  naviZu: boolean;
 }
-function gemerkt(): boolean {
+function gemerkt(schluessel: string): boolean {
   try {
-    return localStorage.getItem(SCHLUESSEL) === '1';
+    return localStorage.getItem(schluessel) === '1';
   } catch {
     return false;
   }
 }
-let zustand: Zustand = { breit: gemerkt(), lesen: false };
+function merke(schluessel: string, ja: boolean): void {
+  try {
+    localStorage.setItem(schluessel, ja ? '1' : '0');
+  } catch {
+    // ohne Speicher gilt es nur bis zum Neuladen
+  }
+}
+let zustand: Zustand = { breit: gemerkt(SCHLUESSEL), lesen: false, naviZu: gemerkt(SCHLUESSEL_NAVI) };
 const hoerer = new Set<() => void>();
 function wende(): void {
   const wurzel = document.documentElement;
@@ -37,12 +48,12 @@ function setze(neu: Partial<Zustand>): void {
   for (const h of hoerer) h();
 }
 export function setzeBreit(breit: boolean): void {
-  try {
-    localStorage.setItem(SCHLUESSEL, breit ? '1' : '0');
-  } catch {
-    // ohne Speicher gilt es nur bis zum Neuladen
-  }
+  merke(SCHLUESSEL, breit);
   setze({ breit });
+}
+export function setzeNaviZu(naviZu: boolean): void {
+  merke(SCHLUESSEL_NAVI, naviZu);
+  setze({ naviZu });
 }
 export function setzeLesemodus(lesen: boolean): void {
   setze({ lesen });
@@ -111,6 +122,17 @@ export function LesemodusEnde() {
     <button type="button" className="knopf schlicht klein lesemodus-ende nicht-drucken" onClick={() => setzeLesemodus(false)}>
       <Icon name="zu" groesse={18} />
       Lesemodus beenden
+    </button>
+  );
+}
+
+/** Knopf oben in der Navigation links (Lernmodul, Handbuch): einklappen zur schmalen Leiste bzw. wieder ausklappen */
+export function NaviKnopf({ was }: { was: string }) {
+  const { naviZu } = useAnsicht();
+  const text = naviZu ? `${was} ausklappen` : `${was} einklappen`;
+  return (
+    <button type="button" className="navi-knopf" aria-expanded={!naviZu} aria-label={text} title={text} onClick={() => setzeNaviZu(!naviZu)}>
+      <Icon name={naviZu ? 'navi-auf' : 'navi-zu'} groesse={20} />
     </button>
   );
 }
