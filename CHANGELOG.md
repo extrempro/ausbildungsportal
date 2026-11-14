@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.67.0] – 2026-11-14
+
+### Neu
+
+- **Tägliche Sicherung:** Das Portal sichert die Datenbank jetzt einmal am Tag von selbst nach `data/backups/`; die letzten sieben Tagesstände bleiben. Darin ist alles aus der Datenbank, auch Fotos und Dateien an Berichten. Bisher wurde nur vor einem Datenbank-Update und auf Befehl gesichert.
+- **Löschfrist für das Protokoll:** Einträge, die älter als 90 Tage sind, löscht das Portal von selbst – alle, auch Anmeldungen. Beim Update werden ältere Einträge gleich beim Start gelöscht.
+
 ## [0.66.0] – 2026-11-13
 
 ### Geändert
