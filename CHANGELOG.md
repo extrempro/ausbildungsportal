@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.68.1] – 2026-11-14
+
+### Geändert
+
+- **Fotos an Berichten:** Bericht und Handbuch sagen jetzt dasselbe – auf Fotos dürfen keine anderen Personen zu sehen sein, auch nicht mit ihrem Einverständnis. Vorher erlaubte das Handbuch Personen, die zustimmen.
+
 ## [0.68.0] – 2026-11-14
 
 ### Geändert

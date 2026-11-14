@@ -638,7 +638,7 @@ const AZUBI: Kapitel[] = [
             <strong>Ein Anhang wird sofort gespeichert</strong> – du musst nicht extra speichern. Ist der Bericht noch nicht gespeichert, legt das Portal dabei einen Entwurf an. Auch „Löschen“ wirkt sofort.
           </li>
           <li>
-            <strong>Achte darauf, was zu sehen ist:</strong> keine anderen Personen ohne ihr Einverständnis, keine Bildschirme oder Unterlagen mit Namen, Passwörtern oder Kundendaten. Im Zweifel frag deinen Ausbilder.
+            <strong>Achte darauf, was zu sehen ist:</strong> keine anderen Personen – auch nicht, wenn sie einverstanden sind –, keine Bildschirme oder Unterlagen mit Namen, Passwörtern oder Kundendaten. Im Zweifel frag deinen Ausbilder.
           </li>
           <li>Anhänge sehen dieselben Personen wie den Bericht – bei einem Entwurf also nur du. Nach dem Einreichen kannst du sie nicht mehr ändern, außer du ziehst den Bericht zurück.</li>
           <li>Im Ausdruck und im PDF des Berichtshefts stehen Anhänge nicht.</li>

@@ -18,7 +18,7 @@ const ABSCHNITTE: { schluessel: 'betrieb' | 'unterweisung' | 'schule'; titel: st
   { schluessel: 'schule', titel: 'Berufsschule', frage: 'Warst du in dieser Woche in der Berufsschule?', hilfe: 'Warst du in der Berufsschule? Schreib die Themen aus dem Unterricht auf. Wenn nicht, lass den Teil leer.', beispiel: 'z. B. Mathe: Prozentrechnung' },
 ];
 
-const ANHANG_HILFE = 'Du kannst Fotos, PDF und Office-Dateien anhängen, je Datei bis 5 MB. Sie werden sofort gespeichert. Achte darauf, dass keine anderen Personen und nichts Vertrauliches zu sehen ist.';
+const ANHANG_HILFE = 'Du kannst Fotos, PDF und Office-Dateien anhängen, je Datei bis 5 MB. Sie werden sofort gespeichert. Auf Fotos und in Dateien dürfen keine anderen Personen und nichts Vertrauliches zu sehen sein.';
 
 type Art = (typeof ABSCHNITTE)[number]['schluessel'];
 const ART_KURZ: Record<Art, string> = { betrieb: 'Betrieb', unterweisung: 'Unterweisung', schule: 'Berufsschule' };
