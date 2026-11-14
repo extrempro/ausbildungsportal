@@ -56,6 +56,18 @@ test(
     await anna.locator('.lesemodus-ende').waitFor({ state: 'detached' });
     assert.equal(await kopfzeile(anna), true);
 
+    // Lesemodus im Jahreskalender: Leisten weg, der Kalender behält seine Breite, bleibt beim Jahreswechsel an
+    await oeffne(anna, p.url, '/jahreskalender');
+    const kalenderBreite = await breiteMain(anna);
+    await anna.click('.ansicht-knoepfe button:has-text("Lesemodus")');
+    await anna.locator('.lesemodus-ende').waitFor();
+    assert.equal(await kopfzeile(anna), false);
+    assert.equal(await breiteMain(anna), kalenderBreite, 'nicht schmaler als ohne Lesemodus');
+    await anna.click('button:has-text("→")');
+    assert.equal(await anna.locator('.lesemodus-ende').count(), 1);
+    await anna.keyboard.press('Escape');
+    await anna.locator('.lesemodus-ende').waitFor({ state: 'detached' });
+
     // Navigation links einklappen: schmale Leiste mit Nummern, gemerkt, wieder ausklappen
     await oeffne(anna, p.url, '/lernen/grundlagen');
     const textbreite = () => anna.evaluate('Math.round(document.querySelector(".lern-haupt").getBoundingClientRect().width)') as Promise<number>;

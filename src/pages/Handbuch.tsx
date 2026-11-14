@@ -733,6 +733,7 @@ const AZUBI: Kapitel[] = [
           <li>Fahr mit der Maus über einen Tag (oder tipp ihn lange an): Dann steht dort alles zu diesem Tag.</li>
           <li>Am Handy ist der Kalender breiter als der Bildschirm – wisch nach links und rechts. Die Spalte mit den Tagen bleibt stehen.</li>
           <li>Ändern kannst du hier nichts. Einträge machst du im Ausbildungsplan, Urlaub beantragst du unter „Urlaub“.</li>
+          <li>„Lesemodus“ neben der Überschrift blendet Leisten und Menüs aus, damit der Kalender den ganzen Bildschirm hat – zusammen mit „Volle Breite“ oben in der Leiste auch in der Breite. Escape oder „Lesemodus beenden“ holt alles zurück.</li>
         </ul>
       </>
     ),
@@ -1364,6 +1365,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>Ein Klick auf den Namen öffnet den Kalender dieses Azubis Tag für Tag: Monate als Spalten, Tage als Zeilen, dazu die Feiertage und – mit gelbem Rand – die Firmentermine. In der Übersicht aller Azubis haben Firmentermine oben eine eigene Zeile und ziehen sich als gelbes Band durch jede Zeile. Dorthin kommst du auch aus dem Ausbildungsplan eines Azubis über „Jahreskalender anzeigen“.</li>
           <li>Mit „←“ und „→“ blätterst du ein Jahr zurück oder vor.</li>
           <li>Private Termine der Azubis stehen nicht im Kalender.</li>
+          <li>„Lesemodus“ neben der Überschrift blendet Leisten und Menüs aus, damit der Kalender den ganzen Bildschirm hat – zusammen mit „Volle Breite“ oben in der Leiste auch in der Breite. Escape oder „Lesemodus beenden“ holt alles zurück.</li>
           <li>Der Kalender ist nur zum Lesen. Geplant wird im Ausbildungsplan{rolle === 'ausbilder' ? ' oder in der Sammelplanung' : ''}.</li>
           <li>Am Handy steht statt der breiten Tabelle je Azubi eine Karte: oben das Jahr als schmale Leiste, darunter „Jetzt und als Nächstes“ als Text. „Ganzes Jahr“ klappt alle Einträge der Reihe nach auf.</li>
         </ul>

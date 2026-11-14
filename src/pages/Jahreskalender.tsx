@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AnsichtKnoepfe } from '../ansicht';
 import { api, datum } from '../api';
 import { Ladefehler } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
@@ -84,10 +85,14 @@ export function Jahreskalender({ azubiId }: { azubiId?: number }) {
           </p>
         )
       )}
-      <h1>
-        Jahreskalender {d.jahr}
-        {einer && !d.eigenes ? ` von ${einer.anzeigename}` : ''}
-      </h1>
+      {/* Lesemodus: Leisten und Menüs weg, der Kalender behält seine Breite (jk-kopf, siehe index.css) */}
+      <div className="ansicht-kopf jk-kopf">
+        <h1>
+          Jahreskalender {d.jahr}
+          {einer && !d.eigenes ? ` von ${einer.anzeigename}` : ''}
+        </h1>
+        <AnsichtKnoepfe />
+      </div>
       <p className="leise">
         {d.eigenes
           ? 'Dein Jahr auf einen Blick: Berufsschule, Einsätze, Prüfungen, Urlaub, Feiertage und deine eigenen Termine. Die Monate stehen nebeneinander, die Tage untereinander.'

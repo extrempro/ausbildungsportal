@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.69.0 · 14.11.2026
+Stand: Version 0.70.0 · 14.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -41,7 +41,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Je Azubi eine Zeitleiste nach Kalenderwochen: Schulblöcke, Einsätze in Abteilungen, Aufgaben (mit Unteraufgaben, abhakbar), Notizen, private Termine des Azubis, Prüfungstermine, Firmentermine, Ferien und Feiertage.
 - Einsatz in einer Abteilung weist deren Beauftragte und Stellvertretung für die Dauer automatisch zu.
 - **Planbausteine:** Vorlagen je Beruf. **Sammelplanung:** ein Eintrag oder Baustein für mehrere Azubis auf einmal.
-- **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen.
+- **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen; mit Lesemodus.
 
 ### Berichtsheft
 
@@ -84,7 +84,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - **Erscheinungsbild** (Super-Admin): Logo hell und dunkel, Begleiter-Schalter.
 - **Protokoll** (Super-Admin): Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten, Profilen; Löschung nach 90 Tagen.
 - **Sicherung:** täglich (sieben bleiben), vor jeder Migration und auf Befehl (je zehn bleiben).
-- **Ansicht:** „Volle Breite“ in der Kopfzeile auf jeder Seite (ab 1300 px, im Browser gemerkt); Lesemodus im Lernthema und im Handbuch; Seitenleiste „Inhalt“ einklappbar.
+- **Ansicht:** „Volle Breite“ in der Kopfzeile auf jeder Seite (ab 1300 px, im Browser gemerkt); Lesemodus im Lernthema, im Handbuch und im Jahreskalender (dort ohne schmalere Seite); Seitenleiste „Inhalt“ einklappbar.
 - **Hilfe:** Handbuch je Rolle mit Suche und Lesemodus, Führung beim ersten Anmelden, Versionshinweise, Hinweis auf neue Versionen.
 
 ## 3. Datenmodell
