@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.68.3] – 2026-11-14
+
+### Neu
+
+- **Spezifikation** in `docs/spec.md`: Funktionen, Datenmodell und alle Seiten je Rolle in einem Dokument – für alle, die am Portal mitarbeiten oder es prüfen. Sie wird ab jetzt mit jeder Änderung mitgeführt.
+
 ## [0.68.2] – 2026-11-14
 
 ### Geändert

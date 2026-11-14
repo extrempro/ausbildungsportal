@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.68.2.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.68.3.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -309,7 +309,7 @@ e2e/                Abläufe im Browser (Playwright) und das Skript für die Bil
 scripts/            build, dev, backup, admin-reset
 content/            gepflegte Inhalte: Schulferien je Bundesland
 lerninhalte/        Platz für Inhaltspakete des Lernmoduls (nicht im Repository)
-docs/               Entra-Einrichtung, Bedienregeln, Gestaltung, Handbuch-Regeln, ISO 9241, Bildschirmfotos
+docs/               Spezifikation, Entra-Einrichtung, Bedienregeln, Gestaltung, Handbuch-Regeln, ISO 9241, Bildschirmfotos
 Dockerfile, docker-compose.yml, docker-compose.override.example.yml
 ```
 

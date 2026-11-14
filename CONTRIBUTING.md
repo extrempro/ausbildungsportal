@@ -24,7 +24,7 @@ Wer mit Claude Code arbeitet: Dieselben Regeln stehen als Arbeitsanweisung in [C
    ```
    Danach die Änderung **im Browser durchspielen**, am PC und in Handybreite (390 px), hell und dunkel. Tests allein genügen nicht.
 6. **Pull Request gegen `main`.** Die Vorlage mit der Checkliste erscheint von selbst. In die Beschreibung gehören: was sich ändert, was geprüft wurde, was **nicht** geprüft wurde, und ob neue Daten über Personen gespeichert werden.
-7. **Mergen** tut der Betreiber des Repositorys, wenn die Prüfungen `pruefen` und `docker` grün sind. Die Prüfung `e2e` läuft mit, ist aber noch keine Pflicht.
+7. **Mergen** tut der Betreiber des Repositorys, wenn die Pflicht-Prüfungen `pruefen`, `docker` und `e2e` grün sind. `abhaengigkeiten` (`npm audit`) und CodeQL laufen mit; ihre Funde bitte ansehen.
 
 ## Was jede Änderung einhalten muss
 
@@ -39,6 +39,10 @@ Das Wichtigste in Kürze:
 - Alles funktioniert am Handy, mit der Tastatur und ohne Farbe als einzigem Hinweis.
 - Anrede „du“, kurze Sätze, erklärte Fachwörter. Die Azubis sind zwischen 16 und 30 Jahre alt.
 - Schalter, die von der Einrichtung abhängen, werden nie ausgeblendet – sie sind gesperrt und sagen, was fehlt.
+
+### Spezifikation
+
+[docs/spec.md](docs/spec.md) beschreibt Funktionen, Datenmodell und Screens in einem Dokument. Kommt eine Funktion, Tabelle, Spalte oder Seite dazu, ändert sich oder fällt weg, wird die Spezifikation im selben Pull Request angepasst.
 
 ### Handbuch
 
