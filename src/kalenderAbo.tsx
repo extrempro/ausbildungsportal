@@ -37,7 +37,9 @@ export function KalenderAbo({ konto }: { konto: Konto }) {
   };
 
   const betreut = konto.rolle !== 'azubi';
-  const url = abo?.url ? abo.url + (nur ? `?azubi=${nur}` : '') : '';
+  // nur eine Kennung aus Ziffern kommt in den Link; geöffnet wird nur eine Adresse mit http(s)
+  const url = abo?.url ? abo.url + (/^\d{1,12}$/.test(nur) ? `?azubi=${nur}` : '') : '';
+  const webcal = /^https?:\/\//.test(url) ? `webcal:${url.replace(/^https?:/, '')}` : '';
 
   const kopiere = async () => {
     try {
@@ -94,9 +96,11 @@ export function KalenderAbo({ konto }: { konto: Konto }) {
             <button type="button" className="knopf" onClick={() => void kopiere()}>
               Link kopieren
             </button>
-            <a className="knopf schlicht" href={url.replace(/^https?:/, 'webcal:')}>
-              Im Kalenderprogramm öffnen
-            </a>
+            {webcal && (
+              <a className="knopf schlicht" href={webcal}>
+                Im Kalenderprogramm öffnen
+              </a>
+            )}
           </div>
           <p className="hinweis">
             <strong>Der Link ist wie ein Passwort.</strong> Wer ihn kennt, kann diese Termine lesen – ohne Anmeldung. Gib ihn nicht weiter. Ist er in falsche Hände geraten, erneuere ihn.

@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.70.1] – 2026-11-14
+
+### Behoben
+
+- **Grafiken in Lerninhalten strenger geprüft:** Der Filter, der Grafiken vor dem Anzeigen von allem Ausführbaren befreit, ließ sich mit geschickt zusammengesetzten oder ungewöhnlich geschriebenen Teilen umgehen (gefunden von CodeQL). Er prüft jetzt so lange, bis nichts mehr zu entfernen ist, und entfernt auch Adressen mit „vbscript:“ und „data:“. Ausgenutzt werden konnte das nicht: Die Sicherheitsregeln des Browsers (CSP) verbieten im Portal jedes eingebettete Skript, und Lerninhalte kommen nur nach Prüfung durch den Super-Admin ins Portal.
+- **Kalender-Abo:** Ein Semikolon in einem Termin (z. B. „Berufsschule; Block 1“) wurde im Kalender nicht maskiert und konnte den Titel in manchen Kalenderprogrammen abschneiden.
+- **Kalender-Abo:** Der Knopf „Im Kalenderprogramm öffnen“ nimmt nur noch eine Webadresse und eine Kennung aus Ziffern in den Link.
+
 ## [0.70.0] – 2026-11-14
 
 ### Neu

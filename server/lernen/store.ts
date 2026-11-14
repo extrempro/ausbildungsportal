@@ -132,17 +132,37 @@ export function ladeInhalte(dir: string, vorher?: Inhalte | null): Inhalte {
 
 /**
  * Entfernt aus einer SVG alles Ausführbare: <script>, <foreignObject>, Event-Attribute (on…),
- * javascript:-Links und externe Verweise. Die Grafiken werden direkt ins HTML eingebettet,
- * damit sie die Farben von Hell- und Dunkelmodus übernehmen.
+ * Verweise nach außen und Adressen mit javascript:, vbscript: oder data:. Die Grafiken werden direkt ins HTML
+ * eingebettet, damit sie die Farben von Hell- und Dunkelmodus übernehmen. Zusätzlich verbietet die CSP jedes Skript
+ * im Seitentext – dieser Filter ist die erste von zwei Schutzschichten.
+ *
+ * Jede Regel läuft, bis sich nichts mehr ändert: Sonst ließe sich ein Verbot aus Teilen zusammensetzen,
+ * die erst nach dem Entfernen zueinanderfinden (`<scr<script></script>ipt>`, `javajavascript:script:`).
  */
 export function bereinigeSvg(roh: string): string {
+  const regeln: [RegExp, string][] = [
+    [/<\?xml[^>]*\?>/gi, ''],
+    [/<!DOCTYPE[^>]*>/gi, ''],
+    [/<!--[\s\S]*?(?:-->|$)/g, ''],
+    // ganze Blöcke samt Inhalt; das Ende-Tag darf Leerzeichen und Angaben enthalten (`</script foo>`)
+    [/<script\b[\s\S]*?(?:<\/script\b[^>]*>|$)/gi, ''],
+    [/<foreignObject\b[\s\S]*?(?:<\/foreignObject\b[^>]*>|$)/gi, ''],
+    // übrig gebliebene einzelne Tags dieser Art
+    [/<\/?(?:script|foreignObject)\b[^>]*>/gi, ''],
+    // Event-Attribute, auch direkt nach dem Tag-Namen oder einem Schrägstrich (`<svg/onload=…>`)
+    [/[\s/]on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, ' '],
+    // Verweise: nur Sprungmarken in der eigenen Grafik (#…) bleiben
+    [/\s(?:xlink:)?href\s*=\s*("(?!#)[^"]*"|'(?!#)[^']*'|(?!["'#])[^\s>]+)/gi, ''],
+  ];
+  // gefährliche Adressen in Attributwerten, auch in Stilangaben (`style="fill:url(javascript:…)"`) – Text bleibt unberührt
+  const gefaehrlich = /(?:java|vb)script\s*:|data\s*:/gi;
+  const werte = /=\s*("[^"]*"|'[^']*'|[^\s>"']+)/g;
   let s = roh.replace(/^\uFEFF/, '');
-  s = s.replace(/<\?xml[^>]*\?>/gi, '').replace(/<!DOCTYPE[^>]*>/gi, '').replace(/<!--[\s\S]*?-->/g, '');
-  s = s.replace(/<script[\s\S]*?<\/script\s*>/gi, '').replace(/<script[^>]*\/>/gi, '');
-  s = s.replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, '');
-  s = s.replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
-  s = s.replace(/\s(?:xlink:)?href\s*=\s*("(?!#)[^"]*"|'(?!#)[^']*')/gi, '');
-  s = s.replace(/javascript:/gi, '');
+  for (let vorher = ''; vorher !== s; ) {
+    vorher = s;
+    for (const [muster, ersatz] of regeln) s = s.replace(muster, ersatz);
+    s = s.replace(werte, (wert) => wert.replace(gefaehrlich, ''));
+  }
   return s.trim();
 }
 

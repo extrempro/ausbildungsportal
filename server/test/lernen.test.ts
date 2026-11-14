@@ -147,6 +147,30 @@ test('Grafiken werden bereinigt: kein Skript, keine Ereignisse, keine fremden Ve
   for (const x of ['script', 'onload', 'alert', 'boese.example', '<?xml']) assert.equal(svg.includes(x), false, x);
 });
 
+test('Grafiken: Umgehungen aus zusammengesetzten oder ungewöhnlich geschriebenen Teilen greifen nicht (CodeQL)', () => {
+  const faelle = [
+    '<svg><scr<script>x</script>ipt>alert(1)</script></svg>',
+    '<svg><script>alert(1)</script foo="bar"></svg>',
+    '<svg><script>alert(1)</svg>',
+    '<svg><SCRIPT\n>alert(1)</SCRIPT\n></svg>',
+    '<svg/onload=alert(1)></svg>',
+    '<svg><a href="javajavascript:script:alert(1)">x</a></svg>',
+    '<svg><a href=javascript:alert(1)>x</a></svg>',
+    '<svg><rect style="fill:url(javascript:alert(1))"/></svg>',
+    '<svg><rect fill="vbscript:alert(1)"/></svg>',
+    '<svg><image href="data:image/svg+xml,alert(1)"/></svg>',
+    '<svg><foreignObject><foreignObject></foreignObject>alert(1)</foreignObject></svg>',
+    '<svg><!-- <script>alert(1)</script> --></svg>',
+  ];
+  for (const roh of faelle) {
+    const s = bereinigeSvg(roh).toLowerCase();
+    for (const verboten of ['<script', 'onload', 'javascript:', 'vbscript:', 'data:', 'foreignobject']) assert.equal(s.includes(verboten), false, `${roh} → ${s} enthält ${verboten}`);
+  }
+  // was harmlos ist, bleibt: Sprungmarken in der Grafik und das Wort „data:“ im Text
+  const ok = bereinigeSvg('<svg><use href="#pfeil"/><text>Metadata: Version</text></svg>');
+  assert.ok(ok.includes('href="#pfeil"') && ok.includes('Metadata: Version'), ok);
+});
+
 test('Lernmodul ist je Beruf schaltbar; /api/ich sagt, ob es das Menü gibt', async () => {
   const w = await welt();
   const ich = async (wer: BenutzerZeile) => koerper(await ruf(w.u, 'GET', '/api/ich', { cookies: als(w, wer) })).lernen;

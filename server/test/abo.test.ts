@@ -56,7 +56,7 @@ test('Azubi: Link erstellen, Kalender enthält Schule, Einsatz und Prüfung – 
   assert.equal(text.split('BEGIN:VEVENT').length - 1, 3);
   assert.ok(text.includes('X-WR-CALNAME:Ausbildungsplan\r\n'));
   // Schulblock 16.11.–29.11. (Montag bis Sonntag); das Ende zählt in ICS nicht mit
-  assert.ok(text.includes('DTSTART;VALUE=DATE:20261116\r\nDTEND;VALUE=DATE:20261130\r\nSUMMARY:Berufsschule\; Block 1\\, Teil A\r\n'), text);
+  assert.ok(text.includes('DTSTART;VALUE=DATE:20261116\r\nDTEND;VALUE=DATE:20261130\r\nSUMMARY:Berufsschule\\; Block 1\\, Teil A\r\n'), text);
   // Einsatz eine Woche: 07.12.–13.12.
   assert.ok(text.includes('DTSTART;VALUE=DATE:20261207\r\nDTEND;VALUE=DATE:20261214\r\nSUMMARY:Lager\r\nDESCRIPTION:Einsatz\\nZuständig: Bea Auft\r\n'));
   assert.ok(text.includes('DTSTART;VALUE=DATE:20270310\r\nDTEND;VALUE=DATE:20270311\r\nSUMMARY:Prüfung: Abschlussprüfung Teil 1\r\n'));
@@ -130,7 +130,7 @@ test('ICS: lange Zeilen werden nach 75 Bytes gefaltet, Sonderzeichen maskiert', 
   const text = alsIcs('Plan', [{ uid: 'x@y', von: '2026-01-05', bis: '2026-01-11', titel: 'Ä'.repeat(60) + ', Ende; fertig', art: 'Einsatz', geaendert: '2026-01-01T10:00:00.000Z', beschreibung: 'a\nb' }], new Date('2026-11-10T09:00:00Z'));
   for (const zeile of text.split('\r\n')) assert.ok(Buffer.byteLength(zeile) <= 75, zeile);
   const glatt = text.replace(/\r\n /g, '');
-  assert.ok(glatt.includes(`SUMMARY:${'Ä'.repeat(60)}\\, Ende\; fertig\r\n`));
+  assert.ok(glatt.includes(`SUMMARY:${'Ä'.repeat(60)}\\, Ende\\; fertig\r\n`));
   assert.ok(glatt.includes('DESCRIPTION:a\\nb\r\n') && glatt.includes('DTSTAMP:20261110T090000Z\r\n') && glatt.includes('LAST-MODIFIED:20260101T100000Z\r\n'));
 });
 

@@ -352,7 +352,7 @@ test('Berichtsheft als PDF: Deckblatt, Auswahl, einzelne Woche, lange Berichte; 
   const a = lies(alle.datei!.inhalt);
   // Deckblatt + langer Bericht (2 Seiten) + 2 Berichte
   assert.equal(a.seiten, 5);
-  for (const erwartet of ['Berichtsheft', 'Anna Azubi', 'Muster GmbH', '19.10.2026 bis 08.11.2026', '3 Wochenberichte: 1 abgezeichnet, 2 nicht abgezeichnet (als solche gekennzeichnet)', 'Woche 43/2026', 'Fortsetzung', 'Tätigkeit 30:', 'Switch konfiguriert', 'VLANs eingerichtet', '06.11.2026 · Urlaub'.replace('·', '\xb7'), 'Summe: 41,5 Stunden', 'Entwurf \x96 noch nicht eingereicht und nicht unterschrieben', 'Seite 5 von 5']) {
+  for (const erwartet of ['Berichtsheft', 'Anna Azubi', 'Muster GmbH', '19.10.2026 bis 08.11.2026', '3 Wochenberichte: 1 abgezeichnet, 2 nicht abgezeichnet (als solche gekennzeichnet)', 'Woche 43/2026', 'Fortsetzung', 'Tätigkeit 30:', 'Switch konfiguriert', 'VLANs eingerichtet', '06.11.2026 · Urlaub', 'Summe: 41,5 Stunden', 'Entwurf \x96 noch nicht eingereicht und nicht unterschrieben', 'Seite 5 von 5']) {
     // lange Angaben auf dem Deckblatt laufen über mehrere Zeilen
     assert.ok(a.text.includes(erwartet) || a.text.replace(/\n/g, ' ').includes(erwartet), `im PDF steht: ${erwartet}`);
   }
