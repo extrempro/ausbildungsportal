@@ -70,7 +70,7 @@ export function useAnsicht(): Zustand {
 }
 
 /** Seiten, auf denen es den Lesemodus gibt */
-export const LESESEITE = /^\/(lernen\/(?!ueben)[a-z0-9-]+|anleitungen\/[a-z0-9-]+|lerninhalte\/[a-z0-9-]+\/[a-z0-9-]+|handbuch)$/;
+export const LESESEITE = /^\/(lernen\/(?!ueben)[a-z0-9-]+|anleitungen\/[a-z0-9-]+|lerninhalte\/[a-z0-9-]+\/[a-z0-9-]+|handbuch|jahreskalender(\/\d{1,12})?)$/;
 
 /** Ab dieser Fensterbreite macht „Volle Breite“ einen Unterschied (Seite 1200 px + Rand) */
 const AB = '(min-width: 1300px)';

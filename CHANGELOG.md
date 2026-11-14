@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.70.0] – 2026-11-14
+
+### Neu
+
+- **Lesemodus im Jahreskalender:** Neben der Überschrift steht jetzt „Lesemodus“. Er blendet Leisten und Menüs aus, damit der Kalender den ganzen Bildschirm hat. Anders als bei Texten bleibt der Kalender dabei so breit wie vorher; zusammen mit „Volle Breite“ geht er über das ganze Fenster. Beim Blättern zwischen den Jahren und beim Öffnen eines einzelnen Azubis bleibt der Lesemodus an; Escape oder „Lesemodus beenden“ holt alles zurück.
+
 ## [0.69.0] – 2026-11-14
 
 ### Neu

@@ -9524,6 +9524,17 @@ body:has(.begleiter-ecke.klein) .nach-oben {
   display: block;
 }
 
+/* Jahreskalender im Lesemodus: nur Leisten und Menüs fallen weg – Breite und Schrift bleiben, der Kalender braucht den Platz */
+:root[data-lesemodus='an'] main:has(.jk-kopf) {
+  max-width: 1200px;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+:root[data-lesemodus='an'][data-breite='voll'] main:has(.jk-kopf) {
+  max-width: none;
+}
+
 .lesemodus-ende {
   position: fixed;
   top: 12px;
