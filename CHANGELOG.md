@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.68.2] – 2026-11-14
+
+### Geändert
+
+- **Feste Paketversionen:** `package-lock.json` liegt jetzt im Repository. Docker und CI installieren mit `npm ci` genau diese Versionen, jede Datei mit Prüfsumme – ein Update baut also nur, was vorher getestet wurde, und eine untergeschobene Paketversion kommt nicht mehr von selbst ins Portal. Neue Versionen kommen als Pull Request (Dependabot).
+
 ## [0.68.1] – 2026-11-14
 
 ### Geändert

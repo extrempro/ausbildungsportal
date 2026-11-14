@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.68.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.68.2.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -52,7 +52,7 @@ Voraussetzungen:
 - für die Microsoft-Anmeldung: eine App-Registrierung in Entra, siehe [docs/entra-einrichtung.md](docs/entra-einrichtung.md)
 
 ```bash
-npm install
+npm ci                    # genau die Versionen aus package-lock.json
 cp .env.example .env      # APP_URL und später die ENTRA_*-Werte eintragen
 npm run build             # Oberfläche nach dist/ bauen
 npm start                 # Server auf Port 3000

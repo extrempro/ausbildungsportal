@@ -10,7 +10,5 @@ data
 *.log
 .DS_Store
 docker-compose.override.yml
-# Lock-Datei von Windows/macOS enthält oft nicht die Linux-Varianten von esbuild
-package-lock.json
 lerninhalte
 e2e
