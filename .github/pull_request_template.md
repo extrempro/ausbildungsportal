@@ -10,6 +10,7 @@ Bitte abhaken. Trifft ein Punkt nicht zu, kurz dahinter schreiben, warum (z. B. 
 - [ ] Versionsnummer an drei Stellen gleich erhöht (`package.json`, `README.md`, `docs/entra-einrichtung.md`) und `CHANGELOG.md` ergänzt
 - [ ] `npm run typecheck`, `npm test` und `npm run build` laufen; die E2E-Tests (`npm run e2e`) sind grün und – wo sich ein Ablauf geändert hat oder dazukam – angepasst
 - [ ] Bedienregeln (`docs/bedienregeln.md`) durchgegangen
+- [ ] `docs/spec.md` angepasst (Funktion, Tabelle, Seite) – oder „nicht betroffen“
 - [ ] Handbuch ergänzt – für jede Rolle, die die Änderung sieht – und im Portal verlinkt; Aufbau nach `docs/handbuch-regeln.md`
 - [ ] Führung (`src/fuehrung.tsx`) bedacht: Station ergänzt oder angepasst und durchgeklickt – oder kurz begründet, warum keine nötig ist
 - [ ] Benachrichtigungen bedacht: neues Ereignis steht in der Glocke (Teams und E-Mail gehen dann mit) – oder kurz begründet, warum keins nötig ist

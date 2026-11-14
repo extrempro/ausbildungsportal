@@ -47,6 +47,7 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `src/pages/` | je Seite eine Datei; `Handbuch.tsx` ist das Handbuch für alle Rollen |
 | `src/dialoge.tsx` | `rueckfrage()`, `melde()`, `<Ladefehler>` |
 | `src/index.css` | das eine Stylesheet |
+| `docs/spec.md` | Spezifikation: Funktionen, Datenmodell (alle Tabellen), Screens (alle Pfade je Rolle), Schnittstelle – **bei jeder Änderung an Funktion, Tabelle oder Seite mitziehen** |
 | `docs/bedienregeln.md` | Checkliste für die Bedienung – **vor jedem Pull Request lesen** |
 | `docs/gestaltung.md` | Farben, Schrift und vorhandene Bausteine – **vor neuem CSS lesen** |
 | `docs/barrierefreiheit.md` | Stand nach WCAG 2.2 AA: erfüllt, offen, nicht geprüft – bei Änderungen an Bedienung oder Darstellung mitziehen |
@@ -67,7 +68,8 @@ Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines C
 8. **Neue Route:** `wer` setzen, in die Rechte-Tabelle in `server/test/api.test.ts` eintragen, den verbotenen Zugriff testen. Fremde Kennung → 404, falsche Rolle → 403.
 9. **Prüfen:** `npm run typecheck`, `npm test`, `npm run build`, `npm run e2e` – und die Änderung **im Browser durchspielen**: PC und 390 px, hell und dunkel, ohne waagerechten Überlauf, ohne Fehler in der Konsole. Ändert sich ein Ablauf, den ein E2E-Test abdeckt, den Test anpassen; kommt ein wichtiger Ablauf oder eine Seite dazu, den Test ergänzen (neue Seiten in die Liste in `e2e/06-handy.test.ts`). Die E2E-Tests ersetzen das Durchspielen nicht.
 10. **Bildschirmfotos:** Sieht eine fotografierte Ansicht danach merklich anders aus oder kommt ein Bereich dazu, im Abschlussbericht daran erinnern, dass die Bilder in `docs/bilder/` veraltet sind. Neu erzeugt (`npm run bilder`, neue Ansichten in `e2e/bilder.ts` ergänzen) wird gesammelt, wenn der Nutzer es sagt – nicht bei jeder kleinen Änderung, die Bilder sind groß. In den Bildern stehen nur erfundene Namen und Inhalte.
-11. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
+11. **`docs/spec.md` mitziehen:** Kommt eine Funktion, Tabelle, Spalte, Seite oder Routengruppe dazu, ändert sich oder fällt weg, die Spezifikation im selben Pull Request anpassen; „Stand: Version …“ oben mitführen. Zahlen (Tabellen, Routen) aus dem Code auslesen, nicht schätzen.
+12. **Neue Daten über Personen oder neue Rechte:** im Pull Request ausdrücklich nennen (für die Leistungsbeschreibung an den Betriebsrat).
 
 ## Bedienung und Gestaltung – die häufigsten Punkte
 
