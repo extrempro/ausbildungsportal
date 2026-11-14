@@ -56,7 +56,7 @@ function hole(db: DB, id: number): AboZeile | undefined {
 // ---------- ICS (RFC 5545) ----------
 
 function text(s: string): string {
-  return s.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 }
 
 /** Zeilen dürfen höchstens 75 Bytes lang sein; längere werden mit Zeilenumbruch + Leerzeichen fortgesetzt. */

@@ -107,7 +107,11 @@ test('Teams-Benachrichtigung: Karte ohne Namen, Text nur auf Wunsch; ein Ausfall
   const karte = gesendet[0].body.attachments[0];
   assert.equal(karte.contentType, 'application/vnd.microsoft.card.adaptive');
   const roh = JSON.stringify(gesendet[0].body);
-  assert.ok(roh.includes('Nr. 1') && roh.includes('/berichtsheft') && roh.includes('"Azubi"') && roh.includes('https://portal.test/verwaltung/meldungen'));
+  assert.ok(roh.includes('Nr. 1') && roh.includes('/berichtsheft') && roh.includes('"Azubi"'));
+  // der Link ins Portal: genau diese Adresse, nicht nur ein Teil davon
+  const links = roh.match(/https?:\/\/[^"\\]+/g) ?? [];
+  const insPortal = links.map((l) => new URL(l)).filter((l) => l.hostname === 'portal.test');
+  assert.deepEqual(insPortal.map((l) => l.href), ['https://portal.test/verwaltung/meldungen']);
   assert.ok(!roh.includes('Anna') && !roh.includes('Geheimer Inhalt') && !roh.includes('iVBOR'), 'kein Name, kein Text, kein Bild');
   assert.ok(roh.length < 28_000, 'unter der Größengrenze von Teams');
 
