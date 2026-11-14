@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
         env:
           # der Browser für die E2E-Tests wird hier nicht gebraucht
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
@@ -26,15 +26,14 @@ jobs:
       - run: npm run build
 
   abhaengigkeiten:
-    # Bekannte Sicherheitslücken in den Paketen, die im Betrieb laufen (OWASP A03:2025, Lieferkette). Ohne package-lock.json im Repository
-    # wird der Stand hier frisch aufgelöst – genau der, den npm install im Docker-Image auch bekäme.
+    # Bekannte Sicherheitslücken in den Paketen, die im Betrieb laufen (OWASP A03:2025, Lieferkette) – geprüft wird der Stand
+    # aus package-lock.json, also genau der, den npm ci im Docker-Image einbaut.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --package-lock-only --no-audit --no-fund
       - name: Sicherheitslücken (nur Pakete für den Betrieb, ab „hoch“)
         run: npm audit --omit=dev --audit-level=high
 
@@ -47,7 +46,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - name: Browser installieren
         run: npx playwright install --with-deps chromium
       - run: npm run e2e

@@ -5,10 +5,11 @@ ARG NODE_VERSION=22
 # ---------- 1. Oberfläche bauen ----------
 FROM node:${NODE_VERSION}-alpine AS build
 WORKDIR /app
-COPY package.json ./
+# genau die Versionen aus package-lock.json, mit Prüfsumme – nichts wird neu aufgelöst
+COPY package.json package-lock.json ./
 # Playwright (nur für die E2E-Tests) soll hier keinen Browser herunterladen
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-RUN npm install --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build
 
@@ -26,8 +27,8 @@ ENV NODE_ENV=production \
     TZ=Europe/Berlin
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 COPY server ./server
