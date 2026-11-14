@@ -482,6 +482,8 @@ test('Tagesform: der Betrieb wählt sie; Einträge gehören zu einem Tag; gespei
     { text: 'Mittwoch: Drucker eingerichtet', stunden: 8, tag: '2026-10-28' },
   ]);
   assert.deepEqual([neu.summe.betrieb, neu.summe.unterweisung, neu.summe.schule, neu.summe.abwesenheit, neu.summe.gesamt], [16, 2, 6, 8, 32]);
+  // eine ältere, noch offene Oberfläche schickt „krank“ – gespeichert wird „abwesend“
+  assert.equal(neu.inhalt.abwesenheit[0].grund, 'abwesend');
   // ohne Tag oder mit einem Tag außerhalb der Woche geht es nicht
   for (const falsch of [{ text: 'ohne Tag', stunden: 1 }, { text: 'andere Woche', stunden: 1, tag: '2026-11-02' }, { text: 'kein Datum', stunden: 1, tag: 'Montag' }]) {
     const r = await schreibe(w, w.azubi, NEU, { ...tage, betrieb: [falsch] });
@@ -510,7 +512,7 @@ test('Tagesform: der Betrieb wählt sie; Einträge gehören zu einem Tag; gespei
       // Bilder und Schriften sind anders verpackt
     }
   }
-  for (const teil of ['Montag, 26.10.2026', '8 h', 'Betrieb: Montag: Server gepatcht', 'Dienstag, 27.10.2026', 'Unterweisung: Brandschutz', 'Berufsschule: Mathe: Prozentrechnung', 'Freitag, 30.10.2026', 'Abwesenheit: Krank']) assert.ok(text.includes(teil), `PDF: ${teil}\n${text}`);
+  for (const teil of ['Montag, 26.10.2026', '8 h', 'Betrieb: Montag: Server gepatcht', 'Dienstag, 27.10.2026', 'Unterweisung: Brandschutz', 'Berufsschule: Mathe: Prozentrechnung', 'Freitag, 30.10.2026', 'Abwesenheit: Abwesend']) assert.ok(text.includes(teil), `PDF: ${teil}\n${text}`);
   assert.ok(!text.includes('Samstag') && !text.includes('Betriebliche Tätigkeiten'.normalize()), 'kein leerer Samstag, keine Teile der Wochenform');
   assert.ok(text.indexOf('Montag, 26.10.2026') < text.indexOf('Dienstag, 27.10.2026') && text.indexOf('Dienstag, 27.10.2026') < text.indexOf('Mittwoch, 28.10.2026'));
 
@@ -543,4 +545,25 @@ test('Tagesform: der Betrieb wählt sie; Einträge gehören zu einem Tag; gespei
   assert.equal((await lies(w, w.ben, w.ben, '2026-10-19')).inhalt.form, 'tag');
   await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt2, berichtForm: null } });
   assert.deepEqual([(await profil()).profil.berichtForm, (await profil()).berichtFormGilt], [null, 'tag']);
+});
+
+test('Migration 034: „krank“ und „sonstiges“ werden in vorhandenen Berichten zu „abwesend“, Freitexte bleiben', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { neueDb } = await import('./hilfe');
+  const db = await neueDb();
+  db.prepare("INSERT INTO benutzer (anmeldung, anmeldename, anzeigename, rolle, erstellt) VALUES ('entra', 'a@firma.test', 'Anna', 'azubi', '2026-01-01T00:00:00.000Z')").run();
+  const inhalt = {
+    betrieb: [{ text: 'Notiz: "grund":"krank" steht hier nur als Text', stunden: 8 }],
+    abwesenheit: [
+      { tag: '2026-11-02', grund: 'krank', stunden: 8, text: '' },
+      { tag: '2026-11-03', grund: 'sonstiges', stunden: 8, text: 'Behördengang' },
+      { tag: '2026-11-04', grund: 'urlaub', stunden: 8, text: '' },
+    ],
+  };
+  db.prepare("INSERT INTO bericht (azubi_id, montag, status, inhalt, geaendert) VALUES (1, '2026-11-02', 'abgezeichnet', ?, '2026-11-09T08:00:00.000Z')").run(JSON.stringify(inhalt));
+  db.exec(readFileSync(new URL('../migrations/034_abwesend.sql', import.meta.url), 'utf8'));
+  const nachher = JSON.parse((db.prepare('SELECT inhalt FROM bericht').get() as { inhalt: string }).inhalt);
+  assert.deepEqual(nachher.abwesenheit.map((a: { grund: string }) => a.grund), ['abwesend', 'abwesend', 'urlaub']);
+  assert.equal(nachher.abwesenheit[1].text, 'Behördengang');
+  assert.equal(nachher.betrieb[0].text, inhalt.betrieb[0].text, 'Freitext bleibt unberührt');
 });
