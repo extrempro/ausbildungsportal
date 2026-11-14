@@ -30,10 +30,21 @@ test(
     // gemerkt, auch auf anderen Seiten
     await oeffne(anna, p.url, '/');
     assert.equal(await breiteMain(anna), 1600);
-    // zurück über den Knopf an der Überschrift
+    // der Knopf in der Kopfzeile steht auf jeder Seite – auch im Jahreskalender – und zeigt den Zustand
+    await oeffne(anna, p.url, '/jahreskalender');
+    const knopf = anna.locator('.breite-knopf');
+    assert.equal(await knopf.getAttribute('aria-pressed'), 'true');
+    await knopf.click();
+    assert.equal(await knopf.getAttribute('aria-pressed'), 'false');
+    assert.ok((await breiteMain(anna)) < 1400, 'zurück zur normalen Breite');
+    await knopf.click();
+    assert.equal(await breiteMain(anna), 1600);
+    assert.equal(await ueberlauf(anna), 0);
+    await knopf.click();
+    // an den Leseseiten bleibt neben der Überschrift nur der Lesemodus
     await oeffne(anna, p.url, '/lernen/grundlagen');
-    await anna.click('.ansicht-knoepfe button:has-text("Normale Breite")');
     assert.equal(await breiteMain(anna), normal);
+    assert.equal(await anna.locator('.ansicht-knoepfe button:has-text("Breite")').count(), 0);
 
     // Lesemodus im Handbuch: Leiste weg, Escape holt sie zurück
     await oeffne(anna, p.url, '/handbuch');
@@ -65,7 +76,7 @@ test(
     // Am Handy: kein Knopf für die Breite, Lesemodus ohne Überlauf, endet beim Seitenwechsel
     const handy = await p.seite(ANNA, { breite: HANDY.breite, hoehe: HANDY.hoehe, dunkel: true });
     await oeffne(handy, p.url, '/lernen/grundlagen');
-    assert.equal(await handy.locator('.ansicht-knoepfe button:has-text("Breite")').count(), 0);
+    assert.equal(await handy.locator('.breite-knopf').count(), 0, 'am Handy kein Knopf für die Breite');
     await handy.click('.ansicht-knoepfe button:has-text("Lesemodus")');
     await handy.locator('.lesemodus-ende').waitFor();
     assert.equal(await handy.locator('.tabs').first().isVisible(), false);

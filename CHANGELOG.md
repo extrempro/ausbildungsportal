@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.69.0] – 2026-11-14
+
+### Neu
+
+- **„Volle Breite“ auf jeder Seite:** Der Knopf steht jetzt oben in der Leiste neben „Rückmeldung geben“ – auf jeder Seite an derselben Stelle, zum Beispiel auch im Jahreskalender und im Plan. Ist die volle Breite an, ist der Knopf hervorgehoben. Es gibt ihn ab einer Fensterbreite von 1300 Pixeln. Im Lernthema und im Handbuch steht neben der Überschrift jetzt nur noch „Lesemodus“.
+
 ## [0.68.3] – 2026-11-14
 
 ### Neu

@@ -189,7 +189,7 @@ const BEDIENUNG: Kapitel = {
         <li>Leicht blau getönte Kästen mit „Anzeigen“ rechts lassen sich aufklappen – dahinter steht mehr, zum Beispiel eine Anleitung. Mit „Einklappen“ schließt du sie wieder.</li>
         <li>Hell oder dunkel: im Menü an deinem Namen bzw. unter „Mehr“. „Automatisch“ stellst du unter „Konto“ ein.</li>
         <li>
-          <strong>Volle Breite:</strong> Auf einem großen Bildschirm nutzt das Portal sonst nur die Mitte. Im Menü an deinem Namen schaltest du „Volle Breite“ ein – dann geht jede Seite über das ganze Fenster. Dein Browser merkt sich das. Auf Lernseiten und im Handbuch steht der Knopf auch oben neben der Überschrift. Bei kleinen Fenstern gibt es ihn nicht, da ist die Seite ohnehin voll.
+          <strong>Volle Breite:</strong> Auf einem großen Bildschirm nutzt das Portal sonst nur die Mitte. Mit dem Knopf „Volle Breite“ oben in der Leiste (zwei Pfeile nach außen, neben „Rückmeldung geben“) geht jede Seite über das ganze Fenster; ein zweiter Klick schaltet zurück. Dasselbe findest du im Menü an deinem Namen. Dein Browser merkt sich die Einstellung. Bei kleinen Fenstern gibt es den Knopf nicht, da ist die Seite ohnehin voll.
         </li>
         <li>
           <strong>Navigation einklappen:</strong> Am PC steht im Lernmodul und hier im Handbuch links eine Navigation. Mit dem kleinen Knopf oben rechts neben „Inhalt“ klappst du sie zu einer schmalen Leiste ein, dann hat der Text mehr Platz. Im Lernmodul stehen in der Leiste die Themenfelder als Nummern (mit dem Punkt der Ampel); zeigst du mit der Maus darauf, erscheint der Name. Im Handbuch bringt dich die Lupe direkt zur Suche. Derselbe Knopf klappt die Navigation wieder aus; dein Browser merkt sich, wie du es eingestellt hast.

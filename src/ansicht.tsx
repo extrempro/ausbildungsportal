@@ -87,17 +87,11 @@ export function useBreitesFenster(): boolean {
 
 /** Knöpfe über Leseseiten: Volle Breite (nur am großen Bildschirm) und Lesemodus */
 export function AnsichtKnoepfe() {
-  const { breit, lesen } = useAnsicht();
-  const gross = useBreitesFenster();
+  const { lesen } = useAnsicht();
   if (lesen) return null;
+  // „Volle Breite“ steht für alle Seiten in der Kopfzeile; hier nur, was die Leseseiten zusätzlich haben
   return (
     <div className="ansicht-knoepfe nicht-drucken" role="group" aria-label="Ansicht">
-      {gross && (
-        <button type="button" className="knopf schlicht klein" aria-pressed={breit} onClick={() => setzeBreit(!breit)}>
-          <Icon name="breit" groesse={18} />
-          {breit ? 'Normale Breite' : 'Volle Breite'}
-        </button>
-      )}
       <button type="button" className="knopf schlicht klein" onClick={() => setzeLesemodus(true)}>
         <Icon name="lesen" groesse={18} />
         Lesemodus
