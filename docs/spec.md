@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.68.3 · 14.11.2026
+Stand: Version 0.69.0 · 14.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -84,6 +84,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - **Erscheinungsbild** (Super-Admin): Logo hell und dunkel, Begleiter-Schalter.
 - **Protokoll** (Super-Admin): Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten, Profilen; Löschung nach 90 Tagen.
 - **Sicherung:** täglich (sieben bleiben), vor jeder Migration und auf Befehl (je zehn bleiben).
+- **Ansicht:** „Volle Breite“ in der Kopfzeile auf jeder Seite (ab 1300 px, im Browser gemerkt); Lesemodus im Lernthema und im Handbuch; Seitenleiste „Inhalt“ einklappbar.
 - **Hilfe:** Handbuch je Rolle mit Suche und Lesemodus, Führung beim ersten Anmelden, Versionshinweise, Hinweis auf neue Versionen.
 
 ## 3. Datenmodell
@@ -181,7 +182,7 @@ Dazu, nicht privat: `lern_paket_stand` (Prüfsumme je Unterthema, für „Lernin
 
 ## 4. Screens
 
-Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit Gruppen, darunter Leiste unten mit „Mehr“.
+Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit Gruppen, darunter Leiste unten mit „Mehr“. Rechts in der Kopfzeile auf jeder Seite: „Volle Breite“ (ab 1300 px), „Rückmeldung geben“, Glocke, Menü am Namen.
 
 ### Alle Rollen
 

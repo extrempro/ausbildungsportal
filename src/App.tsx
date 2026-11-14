@@ -602,6 +602,19 @@ export function App() {
           {/* rechts beieinander: Begleiter (am Handy), Rückmeldung, Glocke */}
           <div className="leiste-rechts">
           {begleiter.kopf}
+          {/* Volle Breite auf jeder Seite an derselben Stelle – erst ab 1300 px, darunter gibt es nichts zu gewinnen */}
+          {grossesFenster && (
+            <button
+              type="button"
+              className="menue-knopf rueck-knopf breite-knopf"
+              aria-pressed={ansicht.breit}
+              aria-label="Volle Breite"
+              title={ansicht.breit ? 'Volle Breite ist an – zurück zur normalen Breite' : 'Volle Breite: Inhalt über die ganze Fensterbreite'}
+              onClick={() => setzeBreit(!ansicht.breit)}
+            >
+              <Icon name="breit" groesse={26} />
+            </button>
+          )}
           <button
             type="button"
             className="menue-knopf rueck-knopf"

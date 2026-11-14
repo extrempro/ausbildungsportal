@@ -3253,6 +3253,12 @@ td.aktion {
   color: var(--c-text);
 }
 
+/* Volle Breite an: Knopf wie gedrückt */
+.breite-knopf[aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
 .melden-art {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
