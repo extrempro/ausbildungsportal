@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.71.0 · 17.11.2026
+Stand: Version 0.72.0 · 17.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -77,7 +77,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 ### Rückmeldung geben
 
 - Drei Arten: **Fehler** (nur Super-Admin liest; freiwillig mit Bildschirmfoto), **Idee fürs Portal** (Super-Admin bearbeitet, Ausbilder lesen), **Wunsch zu Lerninhalten** (nur Azubis; ohne Person gespeichert, nur Ausbilder lesen).
-- **Rückfragen:** Zu Fehlern schreibt der Super-Admin, zu Ideen auch die Ausbilder der meldenden Person zurück; sie bekommt einen Eintrag in der Glocke (persönlich, nur für sie) und antwortet unter „Meine Meldungen“. Eine Antwort öffnet eine erledigte Meldung wieder. Wünsche zu Lerninhalten haben kein Gespräch.
+- **Rückfragen:** Zu Fehlern schreibt der Super-Admin, zu Ideen auch die Ausbilder der meldenden Person zurück; sie bekommt einen Eintrag in der Glocke (persönlich, nur für sie) und antwortet unter „Meine Meldungen“. Eine Antwort öffnet eine erledigte Meldung wieder und geht – wenn eingerichtet – als Karte an den Teams-Kanal für Rückmeldungen (ohne Namen, Text nur mit `FEHLER_WEBHOOK_MIT_TEXT`), weil der Super-Admin keine Glocke hat. Wünsche zu Lerninhalten haben kein Gespräch.
 
 ### Verwaltung und Betrieb
 

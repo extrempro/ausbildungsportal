@@ -142,6 +142,34 @@ test('Teams-Benachrichtigung: Karte ohne Namen, Text nur auf Wunsch; ein Ausfall
   assert.ok(mitText.includes('Dieser Text darf mit nach Teams.') && !mitText.includes('Ben'));
 });
 
+test('Teams-Benachrichtigung: Antwortet die Person auf eine Rückfrage, kommt eine Karte – ohne Namen, die Antwort nur auf Wunsch', async () => {
+  const gesendet: any[] = [];
+  const sende = async (_url: string, body: unknown) => {
+    gesendet.push(body);
+    return { ok: true, status: 202 };
+  };
+  const tick = () => new Promise((r) => setImmediate(r));
+  for (const mitText of [false, true]) {
+    gesendet.length = 0;
+    const u = await umgebung({ FEHLER_WEBHOOK_URL: 'https://example.test/workflows/geheim', ...(mitText ? { FEHLER_WEBHOOK_MIT_TEXT: 'true' } : {}) }, null, sende);
+    const chef = admin(u.db);
+    ohneWechsel(u.db, chef.id);
+    const anna = konto(u.db, 'azubi', 'Anna Azubi');
+    await ruf(u, 'POST', '/api/fehlermeldungen', { cookies: sitzung(u, anna), body: { art: 'idee', text: 'Eine Idee zum Testen.' } });
+    const id = (u.db.prepare('SELECT id FROM fehlermeldung').get() as { id: number }).id;
+    await ruf(u, 'POST', `/api/fehlermeldungen/${id}/nachricht`, { cookies: sitzung(u, chef), body: { text: 'Wie meinst du das?' } });
+    await tick();
+    assert.equal(gesendet.length, 1, 'die Rückfrage selbst geht nicht an den Kanal');
+    assert.equal((await ruf(u, 'POST', `/api/meine-meldungen/${id}/antwort`, { cookies: sitzung(u, anna), body: { text: 'So und so meine ich das.' } })).status, 201);
+    await tick();
+    assert.equal(gesendet.length, 2);
+    const roh = JSON.stringify(gesendet[1]);
+    assert.ok(roh.includes(`Neue Antwort zu Idee Nr. ${id}`) && roh.includes('"Azubi"') && roh.includes('/verwaltung/meldungen'));
+    assert.ok(!roh.includes('Anna'), 'kein Name');
+    assert.equal(roh.includes('So und so meine ich das.'), mitText, 'die Antwort nur, wenn der Text mit darf');
+  }
+});
+
 test('FEHLER_WEBHOOK_URL muss eine https-Adresse sein', async () => {
   await assert.rejects(umgebung({ FEHLER_WEBHOOK_URL: 'http://example.test/x' }), /https/);
   await assert.rejects(umgebung({ FEHLER_WEBHOOK_URL: 'kein link' }), /https/);
