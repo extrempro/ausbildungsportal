@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.71.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.72.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -92,8 +92,8 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `ENTRA_PROFILBILD` | `true` holt bei der Anmeldung das Profilbild aus Microsoft 365; braucht die Berechtigung User.Read (siehe `docs/entra-einrichtung.md`). Standard: aus |
 | `ADMIN_BENUTZER`, `ADMIN_PASSWORT` | nur für den ersten Start |
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
-| `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung und jeder neuen Idee fürs Portal benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
-| `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung nach Teams; Standard `false` |
+| `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung, jeder neuen Idee fürs Portal und jeder Antwort auf eine Rückfrage benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
+| `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung bzw. der Antwort nach Teams; Standard `false` |
 | `TEAMS_CHAT_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der eine Nachricht als Chat an eine einzelne Person schickt (siehe „Benachrichtigungen per Teams und E-Mail“) |
 | `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle und für Benachrichtigungen per E-Mail (siehe „Mail an die Personalstelle“) |
 | `SMTP_PORT`, `SMTP_SICHERHEIT` | Port und `starttls` (Vorgabe, Port 587), `tls` (Port 465) oder `keine` (Port 25, nur internes Relay ohne Anmeldung) |
@@ -103,7 +103,7 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 
 ### Benachrichtigung in Teams
 
-Freiwillig: Sobald jemand im Portal einen Fehler meldet, erscheint ein Hinweis in einem Teams-Kanal.
+Freiwillig: Sobald jemand im Portal einen Fehler meldet, eine Idee schickt oder auf eine Rückfrage antwortet, erscheint ein Hinweis in einem Teams-Kanal.
 
 1. In Teams am gewünschten Kanal **… → Workflows** öffnen und eine Vorlage mit dem Auslöser **„Beim Empfang einer Teams-Webhookanforderung“** wählen (englisch: *When a Teams webhook request is received*), zum Beispiel „In einem Kanal posten, wenn eine Webhookanforderung empfangen wird“. Die genauen Namen der Vorlagen können je nach Teams-Version abweichen.
 2. Die angezeigte Adresse kopieren und in der `.env` als `FEHLER_WEBHOOK_URL` eintragen, dann `docker compose up -d`.
@@ -114,6 +114,7 @@ Gut zu wissen:
 - Der Server muss die Adresse des Workflows über HTTPS erreichen können (ausgehende Verbindung).
 - Die Adresse ist ein Geheimnis – wer sie kennt, kann in den Kanal schreiben. Sie gehört nur in die `.env`.
 - Gesendet werden Nummer, Rolle der meldenden Person, Seite, Version und ein Link ins Portal. Name und Bildschirmfoto bleiben im Portal; den Text der Meldung schickt das Portal nur mit `FEHLER_WEBHOOK_MIT_TEXT=true`.
+- Bei einer Antwort auf eine Rückfrage: Art und Nummer der Meldung, Rolle der antwortenden Person und ein Link ins Portal; den Text der Antwort nur mit `FEHLER_WEBHOOK_MIT_TEXT=true`.
 - Über dieselbe Adresse meldet das Portal auch, wenn ein Ausbilder Lerninhalte einreicht (Lernmodul, Umfang, Link zur Prüfung – ohne Namen).
 - Antwortet Teams nicht, wird die Meldung trotzdem gespeichert; der Grund steht im Log (`docker compose logs app`).
 - Die früheren „Eingehenden Webhooks“ (Office-365-Connectors) hat Microsoft eingestellt; das Portal schickt das Format, das die Workflows erwarten (Adaptive Card). Mit einem echten Teams-Kanal ist das erprobt.

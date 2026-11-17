@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.72.0] – 2026-11-17
+
+### Neu
+
+- **Teams-Hinweis bei Antworten:** Antwortet jemand auf eine Rückfrage zu seinem Fehler oder seiner Idee, erscheint im Teams-Kanal für Rückmeldungen ein Hinweis – so erfährt der Super-Admin davon, obwohl er keine Glocke hat. Wie bei neuen Meldungen ohne Namen; den Text der Antwort nur, wenn der Kanal den Text mitbekommen darf (`FEHLER_WEBHOOK_MIT_TEXT`).
+
 ## [0.71.0] – 2026-11-17
 
 ### Neu

@@ -2073,7 +2073,7 @@ const ADMIN: Kapitel[] = [
             <strong>Nachfragen:</strong> Unter jeder Meldung „Rückfrage stellen“ aufklappen, schreiben, „Rückfrage senden“. Die Person sieht es in ihrer Glocke (und per Teams oder E-Mail, wenn sie das eingeschaltet hat) und antwortet unter „Meine Meldungen“. Bei Ideen können auch die Ausbilder nachfragen und lesen das Gespräch mit. Hat die Person zuletzt geschrieben, steht an der Meldung „Neue Antwort“; ihre Antwort öffnet eine erledigte Meldung wieder. Gibt es das Konto nicht mehr, ist keine Rückfrage möglich.
           </li>
           <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig, samt Gespräch. Eine automatische Löschfrist gibt es nicht.</li>
-          <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten; sie kommt bei jedem neuen Fehler und jeder neuen Idee. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
+          <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten; sie kommt bei jedem neuen Fehler, jeder neuen Idee und jeder Antwort auf eine Rückfrage – so erfährst du davon, obwohl du keine Glocke hast. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
           <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
         </ul>
       </>

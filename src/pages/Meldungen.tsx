@@ -199,7 +199,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
             <strong>Benachrichtigung in Teams</strong> <span className={`pille ${daten.webhook ? 'gruen' : 'grau'}`}>{daten.webhook ? 'eingerichtet' : 'nicht eingerichtet'}</span>
             <p className="leise klein">
               {daten.webhook
-                ? `Bei jedem neuen Fehler und jeder neuen Idee geht ein Hinweis an den Teams-Kanal: Nummer, Rolle, Seite und ein Link hierher – ohne Namen und ohne Bild${daten.webhookMitText ? ', mit dem Text der Meldung' : ', ohne den Text der Meldung'}.`
+                ? `Bei jedem neuen Fehler und jeder neuen Idee geht ein Hinweis an den Teams-Kanal: Nummer, Rolle, Seite und ein Link hierher – ohne Namen und ohne Bild${daten.webhookMitText ? ', mit dem Text der Meldung' : ', ohne den Text der Meldung'}. Ebenso, wenn jemand auf deine Rückfrage antwortet.`
                 : 'Wer den Server betreibt, trägt dafür in der .env die Adresse eines Teams-Workflows als FEHLER_WEBHOOK_URL ein. Die Anleitung steht in der README.'}
             </p>
           </div>

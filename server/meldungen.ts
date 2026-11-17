@@ -45,9 +45,17 @@ const ROLLEN_TEXT: Record<string, string> = { admin: 'Super-Admin', ausbilder: '
  * Ohne Namen und ohne Bild; der Text der Meldung nur, wenn der Betreiber das eingeschaltet hat –
  * in einem Teams-Kanal lesen oft mehr Personen mit als im Portal.
  */
-export function teamsKarte(k: Kontext, m: { id: number; rolle: string; seite: string; text: string; mitBild: boolean; art?: MeldungArt } | null) {
-  const body: unknown[] = [{ type: 'TextBlock', size: 'Medium', weight: 'Bolder', wrap: true, text: m ? `${m.art === 'idee' ? 'Neue Idee fürs Ausbildungsportal' : 'Neue Fehlermeldung im Ausbildungsportal'} (Nr. ${m.id})` : 'Test: Das Ausbildungsportal kann diesen Kanal benachrichtigen' }];
-  if (m) {
+export function teamsKarte(k: Kontext, m: { id: number; rolle: string; seite: string; text: string; mitBild: boolean; art?: MeldungArt; /** die meldende Person hat auf eine Rückfrage geantwortet */ antwort?: boolean } | null) {
+  const titel = !m
+    ? 'Test: Das Ausbildungsportal kann diesen Kanal benachrichtigen'
+    : m.antwort
+      ? `Neue Antwort zu ${m.art === 'idee' ? 'Idee' : 'Fehlermeldung'} Nr. ${m.id} im Ausbildungsportal`
+      : `${m.art === 'idee' ? 'Neue Idee fürs Ausbildungsportal' : 'Neue Fehlermeldung im Ausbildungsportal'} (Nr. ${m.id})`;
+  const body: unknown[] = [{ type: 'TextBlock', size: 'Medium', weight: 'Bolder', wrap: true, text: titel }];
+  if (m?.antwort) {
+    body.push({ type: 'FactSet', facts: [{ title: 'Geantwortet von', value: ROLLEN_TEXT[m.rolle] ?? m.rolle }] });
+    if (k.cfg.fehlerWebhookMitText) body.push({ type: 'TextBlock', wrap: true, text: m.text.length > 600 ? `${m.text.slice(0, 600)} …` : m.text });
+  } else if (m) {
     body.push({
       type: 'FactSet',
       facts: [
@@ -181,7 +189,7 @@ function personVon(c: Ctx, z: Pick<Zeile, 'benutzer_id'>): number | null {
 }
 
 /** Text einer Nachricht prüfen und speichern; gibt die neue Nachricht zurück. */
-function speichereNachricht(c: Ctx, z: Zeile): void {
+function speichereNachricht(c: Ctx, z: Zeile): string {
   const roh = koerper(c).text;
   if (typeof roh === 'string' && roh.trim().length > MAX_TEXT) throw new Fehler(400, `Der Text ist zu lang (höchstens ${MAX_TEXT} Zeichen)`);
   const text = sauber(roh, MAX_TEXT);
@@ -189,6 +197,7 @@ function speichereNachricht(c: Ctx, z: Zeile): void {
   const anzahl = (c.k.db.prepare('SELECT COUNT(*) AS n FROM fehlermeldung_nachricht WHERE meldung_id = ?').get(z.id) as { n: number }).n;
   if (anzahl >= MAX_NACHRICHTEN) throw new Fehler(409, 'Zu dieser Meldung gibt es schon sehr viele Nachrichten. Bitte sprecht direkt miteinander.');
   c.k.db.prepare('INSERT INTO fehlermeldung_nachricht (meldung_id, zeit, von_id, von_name, von_rolle, text) VALUES (?, ?, ?, ?, ?, ?)').run(z.id, c.k.jetzt().toISOString(), c.b.id, c.b.anzeigename, c.b.rolle, text);
+  return text;
 }
 
 /** Super-Admin oder Ausbilder schreibt der meldenden Person: Glocke (und auf Wunsch Teams/E-Mail) für sie. */
@@ -459,8 +468,10 @@ export const MELDUNG_ROUTEN: Route[] = [
     wer: 'alle',
     h: (c) => {
       const z = eigeneMeldung(c);
-      speichereNachricht(c, z);
+      const text = speichereNachricht(c, z);
       c.k.db.prepare("UPDATE fehlermeldung SET antwort_neu = 1, status = 'offen', erledigt_am = NULL, person_gesehen = (SELECT MAX(id) FROM fehlermeldung_nachricht WHERE meldung_id = ?) WHERE id = ?").run(z.id, z.id);
+      // der Super-Admin hat keine Glocke: Hinweis an denselben Teams-Kanal wie bei neuen Meldungen – ohne Namen, Text nur auf Wunsch
+      if (c.k.cfg.fehlerWebhook) void benachrichtige(c.k, teamsKarte(c.k, { id: z.id, rolle: c.b.rolle, seite: '', text, mitBild: false, art: z.art, antwort: true }));
       return { status: 201, body: meine(c) };
     },
   },
