@@ -1,3 +1,4 @@
+import { StundenFeld } from '../stundenFeld';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, datum, h } from '../api';
@@ -412,8 +413,6 @@ function ChecklisteKarte({ c, daten, neu, sende }: { c: Checkliste; daten: Daten
   );
 }
 
-const zahl = (v: string) => Math.max(0, Math.min(2000, Number(v.replace(',', '.')) || 0));
-
 function ZeitKarte({ z, daten, sende }: { z: Zeitplanung; daten: Daten; sende: Sende }) {
   const [phasen, setPhasen] = useState<Phase[]>(daten.phasen);
   const [laeuft, setLaeuft] = useState(false);
@@ -456,10 +455,10 @@ function ZeitKarte({ z, daten, sende }: { z: Zeitplanung; daten: Daten; sende: S
                   <input aria-label={`Name der Phase ${i + 1}`} value={p.name} maxLength={120} required onChange={(e) => setze(i, { name: e.target.value })} />
                 </td>
                 <td data-label="Geplant (Stunden)">
-                  <input type="number" min={0} max={2000} step={0.25} aria-label={`Geplante Stunden: ${p.name}`} value={p.soll || ''} onChange={(e) => setze(i, { soll: zahl(e.target.value) })} />
+                  <StundenFeld max={2000} leerBeiNull aria-label={`Geplante Stunden: ${p.name}`} wert={p.soll} onWert={(n) => setze(i, { soll: n })} />
                 </td>
                 <td data-label="Tatsächlich (Stunden)">
-                  <input type="number" min={0} max={2000} step={0.25} aria-label={`Tatsächliche Stunden: ${p.name}`} value={p.ist || ''} onChange={(e) => setze(i, { ist: zahl(e.target.value) })} />
+                  <StundenFeld max={2000} leerBeiNull aria-label={`Tatsächliche Stunden: ${p.name}`} wert={p.ist} onWert={(n) => setze(i, { ist: n })} />
                 </td>
                 <td>
                   <button type="button" className="knopf schlicht klein" aria-label={`Phase „${p.name}“ entfernen`} onClick={() => setPhasen(phasen.filter((_, j) => j !== i))}>

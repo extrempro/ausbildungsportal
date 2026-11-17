@@ -39,8 +39,12 @@ export function halteFokusFrei(): () => void {
       if (document.activeElement !== el) return;
       const r = el.getBoundingClientRect();
       const { oben, unten } = freiRaum(el);
+      // Was höher ist als der freie Platz, passt ohnehin nicht ganz hinein – nicht rollen. Das betrifft vor allem
+      // <main tabindex="-1">: Safari gibt einem angeklickten Knopf keinen Fokus, sondern dem nächsten fokussierbaren
+      // Element darüber. Früher sprang die Seite dann an den Anfang (z. B. bei „Tätigkeit im Betrieb eintragen“).
+      if (r.height >= unten - oben - 2 * LUFT) return;
       if (r.top < oben + LUFT) window.scrollBy({ top: r.top - oben - LUFT });
-      else if (r.bottom > unten - LUFT && r.height < unten - oben) window.scrollBy({ top: r.bottom - unten + LUFT });
+      else if (r.bottom > unten - LUFT) window.scrollBy({ top: r.bottom - unten + LUFT });
     });
   };
   document.addEventListener('focusin', pruefe);

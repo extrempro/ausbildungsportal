@@ -37,7 +37,7 @@ test(
     // ohne Unterschrift lässt sich nicht einreichen – das Portal sagt, was fehlt
     await oeffne(a, p.url, `/berichtsheft/${montag}`);
     await a.locator('main textarea').first().fill('Wareneingang geprüft und Artikel eingelagert');
-    await a.locator('main input[type=number]').first().fill('38');
+    await a.locator('main .bericht-stunden input').first().fill('38');
     await a.click('main button.knopf:not(.klein):has-text("Einreichen")');
     // das Portal speichert den Bericht als Entwurf und sagt, was fehlt
     await a.waitForSelector('main h1:has-text("Entwurf")');

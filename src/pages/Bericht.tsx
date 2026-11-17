@@ -1,3 +1,4 @@
+import { StundenFeld } from '../stundenFeld';
 import { begleiterSagt } from '../begleiter';
 import type { Anlass } from '../begleiter';
 import { melde, rueckfrage } from '../dialoge';
@@ -340,7 +341,7 @@ function EintragListe({ nr, art, titel, hilfe, beispiel, liste, onAendern }: { n
           </label>
           <label className="bericht-stunden">
             <span className="klein">Stunden</span>
-            <input type="number" inputMode="decimal" min={0} max={60} step={0.25} value={e.stunden} aria-label={`Stunden, ${titel}, Zeile ${i + 1}`} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
+            <StundenFeld max={60} wert={e.stunden} aria-label={`Stunden, ${titel}, Zeile ${i + 1}`} onWert={(n) => setze(i, { stunden: n })} />
           </label>
           <button type="button" className="knopf schlicht klein bericht-weg" aria-label={`${titel}, Zeile ${i + 1} entfernen`} onClick={() => onAendern(liste.filter((_, j) => j !== i))}>
             Entfernen
@@ -394,7 +395,7 @@ function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAen
               </label>
               <label className="bericht-stunden">
                 <span className="klein">Stunden</span>
-                <input type="number" inputMode="decimal" min={0} max={24} step={0.25} value={z.eintrag.stunden} aria-label={`Stunden, ${t.name}, Zeile ${i + 1}`} onChange={(ev) => setze(z, { stunden: Number(ev.target.value) })} />
+                <StundenFeld max={24} wert={z.eintrag.stunden} aria-label={`Stunden, ${t.name}, Zeile ${i + 1}`} onWert={(n) => setze(z, { stunden: n })} />
               </label>
               <button type="button" className="knopf schlicht klein bericht-weg" aria-label={`${t.name}, Zeile ${i + 1} entfernen`} onClick={() => entferne(z)}>
                 Entfernen
@@ -461,7 +462,7 @@ function AbwesenheitListe({ nr, montag, tagSoll, liste, onAendern }: { nr: numbe
           </label>
           <label className="bericht-stunden">
             <span className="klein">Stunden</span>
-            <input type="number" inputMode="decimal" min={0} max={24} step={0.25} value={a.stunden} onChange={(ev) => setze(i, { stunden: Number(ev.target.value) })} />
+            <StundenFeld max={24} wert={a.stunden} onWert={(n) => setze(i, { stunden: n })} />
           </label>
           <label className="bericht-hinweis">
             <span className="klein">Hinweis (freiwillig)</span>
