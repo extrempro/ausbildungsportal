@@ -146,3 +146,79 @@ test('FEHLER_WEBHOOK_URL muss eine https-Adresse sein', async () => {
   await assert.rejects(umgebung({ FEHLER_WEBHOOK_URL: 'http://example.test/x' }), /https/);
   await assert.rejects(umgebung({ FEHLER_WEBHOOK_URL: 'kein link' }), /https/);
 });
+
+test('Rückfragen: Super-Admin fragt nach, die Person antwortet unter „Meine Meldungen“ – eine Antwort öffnet die Meldung wieder', async () => {
+  const u = await umgebung();
+  const chef = admin(u.db);
+  ohneWechsel(u.db, chef.id);
+  const anna = konto(u.db, 'azubi', 'Anna Azubi');
+  const ben = konto(u.db, 'azubi', 'Ben Beispiel');
+  const cA = sitzung(u, anna);
+  const cB = sitzung(u, ben);
+  const cC = sitzung(u, chef);
+  await ruf(u, 'POST', '/api/fehlermeldungen', { cookies: cA, body: { text: 'Der Knopf reagiert nicht.', technik: 'TypeError' } });
+  const id = koerper(await ruf(u, 'GET', '/api/fehlermeldungen', { cookies: cC })).meldungen[0].id;
+
+  for (const falsch of [undefined, '', 'x', 'x'.repeat(2001)]) assert.equal((await ruf(u, 'POST', `/api/fehlermeldungen/${id}/nachricht`, { cookies: cC, body: { text: falsch } })).status, 400);
+  assert.equal((await ruf(u, 'POST', '/api/fehlermeldungen/9999/nachricht', { cookies: cC, body: { text: 'Hallo?' } })).status, 404);
+  const r = await ruf(u, 'POST', `/api/fehlermeldungen/${id}/nachricht`, { cookies: cC, body: { text: 'Welchen Knopf meinst du?' } });
+  assert.equal(r.status, 201);
+  assert.deepEqual(koerper(r).meldungen[0].nachrichten.map((n: any) => [n.text, n.vonPerson]), [['Welchen Knopf meinst du?', false]]);
+
+  // Glocke nur für die meldende Person
+  const glA = koerper(await ruf(u, 'GET', '/api/aktivitaeten', { cookies: cA }));
+  assert.equal(glA.neu, 1);
+  assert.deepEqual([glA.gruppen[0].art, glA.gruppen[0].titel], ['meldung_rueckfrage', [`Fehlermeldung Nr. ${id}`]]);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/aktivitaeten', { cookies: cB })).neu, 0, 'andere sehen die Rückfrage nicht');
+
+  // „Meine Meldungen“: nur die eigenen, ohne Technik
+  const m = koerper(await ruf(u, 'GET', '/api/meine-meldungen', { cookies: cA }));
+  assert.equal(m.neu, 1);
+  assert.equal(m.meldungen.length, 1);
+  assert.equal(m.meldungen[0].technik, undefined);
+  assert.equal(koerper(await ruf(u, 'GET', '/api/meine-meldungen', { cookies: cB })).meldungen.length, 0);
+  assert.equal((await ruf(u, 'POST', `/api/meine-meldungen/${id}/antwort`, { cookies: cB, body: { text: 'Ich mische mich ein.' } })).status, 404, 'fremde Meldung');
+  assert.equal(koerper(await ruf(u, 'POST', '/api/meine-meldungen/gesehen', { cookies: cA })).neu, 0);
+
+  // erledigt → Glocke; Antwort → wieder offen und „neue Antwort“ für den Super-Admin
+  await ruf(u, 'PATCH', `/api/fehlermeldungen/${id}`, { cookies: cC, body: { status: 'erledigt' } });
+  assert.equal(koerper(await ruf(u, 'GET', '/api/aktivitaeten', { cookies: cA })).gruppen[0].art, 'meldung_erledigt');
+  const a = koerper(await ruf(u, 'POST', `/api/meine-meldungen/${id}/antwort`, { cookies: cA, body: { text: 'Den Knopf „Einreichen“.' } }));
+  assert.equal(a.meldungen[0].status, 'offen');
+  assert.equal(a.meldungen[0].neu, 0, 'die eigene Antwort ist nicht neu');
+  const l = koerper(await ruf(u, 'GET', '/api/fehlermeldungen', { cookies: cC }));
+  assert.deepEqual([l.meldungen[0].status, l.meldungen[0].antwortNeu, l.meldungen[0].nachrichten.length], ['offen', true, 2]);
+  assert.equal(l.meldungen[0].nachrichten[1].vonPerson, true);
+  await ruf(u, 'POST', `/api/fehlermeldungen/${id}/nachricht`, { cookies: cC, body: { text: 'Danke, ich schaue es mir an.' } });
+  assert.equal(koerper(await ruf(u, 'GET', '/api/fehlermeldungen', { cookies: cC })).meldungen[0].antwortNeu, false);
+
+  // Löschen nimmt das Gespräch mit
+  await ruf(u, 'DELETE', `/api/fehlermeldungen/${id}`, { cookies: cC });
+  assert.equal((u.db.prepare('SELECT COUNT(*) AS n FROM fehlermeldung_nachricht').get() as { n: number }).n, 0);
+});
+
+test('Rückfragen: Ausbilder schreiben nur bei Ideen; Wünsche zu Lerninhalten haben kein Gespräch', async () => {
+  const u = await umgebung();
+  const chef = admin(u.db);
+  ohneWechsel(u.db, chef.id);
+  const anna = konto(u.db, 'azubi', 'Anna Azubi');
+  const petra = konto(u.db, 'ausbilder', 'Petra Lang');
+  const cA = sitzung(u, anna);
+  const cP = sitzung(u, petra);
+  const cC = sitzung(u, chef);
+  await ruf(u, 'POST', '/api/fehlermeldungen', { cookies: cA, body: { text: 'Ein Fehler zum Testen.' } });
+  await ruf(u, 'POST', '/api/fehlermeldungen', { cookies: cA, body: { art: 'idee', text: 'Eine Idee zum Testen.' } });
+  const [idee, fehler] = (u.db.prepare("SELECT id FROM fehlermeldung ORDER BY id DESC").all() as { id: number }[]).map((z) => z.id);
+  u.db.prepare("INSERT INTO fehlermeldung (zeit, benutzer_id, benutzer_name, rolle, text, art, paket, thema, ziel) VALUES ('2026-11-10', NULL, '', 'azubi', 'Bitte besser erklären', 'inhalt', 'p', 't', 'z')").run();
+  const inhalt = (u.db.prepare("SELECT id FROM fehlermeldung WHERE art = 'inhalt'").get() as { id: number }).id;
+
+  assert.equal((await ruf(u, 'POST', `/api/rueckmeldungen/${fehler}/nachricht`, { cookies: cP, body: { text: 'Darf ich nicht.' } })).status, 404);
+  assert.equal((await ruf(u, 'POST', `/api/rueckmeldungen/${inhalt}/nachricht`, { cookies: cP, body: { text: 'Darf ich nicht.' } })).status, 404);
+  assert.equal((await ruf(u, 'POST', `/api/fehlermeldungen/${inhalt}/nachricht`, { cookies: cC, body: { text: 'Darf ich nicht.' } })).status, 404);
+  const r = koerper(await ruf(u, 'POST', `/api/rueckmeldungen/${idee}/nachricht`, { cookies: cP, body: { text: 'Wie stellst du dir das vor?' } }));
+  assert.equal(r.ideen[0].nachrichten[0].name, 'Petra Lang');
+  // der Super-Admin sieht dasselbe Gespräch
+  const l = koerper(await ruf(u, 'GET', '/api/fehlermeldungen', { cookies: cC }));
+  assert.equal(l.meldungen.find((m: any) => m.id === idee).nachrichten.length, 1);
+  assert.equal((u.db.prepare('SELECT COUNT(*) AS n FROM fehlermeldung_nachricht WHERE meldung_id = ?').get(inhalt) as { n: number }).n, 0);
+});

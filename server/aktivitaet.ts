@@ -28,7 +28,17 @@ export type AktivitaetArt =
   | 'planer_termine'
   // Lerninhalte des Berufs bzw. die Anleitungen für alle Berufe wurden aktualisiert – nur für den Azubi selbst, nur in der Glocke
   | 'lernen_aktualisiert'
-  | 'anleitungen_aktualisiert';
+  | 'anleitungen_aktualisiert'
+  // Rückfrage zu einer eigenen Fehlermeldung oder Idee bzw. sie ist erledigt – nur für die meldende Person (jede Rolle)
+  | 'meldung_rueckfrage'
+  | 'meldung_erledigt';
+
+/**
+ * Persönliche Einträge: In `azubi_id` steht hier die Person, für die der Eintrag ist – sie allein sieht ihn,
+ * egal welche Rolle sie hat. Alle anderen Einträge sieht, wer den Azubi sehen darf.
+ */
+export const PERSOENLICH: AktivitaetArt[] = ['lernen_aktualisiert', 'anleitungen_aktualisiert', 'meldung_rueckfrage', 'meldung_erledigt'];
+const PERSOENLICH_SQL = PERSOENLICH.map((a) => `'${a}'`).join(', ');
 
 const AUFBEWAHRUNG_TAGE = 60;
 /** so viele Aktivitäten werden höchstens gelesen und zusammengefasst */
@@ -111,12 +121,12 @@ export interface AktivitaetGruppe {
 
 function sichtbar(db: DB, wer: BenutzerZeile, tag: string): Zeile[] {
   const ids = sichtbareAzubis(db, wer, tag);
-  if (ids.length === 0) return [];
+  // Einträge zu den sichtbaren Azubis – außer den persönlichen; dazu die persönlichen Einträge für einen selbst
+  const zuAzubis = ids.length ? `(a.azubi_id IN (${ids.map(() => '?').join(',')}) AND a.art NOT IN (${PERSOENLICH_SQL})) OR ` : '';
   return db
     .prepare(
       `SELECT a.*, b.anzeigename AS azubi_name FROM aktivitaet a JOIN benutzer b ON b.id = a.azubi_id
-        WHERE a.azubi_id IN (${ids.map(() => '?').join(',')}) AND (a.akteur_id IS NULL OR a.akteur_id <> ?)
-          AND (a.art NOT IN ('lernen_aktualisiert', 'anleitungen_aktualisiert') OR a.azubi_id = ?)
+        WHERE (${zuAzubis}(a.art IN (${PERSOENLICH_SQL}) AND a.azubi_id = ?)) AND (a.akteur_id IS NULL OR a.akteur_id <> ?)
         ORDER BY a.id DESC LIMIT ?`,
     )
     .all(...ids, wer.id, wer.id, MAX_GELESEN) as unknown as Zeile[];

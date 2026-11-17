@@ -9749,3 +9749,50 @@ button.lern-navi-feld[aria-current='location'] {
 .abstand-oben {
   margin-top: 16px;
 }
+
+/* ---------- Rückfragen zu Rückmeldungen: Gespräch unter einer Meldung ---------- */
+.meldung-gespraech {
+  margin: 12px 0;
+}
+
+.gespraech-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.gespraech-liste > li {
+  max-width: 85%;
+  padding: 8px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-card);
+}
+
+.gespraech-liste > li.vom-team {
+  align-self: flex-start;
+  background: var(--c-accent-soft);
+}
+
+.gespraech-liste > li.von-person {
+  align-self: flex-end;
+}
+
+.gespraech-liste p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.gespraech-form textarea {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .gespraech-liste > li {
+    max-width: 100%;
+  }
+}

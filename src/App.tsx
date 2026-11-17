@@ -38,6 +38,7 @@ import { LESESEITE, LesemodusEnde, setzeBreit, setzeLesemodus, useAnsicht, useBr
 import { Rueckmeldungen } from './pages/Rueckmeldungen';
 import { Glocke } from './glocke';
 import { Meldungen } from './pages/Meldungen';
+import { MeineMeldungen } from './pages/MeineMeldungen';
 import { Avatar } from './avatar';
 import { Icon } from './icons';
 import type { IconName } from './icons';
@@ -126,6 +127,8 @@ export function App() {
   // Ausbilder: offene Wünsche der Azubis zu den Lerninhalten
   const [offeneWuensche, setOffeneWuensche] = useState(0);
   const schliesseMelden = useCallback(() => setMelden(false), []);
+  // eigene Fehlermeldungen und Ideen: ob es welche gibt (dann „Meine Meldungen“ im Menü) und wie viele neue Antworten
+  const [meine, setMeine] = useState<{ da: boolean; neu: number }>({ da: false, neu: 0 });
   // Ausbilder und Beauftragte: Urlaubsanträge, bei denen sie selbst etwas tun müssen
   const [urlaubZuTun, setUrlaubZuTun] = useState(0);
   const ladeUrlaubZuTun = useCallback(() => {
@@ -213,6 +216,10 @@ export function App() {
     api<{ offen: number }>('GET', '/api/fehlermeldungen').then((r) => setOffeneMeldungen(r.offen), () => {});
     api<{ offen: number }>('GET', '/api/lernpakete/einreichungen').then((r) => setOffeneEinreichungen(r.offen), () => {});
   }, [konto?.rolle, konto?.passwortWechsel, pfad]);
+  useEffect(() => {
+    if (!konto || konto.passwortWechsel || melden) return;
+    api<{ meldungen: unknown[]; neu: number }>('GET', '/api/meine-meldungen').then((r) => setMeine({ da: r.meldungen.length > 0, neu: r.neu }), () => {});
+  }, [konto, pfad, melden]);
   useEffect(() => {
     if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
     if (konto?.rolle === 'ausbilder') api<{ offen: number }>('GET', '/api/rueckmeldungen').then((r) => setOffeneWuensche(r.offen), () => {});
@@ -410,6 +417,7 @@ export function App() {
   else if (lernKarten && lernen) seite = <LernKarten key={lernKarten} feld={lernKarten} />;
   else if (lernQuiz && lernen) seite = <LernQuiz key={lernQuiz} id={lernQuiz} />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
+  else if (pfad === '/meine-meldungen') seite = <MeineMeldungen onGeaendert={(neu) => setMeine({ da: true, neu })} />;
   else if (pfad === '/konto') seite = <KontoSeite konto={konto} profilbild={profilbild} onGeaendert={lade} />;
   else seite = <NichtGefunden key={pfad} start={start} nachfragen={konto.rolle === 'azubi' && /^\/(planer|lernen|anleitungen)(\/|$)/.test(pfad) ? () => hole(true) : null} />;
 
@@ -453,6 +461,8 @@ export function App() {
       : [];
   const persoenlich: Punkt[] = [
     { zu: '/konto', text: 'Konto', icon: 'konto' },
+    // erst, wenn man selbst etwas gemeldet hat – die Zahl sind neue Antworten darauf
+    ...(meine.da || pfad === '/meine-meldungen' ? [{ zu: '/meine-meldungen', text: 'Meine Meldungen', icon: 'ruf', zahl: meine.neu } as Punkt] : []),
     { zu: '/handbuch', text: 'Handbuch', icon: 'hilfe' },
     { zu: '/versionen', text: 'Versionshinweise', icon: 'versionen' },
   ];
@@ -482,7 +492,7 @@ export function App() {
         {n}
       </span>
     );
-  const mehrZahl = summe(hauptMehr) + gruppen.reduce((n, g) => n + summe(g.punkte), 0);
+  const mehrZahl = summe(hauptMehr) + gruppen.reduce((n, g) => n + summe(g.punkte), 0) + summe(persoenlich);
 
   const liste = (punkte: Punkt[]) =>
     punkte.map((p) => (
@@ -637,6 +647,7 @@ export function App() {
                 {konto.anzeigename}
                 <small>{ROLLE_TEXT[konto.rolle]}</small>
               </span>
+              {zahlKnopf(summe(persoenlich))}
               <Icon name="unten" groesse={16} />
             </button>
             {menue === 'ich' && (

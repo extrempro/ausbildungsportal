@@ -1,3 +1,4 @@
+import { merkeAktivitaet } from './aktivitaet';
 import { Fehler, idAus, koerper } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import { bildTyp } from './branding';
@@ -18,6 +19,8 @@ import type { Paket } from './lernen';
  */
 export type MeldungArt = 'fehler' | 'idee' | 'inhalt';
 const MAX_TEXT = 2000;
+/** so viele Nachrichten hat ein Gespräch zu einer Meldung höchstens */
+const MAX_NACHRICHTEN = 100;
 const MIN_TEXT = 10;
 const JE_TAG = 10;
 const MAX_LISTE = 300;
@@ -140,6 +143,62 @@ interface Zeile {
   paket: string;
   thema: string;
   ziel: string;
+  benutzer_id: number | null;
+  antwort_neu: number;
+  person_gesehen: number;
+}
+
+export interface Nachricht {
+  id: number;
+  zeit: string;
+  name: string;
+  rolle: string;
+  /** von der meldenden Person selbst (sonst von Super-Admin oder Ausbilder) */
+  vonPerson: boolean;
+  text: string;
+}
+
+/** Das Gespräch zu jeder der Meldungen, älteste Nachricht zuerst. */
+function nachrichtenVon(db: DB, meldungen: Pick<Zeile, 'id' | 'benutzer_id'>[]): Map<number, Nachricht[]> {
+  const aus = new Map<number, Nachricht[]>(meldungen.map((m) => [m.id, []]));
+  if (meldungen.length === 0) return aus;
+  const person = new Map(meldungen.map((m) => [m.id, m.benutzer_id]));
+  const zeilen = db
+    .prepare(`SELECT id, meldung_id, zeit, von_id, von_name, von_rolle, text FROM fehlermeldung_nachricht WHERE meldung_id IN (${meldungen.map(() => '?').join(',')}) ORDER BY id`)
+    .all(...meldungen.map((m) => m.id)) as unknown as { id: number; meldung_id: number; zeit: string; von_id: number | null; von_name: string; von_rolle: string; text: string }[];
+  for (const n of zeilen) aus.get(n.meldung_id)?.push({ id: n.id, zeit: n.zeit, name: n.von_name, rolle: n.von_rolle, vonPerson: n.von_id !== null && n.von_id === person.get(n.meldung_id), text: n.text });
+  return aus;
+}
+
+/** Meldung in Kurzform für die Glocke – ohne Inhalt */
+const kurz = (z: Pick<Zeile, 'id' | 'art'>) => `${z.art === 'idee' ? 'Idee' : 'Fehlermeldung'} Nr. ${z.id}`;
+
+/** die meldende Person, wenn es sie noch gibt und sie nicht selbst die schreibende ist */
+function personVon(c: Ctx, z: Pick<Zeile, 'benutzer_id'>): number | null {
+  if (z.benutzer_id === null || z.benutzer_id === c.b.id) return null;
+  const da = c.k.db.prepare("SELECT 1 FROM benutzer WHERE id = ? AND status = 'aktiv'").get(z.benutzer_id);
+  return da ? z.benutzer_id : null;
+}
+
+/** Text einer Nachricht prüfen und speichern; gibt die neue Nachricht zurück. */
+function speichereNachricht(c: Ctx, z: Zeile): void {
+  const roh = koerper(c).text;
+  if (typeof roh === 'string' && roh.trim().length > MAX_TEXT) throw new Fehler(400, `Der Text ist zu lang (höchstens ${MAX_TEXT} Zeichen)`);
+  const text = sauber(roh, MAX_TEXT);
+  if (text.length < 2) throw new Fehler(400, 'Bitte schreib eine Nachricht');
+  const anzahl = (c.k.db.prepare('SELECT COUNT(*) AS n FROM fehlermeldung_nachricht WHERE meldung_id = ?').get(z.id) as { n: number }).n;
+  if (anzahl >= MAX_NACHRICHTEN) throw new Fehler(409, 'Zu dieser Meldung gibt es schon sehr viele Nachrichten. Bitte sprecht direkt miteinander.');
+  c.k.db.prepare('INSERT INTO fehlermeldung_nachricht (meldung_id, zeit, von_id, von_name, von_rolle, text) VALUES (?, ?, ?, ?, ?, ?)').run(z.id, c.k.jetzt().toISOString(), c.b.id, c.b.anzeigename, c.b.rolle, text);
+}
+
+/** Super-Admin oder Ausbilder schreibt der meldenden Person: Glocke (und auf Wunsch Teams/E-Mail) für sie. */
+function schreibeRueckfrage(c: Ctx, z: Zeile): void {
+  if (z.art === 'inhalt') throw new Fehler(404, 'Meldung nicht gefunden');
+  if (z.benutzer_id === null) throw new Fehler(409, 'Die Person, die das gemeldet hat, gibt es im Portal nicht mehr.');
+  speichereNachricht(c, z);
+  c.k.db.prepare('UPDATE fehlermeldung SET antwort_neu = 0 WHERE id = ?').run(z.id);
+  const person = personVon(c, z);
+  if (person !== null) merkeAktivitaet(c.k.db, c.k.jetzt(), 'meldung_rueckfrage', person, c.b, null, kurz(z));
 }
 
 /** mehrzeiliger Text ohne andere Steuerzeichen, auf die Höchstlänge gekürzt */
@@ -149,17 +208,18 @@ function sauber(x: unknown, max: number, einzeilig = false): string {
   return s.slice(0, max);
 }
 
-function ansicht(z: Zeile) {
-  return { id: z.id, art: z.art, zeit: z.zeit, name: z.benutzer_name, rolle: z.rolle, text: z.text, seite: z.seite, version: z.version, browser: z.browser, fenster: z.fenster, technik: z.technik, status: z.status, erledigtAm: z.erledigt_am, hatBild: z.hat_bild === 1 };
+function ansicht(z: Zeile, nachrichten: Nachricht[]) {
+  return { id: z.id, art: z.art, zeit: z.zeit, name: z.benutzer_name, rolle: z.rolle, text: z.text, seite: z.seite, version: z.version, browser: z.browser, fenster: z.fenster, technik: z.technik, status: z.status, erledigtAm: z.erledigt_am, hatBild: z.hat_bild === 1, nachrichten, antwortNeu: z.antwort_neu === 1, personDa: z.benutzer_id !== null };
 }
 
-const SPALTEN = 'id, zeit, benutzer_name, rolle, text, seite, version, browser, fenster, technik, status, erledigt_am, bild IS NOT NULL AS hat_bild, art, paket, thema, ziel';
+const SPALTEN = 'id, zeit, benutzer_name, rolle, text, seite, version, browser, fenster, technik, status, erledigt_am, bild IS NOT NULL AS hat_bild, art, paket, thema, ziel, benutzer_id, antwort_neu, person_gesehen';
 
 /** Liste des Super-Admins: Fehler und Ideen – Wünsche zu Lerninhalten sieht er nicht. */
 function liste(c: Ctx) {
   // die Bilder selbst gehören nicht in die Liste – sie werden einzeln geholt
   const zeilen = c.k.db.prepare(`SELECT ${SPALTEN} FROM fehlermeldung WHERE art <> 'inhalt' ORDER BY status = 'erledigt', id DESC LIMIT ?`).all(MAX_LISTE) as unknown as Zeile[];
-  return { meldungen: zeilen.map(ansicht), offen: zeilen.filter((z) => z.status === 'offen').length, webhook: !!c.k.cfg.fehlerWebhook, webhookMitText: c.k.cfg.fehlerWebhookMitText };
+  const gespraeche = nachrichtenVon(c.k.db, zeilen);
+  return { meldungen: zeilen.map((z) => ansicht(z, gespraeche.get(z.id) ?? [])), offen: zeilen.filter((z) => z.status === 'offen').length, webhook: !!c.k.cfg.fehlerWebhook, webhookMitText: c.k.cfg.fehlerWebhookMitText };
 }
 
 /** Liste der Ausbilder: Wünsche zu Lerninhalten (bearbeiten) und Ideen fürs Portal (nur lesen, ohne technische Angaben). */
@@ -167,6 +227,8 @@ function listeAusbilder(c: Ctx) {
   const hole = (art: MeldungArt) => c.k.db.prepare(`SELECT ${SPALTEN} FROM fehlermeldung WHERE art = ? ORDER BY status = 'erledigt', id DESC LIMIT ?`).all(art, MAX_LISTE) as unknown as Zeile[];
   const pakete = lernpakete(c.k);
   const inhalte = hole('inhalt');
+  const ideen = hole('idee');
+  const gespraeche = nachrichtenVon(c.k.db, ideen);
   /** Wohin der Knopf „Zum Thema“ springt: gespeicherte Kennungen, bei älteren Wünschen über die Titel gesucht – und nur, wenn es die Stelle im Paket noch gibt. */
   const stelle = (z: Zeile): { feld: string; unterthema: string } | null => {
     const p = pakete.get(z.paket);
@@ -184,7 +246,7 @@ function listeAusbilder(c: Ctx) {
   };
   return {
     inhalte: inhalte.map((z) => ({ id: z.id, tag: z.zeit.slice(0, 10), paket: z.paket, paketTitel: pakete.get(z.paket)?.titel ?? z.paket, thema: z.thema, stelle: stelle(z), text: z.text, status: z.status, erledigtAm: z.erledigt_am })),
-    ideen: hole('idee').map((z) => ({ id: z.id, zeit: z.zeit, name: z.benutzer_name, rolle: z.rolle, text: z.text, seite: z.seite, status: z.status, erledigtAm: z.erledigt_am })),
+    ideen: ideen.map((z) => ({ id: z.id, zeit: z.zeit, name: z.benutzer_name, rolle: z.rolle, text: z.text, seite: z.seite, status: z.status, erledigtAm: z.erledigt_am, nachrichten: gespraeche.get(z.id) ?? [], antwortNeu: z.antwort_neu === 1, personDa: z.benutzer_id !== null })),
     offen: inhalte.filter((z) => z.status === 'offen').length,
   };
 }
@@ -194,6 +256,25 @@ function holeMeldung(c: Ctx, arten: MeldungArt[] = ['fehler', 'idee']): Zeile {
   const id = idAus(c.p.id);
   const z = Number.isInteger(id) ? (c.k.db.prepare(`SELECT ${SPALTEN} FROM fehlermeldung WHERE id = ?`).get(id) as unknown as Zeile | undefined) : undefined;
   if (!z || !arten.includes(z.art)) throw new Fehler(404, 'Meldung nicht gefunden');
+  return z;
+}
+
+/** Eigene Fehlermeldungen und Ideen mit Gespräch – ohne Technik und Bild (die hat die Person selbst geschickt). */
+function meine(c: Ctx) {
+  const zeilen = c.k.db.prepare(`SELECT ${SPALTEN} FROM fehlermeldung WHERE benutzer_id = ? AND art <> 'inhalt' ORDER BY id DESC LIMIT ?`).all(c.b.id, MAX_LISTE) as unknown as Zeile[];
+  const gespraeche = nachrichtenVon(c.k.db, zeilen);
+  const meldungen = zeilen.map((z) => {
+    const nachrichten = gespraeche.get(z.id) ?? [];
+    return { id: z.id, art: z.art, zeit: z.zeit, text: z.text, seite: z.seite, status: z.status, erledigtAm: z.erledigt_am, nachrichten, neu: nachrichten.filter((n) => !n.vonPerson && n.id > z.person_gesehen).length };
+  });
+  return { meldungen, neu: meldungen.reduce((s, m) => s + m.neu, 0) };
+}
+
+/** eigene Meldung aus der Adresse – fremde gibt es für die Person nicht (404) */
+function eigeneMeldung(c: Ctx): Zeile {
+  const id = idAus(c.p.id);
+  const z = Number.isInteger(id) ? (c.k.db.prepare(`SELECT ${SPALTEN} FROM fehlermeldung WHERE id = ? AND benutzer_id = ? AND art <> 'inhalt'`).get(id, c.b.id) as unknown as Zeile | undefined) : undefined;
+  if (!z) throw new Fehler(404, 'Meldung nicht gefunden');
   return z;
 }
 
@@ -281,6 +362,16 @@ export const MELDUNG_ROUTEN: Route[] = [
     },
   },
   {
+    // Rückfrage des Super-Admins an die meldende Person (Fehler und Ideen)
+    m: 'POST',
+    p: '/api/fehlermeldungen/:id/nachricht',
+    wer: ['admin'],
+    h: (c) => {
+      schreibeRueckfrage(c, holeMeldung(c));
+      return { status: 201, body: liste(c) };
+    },
+  },
+  {
     // schickt eine Testkarte, damit sich die Einrichtung prüfen lässt, ohne eine Meldung zu erfinden
     m: 'POST',
     p: '/api/fehlermeldungen/webhook-test',
@@ -300,7 +391,10 @@ export const MELDUNG_ROUTEN: Route[] = [
       const z = holeMeldung(c);
       const status = koerper(c).status;
       if (status !== 'offen' && status !== 'erledigt') throw new Fehler(400, 'Unbekannter Status');
-      c.k.db.prepare('UPDATE fehlermeldung SET status = ?, erledigt_am = ? WHERE id = ?').run(status, status === 'erledigt' ? c.k.jetzt().toISOString() : null, z.id);
+      c.k.db.prepare('UPDATE fehlermeldung SET status = ?, erledigt_am = ?, antwort_neu = 0 WHERE id = ?').run(status, status === 'erledigt' ? c.k.jetzt().toISOString() : null, z.id);
+      // erledigt: Die meldende Person erfährt es (Glocke, auf Wunsch Teams/E-Mail)
+      const person = status === 'erledigt' && z.status !== 'erledigt' ? personVon(c, z) : null;
+      if (person !== null) merkeAktivitaet(c.k.db, c.k.jetzt(), 'meldung_erledigt', person, c.b, null, kurz(z));
       return { status: 200, body: liste(c) };
     },
   },
@@ -338,12 +432,48 @@ export const MELDUNG_ROUTEN: Route[] = [
     },
   },
   {
+    // Ausbilder schreiben bei Ideen fürs Portal mit – bei Fehlern und Wünschen zu Lerninhalten nicht
+    m: 'POST',
+    p: '/api/rueckmeldungen/:id/nachricht',
+    wer: ['ausbilder'],
+    h: (c) => {
+      schreibeRueckfrage(c, holeMeldung(c, ['idee']));
+      return { status: 201, body: listeAusbilder(c) };
+    },
+  },
+  {
     m: 'DELETE',
     p: '/api/rueckmeldungen/:id',
     wer: ['ausbilder'],
     h: (c) => {
       c.k.db.prepare('DELETE FROM fehlermeldung WHERE id = ?').run(holeMeldung(c, ['inhalt']).id);
       return { status: 200, body: listeAusbilder(c) };
+    },
+  },
+  // ---------- „Meine Meldungen“: die eigenen Fehlermeldungen und Ideen mit dem Gespräch dazu ----------
+  { m: 'GET', p: '/api/meine-meldungen', wer: 'alle', h: (c) => ({ status: 200, body: meine(c) }) },
+  {
+    // Antwort der meldenden Person; eine erledigte Meldung ist damit wieder offen
+    m: 'POST',
+    p: '/api/meine-meldungen/:id/antwort',
+    wer: 'alle',
+    h: (c) => {
+      const z = eigeneMeldung(c);
+      speichereNachricht(c, z);
+      c.k.db.prepare("UPDATE fehlermeldung SET antwort_neu = 1, status = 'offen', erledigt_am = NULL, person_gesehen = (SELECT MAX(id) FROM fehlermeldung_nachricht WHERE meldung_id = ?) WHERE id = ?").run(z.id, z.id);
+      return { status: 201, body: meine(c) };
+    },
+  },
+  {
+    // „gelesen“: alles bis zur jüngsten Nachricht – getrennt vom Abruf, damit ein Abruf nie etwas ändert
+    m: 'POST',
+    p: '/api/meine-meldungen/gesehen',
+    wer: 'alle',
+    h: (c) => {
+      c.k.db
+        .prepare("UPDATE fehlermeldung SET person_gesehen = COALESCE((SELECT MAX(n.id) FROM fehlermeldung_nachricht n WHERE n.meldung_id = fehlermeldung.id), 0) WHERE benutzer_id = ? AND art <> 'inhalt'")
+        .run(c.b.id);
+      return { status: 200, body: meine(c) };
     },
   },
 ];
