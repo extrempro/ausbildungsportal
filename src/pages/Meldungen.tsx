@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { api, ROLLE_TEXT, zeit } from '../api';
 import type { Rolle } from '../api';
 import { HandbuchLink } from '../handbuchLink';
+import { Gespraech } from '../gespraech';
+import type { Nachricht } from '../gespraech';
 
 interface Meldung {
   id: number;
@@ -19,6 +21,11 @@ interface Meldung {
   status: 'offen' | 'erledigt';
   erledigtAm: string | null;
   hatBild: boolean;
+  nachrichten: Nachricht[];
+  /** die Person hat zuletzt geantwortet */
+  antwortNeu: boolean;
+  /** false: das Konto der Person ist gelöscht – keine Rückfrage möglich */
+  personDa: boolean;
 }
 interface Antwort {
   meldungen: Meldung[];
@@ -76,7 +83,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
 
   const setze = (m: Meldung, status: Meldung['status']) => api<Antwort>('PATCH', `/api/fehlermeldungen/${m.id}`, { status }).then(nimm, zeigeFehler);
   const loesche = async (m: Meldung) => {
-    if (!(await rueckfrage(`Meldung Nr. ${m.id} von ${m.name} endgültig löschen?\n\nText${m.hatBild ? ', Bildschirmfoto' : ''} und technische Angaben sind danach weg.`, { ja: 'Meldung löschen', gefahr: true }))) return;
+    if (!(await rueckfrage(`Meldung Nr. ${m.id} von ${m.name} endgültig löschen?\n\nText${m.hatBild ? ', Bildschirmfoto' : ''}${m.nachrichten.length ? ', Gespräch' : ''} und technische Angaben sind danach weg.`, { ja: 'Meldung löschen', gefahr: true }))) return;
     await api<Antwort>('DELETE', `/api/fehlermeldungen/${m.id}`).then((r) => {
       nimm(r);
       melde(`Rückmeldung Nr. ${m.id} gelöscht.`);
@@ -99,6 +106,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
         <span className="leise">
           {ROLLE_TEXT[m.rolle] ?? m.rolle} · {zeit(m.zeit)} · Nr. {m.id}
         </span>
+        {m.antwortNeu && <span className="pille violett">Neue Antwort</span>}
         <span className={`pille ${m.status === 'offen' ? 'gelb' : 'gruen'}`}>{m.status === 'offen' ? 'Offen' : 'Erledigt'}</span>
       </header>
       <p className="meldung-text">{m.text}</p>
@@ -137,6 +145,18 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
             <span className="leise klein">Kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</span>
           </p>
         ))}
+      <details className="klapp meldung-gespraech" open={m.nachrichten.length > 0}>
+        <summary>{m.nachrichten.length > 0 ? `Gespräch (${m.nachrichten.length})` : 'Rückfrage stellen'}</summary>
+        <Gespraech
+          nachrichten={m.nachrichten}
+          personSieht={false}
+          an={m.name}
+          knopf="Rückfrage senden"
+          bestaetigung="Gesendet. Die Person sieht es unter „Meine Meldungen“."
+          gesperrt={m.personDa ? undefined : 'Das Konto der Person gibt es nicht mehr – eine Rückfrage ist nicht möglich.'}
+          onSende={(text) => api<Antwort>('POST', `/api/fehlermeldungen/${m.id}/nachricht`, { text }).then(nimm)}
+        />
+      </details>
       <div className="aktionen links">
         {m.status === 'offen' ? (
           <button type="button" className="knopf klein" onClick={() => void setze(m, 'erledigt')}>
@@ -165,7 +185,7 @@ export function Meldungen({ onGeaendert }: { onGeaendert: (offen: number) => voi
     <>
       <h1>Rückmeldungen</h1>
       <p className="leise">
-        Fehler und Ideen fürs Portal, die über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) gekommen sind. Sie bleiben gespeichert, bis du sie löschst. Die Ideen lesen auch die Ausbilder; Wünsche zu Lerninhalten gehen nur an sie.{' '}
+        Fehler und Ideen fürs Portal, die über „Rückmeldung geben“ (das Symbol mit den zwei Daumen oben in der Leiste) gekommen sind. Sie bleiben gespeichert, bis du sie löschst. Bei Fragen kannst du der Person zurückschreiben – sie antwortet unter „Meine Meldungen“. Die Ideen lesen auch die Ausbilder; Wünsche zu Lerninhalten gehen nur an sie.{' '}
         <HandbuchLink kapitel="meldungen">Rückmeldungen bearbeiten</HandbuchLink>
       </p>
       {fehler && (

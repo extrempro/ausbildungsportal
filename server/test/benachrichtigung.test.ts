@@ -68,6 +68,7 @@ test('Benachrichtigungen: anfangs ist alles aus – ohne Wahl geht nichts hinaus
     { bereich: 'berichtsheft', teams: false, mail: false },
     { bereich: 'urlaub', teams: false, mail: false },
     { bereich: 'plan', teams: false, mail: false },
+    { bereich: 'rueckmeldungen', teams: false, mail: false },
   ]);
   assert.equal(start.teams.grund, null);
   assert.equal(start.mail.adresse, w.anna.anmeldename);
@@ -256,4 +257,22 @@ test('Benachrichtigungen: Logo in Karte und Mail; die Mail geht als Text und ges
   for (const zeile of roh.split('\r\n')) assert.ok(zeile.length <= 998, 'keine überlange Zeile');
   // eine Mail ohne gestaltete Fassung bleibt, wie sie war
   assert.match(baueMail({ absender: 'portal@firma.test' }, { an: 'x@firma.test', betreff: 'Test', text: 'Hallo' }, new Date()), /MIME-Version: 1\.0\r\nAuto-Submitted: auto-generated\r\nContent-Type: text\/plain; charset=utf-8\r\nContent-Transfer-Encoding: base64\r\n\r\nSGFsbG8=$/);
+});
+
+test('Benachrichtigungen: eine Rückfrage zur eigenen Rückmeldung geht nur an die meldende Person – ohne Namen und ohne Inhalt', async () => {
+  const w = await welt();
+  await waehle(w, w.ben, [{ bereich: 'rueckmeldungen', teams: true, mail: true }]);
+  await waehle(w, w.anna, [{ bereich: 'rueckmeldungen', teams: true, mail: true }]);
+  await waehle(w, w.bea, [{ bereich: 'rueckmeldungen', teams: true, mail: true }]);
+  await ruf(w.u, 'POST', '/api/fehlermeldungen', { cookies: als(w, w.ben), body: { art: 'idee', text: 'Eine Suche im Berichtsheft wäre toll.' } });
+  const id = (w.u.db.prepare('SELECT id FROM fehlermeldung').get() as { id: number }).id;
+  assert.equal((await ruf(w.u, 'POST', `/api/rueckmeldungen/${id}/nachricht`, { cookies: als(w, w.petra), body: { text: 'Geheime Rückfrage: Wonach willst du suchen?' } })).status, 201);
+  spaeter(w);
+  await verschickeFaellige(w.u.k);
+  assert.equal(w.teams.length, 1);
+  assert.equal(w.mails.length, 1);
+  assert.equal(w.mails[0].an, w.ben.anmeldename);
+  const alles = JSON.stringify([w.teams, w.mails]);
+  for (const nicht of ['Petra', 'Geheime', 'Suche im Berichtsheft']) assert.ok(!alles.includes(nicht), nicht);
+  assert.ok(alles.includes('/meine-meldungen'));
 });

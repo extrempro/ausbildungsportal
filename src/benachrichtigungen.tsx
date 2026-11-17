@@ -8,7 +8,7 @@ import { HandbuchLink } from './handbuchLink';
  * Konto: Benachrichtigungen per Teams und E-Mail – zusätzlich zur Glocke.
  * Je Bereich zwei Haken; jede Änderung wird sofort gespeichert. Ist ein Weg nicht eingerichtet, ist er gesperrt und sagt, warum.
  */
-type Bereich = 'berichtsheft' | 'urlaub' | 'plan';
+type Bereich = 'berichtsheft' | 'urlaub' | 'plan' | 'rueckmeldungen';
 type Weg = 'teams' | 'mail';
 
 interface Antwort {
@@ -17,12 +17,13 @@ interface Antwort {
   wahl: { bereich: Bereich; teams: boolean; mail: boolean }[];
 }
 
-const TITEL: Record<Bereich, string> = { berichtsheft: 'Berichtsheft', urlaub: 'Urlaub', plan: 'Ausbildungsplan' };
+const TITEL: Record<Bereich, string> = { berichtsheft: 'Berichtsheft', urlaub: 'Urlaub', plan: 'Ausbildungsplan', rueckmeldungen: 'Rückmeldungen' };
 const WEG: Record<Weg, string> = { teams: 'Teams', mail: 'E-Mail' };
 
 function wofuer(bereich: Bereich, azubi: boolean): string {
   if (bereich === 'berichtsheft') return azubi ? 'Dein Bericht wurde abgezeichnet, zurückgegeben oder wieder geöffnet.' : 'Ein Azubi hat einen Bericht eingereicht – oder an einem Bericht hat sich etwas getan.';
   if (bereich === 'urlaub') return azubi ? 'Dein Urlaubsantrag wurde bestätigt, genehmigt, abgelehnt oder storniert.' : 'Ein Azubi hat Urlaub beantragt – oder an einem Antrag hat sich etwas getan.';
+  if (bereich === 'rueckmeldungen') return 'Zu einer Rückmeldung von dir (Fehler oder Idee) gibt es eine Rückfrage – oder sie ist erledigt.';
   return azubi ? 'In deinem Plan gibt es neue Einträge.' : 'Im Plan eines deiner Azubis gibt es neue Einträge von jemand anderem.';
 }
 

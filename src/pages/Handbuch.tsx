@@ -272,8 +272,17 @@ const FEHLER = (rolle: Rolle): Kapitel => ({
         <li>Bei einem Fehler kannst du ein Bildschirmfoto anhängen: auswählen, einfügen (Strg + V) oder am PC direkt aufnehmen. Du siehst das Bild vor dem Senden und kannst es wieder entfernen.</li>
         <li>„Rückmeldung senden“.</li>
       </ol>
+      <h3>Rückfragen beantworten</h3>
+      <ol className="schritte">
+        <li>Hat jemand eine Frage zu deinem Fehler oder deiner Idee, {rolle === 'admin' ? 'steht unter „Meine Meldungen“ eine Zahl' : 'zeigt es die Glocke: „Rückfrage zu deiner Rückmeldung“'}.</li>
+        <li>
+          <Link zu="/meine-meldungen">Meine Meldungen</Link> öffnen – {rolle === 'admin' ? 'im Menü mit deinem Namen' : 'über die Glocke oder im Menü mit deinem Namen (am Handy unter „Mehr“)'}. Der Punkt erscheint dort, sobald du etwas gemeldet hast.
+        </li>
+        <li>Unter der Meldung steht das Gespräch. Deine Antwort ins Feld schreiben und „Antwort senden“.</li>
+      </ol>
       <h3>Begriffe</h3>
       <dl className="begriffe">
+        <Begriff wort="Meine Meldungen">Deine Fehlermeldungen und Ideen mit dem Stand (offen oder erledigt) und dem Gespräch dazu. Nur du siehst diese Seite{rolle === 'azubi' ? '; Wünsche zu Lerninhalten stehen dort nicht, weil sie ohne Namen gespeichert sind' : ''}.</Begriff>
         <Begriff wort="Fehler melden">Etwas funktioniert nicht oder sieht falsch aus. Liest der Betreiber des Portals (Super-Admin).</Begriff>
         <Begriff wort="Idee fürs Portal">Dir fehlt etwas, oder etwas ginge einfacher. Lesen der Betreiber des Portals und die Ausbilder.</Begriff>
         {rolle !== 'admin' && (
@@ -294,10 +303,13 @@ const FEHLER = (rolle: Rolle): Kapitel => ({
         </li>
         {rolle === 'azubi' && (
           <li>
-            <strong>Bei einem Wunsch zu den Lerninhalten</strong> wird dein Name nicht gespeichert – auch nicht für den Betreiber des Portals. Die Ausbilder sehen deinen Text, das Thema und den Tag. Gibt es in deinem Beruf nur wenige Azubis, lässt sich trotzdem manchmal erraten, von wem ein Wunsch kommt. Schreib nichts hinein, woran man dich erkennt, wenn du das nicht möchtest.
+            <strong>Bei einem Wunsch zu den Lerninhalten</strong> wird dein Name nicht gespeichert – auch nicht für den Betreiber des Portals. Deshalb kann dazu auch niemand nachfragen. Die Ausbilder sehen deinen Text, das Thema und den Tag. Gibt es in deinem Beruf nur wenige Azubis, lässt sich trotzdem manchmal erraten, von wem ein Wunsch kommt. Schreib nichts hinein, woran man dich erkennt, wenn du das nicht möchtest.
           </li>
         )}
-        <li>Eine Antwort bekommst du im Portal nicht, und nicht jede Idee lässt sich umsetzen. Wenn es eilt, sprich zusätzlich deinen Ausbilder oder die IT an.</li>
+        <li>
+          <strong>Rückfragen:</strong> Zu einem Fehler kann der Betreiber des Portals nachfragen, zu einer Idee auch die Ausbilder. Ist deine Meldung schon erledigt und du antwortest, ist sie wieder offen.{rolle !== 'admin' ? ' Per Teams oder E-Mail erfährst du davon, wenn du den Bereich „Rückmeldungen“ unter „Benachrichtigungen“ einschaltest.' : ''}
+        </li>
+        <li>Nicht jede Idee lässt sich umsetzen. Wenn es eilt, sprich zusätzlich deinen Ausbilder oder die IT an.</li>
         <li>Fragen zur Ausbildung oder zu einem Bericht gehören nicht hierher – die klärst du mit deinem Ausbilder.</li>
         <li>Am Tag gehen höchstens zehn Rückmeldungen je Art.</li>
       </ul>
@@ -388,10 +400,11 @@ const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
         <Begriff wort="Berichtsheft">{rolle === 'azubi' ? 'Dein Bericht wurde abgezeichnet, zurückgegeben oder wieder geöffnet.' : 'Ein Azubi hat einen Bericht eingereicht – oder an einem Bericht hat sich etwas getan.'}</Begriff>
         <Begriff wort="Urlaub">{rolle === 'azubi' ? 'Dein Urlaubsantrag wurde bestätigt, genehmigt, abgelehnt oder storniert.' : 'Ein Azubi hat Urlaub beantragt – oder an einem Antrag hat sich etwas getan.'}</Begriff>
         <Begriff wort="Ausbildungsplan">{rolle === 'azubi' ? 'In deinem Plan gibt es neue Einträge – oder für dich wurde der Planer für deine Prüfung freigeschaltet.' : 'Im Plan eines deiner Azubis gibt es neue Einträge von jemand anderem – oder ein Azubi hat Termine für seine Prüfung eingetragen oder geändert.'}</Begriff>
+        <Begriff wort="Rückmeldungen">Zu einem Fehler oder einer Idee, die du geschickt hast, gibt es eine Rückfrage – oder sie wurde als erledigt markiert.</Begriff>
       </dl>
       <h3>Gut zu wissen</h3>
       <ul className="punkte">
-        <li>Für jeden der drei Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
+        <li>Für jeden der vier Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
         <li>Du bekommst nur Nachrichten zu dem, was du auch in der Glocke siehst. Was du selbst gemacht hast, wird dir nicht gemeldet.</li>
         <li>
           <strong>In der Nachricht stehen keine anderen Namen und keine Inhalte.</strong> Sie spricht dich mit deinem Vornamen an und sagt nur, was passiert ist – zum Beispiel „Ein Bericht für KW 46 wurde eingereicht“. Der Knopf „Im Portal öffnen“ führt zur passenden Seite. Dort siehst du alles Weitere.
@@ -426,6 +439,7 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
             <Begriff wort="Lerninhalte aktualisiert">In deinen Lerninhalten (oder in den Anleitungen für alle Berufe) wurden Abschnitte geändert oder ergänzt. Ein Tipp führt zu „Lernen“; dort steht am Themenfeld „Inhalt aktualisiert“. Diese Zeile gibt es nur in der Glocke, nicht per Teams oder E-Mail.</Begriff>
             <Begriff wort="Urlaub bestätigt, genehmigt, abgelehnt, storniert">Es hat sich etwas an deinem Urlaubsantrag getan. Die Zeile führt zu „Urlaub“.</Begriff>
             <Begriff wort="Neu für dich: Planer für deine Prüfung">Dein Ausbilder hat für dich den Planer freigeschaltet, zum Beispiel für dein Abschlussprojekt. Die Zeile führt dorthin. Mehr im Kapitel „Planer für deine Prüfung“.</Begriff>
+            <Begriff wort="Rückfrage zu deiner Rückmeldung, Rückmeldung erledigt">Zu einem Fehler oder einer Idee, die du geschickt hast, gibt es eine Frage – oder sie ist erledigt. Die Zeile führt zu „Meine Meldungen“; dort steht das Gespräch.</Begriff>
           </>
         ) : (
           <>
@@ -433,6 +447,7 @@ const GLOCKE = (rolle: Rolle): Kapitel => ({
             <Begriff wort="Neuer Eintrag im Ausbildungsplan">Ein Azubi hat eine eigene Aufgabe oder Notiz eingetragen – oder eine andere betreuende Person hat etwas geplant.</Begriff>
             <Begriff wort="Urlaub beantragt, bestätigt, zurückgezogen">Ein Azubi hat Urlaub beantragt oder an einem Antrag hat sich etwas getan. Die Zeile führt zu „Urlaub“.</Begriff>
             <Begriff wort="Termine für die Prüfung eingetragen oder geändert">Ein Azubi hat in seinem Planer (zum Beispiel für das Abschlussprojekt) Termine eingetragen oder geändert. Die Zeile führt zu seinem Ausbildungsplan – dort stehen die Termine. Was er sonst im Planer einträgt, siehst du nicht.</Begriff>
+            <Begriff wort="Rückfrage zu deiner Rückmeldung, Rückmeldung erledigt">Zu einem Fehler oder einer Idee, die du selbst geschickt hast, gibt es eine Frage – oder sie ist erledigt. Die Zeile führt zu „Meine Meldungen“.</Begriff>
           </>
         )}
       </dl>
@@ -1620,14 +1635,21 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Die Lerninhalte anpassen und neu einreichen – siehe „Lerninhalte für einen Beruf erstellen“.</li>
                 <li>„Als erledigt markieren“. Erledigte Wünsche stehen eingeklappt darunter.</li>
               </ol>
+              <h3>Bei einer Idee nachfragen</h3>
+              <ol className="schritte">
+                <li>Unter der Idee „Rückfrage stellen“ aufklappen.</li>
+                <li>Die Frage schreiben und „Rückfrage senden“. Die Person sieht sie in ihrer Glocke und antwortet unter „Meine Meldungen“.</li>
+                <li>Ihre Antwort steht im Gespräch unter der Idee; „Neue Antwort“ zeigt, dass sie zuletzt geschrieben hat.</li>
+              </ol>
               <h3>Begriffe</h3>
               <dl className="begriffe">
                 <Begriff wort="Wünsche zu den Lerninhalten">Kommen ohne Namen an. Gespeichert sind nur Text, Lernmodul, Thema und der Tag – auch der Betreiber des Portals erfährt nicht, wer geschrieben hat.</Begriff>
-                <Begriff wort="Ideen fürs Portal">Wünsche an das Portal selbst, mit Namen. Ihr lest sie mit; bearbeitet und auf „erledigt“ gesetzt werden sie vom Betreiber des Portals (Super-Admin).</Begriff>
+                <Begriff wort="Ideen fürs Portal">Wünsche an das Portal selbst, mit Namen. Ihr lest sie mit und könnt nachfragen; bearbeitet und auf „erledigt“ gesetzt werden sie vom Betreiber des Portals (Super-Admin).</Begriff>
+                <Begriff wort="Gespräch">Die Rückfragen zu einer Idee und die Antworten der Person. Alle Ausbilder und der Super-Admin sehen dasselbe Gespräch – schreib nichts hinein, was nur für die Person gedacht ist.</Begriff>
               </dl>
               <h3>Gut zu wissen</h3>
               <ul className="punkte">
-                <li>Nachfragen kannst du bei einem Wunsch nicht, und eine Antwort im Portal gibt es nicht. Sprich das Thema lieber allgemein an, statt zu rätseln, von wem der Wunsch kommt.</li>
+                <li>Nachfragen kannst du bei einem Wunsch zu den Lerninhalten nicht – er ist ohne Namen gespeichert. Sprich das Thema lieber allgemein an, statt zu rätseln, von wem der Wunsch kommt.</li>
                 <li>Bei wenigen Azubis in einem Beruf lässt sich manchmal erraten, wer geschrieben hat. Geh damit so um, wie du es dir selbst wünschen würdest.</li>
                 <li>Alle Ausbilder sehen dieselbe Liste. Ausbildungsbeauftragte und der Super-Admin sehen die Wünsche zu den Lerninhalten nicht.</li>
                 <li>„Wunsch löschen“ entfernt ihn endgültig. Eine automatische Löschfrist gibt es nicht.</li>
@@ -2047,7 +2069,10 @@ const ADMIN: Kapitel[] = [
             Jede angemeldete Person kann einen Fehler melden oder eine Idee schicken. Beides steht unter <Link zu="/verwaltung/meldungen">Rückmeldungen</Link>; die Zahl am Menüpunkt zeigt die offenen. Gibt es beides, kannst du oben nach Fehlern oder Ideen filtern.
           </li>
           <li>Ein Bildschirmfoto erscheint erst nach einem Klick. Es kann Inhalte zeigen, die du sonst nicht siehst – etwa Texte aus Berichten.</li>
-          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig. Eine automatische Löschfrist gibt es nicht.</li>
+          <li>
+            <strong>Nachfragen:</strong> Unter jeder Meldung „Rückfrage stellen“ aufklappen, schreiben, „Rückfrage senden“. Die Person sieht es in ihrer Glocke (und per Teams oder E-Mail, wenn sie das eingeschaltet hat) und antwortet unter „Meine Meldungen“. Bei Ideen können auch die Ausbilder nachfragen und lesen das Gespräch mit. Hat die Person zuletzt geschrieben, steht an der Meldung „Neue Antwort“; ihre Antwort öffnet eine erledigte Meldung wieder. Gibt es das Konto nicht mehr, ist keine Rückfrage möglich.
+          </li>
+          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig, samt Gespräch. Eine automatische Löschfrist gibt es nicht.</li>
           <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten; sie kommt bei jedem neuen Fehler und jeder neuen Idee. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
           <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
         </ul>

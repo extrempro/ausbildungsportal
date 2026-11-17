@@ -20,7 +20,7 @@ before(async () => {
 after(() => p.stop());
 
 const seiten: Record<string, (g: Grunddaten) => string[]> = {
-  [ANNA]: () => ['/', '/berichtsheft', `/berichtsheft/${montagVon(inTagen(-7))}`, '/urlaub', '/jahreskalender', '/lernen', '/lernen/grundlagen', '/lernen/kompendium', '/lernen/ueben', '/planer', '/konto', '/handbuch', '/versionen'],
+  [ANNA]: () => ['/', '/berichtsheft', `/berichtsheft/${montagVon(inTagen(-7))}`, '/urlaub', '/jahreskalender', '/lernen', '/lernen/grundlagen', '/lernen/kompendium', '/lernen/ueben', '/planer', '/konto', '/meine-meldungen', '/handbuch', '/versionen'],
   [PETRA]: (x) => ['/', '/azubis', `/azubis/${x.anna}`, `/azubis/${x.anna}/plan`, '/abzeichnen', '/urlaub', '/jahreskalender', '/planung/sammelplanung', '/planung/bausteine', '/lerninhalte', '/lerninhalte/muster/grundlagen', '/rueckmeldungen', '/verwaltung/stammdaten', '/verwaltung/konten', '/konto', '/handbuch'],
   [BEA]: (x) => ['/', '/azubis', `/azubis/${x.anna}`, '/abzeichnen', '/urlaub', '/jahreskalender', '/lerninhalte', '/konto', '/handbuch'],
   [ADMIN.name]: () => ['/verwaltung/konten', '/verwaltung/protokoll', '/verwaltung/meldungen', '/verwaltung/lerninhalte', '/verwaltung/erscheinungsbild', '/konto', '/handbuch'],

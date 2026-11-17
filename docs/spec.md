@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.70.1 · 14.11.2026
+Stand: Version 0.71.0 · 17.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -70,13 +70,14 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ### Glocke, Benachrichtigungen, Kalender
 
-- **Glocke:** neue Einträge, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Freischaltung des Planers, aktualisierte Lerninhalte; Löschung nach 60 Tagen.
-- **Benachrichtigungen** per Teams und E-Mail, je Bereich selbst einschaltbar; nennen nur die Empfängerin, keine Inhalte.
+- **Glocke:** neue Einträge, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Freischaltung des Planers, aktualisierte Lerninhalte, Rückfragen zu eigenen Rückmeldungen; Löschung nach 60 Tagen.
+- **Benachrichtigungen** per Teams und E-Mail, je Bereich (Berichtsheft, Urlaub, Ausbildungsplan, Rückmeldungen) selbst einschaltbar; nennen nur die Empfängerin, keine Inhalte.
 - **Kalender-Abo:** ein geheimer Link (iCal) mit Schule, Einsätzen, Prüfungen, genehmigtem Urlaub, privaten Terminen.
 
 ### Rückmeldung geben
 
 - Drei Arten: **Fehler** (nur Super-Admin liest; freiwillig mit Bildschirmfoto), **Idee fürs Portal** (Super-Admin bearbeitet, Ausbilder lesen), **Wunsch zu Lerninhalten** (nur Azubis; ohne Person gespeichert, nur Ausbilder lesen).
+- **Rückfragen:** Zu Fehlern schreibt der Super-Admin, zu Ideen auch die Ausbilder der meldenden Person zurück; sie bekommt einen Eintrag in der Glocke (persönlich, nur für sie) und antwortet unter „Meine Meldungen“. Eine Antwort öffnet eine erledigte Meldung wieder. Wünsche zu Lerninhalten haben kein Gespräch.
 
 ### Verwaltung und Betrieb
 
@@ -89,7 +90,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 39 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 034). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 40 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 035). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -174,9 +175,10 @@ Dazu, nicht privat: `lern_paket_stand` (Prüfsumme je Unterthema, für „Lernin
 
 | Tabelle | Inhalt |
 | --- | --- |
-| `aktivitaet` | Einträge der Glocke: Zeit, Azubi, wer, Art, Woche, Titel; Löschung nach 60 Tagen |
+| `aktivitaet` | Einträge der Glocke: Zeit, Azubi, wer, Art, Woche, Titel; Löschung nach 60 Tagen. Bei persönlichen Arten (aktualisierte Lerninhalte, Rückfragen) steht in `azubi_id` die Person, für die der Eintrag ist – nur sie sieht ihn |
 | `protokoll` | Zeit, Bereich, Aktion, wer, betroffen, Angabe; Löschung nach 90 Tagen |
-| `fehlermeldung` | Rückmeldungen aller drei Arten (`art`); bei Wünschen zu Lerninhalten ohne Person |
+| `fehlermeldung` | Rückmeldungen aller drei Arten (`art`); bei Wünschen zu Lerninhalten ohne Person. `antwort_neu`: die Person hat zuletzt geschrieben; `person_gesehen`: bis zu welcher Nachricht sie gelesen hat |
+| `fehlermeldung_nachricht` | Gespräch zu einem Fehler oder einer Idee: Zeit, wer (Konto, Name, Rolle), Text; wird mit der Meldung gelöscht |
 | `einstellungen` | Schlüssel/Wert: Betrieb, Bundesland, Berichtsform, Logos, Personalstelle, Schalter |
 | `schema_version` | Stand der Migrationen |
 
@@ -192,6 +194,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/konto` | Konto | Unterschrift, Profilbild, Darstellung, Benachrichtigungen, Kalender-Abo, Ausbildungsdaten |
 | `/handbuch` | Handbuch | Kapitel je Rolle, Suche, Lesemodus, Führung neu starten |
 | `/versionen` | Versionshinweise | Änderungen je Version |
+| `/meine-meldungen` | Meine Meldungen | eigene Fehler und Ideen mit Gespräch; im Menü, sobald man etwas gemeldet hat |
 | (Kopfzeile) | Glocke, Rückmeldung geben | Fenster über der Seite |
 
 ### Azubi
@@ -230,7 +233,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/planung/bausteine` | Planbausteine | Vorlagen je Beruf |
 | `/verwaltung/stammdaten` | Stammdaten | Betrieb, Berufe, Schulen, Abteilungen, Firmentermine, Personalstelle, Lernmodul |
 | `/verwaltung/konten` | Konten | Azubis und Beauftragte verwalten |
-| `/rueckmeldungen` | Rückmeldungen | Ideen und Wünsche zu Lerninhalten |
+| `/rueckmeldungen` | Rückmeldungen | Ideen (mit Rückfrage) und Wünsche zu Lerninhalten |
 
 ### Nur Super-Admin
 
@@ -238,13 +241,13 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | --- | --- | --- |
 | `/verwaltung/konten` | Konten | alle Konten, letzte Anmeldung, Gesamtsicht |
 | `/verwaltung/protokoll` | Protokoll | die neuesten 200 Einträge |
-| `/verwaltung/meldungen` | Rückmeldungen | Fehler und Ideen |
+| `/verwaltung/meldungen` | Rückmeldungen | Fehler und Ideen, mit Rückfrage |
 | `/verwaltung/lerninhalte` | Lerninhalte | Einreichungen prüfen, übernehmen, zurückgeben |
 | `/verwaltung/erscheinungsbild` | Erscheinungsbild | Logo, Begleiter-Schalter |
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 145 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 150 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |
@@ -254,7 +257,7 @@ Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen
 | Urlaub | `/api/urlaub/…` |
 | Lernmodul, Planer, Begleiter | `/api/lernen/…`, `/api/planer/…`, `/api/begleiter/…`, `/api/anleitungen/…` |
 | Verwaltung | `/api/konten/…`, `/api/stammdaten/…`, `/api/abteilungen/…`, `/api/planvorlagen/…`, `/api/protokoll`, `/api/branding/…`, `/api/lernpakete/…`, `/api/lerninhalte/…` |
-| Rückmeldungen | `/api/fehlermeldungen/…`, `/api/rueckmeldungen/…` |
+| Rückmeldungen | `/api/fehlermeldungen/…`, `/api/rueckmeldungen/…`, `/api/meine-meldungen/…` |
 | Sonstiges | `/api/aktivitaeten/…` (Glocke), `/api/jahreskalender`, `/api/abo/…` (Kalender), `/api/health` |
 
 ## 6. Grundsätze

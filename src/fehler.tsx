@@ -3,7 +3,7 @@ import type { ClipboardEvent, FormEvent } from 'react';
 import { api } from './api';
 import type { Rolle } from './api';
 import { rueckfrage, useFensterFokus } from './dialoge';
-import { useUngespeichert } from './router';
+import { Link, useUngespeichert } from './router';
 import { HandbuchLink } from './handbuchLink';
 
 /**
@@ -26,7 +26,7 @@ const ARTEN: Record<Art, { wahl: string; wozu: string; frage: string; beispiel: 
     frage: 'Was ist passiert?',
     beispiel: 'Zum Beispiel: Ich wollte meinen Bericht einreichen. Nach dem Klick auf „Einreichen“ passiert nichts.',
     hilfe: 'Hilfreich ist: Was wolltest du tun? Was ist stattdessen passiert? Bitte schreibe keine Inhalte aus Berichten und keine Passwörter hinein.',
-    danke: 'Der Betreiber des Portals sieht sie und kümmert sich darum. Eine Antwort bekommst du hier im Portal nicht – wenn es eilt, sprich bitte zusätzlich deinen Ausbilder an.',
+    danke: 'Der Betreiber des Portals sieht sie und kümmert sich darum. Hat er eine Rückfrage, findest du sie unter „Meine Meldungen“ – die Glocke sagt dir Bescheid. Wenn es eilt, sprich bitte zusätzlich deinen Ausbilder an.',
   },
   idee: {
     wahl: 'Idee fürs Portal',
@@ -34,7 +34,7 @@ const ARTEN: Record<Art, { wahl: string; wozu: string; frage: string; beispiel: 
     frage: 'Was wünschst du dir?',
     beispiel: 'Zum Beispiel: Ich würde gern sehen, wie viele Berichte mir bis zum Ende der Ausbildung noch fehlen.',
     hilfe: 'Hilfreich ist: Was möchtest du tun können, und wobei würde es dir helfen?',
-    danke: 'Der Betreiber des Portals und die Ausbilder lesen sie. Eine Antwort bekommst du hier im Portal nicht – und nicht jede Idee lässt sich umsetzen.',
+    danke: 'Der Betreiber des Portals und die Ausbilder lesen sie. Rückfragen findest du unter „Meine Meldungen“ – die Glocke sagt dir Bescheid. Nicht jede Idee lässt sich umsetzen.',
   },
   inhalt: {
     wahl: 'Lerninhalt besser erklären',
@@ -224,6 +224,11 @@ export function RueckmeldungFenster({ version, rolle, onZu }: { version: string;
               <button type="button" className="knopf" autoFocus onClick={onZu}>
                 Schließen
               </button>
+              {art !== 'inhalt' && (
+                <Link zu="/meine-meldungen" className="knopf schlicht" beimKlick={onZu}>
+                  Meine Meldungen ansehen
+                </Link>
+              )}
             </div>
           </>
         ) : (
@@ -323,7 +328,7 @@ export function RueckmeldungFenster({ version, rolle, onZu }: { version: string;
                 <summary>Das wird automatisch mitgeschickt</summary>
                 <dl>
                   <dt>Dein Name und deine Rolle</dt>
-                  <dd>damit man nachfragen kann</dd>
+                  <dd>damit man nachfragen kann – Rückfragen stehen dann unter „Meine Meldungen“</dd>
                   <dt>Seite</dt>
                   <dd>{seite}</dd>
                   {art === 'fehler' && (

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { PERSOENLICH } from './aktivitaet';
 import type { AktivitaetArt } from './aktivitaet';
 import { Fehler, koerper } from './api-basis';
 import type { Kontext, Route } from './api-basis';
@@ -22,13 +23,13 @@ import type { BenutzerZeile } from './typen';
  *   nur, was passiert ist, und einen Link ins Portal.
  * - Was kurz nacheinander passiert, geht als eine Nachricht hinaus. Einen Verlauf verschickter Nachrichten gibt es nicht.
  */
-export const BEREICHE = ['berichtsheft', 'urlaub', 'plan'] as const;
+export const BEREICHE = ['berichtsheft', 'urlaub', 'plan', 'rueckmeldungen'] as const;
 export type Bereich = (typeof BEREICHE)[number];
 
 /** So lange wird gesammelt, bevor eine Nachricht hinausgeht. */
 export const SAMMEL_MS = 3 * 60_000;
 
-const bereichVon = (art: AktivitaetArt): Bereich => (art === 'plan_neu' || art.startsWith('planer_') ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
+const bereichVon = (art: AktivitaetArt): Bereich => (art.startsWith('meldung_') ? 'rueckmeldungen' : art === 'plan_neu' || art.startsWith('planer_') ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
 
 /**
  * Stellt eine Aktivität für alle ein, die sie in der Glocke sehen und für den Bereich eine Benachrichtigung gewählt haben.
@@ -44,7 +45,8 @@ export function stelleEin(db: DB, jetzt: Date, aktivitaetId: number, art: Aktivi
   const tag = heute(jetzt);
   for (const w of waehler) {
     if (w.id === akteurId) continue;
-    if (!sichtbareAzubis(db, w, tag).includes(azubiId)) continue;
+    // persönliche Einträge gehen nur an die Person selbst; alle anderen an alle, die den Azubi sehen
+    if (PERSOENLICH.includes(art) ? w.id !== azubiId : !sichtbareAzubis(db, w, tag).includes(azubiId)) continue;
     db.prepare('INSERT INTO benachrichtigung_warte (benutzer_id, aktivitaet_id, teams, mail, zeit) VALUES (?, ?, ?, ?, ?)').run(w.id, aktivitaetId, w.w_teams, w.w_mail, jetzt.toISOString());
   }
 }
@@ -81,6 +83,8 @@ const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
   // gehen nie per Teams oder E-Mail hinaus (merkeLernAktualisierung stellt nichts ein) – nur der Vollständigkeit halber
   lernen_aktualisiert: ['Deine Lerninhalte wurden aktualisiert.', 'Deine Lerninhalte wurden aktualisiert.', '', ''],
   anleitungen_aktualisiert: ['Die Anleitungen für alle Berufe wurden aktualisiert.', 'Die Anleitungen für alle Berufe wurden aktualisiert.', '', ''],
+  meldung_rueckfrage: ['Zu deiner Rückmeldung gibt es eine Rückfrage. Du findest sie im Portal unter „Meine Meldungen“.', 'Zu deinen Rückmeldungen gibt es {n} Rückfragen. Du findest sie im Portal unter „Meine Meldungen“.', '', ''],
+  meldung_erledigt: ['Deine Rückmeldung wurde als erledigt markiert. Danke!', '{n} deiner Rückmeldungen wurden als erledigt markiert. Danke!', '', ''],
   urlaub_storniert: ['Dein genehmigter Urlaub wurde storniert.', '{n} deiner genehmigten Urlaube wurden storniert.', 'Ein genehmigter Urlaub wurde storniert.', '{n} genehmigte Urlaube wurden storniert.'],
 };
 
@@ -88,7 +92,8 @@ const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
 export type Ton = 'gut' | 'wartet' | 'achtung' | 'neutral';
 
 function tonVon(art: AktivitaetArt, eigenes: boolean): Ton {
-  if (art === 'bericht_abgezeichnet' || art === 'urlaub_genehmigt' || art === 'urlaub_bestaetigt') return 'gut';
+  if (art === 'bericht_abgezeichnet' || art === 'urlaub_genehmigt' || art === 'urlaub_bestaetigt' || art === 'meldung_erledigt') return 'gut';
+  if (art === 'meldung_rueckfrage') return 'wartet';
   if (art === 'bericht_zurueck' || art === 'urlaub_abgelehnt' || art === 'urlaub_storniert' || art === 'bericht_geoeffnet') return 'achtung';
   if (!eigenes && (art === 'bericht_eingereicht' || art === 'urlaub_beantragt')) return 'wartet';
   return 'neutral';
@@ -133,7 +138,7 @@ const anrede = (b: Pick<BenutzerZeile, 'anzeigename'>) => (vorname(b.anzeigename
 function zielVon(k: Kontext, b: Pick<BenutzerZeile, 'rolle'>, zeilen: Zeile[]): string {
   const bereiche = new Set(zeilen.map((z) => z.bereich));
   const einer = bereiche.size === 1 ? [...bereiche][0] : null;
-  const pfad = einer === 'urlaub' ? '/urlaub' : einer === 'berichtsheft' ? (b.rolle === 'azubi' ? '/berichtsheft' : '/abzeichnen') : '/';
+  const pfad = einer === 'rueckmeldungen' ? '/meine-meldungen' : einer === 'urlaub' ? '/urlaub' : einer === 'berichtsheft' ? (b.rolle === 'azubi' ? '/berichtsheft' : '/abzeichnen') : '/';
   return `${k.cfg.appUrl}${pfad}`;
 }
 

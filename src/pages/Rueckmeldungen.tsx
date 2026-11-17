@@ -4,6 +4,8 @@ import type { Rolle } from '../api';
 import { melde, rueckfrage } from '../dialoge';
 import { HandbuchLink } from '../handbuchLink';
 import { Link } from '../router';
+import { Gespraech } from '../gespraech';
+import type { Nachricht } from '../gespraech';
 
 /**
  * Rückmeldungen für Ausbilder: Wünsche der Azubis zu den Lerninhalten (ohne Namen – abhaken und löschen)
@@ -29,6 +31,9 @@ interface Idee {
   text: string;
   seite: string;
   status: 'offen' | 'erledigt';
+  nachrichten: Nachricht[];
+  antwortNeu: boolean;
+  personDa: boolean;
 }
 interface Antwort {
   inhalte: Wunsch[];
@@ -122,7 +127,7 @@ export function Rueckmeldungen({ onGeaendert }: { onGeaendert: (offen: number) =
           </section>
           <section aria-labelledby="rueck-ideen">
             <h2 id="rueck-ideen">Ideen fürs Portal</h2>
-            <p className="leise">Zum Mitlesen: Was sich Nutzerinnen und Nutzer am Portal wünschen. Bearbeitet werden die Ideen vom Betreiber des Portals (Super-Admin) – er setzt sie auch auf „erledigt“.</p>
+            <p className="leise">Was sich Nutzerinnen und Nutzer am Portal wünschen. Ist etwas unklar, kannst du zurückschreiben – die Person antwortet unter „Meine Meldungen“, der Super-Admin liest mit. Bearbeitet werden die Ideen vom Betreiber des Portals (Super-Admin) – er setzt sie auch auf „erledigt“.</p>
             {daten.ideen.length === 0 ? (
               <p className="karte leise">Noch keine Ideen.</p>
             ) : (
@@ -134,9 +139,22 @@ export function Rueckmeldungen({ onGeaendert }: { onGeaendert: (offen: number) =
                       {ROLLE_TEXT[i.rolle] ?? i.rolle} · {zeit(i.zeit)}
                       {i.seite ? ` · geschrieben auf ${i.seite}` : ''}
                     </span>
+                    {i.antwortNeu && <span className="pille violett">Neue Antwort</span>}
                     <span className={`pille ${i.status === 'offen' ? 'gelb' : 'gruen'}`}>{i.status === 'offen' ? 'Offen' : 'Erledigt'}</span>
                   </header>
                   <p className="meldung-text">{i.text}</p>
+                  <details className="klapp meldung-gespraech" open={i.nachrichten.length > 0}>
+                    <summary>{i.nachrichten.length > 0 ? `Gespräch (${i.nachrichten.length})` : 'Rückfrage stellen'}</summary>
+                    <Gespraech
+                      nachrichten={i.nachrichten}
+                      personSieht={false}
+                      an={i.name}
+                      knopf="Rückfrage senden"
+                      bestaetigung="Gesendet. Die Person sieht es unter „Meine Meldungen“."
+                      gesperrt={i.personDa ? undefined : 'Das Konto der Person gibt es nicht mehr – eine Rückfrage ist nicht möglich.'}
+                      onSende={(text) => api<Antwort>('POST', `/api/rueckmeldungen/${i.id}/nachricht`, { text }).then(nimm)}
+                    />
+                  </details>
                 </article>
               ))
             )}

@@ -28,7 +28,10 @@ type Art =
   | 'planer_termine'
   // Lerninhalte des Berufs bzw. die Anleitungen für alle Berufe wurden aktualisiert – nur für den Azubi selbst, nur in der Glocke
   | 'lernen_aktualisiert'
-  | 'anleitungen_aktualisiert';
+  | 'anleitungen_aktualisiert'
+  // Rückfrage zur eigenen Rückmeldung bzw. Rückmeldung erledigt – nur für die meldende Person, ohne Namen und Inhalt
+  | 'meldung_rueckfrage'
+  | 'meldung_erledigt';
 
 interface Gruppe {
   id: number;
@@ -135,6 +138,10 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
     case 'lernen_aktualisiert':
     case 'anleitungen_aktualisiert':
       return { icon: 'lernen', farbe: 'blau', kopf: g.art === 'lernen_aktualisiert' ? 'Lerninhalte aktualisiert' : 'Anleitungen aktualisiert', mitte: `${n === 1 ? 'Ein Abschnitt' : `${n} Abschnitte`}${g.titel[0] ? ` in ${g.titel[0]}` : ''} – ein zweiter Blick lohnt sich.`, zu: g.art === 'lernen_aktualisiert' ? '/lernen' : '/anleitungen' };
+    case 'meldung_rueckfrage':
+      return { icon: 'ruf', farbe: 'gelb', kopf: n === 1 ? 'Rückfrage zu deiner Rückmeldung' : `${n} Rückfragen zu deinen Rückmeldungen`, mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/meine-meldungen' };
+    case 'meldung_erledigt':
+      return { icon: 'haken', farbe: 'gruen', kopf: 'Deine Rückmeldung ist erledigt – danke!', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/meine-meldungen' };
     case 'urlaub_storniert':
       return { icon: 'urlaub', farbe: 'rot', kopf: 'Genehmigter Urlaub storniert', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
     default:
@@ -257,7 +264,8 @@ export function Glocke({ konto, pfad, offen, onSchalte }: { konto: Konto; pfad: 
               {liste.map((g) => {
                 const z = beschreibe(g, konto);
                 const wer = g.art === 'bericht_eingereicht' || g.art === 'urlaub_beantragt' || g.art === 'urlaub_zurueckgezogen' ? g.azubiName : `von ${g.akteurName}`;
-                const fuer = konto.rolle !== 'azubi' && g.art !== 'bericht_eingereicht' && g.art !== 'urlaub_beantragt' && g.art !== 'urlaub_zurueckgezogen' && g.akteurName !== g.azubiName ? ` · für ${g.azubiName}` : '';
+                // persönliche Einträge (Rückfragen zu eigenen Meldungen) betreffen einen selbst – kein „für …“
+                const fuer = konto.rolle !== 'azubi' && !g.art.startsWith('meldung_') && g.art !== 'bericht_eingereicht' && g.art !== 'urlaub_beantragt' && g.art !== 'urlaub_zurueckgezogen' && g.akteurName !== g.azubiName ? ` · für ${g.azubiName}` : '';
                 return (
                   <li key={g.id} className={g.neu ? 'neu' : undefined}>
                     <Link zu={z.zu}>

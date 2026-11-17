@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.71.0] – 2026-11-17
+
+### Neu
+
+- **Rückfragen zu Rückmeldungen:** Zu einem gemeldeten Fehler kann der Super-Admin der Person zurückschreiben, zu einer Idee fürs Portal auch die Ausbilder. Die Person sieht die Rückfrage in der Glocke und antwortet auf der neuen Seite „Meine Meldungen“. Antwortet sie auf eine schon erledigte Meldung, ist diese wieder offen. Super-Admin und Ausbilder sehen das Gespräch unter der Meldung; „Neue Antwort“ zeigt, dass die Person zuletzt geschrieben hat.
+- **Meine Meldungen:** Wer einen Fehler oder eine Idee geschickt hat, findet sie im Menü mit dem eigenen Namen (am Handy unter „Mehr“) – mit Stand und Gespräch. Die Zahl daran zeigt neue Rückfragen. Nach dem Senden führt „Meine Meldungen ansehen“ direkt dorthin.
+- **Benachrichtigungen:** neuer Bereich „Rückmeldungen“. Wer ihn einschaltet, bekommt per Teams oder E-Mail Bescheid, wenn es eine Rückfrage gibt oder die eigene Meldung erledigt ist – wie immer ohne Namen und ohne Inhalt.
+
+### Geändert
+
+- Wünsche zu Lerninhalten bleiben ohne Namen gespeichert und haben deshalb kein Gespräch.
+- Wird eine Meldung gelöscht, ist das Gespräch dazu mit weg.
+
 ## [0.70.1] – 2026-11-14
 
 ### Behoben
