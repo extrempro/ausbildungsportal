@@ -665,7 +665,7 @@ const AZUBI: Kapitel[] = [
           <li>
             In jedem Kasten wählst du, was du einträgst: <strong>„Tätigkeit im Betrieb eintragen“</strong>, <strong>„Unterweisung eintragen“</strong> oder <strong>„Berufsschule eintragen“</strong>. Über dem Textfeld steht dann, wozu die Zeile gehört.
           </li>
-          <li>Stunden kannst du in Viertelstunden eintragen: 0,25 ist eine Viertelstunde, 1,5 sind anderthalb Stunden.</li>
+          <li>Stunden kannst du in Viertelstunden eintragen: 0,25 ist eine Viertelstunde, 1,5 sind anderthalb Stunden. Komma und Punkt gehen beide; mit den Pfeiltasten hoch und runter änderst du um eine Viertelstunde. Andere Werte rundet das Portal beim Verlassen des Felds auf die nächste Viertelstunde.</li>
           <li>Hast du am Samstag oder Sonntag gearbeitet, wähle unter den Tagen „Wochenende anzeigen“.</li>
           <li>Urlaub, Feiertage und andere Abwesenheit trägst du weiter unten bei „Abwesenheit“ ein. Im Kasten des Tages steht dann ein gelber Hinweis.</li>
           <li>Unter „Deine Woche“ siehst du zusätzlich die Stunden je Tag – und welche Tage noch leer sind.</li>

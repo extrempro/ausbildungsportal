@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.72.1] – 2026-11-17
+
+### Behoben
+
+- **Safari (iPhone und Mac): Die Seite sprang an den Anfang.** Wer im Bericht „Tätigkeit im Betrieb eintragen“ (oder einen anderen Knopf) antippte, landete oben auf der Seite – in Safari und in allen Browsern auf dem iPhone. Safari gibt einem angetippten Knopf keinen Fokus, sondern dem Seiteninhalt als Ganzem, und das Portal hat dann versucht, diesen ganz ins Bild zu rollen. Jetzt bleibt die Seite, wo sie ist.
+- **Stunden mit Komma auf iPhone und Mac:** In Safari ließ sich in die Stundenfelder kein Komma eintippen; am iPhone gingen so nur ganze Stunden. Die Felder nehmen jetzt Komma und Punkt, die Pfeiltasten ändern weiter um eine Viertelstunde. Betrifft Bericht, Abwesenheit, den Planer für die Prüfung und die Wochenstunden im Profil.
+
 ## [0.72.0] – 2026-11-17
 
 ### Neu

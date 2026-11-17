@@ -1,3 +1,4 @@
+import { StundenFeld } from '../stundenFeld';
 import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
@@ -139,7 +140,7 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
         </label>
         <label>
           Wochenstunden
-          <input type="number" min={1} max={60} step={0.25} value={wert.wochenstunden} onChange={(e) => setze('wochenstunden', Number(e.target.value))} required />
+          <StundenFeld max={60} wert={wert.wochenstunden} onWert={(n) => setze('wochenstunden', n)} required />
         </label>
         <label>
           Urlaubstage im Jahr

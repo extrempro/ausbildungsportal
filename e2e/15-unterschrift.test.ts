@@ -37,7 +37,7 @@ test(
     const montag = montagVon(inTagen(-7));
     await oeffne(s, p.url, `/berichtsheft/${montag}`);
     await s.locator('main textarea').first().fill('Regale im Lager neu beschriftet');
-    await s.locator('main input[type=number]').first().fill('38');
+    await s.locator('main .bericht-stunden input').first().fill('38');
     await s.locator('main button:visible:has-text("Einreichen")').first().click();
     await s.locator('[role=alertdialog] .frage-ja').click({ timeout: 2000 }).catch(() => undefined);
     await s.waitForSelector('main h1:has-text("Woche")');
