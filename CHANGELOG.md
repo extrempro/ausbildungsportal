@@ -9,6 +9,7 @@
 ### Geändert
 
 - Bildschirmfotos in `docs/bilder/` neu erzeugt, dazu „Meine Meldungen“ und die Rückfragen.
+- Dokumentation: Profilbild aus Microsoft 365, Kalender-Abo in echten Kalenderprogrammen und die Teams-Karte bei Antworten sind im Betrieb erprobt; die Kammer erkennt die Unterschrift als Bild im Berichtsheft an.
 
 ## [0.72.1] – 2026-11-17
 
