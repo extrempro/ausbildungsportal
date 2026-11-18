@@ -14,7 +14,7 @@ export interface Config {
   dataDir: string;
   /** Ordner mit gepflegten Inhalten, z. B. Schulferien je Bundesland */
   contentDir: string;
-  /** Ordner mit Lerninhalten: ein Unterordner je Inhaltspaket (Format des FISI-Lernkompass) */
+  /** Ordner mit Lerninhalten: ein Unterordner je Inhaltspaket (Aufbau in lerninhalte/README.md) */
   lernDir: string;
   production: boolean;
   /** Adresse, unter der die Nutzer die App im Browser sehen (ohne Schrägstrich am Ende) */

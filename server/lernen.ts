@@ -17,7 +17,7 @@ import type { BenutzerZeile } from './typen';
 /**
  * Lernmodul: Lerninhalte (Cheatsheets) je Ausbildungsberuf mit eigenem Lernstand je Azubi.
  *
- * - Inhalte liegen als Dateien in LERN_DIR, ein Unterordner je Inhaltspaket – im Format des FISI-Lernkompass
+ * - Inhalte liegen als Dateien in LERN_DIR, ein Unterordner je Inhaltspaket (Aufbau in lerninhalte/README.md)
  *   (themenfelder.json, themen/<id>.md, bilder/, meta.json). Ein Beruf schaltet ein Paket ein (beruf.lernpaket).
  * - Der Lernstand (Ampel, Lernpunkt, Notiz) ist privat: Nur der Azubi selbst liest und schreibt ihn. Für Ausbilder,
  *   Beauftragte und den Super-Admin gibt es keine Route, die ihn liefert – auch keine Zusammenfassung.

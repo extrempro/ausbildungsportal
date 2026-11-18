@@ -1,5 +1,3 @@
-// Übernommen aus dem FISI-Lernkompass (https://github.com/extrempro/fisi-lernkompass, MIT), dort server/content/.
-// Das Inhaltsformat ist dasselbe – ein Inhaltspaket aus dem Lernkompass lässt sich unverändert einbinden.
 import { createHash } from 'node:crypto';
 import type {
   Abbildung,
@@ -137,7 +135,7 @@ function trenneId(ueberschrift: string): { titel: string; id: string | null } {
 
 /**
  * Liest den Kopf zwischen zwei Zeilen „---“: einfache Zeilen „schluessel: wert“ (mehr braucht das Format nicht).
- * Ersetzt die Bibliothek gray-matter aus dem Lernkompass.
+ * Kommt ohne die Bibliothek gray-matter aus.
  */
 export function frontmatter(raw: string): { data: Record<string, unknown>; content: string } {
   const text = raw.replace(/^\uFEFF/, '');

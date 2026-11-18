@@ -219,13 +219,13 @@ test('Planvorlagen: anlegen, ändern, in einen Plan übernehmen (Wochen ab Ausbi
   const ohne = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'Ohne Woche', eintraege: [{ art: 'einsatz', wochen: 4, titel: 'Einkauf' }] } })).vorlage;
   assert.deepEqual([ohne.eintraege[0].abWoche, ohne.eintraege[0].wochen], [1, 4]);
   assert.equal((await ruf(w.u, 'DELETE', `/api/planvorlagen/${ohne.id}`, { cookies })).status, 200);
-  const v = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'FISI Standard', eintraege } })).vorlage;
+  const v = koerper(await ruf(w.u, 'POST', '/api/planvorlagen', { cookies, body: { titel: 'Grundplan Standard', eintraege } })).vorlage;
   assert.equal(v.eintraege.length, 4);
   assert.equal(v.eintraege[3].wochen, 1);
-  assert.equal(koerper(await ruf(w.u, 'PUT', `/api/planvorlagen/${v.id}`, { cookies, body: { titel: 'FISI', eintraege } })).vorlage.titel, 'FISI');
-  assert.equal((await ruf(w.u, 'PUT', '/api/planvorlagen/999', { cookies, body: { titel: 'FISI', eintraege } })).status, 404);
+  assert.equal(koerper(await ruf(w.u, 'PUT', `/api/planvorlagen/${v.id}`, { cookies, body: { titel: 'Grundplan', eintraege } })).vorlage.titel, 'Grundplan');
+  assert.equal((await ruf(w.u, 'PUT', '/api/planvorlagen/999', { cookies, body: { titel: 'Grundplan', eintraege } })).status, 404);
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/planvorlagen', { cookies })).vorlagen.length, 1);
-  assert.deepEqual((await plan(w, w.ausbilder)).vorlagen, [{ id: v.id, titel: 'FISI', berufId: null, passt: true }]);
+  assert.deepEqual((await plan(w, w.ausbilder)).vorlagen, [{ id: v.id, titel: 'Grundplan', berufId: null, passt: true }]);
 
   const r = await ruf(w.u, 'POST', `/api/azubis/${w.azubi.id}/plan/vorlage`, { cookies, body: { vorlageId: v.id } });
   assert.equal(koerper(r).uebernommen, 3, 'der Eintrag nach dem Ende entfällt');

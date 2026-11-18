@@ -4,7 +4,6 @@ import type { Inhalte } from './store';
 /**
  * Üben im Lernmodul: Karteikarten und Quiz entstehen aus dem, was schon in den Cheatsheets steht –
  * den Kernbegriffen und der Prüfungsfrage je Unterthema. Neue Inhalte braucht es dafür nicht.
- * Die Logik stammt aus dem FISI-Lernkompass (src/lib/training.ts).
  */
 export interface Karte {
   id: string;

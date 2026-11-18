@@ -1,4 +1,4 @@
-// Ampel-Logik des Lernmoduls – übernommen aus dem FISI-Lernkompass (src/lib/ampel.ts).
+// Ampel-Logik des Lernmoduls.
 
 export type LernStatus = 'rot' | 'gelb' | 'gruen';
 

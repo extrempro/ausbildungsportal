@@ -1,4 +1,3 @@
-// Darstellung übernommen aus dem FISI-Lernkompass (https://github.com/extrempro/fisi-lernkompass, MIT), dort src/zusatz/.
 import { useEffect, useState } from 'react';
 import { Icon } from '../icons';
 import { Link } from '../router';

@@ -1665,7 +1665,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           inhalt: (
             <>
               <p>
-                Für jeden Ausbildungsberuf kann es ein eigenes <strong>Lernmodul</strong> geben – Cheatsheets, Kompendium und Zusatzwissen wie beim Fachinformatiker. Dafür muss niemand programmieren: Ein Lernmodul ist ein Ordner mit Textdateien in einem festen Aufbau. Die eigentliche Arbeit ist, die Inhalte zu schreiben.
+                Für jeden Ausbildungsberuf kann es ein eigenes <strong>Lernmodul</strong> geben – Cheatsheets, Kompendium und Zusatzwissen. Dafür muss niemand programmieren: Ein Lernmodul ist ein Ordner mit Textdateien in einem festen Aufbau. Die eigentliche Arbeit ist, die Inhalte zu schreiben.
               </p>
               <p className="hinweis">
                 <strong>So kommen die Inhalte ins Portal:</strong> Du packst den fertigen Ordner als ZIP-Datei und reichst ihn unter <Link zu="/lerninhalte">Lerninhalte</Link> ein. Das Portal prüft den Aufbau sofort. Danach sieht der Betreiber des Portals (Super-Admin) die Einreichung und lädt sie hoch oder gibt sie dir mit einer Rückmeldung zurück. Nach dem Hochladen erscheint das Paket unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link>, und du schaltest es am Beruf im Feld „Lernmodul“ ein. Für jede spätere Änderung nimmst du unter „Lerninhalte“ an der Karte des Lernmoduls „Lerninhalte aktualisieren“ und lädst das ganze Paket noch einmal hoch.

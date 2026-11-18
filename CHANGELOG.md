@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.73.1] – 2026-11-18
+
+### Geändert
+
+- Dokumentation, Handbuch, Code-Kommentare und Testdaten nennen kein anderes Projekt mehr als Vorlage. Die Anleitung zum Einbinden von Lerninhalten (`lerninhalte/README.md`) beschreibt den Aufbau eines Pakets jetzt für sich, mit einem neutralen Beispiel.
+
 ## [0.73.0] – 2026-11-18
 
 ### Neu
@@ -765,14 +771,14 @@ Bedienung mit der Tastatur und mit Vorleseprogrammen (aus der Prüfung nach WCAG
 
 - **Lernmodul, Stufe 2: Kompendium.** Unter „Lernen“ gibt es neben „Themenfelder“ den Bereich „Kompendium“: alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen aus allen Cheatsheets in einer Liste von A bis Z. Mit Suche (mehrere Wörter, Umlaute egal, Fundstellen markiert), Filter nach Themenfeld und Art, Buchstabenleiste und eingeklapptem Lösungsweg bei Prüfungsfragen.
 - Von jedem Eintrag führt „Zum Cheatsheet“ zum passenden Unterthema; dessen Cheatsheet ist dann schon aufgeklappt. Suche und Filter bleiben beim Zurückkommen stehen.
-- **Cheatsheet mit Navigation am linken Rand** (wie im Lernkompass): alle Themenfelder mit Ampelpunkt und Prozentzahl, beim geöffneten Themenfeld darunter seine Unterthemen. Ein Klick springt zum Unterthema; das gerade gelesene ist markiert. Am Handy und Tablet steckt die Liste hinter „Themenfeld wechseln“.
+- **Cheatsheet mit Navigation am linken Rand:** alle Themenfelder mit Ampelpunkt und Prozentzahl, beim geöffneten Themenfeld darunter seine Unterthemen. Ein Klick springt zum Unterthema; das gerade gelesene ist markiert. Am Handy und Tablet steckt die Liste hinter „Themenfeld wechseln“.
 - Wird die Ampel umgestellt, erscheint jetzt eine Bestätigung („… steht jetzt auf „Sicher““); Punkt und Prozentzahl in der Navigation ändern sich sofort mit.
 - Handbuch für Azubis: neues Kapitel „Im Kompendium nachschlagen“; Kapitel „Lernen“ um Navigation und Bestätigung ergänzt.
 - Schnittstelle `GET /api/lernen/kompendium` (nur Azubis mit eingeschaltetem Lernmodul; enthält nur Inhalte, keinen Lernstand).
 
 ### Noch nicht enthalten
 
-- Das „Zusatzwissen“ des Lernkompass (Abläufe, Vergleiche) zeigt das Portal noch nicht – weder im Cheatsheet noch im Kompendium.
+- Das „Zusatzwissen“ (Abläufe, Vergleiche) zeigt das Portal noch nicht – weder im Cheatsheet noch im Kompendium.
 
 ## [0.23.2] – 2026-11-11
 
@@ -796,7 +802,7 @@ Bedienung mit der Tastatur und mit Vorleseprogrammen (aus der Prüfung nach WCAG
 - **Ampel je Unterthema:** „Offen“, „In Arbeit“ oder „Sicher“. Bei „In Arbeit“ lässt sich ein Lernpunkt notieren (was noch schwerfällt), dazu eine freie Notiz. Die Übersicht zeigt den Stand je Themenfeld und insgesamt.
 - **Der Lernstand ist privat.** Nur der Azubi selbst sieht ihn. Ausbilder, Ausbildungsbeauftragte und der Super-Admin sehen weder Ampeln noch Lernpunkte oder Notizen – auch keine Zusammenfassung.
 - **Einschalten je Beruf:** Unter „Stammdaten“ wählt ein Ausbilder am Ausbildungsberuf das Lernmodul (Inhaltspaket) aus. Ohne Auswahl gibt es für diesen Beruf kein „Lernen“.
-- Die Inhalte kommen als Dateien von außen (Ordner `lerninhalte/`, Format des FISI-Lernkompass). Wie man sie einbindet, steht in `lerninhalte/README.md`. Ändern sich die Inhalte, zeigt das Portal bei schon bewerteten Unterthemen „Inhalt aktualisiert“.
+- Die Inhalte kommen als Dateien von außen (Ordner `lerninhalte/`). Wie man sie einbindet, steht in `lerninhalte/README.md`. Ändern sich die Inhalte, zeigt das Portal bei schon bewerteten Unterthemen „Inhalt aktualisiert“.
 - Noch nicht enthalten: Kompendium, Üben (Karteikarten, Quiz, Prüfungssimulation), Prüfungsseite und Zusatzwissen – sie folgen in den nächsten Stufen.
 
 ## [0.22.2] – 2026-11-11
@@ -1072,7 +1078,7 @@ Einheitliche Bedienung: Die Anwendung wurde Seite für Seite auf gleiche Abläuf
 
 ### Geändert
 
-- Ausbildungsplan im Aufbau des FISI-Lernkompass: oben die Karten „Diese Woche“ und „Nächste Woche“ mit Kennzahlen (Wochen bis zum Ende der Ausbildung, fehlende Berichte, offene Aufgaben), links eine mitlaufende Übersicht („Du bist hier“, Fortschritt, je Ausbildungsjahr ein Band aller Wochen mit Schule und Ferien, Sprung zu Monaten), rechts alle Kalenderwochen nach Ausbildungsjahr und Monat.
+- Ausbildungsplan neu aufgebaut: oben die Karten „Diese Woche“ und „Nächste Woche“ mit Kennzahlen (Wochen bis zum Ende der Ausbildung, fehlende Berichte, offene Aufgaben), links eine mitlaufende Übersicht („Du bist hier“, Fortschritt, je Ausbildungsjahr ein Band aller Wochen mit Schule und Ferien, Sprung zu Monaten), rechts alle Kalenderwochen nach Ausbildungsjahr und Monat.
 - Schulwochen tragen einen violetten Streifen; an jeder Woche steht der Stand des Berichts mit Link dorthin.
 - Ansicht umschaltbar: alle Wochen oder nur Wochen mit Einträgen; Ferien und Feiertage lassen sich ausblenden.
 - Einträge werden in einem Dialog angelegt und bearbeitet.

@@ -1,6 +1,6 @@
 /**
  * Rechnen mit Kalenderdaten (JJJJ-MM-TT) und mit der Ausbildungsdauer.
- * Aus dem FISI-Lernkompass übernommen; die Regeldauer ist hier ein Parameter statt fest drei Jahre.
+ * Die Regeldauer ist ein Parameter je Beruf.
  * Gerechnet wird in UTC, damit die Sommerzeit nichts verschiebt.
  */
 function d(iso: string): Date {

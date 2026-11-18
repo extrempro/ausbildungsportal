@@ -1,4 +1,3 @@
-// Sammellogik übernommen aus dem FISI-Lernkompass (https://github.com/extrempro/fisi-lernkompass, MIT), dort src/lib/kompendium.ts.
 import type { Tabelle, Themenfeld } from './typen';
 
 export type EintragTyp = 'begriff' | 'befehl' | 'tabelle' | 'merksatz' | 'frage' | 'zusatz';

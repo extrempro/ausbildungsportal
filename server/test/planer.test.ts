@@ -54,17 +54,17 @@ timer: 15
 - [Merkblatt](https://www.example.org/merkblatt.pdf) – von der Kammer
 `;
 
-/** Paket „fisi“ mit Planer, Paket „ohne“ ohne Planer. */
+/** Paket „technik“ mit Planer, Paket „ohne“ ohne Planer. */
 function inhalte(planer: string | null = PLANER): string {
   const dir = mkdtempSync(join(tmpdir(), 'planer-'));
-  for (const name of ['fisi', 'ohne']) {
+  for (const name of ['technik', 'ohne']) {
     const p = join(dir, name);
     mkdirSync(join(p, 'themen'), { recursive: true });
     writeFileSync(join(p, 'meta.json'), JSON.stringify({ stand: '2026-11-01' }));
     writeFileSync(join(p, 'themenfelder.json'), JSON.stringify([{ id: 'netz', icon: 'network', lernfelder: [], pruefung: [] }]));
     writeFileSync(join(p, 'themen', 'netz.md'), '---\ntitel: Netz\n---\n\nWorum es geht.\n\n## Subnetting {#subnetting}\n\n### Merksatz\nErst zählen, dann rechnen.\n');
   }
-  if (planer !== null) writeFileSync(join(dir, 'fisi', 'planer.md'), planer);
+  if (planer !== null) writeFileSync(join(dir, 'technik', 'planer.md'), planer);
   return dir;
 }
 
@@ -80,13 +80,13 @@ async function welt(dir = inhalte()) {
   const mia = konto(u.db, 'azubi', 'Mia Muster');
   const c = sitzung(u, ausbilder);
   const beruf = async (bezeichnung: string, lernpaket: string | null) => koerper(await ruf(u, 'POST', '/api/stammdaten/berufe', { cookies: c, body: { bezeichnung, fachrichtung: '', regeldauerMonate: 36, lernpaket } })).beruf.id as number;
-  const fisi = await beruf('Fachinformatiker', 'fisi');
+  const technik = await beruf('Mechatroniker', 'technik');
   const ohne = await beruf('Maler', 'ohne');
   const profil = (a: BenutzerZeile, body: Record<string, unknown>) => ruf(u, 'PUT', `/api/azubis/${a.id}/profil`, { cookies: c, body: { ausbildungsbeginn: '2025-08-01', ausbilderId: ausbilder.id, ...body } });
-  for (const [a, b] of [[anna, fisi], [ben, fisi], [mia, ohne]] as const) assert.equal((await profil(a, { berufId: b })).status, 200);
+  for (const [a, b] of [[anna, technik], [ben, technik], [mia, ohne]] as const) assert.equal((await profil(a, { berufId: b })).status, 200);
   zuweisen(u.db, anna, bea);
   const als = (wer: BenutzerZeile) => sitzung(u, wer);
-  return { u, dir, ausbilder, fremd, bea, anna, ben, mia, fisi, ohne, profil, als, admin: admin(u.db) };
+  return { u, dir, ausbilder, fremd, bea, anna, ben, mia, technik, ohne, profil, als, admin: admin(u.db) };
 }
 
 test('Einleser: Termine, Checklisten, Zeitplanung, Fragen, Links – in der Reihenfolge der Datei', () => {
@@ -153,10 +153,10 @@ test('Freischalten: nur Ausbilder, nur wenn das Paket des Berufs einen Planer ha
   assert.equal(ohne.status, 400);
   assert.match(koerper(ohne).fehler, /keinen Planer/);
   // Beauftragte und fremde Ausbilder dürfen das Profil nicht ändern
-  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/profil`, { cookies: w.als(w.bea), body: { berufId: w.fisi, planerFrei: true } })).status, 403);
-  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/profil`, { cookies: w.als(w.fremd), body: { berufId: w.fisi, planerFrei: true } })).status, 404);
+  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/profil`, { cookies: w.als(w.bea), body: { berufId: w.technik, planerFrei: true } })).status, 403);
+  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/profil`, { cookies: w.als(w.fremd), body: { berufId: w.technik, planerFrei: true } })).status, 404);
 
-  assert.equal(koerper(await w.profil(w.anna, { berufId: w.fisi, planerFrei: true })).profil.planerFrei, true);
+  assert.equal(koerper(await w.profil(w.anna, { berufId: w.technik, planerFrei: true })).profil.planerFrei, true);
   assert.equal(await ich(w.anna), 'Abschlussprojekt');
   assert.equal(await ich(w.ben), null, 'gilt je Azubi');
   assert.equal(await ich(w.ausbilder), null);
@@ -166,21 +166,21 @@ test('Freischalten: nur Ausbilder, nur wenn das Paket des Berufs einen Planer ha
   assert.equal(glocke.gruppen[0].art, 'planer_frei');
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: w.als(w.ausbilder) })).neu, 0);
   // ohne Angabe bleibt die Freischaltung; noch einmal speichern meldet nichts Neues
-  assert.equal(koerper(await w.profil(w.anna, { berufId: w.fisi })).profil.planerFrei, true);
+  assert.equal(koerper(await w.profil(w.anna, { berufId: w.technik })).profil.planerFrei, true);
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/aktivitaeten', { cookies: w.als(w.anna) })).neu, 1);
 
   // wieder sperren: der Bereich verschwindet, die Eintragungen bleiben
   await ruf(w.u, 'PUT', '/api/planer/angaben', { cookies: w.als(w.anna), body: { name: 'Monitoring', auftraggeber: 'IT' } });
-  assert.equal(koerper(await w.profil(w.anna, { berufId: w.fisi, planerFrei: false })).profil.planerFrei, false);
+  assert.equal(koerper(await w.profil(w.anna, { berufId: w.technik, planerFrei: false })).profil.planerFrei, false);
   assert.equal(await ich(w.anna), null);
   assert.equal((await ruf(w.u, 'GET', '/api/planer', { cookies: w.als(w.anna) })).status, 404);
-  await w.profil(w.anna, { berufId: w.fisi, planerFrei: true });
+  await w.profil(w.anna, { berufId: w.technik, planerFrei: true });
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: w.als(w.anna) })).daten.name, 'Monitoring');
 });
 
 test('Der Planer ist privat: keine Route für Ausbilder, Beauftragte und Super-Admin', async () => {
   const w = await welt();
-  await w.profil(w.anna, { berufId: w.fisi, planerFrei: true });
+  await w.profil(w.anna, { berufId: w.technik, planerFrei: true });
   for (const wer of [w.ausbilder, w.bea, w.admin]) {
     assert.equal((await ruf(w.u, 'GET', '/api/planer', { cookies: w.als(wer) })).status, 403, wer.rolle);
     assert.equal((await ruf(w.u, 'PUT', '/api/planer/notizen', { cookies: w.als(wer), body: { text: 'x' } })).status, 403, wer.rolle);
@@ -199,7 +199,7 @@ test('Der Planer ist privat: keine Route für Ausbilder, Beauftragte und Super-A
 
 test('Eintragen: Angaben, Haken, Zeitplanung, Stichworte, Notizen', async () => {
   const w = await welt();
-  await w.profil(w.anna, { berufId: w.fisi, planerFrei: true });
+  await w.profil(w.anna, { berufId: w.technik, planerFrei: true });
   const c = w.als(w.anna);
   const start = koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c }));
   assert.equal(start.planer.titel, 'Abschlussprojekt');
@@ -239,7 +239,7 @@ test('Eintragen: Angaben, Haken, Zeitplanung, Stichworte, Notizen', async () => 
 
 test('Termine stehen im Ausbildungsplan und im Jahreskalender – für alle, die den Azubi sehen; Betreuende erfahren die Änderung', async () => {
   const w = await welt();
-  await w.profil(w.anna, { berufId: w.fisi, planerFrei: true, pruefungen: [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-10' }] });
+  await w.profil(w.anna, { berufId: w.technik, planerFrei: true, pruefungen: [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-10' }] });
   const c = w.als(w.anna);
   await ruf(w.u, 'POST', '/api/aktivitaeten/gesehen', { cookies: c, body: { bis: 999 } });
   const setze = (termine: Record<string, unknown>) => ruf(w.u, 'PUT', '/api/planer/termine', { cookies: c, body: { termine } });
@@ -274,14 +274,14 @@ test('Termine stehen im Ausbildungsplan und im Jahreskalender – für alle, die
   // Termin leeren → verschwindet aus dem Plan; gesperrter Planer → alle Planer-Termine verschwinden
   await setze({ antrag: '' });
   assert.equal(koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/plan`, { cookies: w.als(w.ausbilder) })).pruefungen.length, 2);
-  await w.profil(w.anna, { berufId: w.fisi, planerFrei: false, pruefungen: [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-10' }] });
+  await w.profil(w.anna, { berufId: w.technik, planerFrei: false, pruefungen: [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-10' }] });
   assert.deepEqual(koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/plan`, { cookies: w.als(w.ausbilder) })).pruefungen, [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: '2027-03-10' }]);
 });
 
 test('Aktualisierung des Pakets: Eintragungen hängen an den Kennungen; Umbenennungen nehmen sie mit', async () => {
   const dir = inhalte();
   const w = await welt(dir);
-  await w.profil(w.anna, { berufId: w.fisi, planerFrei: true });
+  await w.profil(w.anna, { berufId: w.technik, planerFrei: true });
   const c = w.als(w.anna);
   await ruf(w.u, 'PATCH', '/api/planer/haken', { cookies: c, body: { id: 'antrag.thema', an: true } });
   await ruf(w.u, 'PATCH', '/api/planer/haken', { cookies: c, body: { id: 'antrag.ziel', an: true } });
@@ -289,10 +289,10 @@ test('Aktualisierung des Pakets: Eintragungen hängen an den Kennungen; Umbenenn
   await ruf(w.u, 'PUT', '/api/planer/antwort', { cookies: c, body: { id: 'gespraech.warum', text: 'Weil.' } });
   let zeit = Date.now() / 1000;
   const neu = (inhalt: string) => {
-    writeFileSync(join(dir, 'fisi', 'planer.md'), inhalt);
+    writeFileSync(join(dir, 'technik', 'planer.md'), inhalt);
     // wie im Betrieb: Das Portal merkt die geänderte Datei und liest das Paket neu ein
     zeit += 10;
-    utimesSync(join(dir, 'fisi', 'planer.md'), zeit, zeit);
+    utimesSync(join(dir, 'technik', 'planer.md'), zeit, zeit);
     pruefeLernpaketeSofort();
   };
   // Text geändert, Kennung gleich: Haken bleibt. Kennungen umbenannt und eingetragen: Haken, Termin und Stichworte ziehen mit.
@@ -327,7 +327,7 @@ test('Aktualisierung des Pakets: Eintragungen hängen an den Kennungen; Umbenenn
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).neu, []);
   assert.equal('bekannt' in koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: c })).daten, false);
   // wer noch nie etwas gespeichert hat, bekommt keinen Hinweis – für ihn ist alles neu
-  await w.profil(w.ben, { berufId: w.fisi, planerFrei: true });
+  await w.profil(w.ben, { berufId: w.technik, planerFrei: true });
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/planer', { cookies: w.als(w.ben) })).neu, []);
 
   // fehlerhafte Datei: die zuletzt gültige Fassung gilt weiter
@@ -338,5 +338,5 @@ test('Aktualisierung des Pakets: Eintragungen hängen an den Kennungen; Umbenenn
 test('Paket ohne planer.md: kein Planer, keine Freischaltung', async () => {
   const w = await welt(inhalte(null));
   assert.equal(koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/profil`, { cookies: w.als(w.ausbilder) })).planerTitel, null, 'Paket ohne planer.md');
-  assert.equal((await w.profil(w.anna, { berufId: w.fisi, planerFrei: true })).status, 400);
+  assert.equal((await w.profil(w.anna, { berufId: w.technik, planerFrei: true })).status, 400);
 });

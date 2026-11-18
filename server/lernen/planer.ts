@@ -1,6 +1,5 @@
 // Planer für das Prüfungsvorhaben eines Berufs (Abschlussprojekt, Gesellenstück, Fachaufgabe …).
-// Die Datei planer.md liegt im Inhaltspaket neben themenfelder.json. Anders als die Themen-Dateien stammt dieses
-// Format nicht aus dem FISI-Lernkompass – der Lernkompass liest die Datei nicht und stört sich nicht an ihr.
+// Die Datei planer.md liegt im Inhaltspaket neben themenfelder.json.
 import { frontmatter, ID_MUSTER } from './parse';
 import type { Link, Meldung } from './typen';
 

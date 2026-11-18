@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.73.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.73.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -202,7 +202,7 @@ Ein Ausbildungsnachweis je Kalenderwoche, von der ersten bis zur laufenden Woche
 
 ## Ausbildungsplan
 
-Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Ausbildung, mit Schulferien und Feiertagen. Der Aufbau folgt dem FISI-Lernkompass: oben „Diese Woche“, „Nächste Woche“ und Kennzahlen (Wochen bis zum Ende, fehlende Berichte, offene Aufgaben), links eine Übersicht mit Fortschritt und einem Band aller Wochen je Ausbildungsjahr, rechts alle Kalenderwochen nach Jahr und Monat.
+Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Ausbildung, mit Schulferien und Feiertagen. Oben stehen „Diese Woche“, „Nächste Woche“ und Kennzahlen (Wochen bis zum Ende, fehlende Berichte, offene Aufgaben), links eine Übersicht mit Fortschritt und einem Band aller Wochen je Ausbildungsjahr, rechts alle Kalenderwochen nach Jahr und Monat.
 
 - **Arten:** Berufsschule (Schulblock), Einsatz (Abteilung oder Einsatzort), Aufgabe (mit Unteraufgaben zum Abhaken) und Notiz.
 - **Wer plant:** Ausbilder alles. Ausbildungsbeauftragte legen Aufgaben und Notizen an, solange ihre Zuweisung läuft. Azubis tragen eigene Aufgaben und Notizen ein und haken Aufgaben ab; ändern und löschen können sie nur, was sie selbst eingetragen haben.
@@ -232,7 +232,7 @@ Ausbilder tragen unter **Stammdaten → Firmentermine** ganztägige Termine ein,
 
 Lernstoff je Ausbildungsberuf zum Nachlesen und Üben. Alles, was ein Azubi dort über sich festhält, ist privat. Die Inhalte selbst liegen nicht in diesem Repository.
 
-- **Lerninhalte je Ausbildungsberuf:** Ein Ausbilder schaltet in den Stammdaten am Beruf ein Inhaltspaket ein; Azubis dieses Berufs sehen den Menüpunkt „Lernen“ mit Themenfeldern, Cheatsheets (Kernbegriffe, Tabellen, Befehle, Merksätze, Prüfungsfragen, Grafiken) und einer Ampel je Unterthema (Offen / In Arbeit / Sicher) samt Lernpunkt und Notiz. Das **Kompendium** sammelt alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen zum Nachschlagen – mit Suche und Filtern. **Der Lernstand ist privat:** Nur der Azubi selbst sieht ihn (Ampel, Lernpunkt, Notiz, Haken „Gelesen“); für Ausbilder, Beauftragte und Super-Admin gibt es keine Auswertung. Die Inhalte liegen als Dateien in `LERN_DIR` im Format des [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass) – Einrichtung in [lerninhalte/README.md](lerninhalte/README.md). Dazu das **Zusatzwissen** des Lernkompass (Texte, Vergleiche, Checklisten, Abläufe Schritt für Schritt) mit einem privaten Haken „Gelesen“. Eine Prüfungssimulation wie im Lernkompass gibt es im Portal nicht.
+- **Lerninhalte je Ausbildungsberuf:** Ein Ausbilder schaltet in den Stammdaten am Beruf ein Inhaltspaket ein; Azubis dieses Berufs sehen den Menüpunkt „Lernen“ mit Themenfeldern, Cheatsheets (Kernbegriffe, Tabellen, Befehle, Merksätze, Prüfungsfragen, Grafiken) und einer Ampel je Unterthema (Offen / In Arbeit / Sicher) samt Lernpunkt und Notiz. Das **Kompendium** sammelt alle Begriffe, Befehle, Tabellen, Merksätze und Prüfungsfragen zum Nachschlagen – mit Suche und Filtern. **Der Lernstand ist privat:** Nur der Azubi selbst sieht ihn (Ampel, Lernpunkt, Notiz, Haken „Gelesen“); für Ausbilder, Beauftragte und Super-Admin gibt es keine Auswertung. Die Inhalte liegen als Dateien in `LERN_DIR` – Aufbau und Einrichtung in [lerninhalte/README.md](lerninhalte/README.md). Dazu das **Zusatzwissen** (Texte, Vergleiche, Checklisten, Abläufe Schritt für Schritt) mit einem privaten Haken „Gelesen“. Eine Prüfungssimulation gibt es im Portal nicht.
 - **Abzeichen im Lernmodul:** je Themenfeld ein Schild in sechs Stufen. Holz, Stein und Bronze hängen an Ampel und Zusatzwissen; Silber, Gold und Meister am Quiz. Dazu ein Rang über alle Themenfelder. Erreichte Abzeichen bleiben. Privat wie der Lernstand, keine Rangliste.
 - **Üben:** Karteikarten (Lernkartei mit fünf Fächern) und Quiz je Unterthema, erzeugt aus den Kernbegriffen und Prüfungsfragen der Cheatsheets. Privat wie der Lernstand.
 - **Anleitungen für alle Berufe:** Ausbilder können ein Lernmodul festlegen, das alle Azubis unter „Lernen“ sehen – zum Beispiel „Arbeiten und Prüfung“ (strukturiert arbeiten, auf eine Prüfung vorbereiten, in der Prüfung). Nur zum Lesen: ohne Ampel, Üben und Abzeichen; es wird nichts über die Azubis gespeichert. Die Inhalte kommen wie jedes Lernmodul als Ordner oder ZIP-Datei – sie liegen nicht in diesem Repository.
@@ -316,4 +316,4 @@ Dockerfile, docker-compose.yml, docker-compose.override.example.yml
 
 ## Lizenz
 
-MIT, siehe [LICENSE](LICENSE). Grundgerüst und Design-Tokens stammen aus dem [FISI-Lernkompass](https://github.com/extrempro/fisi-lernkompass).
+MIT, siehe [LICENSE](LICENSE).

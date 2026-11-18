@@ -1,5 +1,3 @@
-// Übernommen aus dem FISI-Lernkompass (https://github.com/extrempro/fisi-lernkompass, MIT), dort server/content/.
-// Das Inhaltsformat ist dasselbe – ein Inhaltspaket aus dem Lernkompass lässt sich unverändert einbinden.
 export interface Begriff {
   begriff: string;
   erklaerung: string;
