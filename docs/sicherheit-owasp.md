@@ -34,7 +34,11 @@ Maßstab sind die [OWASP Top 10:2025](https://owasp.org/Top10/2025/) – die zeh
 
 ## Offen
 
-- **Abgelehnte Zugriffe** (403/404 auf fremde Kennungen) werden nicht protokolliert. Häufen sie sich, wäre das ein Hinweis auf jemanden, der probiert. Bei Bedarf ergänzen – ohne Inhalte, nur Konto, Pfad und Zeit.
+Nichts.
+
+## Bewusst nicht umgesetzt
+
+- **Abgelehnte Zugriffe protokollieren** (403/404 auf fremde Kennungen). Entschieden am 18.11.2026. Gründe: Die Rechte werden zentral in `server/rechte.ts` geprüft, und `server/test/owasp.test.ts` ruft bei jeder Änderung jede Route mit fremden Kennungen auf. Zugang haben nur Konten aus dem eigenen Entra-Mandanten, hinter Reverse Proxy und bedingtem Zugriff. Ein Protokoll verhindert keinen Zugriff, es würde aber viele harmlose Fälle sammeln (gelöschter Bericht, alter Link) und neue Daten über das Verhalten von Beschäftigten erzeugen – das widerspricht dem Grundsatz „keine Leistungs- und Verhaltenskontrolle“. Falls später doch ein Frühwarnzeichen gewünscht ist: nur im Arbeitsspeicher zählen und erst ab einer Schwelle (z. B. zehn Ablehnungen in zehn Minuten) einen Eintrag ohne Pfade anlegen – vorher mit dem Betriebsrat abstimmen.
 
 ## Nicht geprüft
 
