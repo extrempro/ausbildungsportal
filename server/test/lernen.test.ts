@@ -69,13 +69,13 @@ Erst zählen, dann rechnen.
 
 const SVG = '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" onload="alert(1)"><script>alert(2)</script><rect class="sv-box" x="2" y="2" width="196" height="76"/><a href="https://boese.example"><text class="sv-t" x="10" y="40">Kopf</text></a></svg>';
 
-/** Legt einen Ordner mit einem Inhaltspaket „fisi“ an (und einem zweiten, „leer“). */
+/** Legt einen Ordner mit einem Inhaltspaket „technik“ an (und einem zweiten, „leer“). */
 function inhalte(netz = NETZ, stand = '2026-11-01'): string {
   const dir = mkdtempSync(join(tmpdir(), 'lern-'));
-  const p = join(dir, 'fisi');
+  const p = join(dir, 'technik');
   mkdirSync(join(p, 'themen'), { recursive: true });
   mkdirSync(join(p, 'bilder'));
-  writeFileSync(join(p, 'paket.json'), JSON.stringify({ titel: 'Fachinformatiker Systemintegration', quelle: 'FISI-Lernkompass', lizenz: 'CC BY-SA 4.0' }));
+  writeFileSync(join(p, 'paket.json'), JSON.stringify({ titel: 'Technik-Grundlagen', quelle: 'Beispielquelle', lizenz: 'CC BY-SA 4.0' }));
   writeFileSync(join(p, 'meta.json'), JSON.stringify({ stand }));
   writeFileSync(join(p, 'themenfelder.json'), JSON.stringify([{ id: 'netz', icon: 'network', lernfelder: ['LF 3'], pruefung: ['AP1'] }, { id: 'wiso', icon: 'scale', lernfelder: [], pruefung: ['AP2'] }]));
   writeFileSync(join(p, 'themen', 'netz.md'), netz);
@@ -97,13 +97,13 @@ async function welt(dir = inhalte()) {
   const maler = konto(u.db, 'azubi', 'Mia');
   const c = sitzung(u, ausbilder);
   const beruf = async (bezeichnung: string, lernpaket: string | null) => koerper(await ruf(u, 'POST', '/api/stammdaten/berufe', { cookies: c, body: { bezeichnung, fachrichtung: '', regeldauerMonate: 36, lernpaket } })).beruf.id as number;
-  const fisi = await beruf('Fachinformatiker', 'fisi');
+  const technik = await beruf('Mechatroniker', 'technik');
   const malerBeruf = await beruf('Maler', null);
-  for (const [a, b] of [[anna, fisi], [ben, fisi], [maler, malerBeruf]] as const) {
+  for (const [a, b] of [[anna, technik], [ben, technik], [maler, malerBeruf]] as const) {
     assert.equal((await ruf(u, 'PUT', `/api/azubis/${a.id}/profil`, { cookies: c, body: { ausbildungsbeginn: '2025-08-01', berufId: b, ausbilderId: ausbilder.id } })).status, 200);
   }
   zuweisen(u.db, anna, bea);
-  return { u, ausbilder, bea, anna, ben, maler, fisi, malerBeruf, dir };
+  return { u, ausbilder, bea, anna, ben, maler, technik, malerBeruf, dir };
 }
 const als = (w: Awaited<ReturnType<typeof welt>>, wer: BenutzerZeile) => sitzung(w.u, wer);
 
@@ -181,25 +181,25 @@ test('Lernmodul ist je Beruf schaltbar; /api/ich sagt, ob es das Menü gibt', as
 
   // Auswahl in den Stammdaten: nur gültige Pakete, nur für Ausbilder sichtbar
   const sd = koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.ausbilder) }));
-  assert.deepEqual(sd.lernpakete, [{ id: 'fisi', titel: 'Fachinformatiker Systemintegration', stand: '2026-11-01', herkunft: 'ordner', themenfelder: 2, unterthemen: 3, fehler: 0, meldungen: [] }]);
+  assert.deepEqual(sd.lernpakete, [{ id: 'technik', titel: 'Technik-Grundlagen', stand: '2026-11-01', herkunft: 'ordner', themenfelder: 2, unterthemen: 3, fehler: 0, meldungen: [] }]);
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/stammdaten', { cookies: als(w, w.bea) })).lernpakete, []);
   const aendere = (body: object) => ruf(w.u, 'PATCH', `/api/stammdaten/berufe/${w.malerBeruf}`, { cookies: als(w, w.ausbilder), body: { bezeichnung: 'Maler', fachrichtung: '', regeldauerMonate: 36, ...body } });
   assert.equal((await aendere({ lernpaket: 'gibt-es-nicht' })).status, 400);
-  assert.equal((await aendere({ lernpaket: '../fisi' })).status, 400);
-  assert.equal(koerper(await aendere({ lernpaket: 'fisi' })).beruf.lernpaket, 'fisi');
+  assert.equal((await aendere({ lernpaket: '../technik' })).status, 400);
+  assert.equal(koerper(await aendere({ lernpaket: 'technik' })).beruf.lernpaket, 'technik');
   assert.equal(await ich(w.maler), true, 'eingeschaltet: sofort da');
-  assert.equal(koerper(await aendere({})).beruf.lernpaket, 'fisi', 'ohne Angabe bleibt es');
+  assert.equal(koerper(await aendere({})).beruf.lernpaket, 'technik', 'ohne Angabe bleibt es');
   assert.equal(koerper(await aendere({ lernpaket: null })).beruf.lernpaket, null);
   assert.equal(await ich(w.maler), false);
   const protokoll = (w.u.db.prepare("SELECT detail FROM protokoll WHERE detail LIKE '%Lernmodul%' ORDER BY id").all() as { detail: string }[]).map((z) => z.detail);
-  assert.deepEqual(protokoll, ['Beruf geändert: Maler · Lernmodul eingeschaltet (fisi)', 'Beruf geändert: Maler · Lernmodul ausgeschaltet']);
+  assert.deepEqual(protokoll, ['Beruf geändert: Maler · Lernmodul eingeschaltet (technik)', 'Beruf geändert: Maler · Lernmodul ausgeschaltet']);
 });
 
 test('Übersicht und Cheatsheet: Inhalte, bereinigte Grafik, Herkunft', async () => {
   const w = await welt();
   const c = als(w, w.anna);
   const ue = koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c }));
-  assert.deepEqual(ue.paket, { id: 'fisi', titel: 'Fachinformatiker Systemintegration', stand: '2026-11-01', quelle: 'FISI-Lernkompass', lizenz: 'CC BY-SA 4.0' });
+  assert.deepEqual(ue.paket, { id: 'technik', titel: 'Technik-Grundlagen', stand: '2026-11-01', quelle: 'Beispielquelle', lizenz: 'CC BY-SA 4.0' });
   assert.deepEqual(ue.themenfelder.map((f: { id: string; titel: string; unterthemen: unknown[] }) => [f.id, f.titel, f.unterthemen.length]), [['netz', 'Netzwerkgrundlagen', 2], ['wiso', 'Wirtschaft', 1]]);
   assert.deepEqual(ue.themenfelder[0].unterthemen[0], { id: 'subnetting', titel: 'Subnetting', status: 'rot', lernpunkt: false, inhaltAktualisiert: false });
   assert.equal(JSON.stringify(ue).includes('Netzadresse'), false, 'die Übersicht trägt keine Inhalte');
@@ -272,7 +272,7 @@ test('Geänderte Inhalte: Hinweis „Inhalt aktualisiert“, bis der Azubi ihn b
   assert.equal((await erstes())[0].inhaltAktualisiert, false);
 
   // Inhaltspflege: Text geändert, VLAN umbenannt, Inhaltsstand erhöht
-  const p = join(w.dir, 'fisi');
+  const p = join(w.dir, 'technik');
   writeFileSync(join(p, 'themen', 'netz.md'), NETZ.replace('Blockgröße = 256', 'Die Blockgröße ist 256').replace('{#vlan}', '{#vlans}'));
   writeFileSync(join(p, 'umbenennungen.json'), JSON.stringify({ 'netz.vlan': 'netz.vlans' }));
   writeFileSync(join(p, 'meta.json'), JSON.stringify({ stand: '2026-11-09' }));
@@ -294,9 +294,9 @@ test('Geänderte Inhalte: Glocke für alle Azubis des Berufs – nicht für ande
   // erstes Einlesen: nur der Stand wird gemerkt
   assert.equal((await ruf(w.u, 'GET', '/api/lernen', { cookies: als(w, w.anna) })).status, 200);
   assert.deepEqual(await glocke(w.anna), []);
-  assert.ok((w.u.db.prepare("SELECT COUNT(*) AS n FROM lern_paket_stand WHERE paket = 'fisi'").get() as { n: number }).n > 0);
+  assert.ok((w.u.db.prepare("SELECT COUNT(*) AS n FROM lern_paket_stand WHERE paket = 'technik'").get() as { n: number }).n > 0);
 
-  const p = join(w.dir, 'fisi');
+  const p = join(w.dir, 'technik');
   const aendere = (text: string) => {
     writeFileSync(join(p, 'themen', 'netz.md'), text);
     const spaeter = new Date(Date.now() + 120_000 + Math.random() * 60_000);
@@ -337,10 +337,10 @@ test('Ohne Ordner oder mit kaputtem Paket startet das Portal trotzdem', async ()
 
 test('Unterordner beim Kopieren vergessen: 0 Themenfelder, und die Seite sagt, woran es liegt', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'lern-'));
-  mkdirSync(join(dir, 'fisi'));
+  mkdirSync(join(dir, 'technik'));
   // nur die Dateien der obersten Ebene – wie nach cp/scp ohne -r
-  writeFileSync(join(dir, 'fisi', 'meta.json'), JSON.stringify({ stand: '2026-11-01' }));
-  writeFileSync(join(dir, 'fisi', 'themenfelder.json'), JSON.stringify([{ id: 'netz' }, { id: 'wiso' }]));
+  writeFileSync(join(dir, 'technik', 'meta.json'), JSON.stringify({ stand: '2026-11-01' }));
+  writeFileSync(join(dir, 'technik', 'themenfelder.json'), JSON.stringify([{ id: 'netz' }, { id: 'wiso' }]));
   vergissLernpakete();
   const u = await umgebung({ LERN_DIR: dir });
   const p = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
@@ -349,12 +349,12 @@ test('Unterordner beim Kopieren vergessen: 0 Themenfelder, und die Seite sagt, w
   assert.equal(p.meldungen[1], 'themen/netz.md – Markdown-Datei zum Katalogeintrag fehlt');
 
   // ganzer Ordner „content“ hineinkopiert: eine Ebene zu tief
-  mkdirSync(join(dir, 'fisi', 'content', 'themen'), { recursive: true });
+  mkdirSync(join(dir, 'technik', 'content', 'themen'), { recursive: true });
   vergissLernpakete();
   const tief = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
   assert.match(tief.meldungen[0], /eine Ebene zu tief/);
 
-  mkdirSync(join(dir, 'fisi', 'themen'));
+  mkdirSync(join(dir, 'technik', 'themen'));
   vergissLernpakete();
   const leer = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, konto(u.db, 'ausbilder')) })).lernpakete[0];
   assert.match(leer.meldungen[0], /ist leer/);
@@ -477,7 +477,7 @@ test('Abzeichen: Wer schon vorher gelernt hat, bekommt sie beim Öffnen von „L
   const w = await welt();
   const c = als(w, w.anna);
   // Lernstand wie vor der Einführung der Abzeichen: direkt in der Datenbank
-  for (const id of ['netz.subnetting', 'netz.vlan']) w.u.db.prepare("INSERT INTO lern_status (azubi_id, paket, unterthema_id, status, geaendert) VALUES (?, 'fisi', ?, 'gruen', '2026-10-01')").run(w.anna.id, id);
+  for (const id of ['netz.subnetting', 'netz.vlan']) w.u.db.prepare("INSERT INTO lern_status (azubi_id, paket, unterthema_id, status, geaendert) VALUES (?, 'technik', ?, 'gruen', '2026-10-01')").run(w.anna.id, id);
   const d = koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c }));
   assert.deepEqual([d.themenfelder[0].abzeichen.name, d.themenfelder[0].abzeichen.erreicht, d.rang.name], ['Stein', '2026-11-10', 'Stein']);
 });
@@ -493,27 +493,27 @@ test('Leseansicht: Ausbilder und Beauftragte sehen alle Lernmodule mit Inhalt �
     const c = als(w, wer);
     // alle Pakete auf dem Server, mit den Berufen, für die sie eingeschaltet sind
     const liste = koerper(await ruf(w.u, 'GET', '/api/lerninhalte', { cookies: c })).pakete;
-    assert.deepEqual(liste.map((p: { id: string; titel: string; themenfelder: number; unterthemen: number; berufe: string[] }) => [p.id, p.titel, p.themenfelder, p.unterthemen, p.berufe]), [['fisi', 'Fachinformatiker Systemintegration', 2, 3, ['Fachinformatiker']]]);
+    assert.deepEqual(liste.map((p: { id: string; titel: string; themenfelder: number; unterthemen: number; berufe: string[] }) => [p.id, p.titel, p.themenfelder, p.unterthemen, p.berufe]), [['technik', 'Technik-Grundlagen', 2, 3, ['Mechatroniker']]]);
     // Übersicht: Themenfelder ohne Stand
-    const ue = koerper(await ruf(w.u, 'GET', '/api/lerninhalte/fisi', { cookies: c }));
+    const ue = koerper(await ruf(w.u, 'GET', '/api/lerninhalte/technik', { cookies: c }));
     assert.deepEqual(ue.themenfelder.map((f: { id: string }) => f.id), ['netz', 'wiso']);
     assert.equal(ue.rang, undefined);
     assert.deepEqual([ue.themenfelder[0].unterthemen[0].status, ue.themenfelder[0].zusatz[0].gelesen, ue.themenfelder[0].abzeichen.stufe], ['rot', false, 0]);
     // Themenfeld: der volle Inhalt, aber nichts von Anna
-    const t = await ruf(w.u, 'GET', '/api/lerninhalte/fisi/thema/netz', { cookies: c });
+    const t = await ruf(w.u, 'GET', '/api/lerninhalte/technik/thema/netz', { cookies: c });
     const thema = koerper(t).thema;
     assert.equal(thema.unterthemen[0].begriffe[0].begriff, 'Netzadresse');
     assert.deepEqual([thema.unterthemen[0].status, thema.unterthemen[0].luecke, thema.unterthemen[0].notiz, thema.zusatz[0].gelesen, thema.abzeichen.stufe], ['rot', '', '', false, 0]);
     assert.ok(!JSON.stringify(koerper(t)).includes('geheim'), 'weder Lernpunkt noch Notiz');
-    assert.ok(koerper(await ruf(w.u, 'GET', '/api/lerninhalte/fisi/kompendium', { cookies: c })).eintraege.length > 3);
+    assert.ok(koerper(await ruf(w.u, 'GET', '/api/lerninhalte/technik/kompendium', { cookies: c })).eintraege.length > 3);
     // unbekanntes Paket, unbekanntes Themenfeld, krumme Namen
-    for (const pfad of ['/api/lerninhalte/gibtsnicht', '/api/lerninhalte/fisi/thema/gibtsnicht', '/api/lerninhalte/..%2Ffisi', '/api/lerninhalte/FISI/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: c })).status, 404, pfad);
+    for (const pfad of ['/api/lerninhalte/gibtsnicht', '/api/lerninhalte/technik/thema/gibtsnicht', '/api/lerninhalte/..%2Ftechnik', '/api/lerninhalte/TECHNIK/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: c })).status, 404, pfad);
     // die Seiten der Azubis bleiben ihnen verschlossen – und schreiben können sie nichts
     assert.equal((await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).status, 403);
     assert.equal((await ruf(w.u, 'PATCH', '/api/lernen/unterthema/netz.subnetting', { cookies: c, body: { status: 'gelb' } })).status, 403);
   }
   // Azubis und Super-Admin haben die Leseansicht nicht
-  for (const wer of [w.anna, w.maler, admin(w.u.db)]) for (const pfad of ['/api/lerninhalte', '/api/lerninhalte/fisi', '/api/lerninhalte/fisi/thema/netz', '/api/lerninhalte/fisi/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) })).status, 403, `${wer.rolle} ${pfad}`);
+  for (const wer of [w.anna, w.maler, admin(w.u.db)]) for (const pfad of ['/api/lerninhalte', '/api/lerninhalte/technik', '/api/lerninhalte/technik/thema/netz', '/api/lerninhalte/technik/kompendium']) assert.equal((await ruf(w.u, 'GET', pfad, { cookies: als(w, wer) })).status, 403, `${wer.rolle} ${pfad}`);
   assert.equal((await ruf(w.u, 'GET', '/api/lerninhalte')).status, 401);
 });
 
@@ -677,7 +677,7 @@ test('Rückmeldung: Wünsche zu Lerninhalten ohne Person an die Ausbilder, Ideen
 
   // Themen für das Formular: nur für Azubis, nur Titel
   const themen = koerper(await ruf(w.u, 'GET', '/api/rueckmeldungen/themen', { cookies: als(w, w.anna) })).bereiche;
-  assert.deepEqual(themen.map((b: any) => [b.bereich, b.titel]), [['lernen', 'Fachinformatiker Systemintegration']]);
+  assert.deepEqual(themen.map((b: any) => [b.bereich, b.titel]), [['lernen', 'Technik-Grundlagen']]);
   assert.deepEqual(themen[0].felder[0], { id: 'netz', titel: 'Netzwerkgrundlagen', themen: [{ id: 'subnetting', titel: 'Subnetting' }, { id: 'vlan', titel: 'VLAN' }] });
   assert.deepEqual(koerper(await ruf(w.u, 'GET', '/api/rueckmeldungen/themen', { cookies: als(w, w.maler) })).bereiche, [], 'Beruf ohne Lernmodul');
   assert.equal((await ruf(w.u, 'GET', '/api/rueckmeldungen/themen', { cookies: als(w, w.ausbilder) })).status, 403);
@@ -704,9 +704,9 @@ test('Rückmeldung: Wünsche zu Lerninhalten ohne Person an die Ausbilder, Ideen
   const a = await fuerAusbilder();
   assert.equal(a.offen, 3);
   assert.deepEqual(a.inhalte.map((x: any) => [x.paketTitel, x.thema, x.text]).reverse(), [
-    ['Fachinformatiker Systemintegration', 'Netzwerkgrundlagen › Subnetting', 'Wie komme ich von /26 auf 62 Hosts?'],
-    ['Fachinformatiker Systemintegration', 'Wirtschaft', 'Das ganze Themenfeld ist mir zu knapp.'],
-    ['Fachinformatiker Systemintegration', '', 'Mir fehlt ein Thema zu Druckern.'],
+    ['Technik-Grundlagen', 'Netzwerkgrundlagen › Subnetting', 'Wie komme ich von /26 auf 62 Hosts?'],
+    ['Technik-Grundlagen', 'Wirtschaft', 'Das ganze Themenfeld ist mir zu knapp.'],
+    ['Technik-Grundlagen', '', 'Mir fehlt ein Thema zu Druckern.'],
   ]);
   assert.deepEqual(Object.keys(a.inhalte[0]).sort(), ['erledigtAm', 'id', 'paket', 'paketTitel', 'status', 'stelle', 'tag', 'text', 'thema'], 'kein Name, keine Rolle, keine Uhrzeit');
   // die Stelle zum Hinspringen: Themenfeld und – wenn gewählt – Unterthema

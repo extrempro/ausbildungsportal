@@ -12,7 +12,6 @@ export interface ChangelogEintrag {
  *   ## [0.6.0] – 2026-11-10
  *   ### Neu
  *   - Punkt
- * (aus dem FISI-Lernkompass übernommen)
  */
 export function parseChangelog(text: string): ChangelogEintrag[] {
   const eintraege: ChangelogEintrag[] = [];

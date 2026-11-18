@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 
-/** Zeichenfläche in festen Koordinaten; die Anzeige skaliert. Aus dem FISI-Lernkompass übernommen. */
+/** Zeichenfläche in festen Koordinaten; die Anzeige skaliert. */
 const BREITE = 600;
 const HOEHE = 200;
 

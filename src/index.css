@@ -1,4 +1,4 @@
-/* Design-Tokens aus dem FISI-Lernkompass – Farben nur hier definieren, nie hart im Code */
+/* Design-Tokens – Farben nur hier definieren, nie hart im Code */
 :root {
   --c-bg: #f8fafc;
   --c-card: #ffffff;
@@ -798,7 +798,7 @@ fieldset.abschnitt legend {
 }
 
 /* Drucken: nur der Nachweis, schwarz auf weiß, jede Woche auf einer eigenen Seite */
-/* ---------- Ausbildungsplan (Aufbau wie im FISI-Lernkompass) ---------- */
+/* ---------- Ausbildungsplan ---------- */
 .ueberschrift-klein {
   font-size: 12px;
   font-weight: 600;
@@ -4891,7 +4891,7 @@ details.klapp > summary:focus-visible,
 }
 
 /* ---------- Lernmodul ----------
-   Grafiken aus den Inhaltspaketen (Format des FISI-Lernkompass): Die SVGs nutzen nur die Klassen sv-… statt fester
+   Grafiken aus den Inhaltspaketen: Die SVGs nutzen nur die Klassen sv-… statt fester
    Farben und passen sich so an Hell und Dunkel an.
    Flächen: sv-box (neutral), sv-a (blau), sv-b (grün), sv-c (gelb), sv-d (violett), sv-e (rot)
    Linien: sv-ln, sv-ln-d (gestrichelt), sv-ln-a … sv-ln-e (farbig), sv-pf (Pfeilspitze)

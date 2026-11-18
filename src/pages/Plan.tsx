@@ -163,7 +163,7 @@ function obenBelegt(): number {
   return (document.querySelector('.leiste')?.getBoundingClientRect().height ?? 60) + hoehe('.plan-legende') + hoehe('.plan-inhalt');
 }
 
-/** Welche Woche steht gerade oben im Fenster? (aus dem FISI-Lernkompass übernommen) */
+/** Welche Woche steht gerade oben im Fenster? */
 function useAktiverAbschnitt(ids: string[]): string | null {
   const [aktiv, setAktiv] = useState<string | null>(null);
   const schluessel = ids.join('|');
@@ -648,7 +648,7 @@ function PlanKompass({ jahre, gelesen, heute, gesamt, schule, abteilung, durchla
   );
 }
 
-/** Ausbildungsplan eines Azubis – Aufbau wie im FISI-Lernkompass: oben diese und nächste Woche, links die Übersicht, rechts alle Kalenderwochen. */
+/** Ausbildungsplan eines Azubis: oben diese und nächste Woche, links die Übersicht, rechts alle Kalenderwochen. */
 export function PlanSeite({ azubiId }: { azubiId: number }) {
   const [d, setD] = useState<PlanAntwort | null>(null);
   const [berichte, setBerichte] = useState<BerichtListe | null>(null);

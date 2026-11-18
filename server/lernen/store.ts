@@ -1,5 +1,3 @@
-// Übernommen aus dem FISI-Lernkompass (https://github.com/extrempro/fisi-lernkompass, MIT), dort server/content/.
-// Das Inhaltsformat ist dasselbe – ein Inhaltspaket aus dem Lernkompass lässt sich unverändert einbinden.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BILD_DATEI, ID_MUSTER, parseThemaMarkdown } from './parse';
