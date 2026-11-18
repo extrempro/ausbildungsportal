@@ -488,3 +488,12 @@ export const MELDUNG_ROUTEN: Route[] = [
     },
   },
 ];
+
+/** Erledigte Rückmeldungen (alle drei Arten) werden so viele Tage nach „erledigt“ gelöscht – samt Gespräch und Bildschirmfoto. */
+export const MELDUNG_TAGE = 30;
+
+/** löscht erledigte Rückmeldungen nach MELDUNG_TAGE; offene bleiben, bis jemand sie erledigt. Gibt die Anzahl zurück. */
+export function loescheErledigteMeldungen(db: DB, jetzt: Date): number {
+  const grenze = new Date(jetzt.getTime() - MELDUNG_TAGE * 24 * 60 * 60 * 1000).toISOString();
+  return Number(db.prepare("DELETE FROM fehlermeldung WHERE status = 'erledigt' AND erledigt_am IS NOT NULL AND erledigt_am < ?").run(grenze).changes);
+}

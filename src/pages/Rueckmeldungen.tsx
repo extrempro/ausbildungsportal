@@ -115,7 +115,7 @@ export function Rueckmeldungen({ onGeaendert }: { onGeaendert: (offen: number) =
         <>
           <section aria-labelledby="rueck-wuensche">
             <h2 id="rueck-wuensche">Wünsche zu den Lerninhalten{offen.length > 0 ? ` (${offen.length} offen)` : ''}</h2>
-            <p className="leise">Azubis schreiben hier, was sie im Lernmodul besser erklärt haben möchten. Die Wünsche kommen ohne Namen an – nachfragen kannst du also nicht. Wenn du die Lerninhalte angepasst hast, markiere den Wunsch als erledigt.</p>
+            <p className="leise">Azubis schreiben hier, was sie im Lernmodul besser erklärt haben möchten. Die Wünsche kommen ohne Namen an – nachfragen kannst du also nicht. Wenn du die Lerninhalte angepasst hast, markiere den Wunsch als erledigt – 30 Tage danach wird er gelöscht.</p>
             {daten.inhalte.length === 0 && <p className="karte leise">Noch keine Wünsche.</p>}
             {offen.map(wunsch)}
             {erledigt.length > 0 && (

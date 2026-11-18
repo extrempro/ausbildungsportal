@@ -187,6 +187,14 @@ async function fuelle(url: string, api: () => Api, g: { petra: number; bea: numb
   await anna.ruf('POST', '/api/fehlermeldungen', { art: 'inhalt', thema: 'lernen|grundlagen|ablauf', text: 'Beim Planen der Schritte würde mir ein Beispiel mit einem echten Auftrag helfen.' });
   await anna.ruf('POST', '/api/fehlermeldungen', { art: 'idee', seite: '/berichtsheft', text: 'Eine Erinnerung am Freitag, wenn der Bericht der Woche noch fehlt, wäre praktisch.' });
   await bea.ruf('POST', '/api/fehlermeldungen', { art: 'fehler', seite: '/urlaub', fenster: '1280 × 860', technik: '', text: 'Nach dem Bestätigen eines Antrags springt die Liste ganz nach oben.' });
+  // Rückfragen: die Ausbilderin fragt zur Idee nach, Anna antwortet; der Super-Admin fragt zum Fehler nach
+  const meldungen = (await petra.ruf('GET', '/api/rueckmeldungen')) as { ideen: { id: number }[] };
+  const idee = meldungen.ideen[0].id;
+  await petra.ruf('POST', `/api/rueckmeldungen/${idee}/nachricht`, { text: 'Gute Idee! Lieber am Freitagmittag oder erst am Montag früh?' });
+  await anna.ruf('POST', `/api/meine-meldungen/${idee}/antwort`, { text: 'Freitagmittag – dann habe ich die Woche noch im Kopf.' });
+  const chef = await api().alsAdmin();
+  const fehler = ((await chef.ruf('GET', '/api/fehlermeldungen')) as { meldungen: { id: number; art: string }[] }).meldungen.find((m) => m.art === 'fehler')!.id;
+  await chef.ruf('POST', `/api/fehlermeldungen/${fehler}/nachricht`, { text: 'Danke! Passiert das bei jedem Antrag oder nur bei langen Listen?' });
   const begleiter = await anna.ruf('PUT', '/api/begleiter', { an: true, figur: 'fuchs', name: 'Fiete' });
   await anna.ruf('POST', '/api/begleiter/gefeiert', { stufe: begleiter.stufe });
   return { cem, url };
@@ -298,6 +306,7 @@ async function main() {
       },
     });
     await s.keyboard.press('Escape');
+    await foto(s, '/meine-meldungen', 'azubi-19-meine-meldungen', 'Meine Meldungen', 'Eigene Fehlermeldungen und Ideen mit dem Gespräch dazu: Fragt jemand nach, sagt die Glocke Bescheid, und hier steht die Antwort. Erledigte Meldungen werden 30 Tage danach gelöscht.', { ganz: true });
     await foto(s, '/handbuch', 'azubi-13-handbuch', 'Handbuch', 'Jede Rolle hat ihr eigenes Handbuch mit Inhaltsverzeichnis und Suche.');
     await foto(s, '/berichtsheft', 'azubi-17-abmelde-warnung', 'Warnung vor dem Abmelden', 'Fünf Minuten bevor das Portal nach langer Pause abmeldet, erscheint dieses Fenster mit der verbleibenden Zeit. „Angemeldet bleiben“ verlängert.', {
       vorher: async () => {
@@ -339,7 +348,7 @@ async function main() {
     await foto(s, '/jahreskalender', 'ausbilder-07-jahreskalender', 'Jahreskalender', 'Wer ist wann wo: je Azubi eine Zeile mit Schule, Einsätzen und Urlaub.');
     await foto(s, '/lerninhalte/muster/grundlagen', 'ausbilder-08-lerninhalte', 'Lerninhalte ansehen', 'Ausbilder und Beauftragte sehen die Lerninhalte nur zum Lesen – ohne Ampel, Notizen und Abzeichen der Azubis.');
     await foto(s, '/lerninhalte', 'ausbilder-11-lerninhalte-verwalten', 'Lerninhalte verwalten', 'Je Lernmodul eine Karte mit Stand und Berufen. Ausbilder reichen neue Fassungen ein; eine andere Ausbilderin prüft sie, bevor sie ins Portal kommen.', { ganz: true });
-    await foto(s, '/rueckmeldungen', 'ausbilder-12-rueckmeldungen', 'Rückmeldungen', 'Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal zum Mitlesen.', { ganz: true });
+    await foto(s, '/rueckmeldungen', 'ausbilder-12-rueckmeldungen', 'Rückmeldungen', 'Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal; bei Ideen kann die Ausbilderin nachfragen.', { ganz: true });
     await foto(s, '/verwaltung/stammdaten', 'ausbilder-09-stammdaten', 'Stammdaten', 'Betrieb, Berufe, Berufsschulen, Abteilungen und Firmentermine.');
     await foto(s, '/verwaltung/konten', 'ausbilder-10-konten', 'Konten', 'Ausbilder legen Konten für Azubis und Beauftragte an.');
     await s.context().close();
@@ -357,7 +366,7 @@ async function main() {
     s = await p.seite(ADMIN.name, PC);
     await foto(s, '/verwaltung/konten', 'admin-01-konten', 'Konten', 'Der Super-Admin verwaltet Konten. Berichte, Pläne und Urlaub sieht er nicht.');
     await foto(s, '/verwaltung/protokoll', 'admin-02-protokoll', 'Protokoll', 'Anmeldungen und Änderungen – ohne Inhalte von Berichten und Plänen.');
-    await foto(s, '/verwaltung/meldungen', 'admin-04-meldungen', 'Rückmeldungen', 'Fehlermeldungen und Ideen fürs Portal. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.', { ganz: true });
+    await foto(s, '/verwaltung/meldungen', 'admin-04-meldungen', 'Rückmeldungen', 'Fehlermeldungen und Ideen fürs Portal, mit Rückfrage an die Person und ihrer Antwort. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.', { ganz: true });
     await foto(s, '/verwaltung/erscheinungsbild', 'admin-03-erscheinungsbild', 'Erscheinungsbild', 'Logo des Betriebs und der Schalter für den Begleiter der Azubis.', { ganz: true });
     await s.context().close();
 

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { dailyBackup, openDatabase } from '../db';
+import { loescheErledigteMeldungen, MELDUNG_TAGE } from '../meldungen';
 import { loescheAltesProtokoll, protokolliere, PROTOKOLL_TAGE } from '../protokoll';
 import { neueDb } from './hilfe';
 
@@ -23,6 +24,24 @@ test('Protokoll: Einträge älter als 90 Tage werden gelöscht – alle Arten, j
   const rest = db.prepare('SELECT aktion FROM protokoll ORDER BY zeit').all() as { aktion: string }[];
   assert.deepEqual(rest.map((r) => r.aktion), ['anmeldung', 'zuweisung_geaendert']);
   assert.equal(loescheAltesProtokoll(db, jetzt), 0, 'beim nächsten Lauf gibt es nichts mehr zu löschen');
+});
+
+test('Rückmeldungen: erledigte werden 30 Tage nach „erledigt“ gelöscht – samt Gespräch; offene bleiben, egal wie alt', async () => {
+  const db = await neueDb();
+  const jetzt = new Date('2026-11-18T10:00:00.000Z');
+  const vor = (tage: number) => new Date(jetzt.getTime() - tage * TAG).toISOString();
+  const neu = (art: string, status: string, erledigt: string | null, zeit = vor(400)) =>
+    Number(db.prepare("INSERT INTO fehlermeldung (zeit, benutzer_id, benutzer_name, rolle, text, art, status, erledigt_am) VALUES (?, NULL, '', 'azubi', ?, ?, ?, ?)").run(zeit, `${art} ${status}`, art, status, erledigt).lastInsertRowid);
+  const alt = neu('fehler', 'erledigt', vor(MELDUNG_TAGE + 1));
+  neu('inhalt', 'erledigt', vor(45));
+  neu('idee', 'erledigt', vor(MELDUNG_TAGE - 1));
+  neu('fehler', 'offen', null, vor(800));
+  db.prepare("INSERT INTO fehlermeldung_nachricht (meldung_id, zeit, von_id, von_name, von_rolle, text) VALUES (?, ?, NULL, 'Super-Admin', 'admin', 'Rückfrage')").run(alt, vor(50));
+  assert.equal(loescheErledigteMeldungen(db, jetzt), 2);
+  const rest = db.prepare('SELECT text FROM fehlermeldung ORDER BY id').all() as { text: string }[];
+  assert.deepEqual(rest.map((r) => r.text), ['idee erledigt', 'fehler offen']);
+  assert.equal((db.prepare('SELECT COUNT(*) AS n FROM fehlermeldung_nachricht').get() as { n: number }).n, 0, 'das Gespräch ist mit weg');
+  assert.equal(loescheErledigteMeldungen(db, jetzt), 0);
 });
 
 test('Tägliche Sicherung: höchstens eine am Tag, die letzten sieben bleiben, Anhänge sind darin', async () => {

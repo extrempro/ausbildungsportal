@@ -3,6 +3,7 @@ import { wechsleZumBesitzer } from './benutzer-wechsel';
 import { loadConfig } from './config';
 import { dailyBackup, openDatabase } from './db';
 import { erzeugeServer } from './http';
+import { loescheErledigteMeldungen, MELDUNG_TAGE } from './meldungen';
 import { loescheAltesProtokoll, PROTOKOLL_TAGE } from './protokoll';
 import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
@@ -28,6 +29,7 @@ if (cfg.devAnmeldung) console.warn('WARNUNG: DEV_ANMELDUNG ist an – Anmeldung 
  * Pflege, beim Start und dann stündlich:
  * - abgelaufene Sitzungen und Anmeldevorgänge entfernen,
  * - Protokolleinträge nach 90 Tagen löschen,
+ * - erledigte Rückmeldungen 30 Tage nach „erledigt“ löschen,
  * - einmal am Tag eine Sicherung anlegen (die letzten sieben bleiben, siehe KEEP in db.ts).
  */
 const pflege = () => {
@@ -35,6 +37,8 @@ const pflege = () => {
   raeumeAuf(db, jetzt);
   const geloescht = loescheAltesProtokoll(db, jetzt);
   if (geloescht > 0) console.log(`Protokoll: ${geloescht} Einträge älter als ${PROTOKOLL_TAGE} Tage gelöscht`);
+  const meldungen = loescheErledigteMeldungen(db, jetzt);
+  if (meldungen > 0) console.log(`Rückmeldungen: ${meldungen} seit mehr als ${MELDUNG_TAGE} Tagen erledigte gelöscht`);
   dailyBackup(db, cfg.dataDir).then(
     (datei) => datei && console.log(`Tägliche Sicherung angelegt: ${datei}`),
     (e: unknown) => console.error(`FEHLER: Tägliche Sicherung fehlgeschlagen: ${e instanceof Error ? e.message : String(e)}`),
