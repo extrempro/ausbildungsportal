@@ -27,6 +27,11 @@ Maßstab sind die [OWASP Top 10:2025](https://owasp.org/Top10/2025/) – die zeh
 | A09 Protokoll | Anmeldungen, Fehlversuche (mit IP) und Änderungen an Konten, Rechten und Einstellungen stehen im Protokoll; nach 90 Tagen wird gelöscht. Geheimnisse (Webhook, SMTP, Kalender-Link) werden nie ausgegeben. |
 | A10 Ausnahmen | Unerwartete Fehler → 500 mit „Interner Fehler“, Einzelheiten nur ins Server-Log. Ausfälle von Teams oder Mail halten nichts auf. |
 
+## Beim Betreiber geprüft
+
+- Reverse Proxy, TLS und Netz (vom Betreiber bestätigt, 18.11.2026).
+- Der Entra-Mandant: Zuweisung der Anwendung und bedingter Zugriff (vom Betreiber bestätigt, 18.11.2026).
+
 ## Offen
 
 - **Abgelehnte Zugriffe** (403/404 auf fremde Kennungen) werden nicht protokolliert. Häufen sie sich, wäre das ein Hinweis auf jemanden, der probiert. Bei Bedarf ergänzen – ohne Inhalte, nur Konto, Pfad und Zeit.
@@ -34,6 +39,4 @@ Maßstab sind die [OWASP Top 10:2025](https://owasp.org/Top10/2025/) – die zeh
 ## Nicht geprüft
 
 - Ein Penetrationstest durch Dritte und automatische Scanner (z. B. OWASP ZAP) gegen eine laufende Installation.
-- Reverse Proxy, TLS und Netz beim Betreiber.
-- Der Entra-Mandant (Zuweisung der Anwendung, bedingter Zugriff).
 - Die Pakete selbst über `npm audit` hinaus.
