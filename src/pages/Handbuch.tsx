@@ -307,7 +307,7 @@ const FEHLER = (rolle: Rolle): Kapitel => ({
           </li>
         )}
         <li>
-          <strong>Rückfragen:</strong> Zu einem Fehler kann der Betreiber des Portals nachfragen, zu einer Idee auch die Ausbilder. Ist deine Meldung schon erledigt und du antwortest, ist sie wieder offen.{rolle !== 'admin' ? ' Per Teams oder E-Mail erfährst du davon, wenn du den Bereich „Rückmeldungen“ unter „Benachrichtigungen“ einschaltest.' : ''}
+          <strong>Rückfragen:</strong> Zu einem Fehler kann der Betreiber des Portals nachfragen, zu einer Idee auch die Ausbilder. Ist deine Meldung schon erledigt und du antwortest, ist sie wieder offen. Erledigte Meldungen werden 30 Tage danach gelöscht, samt Gespräch.{rolle !== 'admin' ? ' Per Teams oder E-Mail erfährst du davon, wenn du den Bereich „Rückmeldungen“ unter „Benachrichtigungen“ einschaltest.' : ''}
         </li>
         <li>Nicht jede Idee lässt sich umsetzen. Wenn es eilt, sprich zusätzlich deinen Ausbilder oder die IT an.</li>
         <li>Fragen zur Ausbildung oder zu einem Bericht gehören nicht hierher – die klärst du mit deinem Ausbilder.</li>
@@ -1652,7 +1652,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Nachfragen kannst du bei einem Wunsch zu den Lerninhalten nicht – er ist ohne Namen gespeichert. Sprich das Thema lieber allgemein an, statt zu rätseln, von wem der Wunsch kommt.</li>
                 <li>Bei wenigen Azubis in einem Beruf lässt sich manchmal erraten, wer geschrieben hat. Geh damit so um, wie du es dir selbst wünschen würdest.</li>
                 <li>Alle Ausbilder sehen dieselbe Liste. Ausbildungsbeauftragte und der Super-Admin sehen die Wünsche zu den Lerninhalten nicht.</li>
-                <li>„Wunsch löschen“ entfernt ihn endgültig. Eine automatische Löschfrist gibt es nicht.</li>
+                <li>„Wunsch löschen“ entfernt ihn sofort endgültig. Erledigte Wünsche löscht das Portal 30 Tage nach „erledigt“ von selbst; offene bleiben.</li>
                 <li>Fehler, die jemand meldet, gehen nur an den Betreiber des Portals.</li>
               </ul>
             </>
@@ -2072,7 +2072,7 @@ const ADMIN: Kapitel[] = [
           <li>
             <strong>Nachfragen:</strong> Unter jeder Meldung „Rückfrage stellen“ aufklappen, schreiben, „Rückfrage senden“. Die Person sieht es in ihrer Glocke (und per Teams oder E-Mail, wenn sie das eingeschaltet hat) und antwortet unter „Meine Meldungen“. Bei Ideen können auch die Ausbilder nachfragen und lesen das Gespräch mit. Hat die Person zuletzt geschrieben, steht an der Meldung „Neue Antwort“; ihre Antwort öffnet eine erledigte Meldung wieder. Gibt es das Konto nicht mehr, ist keine Rückfrage möglich.
           </li>
-          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie endgültig, samt Gespräch. Eine automatische Löschfrist gibt es nicht.</li>
+          <li>„Als Text kopieren“ erzeugt eine Fassung ohne Namen zum Weitergeben. „Als erledigt markieren“ räumt die Liste auf, „Meldung löschen“ entfernt sie sofort endgültig, samt Gespräch. Erledigte Meldungen löscht das Portal 30 Tage nach „erledigt“ von selbst, samt Gespräch und Bildschirmfoto; offene bleiben. Wird eine erledigte Meldung durch eine Antwort wieder offen, beginnt die Frist neu.</li>
           <li>Wer den Server betreibt, kann eine Benachrichtigung in Teams einrichten; sie kommt bei jedem neuen Fehler, jeder neuen Idee und jeder Antwort auf eine Rückfrage – so erfährst du davon, obwohl du keine Glocke hast. Ob sie eingerichtet ist, steht oben auf der Seite; dort lässt sich auch eine Testnachricht senden.</li>
           <li>Davon getrennt sind die persönlichen Benachrichtigungen per Teams und E-Mail, die Azubis, Ausbildungsbeauftragte und Ausbilder unter „Konto“ für sich einschalten. Sie brauchen eine eigene Einrichtung auf dem Server (README, Abschnitt „Benachrichtigungen per Teams und E-Mail“). Ein Super-Admin bekommt keine.</li>
         </ul>

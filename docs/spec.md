@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.72.1 · 17.11.2026
+Stand: Version 0.73.0 · 18.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -177,7 +177,7 @@ Dazu, nicht privat: `lern_paket_stand` (Prüfsumme je Unterthema, für „Lernin
 | --- | --- |
 | `aktivitaet` | Einträge der Glocke: Zeit, Azubi, wer, Art, Woche, Titel; Löschung nach 60 Tagen. Bei persönlichen Arten (aktualisierte Lerninhalte, Rückfragen) steht in `azubi_id` die Person, für die der Eintrag ist – nur sie sieht ihn |
 | `protokoll` | Zeit, Bereich, Aktion, wer, betroffen, Angabe; Löschung nach 90 Tagen |
-| `fehlermeldung` | Rückmeldungen aller drei Arten (`art`); bei Wünschen zu Lerninhalten ohne Person. `antwort_neu`: die Person hat zuletzt geschrieben; `person_gesehen`: bis zu welcher Nachricht sie gelesen hat |
+| `fehlermeldung` | Rückmeldungen aller drei Arten (`art`); bei Wünschen zu Lerninhalten ohne Person. Löschung 30 Tage nach „erledigt“ (`erledigt_am`), samt Gespräch und Bild. `antwort_neu`: die Person hat zuletzt geschrieben; `person_gesehen`: bis zu welcher Nachricht sie gelesen hat |
 | `fehlermeldung_nachricht` | Gespräch zu einem Fehler oder einer Idee: Zeit, wer (Konto, Name, Rolle), Text; wird mit der Meldung gelöscht |
 | `einstellungen` | Schlüssel/Wert: Betrieb, Bundesland, Berichtsform, Logos, Personalstelle, Schalter |
 | `schema_version` | Stand der Migrationen |

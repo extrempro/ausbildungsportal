@@ -57,7 +57,7 @@ export function MeineMeldungen({ onGeaendert }: { onGeaendert: (neu: number) => 
     <>
       <h1>Meine Meldungen</h1>
       <p className="leise">
-        Deine Fehlermeldungen und Ideen fürs Portal. Hat jemand eine Rückfrage, steht sie hier – und die Glocke sagt dir Bescheid. Wünsche zu Lerninhalten stehen hier nicht: Sie kommen ohne deinen Namen an, deshalb kann dazu niemand nachfragen.{' '}
+        Deine Fehlermeldungen und Ideen fürs Portal. Hat jemand eine Rückfrage, steht sie hier – und die Glocke sagt dir Bescheid. Erledigte Meldungen werden 30 Tage danach gelöscht. Wünsche zu Lerninhalten stehen hier nicht: Sie kommen ohne deinen Namen an, deshalb kann dazu niemand nachfragen.{' '}
         <HandbuchLink kapitel="fehler">Rückmeldung geben</HandbuchLink>
       </p>
       {fehler && (

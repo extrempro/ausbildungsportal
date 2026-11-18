@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.65.0 (erzeugt am 13.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.73.0 (erzeugt am 18.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
@@ -118,6 +118,12 @@ Was das Portal für Tastatur, Vorleseprogramm und Vergrößerung bietet, was noc
 
 ![Barrierefreiheit im Handbuch](azubi-18-barrierefreiheit.png)
 
+### Meine Meldungen
+
+Eigene Fehlermeldungen und Ideen mit dem Gespräch dazu: Fragt jemand nach, sagt die Glocke Bescheid, und hier steht die Antwort. Erledigte Meldungen werden 30 Tage danach gelöscht.
+
+![Meine Meldungen](azubi-19-meine-meldungen.png)
+
 ## Ausbilderin
 
 ### Startseite
@@ -188,7 +194,7 @@ Je Lernmodul eine Karte mit Stand und Berufen. Ausbilder reichen neue Fassungen 
 
 ### Rückmeldungen
 
-Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal zum Mitlesen.
+Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal; bei Ideen kann die Ausbilderin nachfragen.
 
 ![Rückmeldungen](ausbilder-12-rueckmeldungen.png)
 
@@ -228,7 +234,7 @@ Logo des Betriebs und der Schalter für den Begleiter der Azubis.
 
 ### Rückmeldungen
 
-Fehlermeldungen und Ideen fürs Portal. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.
+Fehlermeldungen und Ideen fürs Portal, mit Rückfrage an die Person und ihrer Antwort. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.
 
 ![Rückmeldungen](admin-04-meldungen.png)
 

@@ -1,6 +1,6 @@
 # Anmeldung über Microsoft Entra ID einrichten
 
-Stand: 17.11.2026 · passt zu Version 0.72.1
+Stand: 18.11.2026 · passt zu Version 0.73.0
 
 Diese Anleitung beschreibt, wie das Ausbildungsportal im eigenen Entra-Mandanten als Anwendung angelegt wird, damit sich Azubis, Ausbildungsbeauftragte und Ausbilder mit ihrem Microsoft-Konto anmelden können. Der Super-Admin meldet sich weiterhin lokal an und braucht nichts davon.
 
@@ -70,7 +70,7 @@ Das Portal kann die Profilbilder aus Microsoft 365 zeigen. Dafür liest es bei d
 2. **Administratorzustimmung erteilen** – sonst fragt Microsoft jede Person bei der nächsten Anmeldung nach ihrer Zustimmung, oder die Anmeldung scheitert, wenn Benutzer bei euch nicht selbst zustimmen dürfen.
 3. Erst danach in der `.env` `ENTRA_PROFILBILD=true` setzen und `docker compose up -d`.
 
-Gut zu wissen: Ohne den Schalter verlangt das Portal wie bisher nur `openid profile email`. Liefert Graph kein Bild oder antwortet nicht, gelingt die Anmeldung trotzdem. Jede Person kann ihr Bild unter „Konto“ abschalten; es wird dann gelöscht. Mit einem echten Mandanten ist diese Funktion noch nicht erprobt.
+Gut zu wissen: Ohne den Schalter verlangt das Portal wie bisher nur `openid profile email`. Liefert Graph kein Bild oder antwortet nicht, gelingt die Anmeldung trotzdem. Jede Person kann ihr Bild unter „Konto“ abschalten; es wird dann gelöscht. Mit einem echten Mandanten ist diese Funktion erprobt.
 
 ## Schritt 5 – Zugriff auf die Ausbildungsgruppe beschränken (empfohlen)
 
