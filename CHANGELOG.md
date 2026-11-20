@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.74.1] – 2026-11-20
+
+### Geändert
+
+- Regeln für Mitwirkende (`CONTRIBUTING.md`, `CLAUDE.md`): Frameworks, Pakete und Werkzeuge werden – wenn möglich – in der aktuellen stabilen Version genutzt; keine veralteten oder nicht mehr gepflegten Pakete. Geht es nicht, steht der Grund im Pull Request.
+
 ## [0.74.0] – 2026-11-20
 
 ### Neu

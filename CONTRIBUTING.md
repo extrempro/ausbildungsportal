@@ -65,6 +65,7 @@ Bei jeder neuen Funktion fragen: Erfährt dadurch eine andere Person etwas Neues
 ### Technik
 
 - **Keine neuen Abhängigkeiten** ohne vorherige Abstimmung. Kein UI-Framework, keine CSS-Bibliothek.
+- **Aktuelle Versionen:** Frameworks, Pakete und Werkzeuge (Node, React, esbuild, tsx, TypeScript, Playwright, Docker-Basisabbild) – wenn möglich – in der aktuellen stabilen Version nutzen. Keine Pakete, die nicht mehr gepflegt oder als veraltet (deprecated) markiert sind. Geht die aktuelle Version nicht, steht im Pull Request, welche es ist und warum.
 - **`package-lock.json` gehört ins Repository.** Installiert wird mit `npm ci`. Wer ein Paket hinzufügt oder aktualisiert (`npm install paket@version`, `npm update`), checkt die geänderte Lock-Datei im selben Pull Request mit ein; Docker und CI bauen nur, was darin steht.
 - **Datenbank:** Änderungen nur als neue, fortlaufend nummerierte Datei in `server/migrations/`. Vorhandene Migrationen werden nie geändert.
 - **Gestaltung:** ein Stylesheet (`src/index.css`), Farben nur über die vorhandenen Variablen (`--c-…`), damit hell und dunkel stimmen. Welche Farben und Bausteine es gibt, zeigt [docs/gestaltung.md](docs/gestaltung.md) – erst dort nachsehen, dann neu bauen.

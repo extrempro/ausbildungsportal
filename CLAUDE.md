@@ -56,6 +56,8 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 
 Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines CSS, esbuild; für die E2E-Tests Playwright (nur Entwicklung). **Keine neuen Abhängigkeiten** ohne Rückfrage beim Nutzer.
 
+**Aktuelle Versionen:** Frameworks, Pakete und Werkzeuge (Node, React, esbuild, tsx, TypeScript, Playwright, Docker-Basisabbild) werden – wenn möglich – in der aktuellen stabilen Version genutzt, auch wenn ein neues Paket abgestimmt wird. Keine Pakete, die nicht mehr gepflegt oder als veraltet (deprecated) markiert sind. Geht die aktuelle Version nicht, im Pull Request sagen, welche Version es ist und warum.
+
 ## Bei jeder Änderung
 
 1. **Branch + Pull Request.** Nie direkt nach `main`; der Nutzer mergt.
