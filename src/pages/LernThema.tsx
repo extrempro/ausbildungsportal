@@ -6,8 +6,8 @@ import { HandbuchLink } from '../handbuchLink';
 import { Icon } from '../icons';
 import { AMPEL_REGEL, AMPEL_TEXT, ampelVon, prozent, zaehle, zusammenfassung } from '../lernen/ampel';
 import type { LernStatus } from '../lernen/ampel';
-import { AmpelSchalter, Grafik, Inline, StapelBalken, StatusPille, TabelleAnsicht } from '../lernen/teile';
-import type { Bild, Tabelle } from '../lernen/teile';
+import { AmpelSchalter, Grafik, Inline, Markiert, StapelBalken, StatusPille, TabelleAnsicht } from '../lernen/teile';
+import type { Bild, Markierung, Tabelle } from '../lernen/teile';
 import { ZusatzBereich } from '../lernen/zusatz';
 import type { Verweis, Zusatz } from '../lernen/zusatz';
 import { Link, useUngespeichert } from '../router';
@@ -33,6 +33,8 @@ interface Unterthema {
   notiz: string;
   geaendert: string | null;
   inhaltAktualisiert: boolean;
+  /** was seit dem zuletzt gesehenen Stand neu ist oder sich geändert hat – null, wenn nichts oder der alte Stand unbekannt ist */
+  aenderungen: Aenderungen | null;
   /** Zusatzwissen, das dieses Unterthema vertieft */
   vertiefung: Verweis[];
 }
@@ -48,6 +50,17 @@ interface Thema {
   unterthemen: Unterthema[];
   zusatz: Zusatz[];
   abzeichen: FeldAbzeichen;
+}
+
+interface Aenderungen {
+  begriffe: Markierung[];
+  tabellen: { titel: Markierung; zeilen: Markierung[] }[];
+  befehle: Markierung[];
+  merksatz: Markierung;
+  frage: Markierung;
+  abbildungen: Markierung[];
+  entfernt: number;
+  markiert: number;
 }
 
 type Aenderung = { status?: LernStatus; luecke?: string; notiz?: string; bestaetigen?: true };
@@ -95,9 +108,9 @@ export function LernThema({ id }: { id: string }) {
 
   const aendere = useCallback(
     async (unterthema: string, patch: Aenderung) => {
-      const r = await api<Pick<Unterthema, 'status' | 'luecke' | 'notiz' | 'geaendert' | 'inhaltAktualisiert'> & Erfolg>('PATCH', `/api/lernen/unterthema/${id}.${unterthema}`, patch);
+      const r = await api<Pick<Unterthema, 'status' | 'luecke' | 'notiz' | 'geaendert' | 'inhaltAktualisiert' | 'aenderungen'> & Erfolg>('PATCH', `/api/lernen/unterthema/${id}.${unterthema}`, patch);
       // die Antwort nennt die volle Kennung (themenfeld.unterthema) – hier zählt nur der neue Stand
-      const stand = { status: r.status, luecke: r.luecke, notiz: r.notiz, geaendert: r.geaendert, inhaltAktualisiert: r.inhaltAktualisiert };
+      const stand = { status: r.status, luecke: r.luecke, notiz: r.notiz, geaendert: r.geaendert, inhaltAktualisiert: r.inhaltAktualisiert, aenderungen: r.aenderungen };
       setDaten((d) => d && { ...d, thema: { ...d.thema, unterthemen: d.thema.unterthemen.map((u) => (u.id === unterthema ? { ...u, ...stand } : u)) } });
       setFelder((fs) => fs.map((f) => (f.id === id ? { ...f, unterthemen: f.unterthemen.map((u) => (u.id === unterthema ? { ...u, status: r.status } : u)) } : f)));
       if (patch.status !== undefined) nachSpeichern(r);
@@ -460,7 +473,7 @@ function UnterthemaKarte({ feld, u, nr, von, aendere }: { feld: string; u: Unter
 
       {!lesen && u.inhaltAktualisiert && (
         <p className="hinweis lern-neu">
-          <span>Der Inhalt wurde aktualisiert – ein zweiter Blick lohnt sich.</span>
+          <span>{hinweisAktualisiert(u.aenderungen)}</span>
           <button type="button" className="knopf schlicht" disabled={laeuft} onClick={() => void tue({ bestaetigen: true })}>
             Als gesehen merken
           </button>
@@ -503,7 +516,7 @@ function UnterthemaKarte({ feld, u, nr, von, aendere }: { feld: string; u: Unter
       {u.hatInhalt ? (
         // das Cheatsheet steht offen da – man liest ein Themenfeld von oben nach unten, ohne jedes Unterthema aufzuklappen
         <div className="lern-cheatsheet">
-          <Inhalt u={u} />
+          <Inhalt u={u} a={lesen ? null : u.aenderungen} />
         </div>
       ) : (
         <p className="leise">Zu diesem Unterthema gibt es noch kein Cheatsheet.{lesen ? '' : ' Du kannst dir trotzdem eine Notiz machen.'}</p>
@@ -546,17 +559,26 @@ function TextMitSpeichern({ label, platzhalter, wert, knopf, hinweis, klasse, on
   );
 }
 
-function Inhalt({ u }: { u: Unterthema }) {
+/** Text des Hinweises über einem aktualisierten Unterthema – mit den Markierungen, wenn der alte Stand bekannt ist. */
+function hinweisAktualisiert(a: Aenderungen | null): string {
+  if (!a) return 'Der Inhalt wurde aktualisiert – ein zweiter Blick lohnt sich.';
+  const weg = a.entfernt === 0 ? '' : a.entfernt === 1 ? ' Eine Stelle ist weggefallen.' : ` ${a.entfernt} Stellen sind weggefallen.`;
+  if (a.markiert === 0) return `Der Inhalt wurde aktualisiert.${weg || ' Es hat sich nur eine Kleinigkeit geändert, z. B. die Reihenfolge.'}`;
+  return `Der Inhalt wurde aktualisiert. Markiert ist, was seit deinem letzten Blick neu ist oder sich geändert hat.${weg}`;
+}
+
+function Inhalt({ u, a }: { u: Unterthema; a: Aenderungen | null }) {
   return (
     <div className="lern-inhalt">
       {u.begriffe.length > 0 && (
         <div>
           <h4>Kernbegriffe</h4>
           <dl className="lern-begriffe">
-            {u.begriffe.map((b) => (
-              <div key={b.begriff}>
+            {u.begriffe.map((b, i) => (
+              <div key={b.begriff} className={a?.begriffe[i] ? 'lern-markiert' : undefined}>
                 <dt>
                   <Inline text={b.begriff} />
+                  <Markiert m={a?.begriffe[i]} />
                 </dt>
                 <dd>
                   <Inline text={b.erklaerung} />
@@ -566,40 +588,48 @@ function Inhalt({ u }: { u: Unterthema }) {
           </dl>
         </div>
       )}
-      {u.abbildungen.map((a) => (
-        <div key={a.titel}>
-          <h4>{a.titel}</h4>
+      {u.abbildungen.map((abb, i) => (
+        <div key={abb.titel} className={a?.abbildungen[i] ? 'lern-markiert' : undefined}>
+          <h4>
+            {abb.titel}
+            <Markiert m={a?.abbildungen[i]} />
+          </h4>
           <div className="lern-grafiken">
-            {a.bilder.map((b) => (
+            {abb.bilder.map((b) => (
               <Grafik key={b.datei} bild={b} />
             ))}
           </div>
         </div>
       ))}
-      {u.tabellen.map((t) => (
-        <div key={t.titel}>
-          <h4>{t.titel}</h4>
-          <TabelleAnsicht t={t} />
+      {u.tabellen.map((t, i) => (
+        <div key={t.titel} className={a?.tabellen[i]?.titel ? 'lern-markiert' : undefined}>
+          <h4>
+            {t.titel}
+            <Markiert m={a?.tabellen[i]?.titel} />
+          </h4>
+          <TabelleAnsicht t={t} markierung={a?.tabellen[i]?.zeilen} />
         </div>
       ))}
       {u.befehle.length > 0 && (
         <div>
           <h4>Befehle</h4>
           <ul className="lern-befehle">
-            {u.befehle.map((b) => (
-              <li key={b.befehl}>
+            {u.befehle.map((b, i) => (
+              <li key={b.befehl} className={a?.befehle[i] ? 'lern-markiert' : undefined}>
                 <code>{b.befehl}</code>
                 {b.info && <span className="leise"> {b.info}</span>}
+                <Markiert m={a?.befehle[i]} />
               </li>
             ))}
           </ul>
         </div>
       )}
       {u.merksatz && (
-        <div className="lern-merksatz">
+        <div className={`lern-merksatz${a?.merksatz ? ' lern-markiert' : ''}`}>
           <Icon name="hilfe" />
           <div>
             <strong>Merksatz</strong>
+            <Markiert m={a?.merksatz} />
             <p>
               <Inline text={u.merksatz} />
             </p>
@@ -607,8 +637,11 @@ function Inhalt({ u }: { u: Unterthema }) {
         </div>
       )}
       {u.frage && (
-        <div className="lern-frage">
-          <h4>Typische Prüfungsfrage</h4>
+        <div className={`lern-frage${a?.frage ? ' lern-markiert' : ''}`}>
+          <h4>
+            Typische Prüfungsfrage
+            <Markiert m={a?.frage} />
+          </h4>
           <p>
             <strong>
               <Inline text={u.frage.frage} />

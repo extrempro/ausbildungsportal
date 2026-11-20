@@ -5361,6 +5361,47 @@ html.dark {
   margin: 0 0 8px;
 }
 
+/* Stelle, die seit dem letzten Blick neu ist oder sich geändert hat: Strich am Rand und die Marke „neu“ bzw. „geändert“ */
+/* der Strich steht links neben dem Inhalt, damit nichts verrutscht */
+.lern-markiert {
+  margin-left: -10px;
+  padding-left: 10px;
+  box-shadow: inset 3px 0 0 var(--c-accent);
+}
+
+/* Kästen und Karten haben eigenen Innenabstand: dort sitzt der Strich am Rand des Kastens */
+.lern-merksatz.lern-markiert,
+.lern-frage.lern-markiert {
+  margin-left: 0;
+  padding-left: 16px;
+}
+
+.lern-tabelle-karten li.lern-markiert {
+  margin-left: 0;
+  padding-left: 12px;
+}
+
+tr.lern-markiert {
+  box-shadow: none;
+}
+
+tr.lern-markiert td:first-child {
+  box-shadow: inset 3px 0 0 var(--c-accent);
+}
+
+.lern-inhalt .lern-marke,
+.lern-inhalt td > .lern-marke {
+  margin-left: 8px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: 1px;
+}
+
+.lern-inhalt .lern-tabelle-karten .lern-marke {
+  margin: 0 0 6px;
+}
+
 .lern-frage ol {
   margin: 0;
   padding-left: 22px;

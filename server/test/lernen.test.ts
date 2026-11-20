@@ -219,7 +219,7 @@ test('Lernstand: Ampel, Lernpunkt und Notiz speichern; Eingaben werden geprüft'
   const w = await welt();
   const c = als(w, w.anna);
   const setze = (id: string, body: unknown) => ruf(w.u, 'PATCH', `/api/lernen/unterthema/${id}`, { cookies: c, body });
-  assert.deepEqual(koerper(await setze('netz.subnetting', { status: 'gelb', luecke: '  Blockgröße bei /27 üben ' })), { id: 'netz.subnetting', status: 'gelb', luecke: 'Blockgröße bei /27 üben', notiz: '', geaendert: '2026-11-10', inhaltAktualisiert: false, abzeichen: { feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 2, name: 'Stein' }, rang: { stufe: 2, name: 'Stein' } });
+  assert.deepEqual(koerper(await setze('netz.subnetting', { status: 'gelb', luecke: '  Blockgröße bei /27 üben ' })), { id: 'netz.subnetting', status: 'gelb', luecke: 'Blockgröße bei /27 üben', notiz: '', geaendert: '2026-11-10', inhaltAktualisiert: false, aenderungen: null, abzeichen: { feld: 'netz', feldTitel: 'Netzwerkgrundlagen', stufe: 2, name: 'Stein' }, rang: { stufe: 2, name: 'Stein' } });
   assert.equal((await setze('netz.subnetting', { notiz: 'in der Schule fragen' })).status, 200);
   assert.equal(koerper(await setze('netz.subnetting', { status: 'gruen' })).luecke, 'Blockgröße bei /27 üben', 'der Lernpunkt bleibt beim Wechsel auf Sicher');
 
@@ -286,6 +286,61 @@ test('Geänderte Inhalte: Hinweis „Inhalt aktualisiert“, bis der Azubi ihn b
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen', { cookies: c })).paket.stand, '2026-11-09');
   assert.equal(koerper(await setze('netz.subnetting', { bestaetigen: true })).inhaltAktualisiert, false);
   assert.equal((await erstes())[0].inhaltAktualisiert, false);
+});
+
+test('Geänderte Inhalte: markiert ist, was seit dem letzten Blick neu ist oder sich geändert hat', async () => {
+  const w = await welt();
+  const c = als(w, w.anna);
+  const setze = (id: string, body: unknown) => ruf(w.u, 'PATCH', `/api/lernen/unterthema/${id}`, { cookies: c, body });
+  const subnetting = async () => (koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: c })).thema.unterthemen as any[])[0];
+  await setze('netz.subnetting', { status: 'gruen' });
+  assert.equal((await subnetting()).aenderungen, null);
+
+  const p = join(w.dir, 'technik');
+  const aendere = (text: string) => {
+    writeFileSync(join(p, 'themen', 'netz.md'), text);
+    const spaeter = new Date(Date.now() + 120_000 + Math.random() * 60_000);
+    utimesSync(join(p, 'themen', 'netz.md'), spaeter, spaeter);
+    vergissLernpakete();
+  };
+  // Begriff geändert und einer dazu, Tabellenzeile geändert und eine dazu, Befehl weg; Merksatz, Frage und Abbildung gleich
+  aendere(
+    NETZ.replace('Letzte Adresse, mit `ping` nicht erreichbar.', 'Letzte Adresse eines Subnetzes.')
+      .replace('- **Broadcast:**', '- **Gateway:** Meist die erste nutzbare Adresse.\n- **Broadcast:**')
+      .replace('| /26 | 62 |', '| /26 | 62 Hosts |\n| /27 | 30 |')
+      .replace('### Befehle\n- `ip addr show` – Adressen anzeigen\n\n', ''),
+  );
+  const u = await subnetting();
+  assert.equal(u.inhaltAktualisiert, true);
+  assert.deepEqual(u.aenderungen, {
+    begriffe: [null, 'neu', 'geaendert'],
+    tabellen: [{ titel: null, zeilen: [null, 'geaendert', 'neu'] }],
+    befehle: [],
+    merksatz: null,
+    frage: null,
+    abbildungen: [null],
+    entfernt: 1,
+    markiert: 4,
+  });
+  // eine Notiz zu speichern bestätigt den neuen Inhalt nicht
+  const notiz = koerper(await setze('netz.subnetting', { notiz: 'Gateway merken' }));
+  assert.deepEqual([notiz.inhaltAktualisiert, notiz.aenderungen.markiert], [true, 4]);
+  // „Als gesehen merken“: keine Markierungen mehr, der alte Stand wird beim nächsten Einlesen nicht mehr gebraucht
+  const alt = (w.u.db.prepare("SELECT inhalt_hash FROM lern_status WHERE unterthema_id = 'netz.subnetting'").get() as { inhalt_hash: string }).inhalt_hash;
+  const gesehen = koerper(await setze('netz.subnetting', { bestaetigen: true }));
+  assert.deepEqual([gesehen.inhaltAktualisiert, gesehen.aenderungen], [false, null]);
+  assert.equal((await subnetting()).aenderungen, null);
+  vergissLernpakete();
+  await subnetting();
+  assert.equal(w.u.db.prepare("SELECT 1 FROM lern_inhalt_version WHERE paket = 'technik' AND hash = ?").get(alt), undefined, 'der alte Stand ist weg');
+  // Ben hat nichts bearbeitet: weder Hinweis noch Markierungen
+  assert.equal((koerper(await ruf(w.u, 'GET', '/api/lernen/thema/netz', { cookies: als(w, w.ben) })).thema.unterthemen as any[])[0].aenderungen, null);
+
+  // alter Stand unbekannt (z. B. Inhalt vor dem Update des Portals geändert): nur der allgemeine Hinweis
+  w.u.db.prepare('DELETE FROM lern_inhalt_version').run();
+  aendere(NETZ);
+  const ohne = await subnetting();
+  assert.deepEqual([ohne.inhaltAktualisiert, ohne.aenderungen], [true, null]);
 });
 
 test('Geänderte Inhalte: Glocke für alle Azubis des Berufs – nicht für andere, nicht bei „kein-hinweis“, nicht beim ersten Einlesen', async () => {

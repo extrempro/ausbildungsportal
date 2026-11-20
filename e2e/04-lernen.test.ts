@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync, utimesSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { ANNA, BEA, BEN, HANDY, inTagen, mitFoto, oeffne, PETRA, startePortal, text, ueberlauf } from './hilfe';
 import type { Grunddaten, Portal } from './hilfe';
@@ -134,6 +136,47 @@ test(
     await zeile.locator('a:has-text("Praxis")').click();
     await s.waitForFunction(() => /Praxis/.test(document.querySelector('.lern-navi-klapp .handbuch-wo')?.textContent ?? ''));
     assert.equal(await zeile.evaluate((e) => (e as HTMLDetailsElement).open), false);
+    assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
+  }),
+);
+
+test(
+  'Geänderte Inhalte: Neue und geänderte Stellen sind markiert, bis der Azubi sie als gesehen merkt',
+  mitFoto(() => p, 'lernen-markiert', async () => {
+    // Anna hat „Begriffe“ im ersten Test bewertet – jetzt ändert sich der Inhalt
+    const datei = join(p.lernOrdner, 'muster', 'themen', 'grundlagen.md');
+    writeFileSync(
+      datei,
+      readFileSync(datei, 'utf8').replace('Bis wann es fertig sein muss.', 'Bis wann es fertig und abgegeben sein muss.').replace('- **Termin:**', '- **Rückfrage:** Klären, was unklar ist.\n- **Termin:**'),
+    );
+    // wie bei der Inhaltspflege: neuer Inhaltsstand in meta.json – daran erkennt das Portal neue Inhalte
+    const meta = join(p.lernOrdner, 'muster', 'meta.json');
+    writeFileSync(meta, JSON.stringify({ stand: '2026-02-01' }));
+    const spaeter = new Date(Date.now() + 60_000);
+    utimesSync(datei, spaeter, spaeter);
+    utimesSync(meta, spaeter, spaeter);
+
+    const s = await p.seite(ANNA, HANDY);
+    // das Portal sieht nach geänderten Inhalten alle paar Sekunden nach
+    for (let i = 0; ; i++) {
+      await oeffne(s, p.url, '/lernen/grundlagen');
+      await s.waitForSelector('.lern-unterthema');
+      if ((await s.locator('.lern-marke').count()) > 0) break;
+      assert.ok(i < 15, 'die Änderung kommt im Portal an');
+      await s.waitForTimeout(2000);
+    }
+    const erstes = s.locator('.lern-unterthema').first();
+    assert.match(await text(s, '.lern-neu'), /Markiert ist, was seit deinem letzten Blick neu ist oder sich geändert hat/);
+    assert.deepEqual(await erstes.locator('.lern-markiert dt').allTextContents(), ['Rückfrageneu', 'Termingeändert']);
+    assert.equal(await s.locator('.lern-unterthema').nth(1).locator('.lern-marke').count(), 0, 'nicht bewertet: keine Marken');
+    assert.equal(await ueberlauf(s), 0);
+
+    await erstes.locator('button:has-text("Als gesehen merken")').click();
+    await s.waitForFunction(() => document.querySelectorAll('.lern-marke').length === 0);
+    assert.equal(await s.locator('.lern-neu').count(), 0);
+    await s.reload();
+    await s.waitForSelector('.lern-unterthema');
+    assert.equal(await s.locator('.lern-marke').count(), 0, 'bleibt gesehen');
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );

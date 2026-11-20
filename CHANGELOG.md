@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.74.0] – 2026-11-20
+
+### Neu
+
+- **Lernen – sehen, was sich geändert hat:** Wurde ein Cheatsheet aktualisiert, seit du es bewertet hast, markiert das Portal jetzt genau die Stellen, die seitdem neu sind oder sich geändert haben – Kernbegriffe, Tabellenzeilen, Befehle, Merksatz, Prüfungsfrage und Abbildungen. Sie haben einen Strich am Rand und die Marke „neu“ oder „geändert“. Der Hinweis darüber sagt auch, ob Stellen weggefallen sind. Mit „Als gesehen merken“ oder sobald du die Ampel umstellst, verschwinden die Markierungen.
+
+### Geändert
+
+- Lernen: Speicherst du nur eine Notiz, bleibt der Hinweis „Inhalt aktualisiert“ stehen. Bisher verschwand er bis zum Neuladen der Seite.
+
 ## [0.73.1] – 2026-11-18
 
 ### Geändert

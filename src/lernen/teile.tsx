@@ -166,11 +166,20 @@ export interface Tabelle {
   zeilen: string[][];
 }
 
+/** Stelle in einem Unterthema, die seit dem letzten Blick neu ist oder sich geändert hat */
+export type Markierung = 'neu' | 'geaendert' | null;
+
+/** Marke „neu“ bzw. „geändert“ hinter einer markierten Stelle – mit Wort, nicht nur Farbe. */
+export function Markiert({ m }: { m: Markierung | undefined }) {
+  if (!m) return null;
+  return <span className="pille blau lern-marke">{m === 'neu' ? 'neu' : 'geändert'}</span>;
+}
+
 /**
  * Tabelle aus den Lerninhalten. Passt sie nicht in die Breite (am Handy bei mehreren Spalten mit Text),
  * steht jede Zeile als Karte untereinander – mit der Spaltenüberschrift vor jedem Wert. So muss niemand zur Seite rollen.
  */
-export function TabelleAnsicht({ t }: { t: Tabelle }) {
+export function TabelleAnsicht({ t, markierung }: { t: Tabelle; markierung?: Markierung[] }) {
   const rahmen = useRef<HTMLDivElement>(null);
   // so viel Platz braucht die Tabelle mindestens – gemessen, solange sie als Tabelle dasteht
   const braucht = useRef(0);
@@ -199,7 +208,8 @@ export function TabelleAnsicht({ t }: { t: Tabelle }) {
       <div className="tabelle-rahmen gestapelt" ref={rahmen}>
         <ul className="lern-tabelle-karten">
           {t.zeilen.map((z, i) => (
-            <li key={i}>
+            <li key={i} className={markierung?.[i] ? 'lern-markiert' : undefined}>
+              <Markiert m={markierung?.[i]} />
               <dl>
                 {z.map((zelle, j) => (
                   <div key={j}>
@@ -232,10 +242,11 @@ export function TabelleAnsicht({ t }: { t: Tabelle }) {
         </thead>
         <tbody>
           {t.zeilen.map((z, i) => (
-            <tr key={i}>
+            <tr key={i} className={markierung?.[i] ? 'lern-markiert' : undefined}>
               {z.map((zelle, j) => (
                 <td key={j}>
                   <Inline text={zelle} />
+                  {j === 0 && <Markiert m={markierung?.[i]} />}
                 </td>
               ))}
             </tr>
