@@ -51,6 +51,10 @@ test(
     await a.waitForSelector('.menue.glocke :text("Urlaub genehmigt")');
     await a.keyboard.press('Escape');
     await oeffne(a, p.url, '/jahreskalender');
+    // Ende des Jahres liegt der Urlaub schon im nächsten: dann ein Jahr weiterblättern
+    const jahr = von.slice(0, 4);
+    if (!(await text(a, 'main h1')).includes(jahr)) await a.click(`main button:has-text("${jahr} →")`);
+    await a.waitForSelector(`main h1:has-text("${jahr}")`);
     await a.waitForSelector('.jk-zelle.urlaub');
     assert.equal(await a.locator('.jk-zelle.urlaub').count(), 3, 'drei Urlaubstage im Jahreskalender');
 
