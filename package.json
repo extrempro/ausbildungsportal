@@ -6,7 +6,7 @@
   "description": "Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung über Microsoft Entra ID und Rollen",
   "type": "module",
   "engines": {
-    "node": ">=22.16"
+    "node": ">=26"
   },
   "scripts": {
     "dev": "tsx scripts/dev.ts",

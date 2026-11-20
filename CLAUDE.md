@@ -21,7 +21,7 @@ npm run build       # Oberfläche bauen
 npm run bilder      # Bildschirmfotos in docs/bilder/ neu erzeugen (erfundene Daten)
 ```
 
-Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtbetrieb). Daten liegen in `DATA_DIR`, Lerninhalte in `LERN_DIR`.
+Node ab 26. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtbetrieb). Daten liegen in `DATA_DIR`, Lerninhalte in `LERN_DIR`.
 
 ## Aufbau
 

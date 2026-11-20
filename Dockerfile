@@ -1,9 +1,10 @@
 # Ausbildungsportal als Container – Bauen und Starten: docker compose up -d --build
 
-ARG NODE_VERSION=22
+# Node 26 (LTS, Sicherheitsupdates bis April 2029). Die Version steht ausgeschrieben, damit Dependabot sie aktuell hält;
+# ein Wechsel der Hauptversion geschieht von Hand – zusammen mit der CI, „engines“ in package.json und @types/node.
 
 # ---------- 1. Oberfläche bauen ----------
-FROM node:${NODE_VERSION}-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 # genau die Versionen aus package-lock.json, mit Prüfsumme – nichts wird neu aufgelöst
 COPY package.json package-lock.json ./
@@ -14,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # ---------- 2. Laufzeit ----------
-FROM node:${NODE_VERSION}-alpine
+FROM node:26-alpine
 # tzdata: Datumsangaben („heute“, Sicherungen) in deutscher Zeit
 # su-exec: das Startskript wechselt damit von root zum Benutzer „node“
 RUN apk add --no-cache tzdata su-exec

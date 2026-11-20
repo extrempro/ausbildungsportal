@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync 
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** Eingebautes SQLite von Node.js (ab 22.16) – keine native Abhängigkeit, nichts zu kompilieren. */
+/** Eingebautes SQLite von Node.js (seit 22.16, das Portal verlangt 26) – keine native Abhängigkeit, nichts zu kompilieren. */
 export type DB = DatabaseSync;
 
 /** Führt fn in einer Transaktion aus; bei einem Fehler wird alles zurückgerollt. */

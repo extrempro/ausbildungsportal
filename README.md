@@ -48,7 +48,7 @@ Zum Ausprobieren ohne Proxy und ohne `.env` reicht `docker compose up -d --build
 
 Voraussetzungen:
 
-- Node.js ab 22.16 (nutzt das eingebaute `node:sqlite`)
+- Node.js ab 26 (nutzt das eingebaute `node:sqlite`)
 - für die Microsoft-Anmeldung: eine App-Registrierung in Entra, siehe [docs/entra-einrichtung.md](docs/entra-einrichtung.md)
 
 ```bash

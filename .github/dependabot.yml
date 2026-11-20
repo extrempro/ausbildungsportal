@@ -1,0 +1,49 @@
+# Hält Pakete, das Docker-Basisabbild und die GitHub Actions aktuell: Dependabot sieht jeden Montag nach und legt für
+# neue Versionen einen Pull Request an. Die CI prüft ihn wie jeden anderen; gemergt wird von Hand.
+# Kleine Updates (Patch und Minor) kommen gesammelt in einem Pull Request je Bereich.
+# Größere Sprünge bei Node (Docker-Abbild und @types/node) bewusst von Hand: nur auf Versionen mit Langzeitpflege (LTS),
+# siehe https://endoflife.date/nodejs – Dockerfile, CI, package.json (engines) und @types/node gehören zusammen.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'Pakete'
+    groups:
+      pakete-klein:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    commit-message:
+      prefix: 'Docker'
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Berlin
+    commit-message:
+      prefix: 'CI'
+    groups:
+      actions:
+        patterns: ['*']
