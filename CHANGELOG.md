@@ -1,5 +1,13 @@
 # Änderungen
 
+## [0.74.1] – 2026-11-20
+
+### Geändert
+
+- Regeln für Mitwirkende (`CONTRIBUTING.md`, `CLAUDE.md`): Frameworks, Pakete und Werkzeuge werden – wenn möglich – in der aktuellen stabilen Version genutzt; keine veralteten oder nicht mehr gepflegten Pakete. Geht es nicht, steht der Grund im Pull Request.
+- **Node 26:** Das Docker-Abbild und die CI laufen jetzt mit Node 26 (Langzeitpflege bis April 2029) statt Node 22 (Sicherheitsupdates nur noch bis April 2027). Das Portal verlangt Node ab 26. Im Betrieb genügt `docker compose up -d --build`; wer ohne Docker betreibt, installiert vorher Node 26.
+- **Dependabot:** GitHub schlägt jeden Montag neue Versionen der Pakete, des Docker-Abbilds und der GitHub Actions als Pull Request vor (`.github/dependabot.yml`). Kleine Updates kommen gesammelt; den Sprung auf eine neue Hauptversion von Node gibt es bewusst nur von Hand.
+
 ## [0.74.0] – 2026-11-20
 
 ### Neu

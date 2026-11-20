@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26
       - run: npm ci --no-audit --no-fund
         env:
           # der Browser für die E2E-Tests wird hier nicht gebraucht
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26
       - name: Sicherheitslücken (nur Pakete für den Betrieb, ab „hoch“)
         run: npm audit --omit=dev --audit-level=high
 
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26
       - run: npm ci --no-audit --no-fund
       - name: Browser installieren
         run: npx playwright install --with-deps chromium

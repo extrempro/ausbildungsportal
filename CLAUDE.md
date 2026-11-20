@@ -21,7 +21,7 @@ npm run build       # Oberfläche bauen
 npm run bilder      # Bildschirmfotos in docs/bilder/ neu erzeugen (erfundene Daten)
 ```
 
-Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtbetrieb). Daten liegen in `DATA_DIR`, Lerninhalte in `LERN_DIR`.
+Node ab 26. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtbetrieb). Daten liegen in `DATA_DIR`, Lerninhalte in `LERN_DIR`.
 
 ## Aufbau
 
@@ -55,6 +55,8 @@ Node ab 22.16. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtb
 | `docs/handbuch-regeln.md` | Aufbau eines Handbuch-Kapitels (Gruppe, Einleitung, „So geht's“, „Begriffe“, „Gut zu wissen“) – **vor jedem neuen oder geänderten Kapitel lesen**; `handbuch.test.ts` prüft es |
 
 Technik: `node:http` und `node:sqlite` ohne Server-Framework, React 19, reines CSS, esbuild; für die E2E-Tests Playwright (nur Entwicklung). **Keine neuen Abhängigkeiten** ohne Rückfrage beim Nutzer.
+
+**Aktuelle Versionen:** Frameworks, Pakete und Werkzeuge (Node, React, esbuild, tsx, TypeScript, Playwright, Docker-Basisabbild) werden – wenn möglich – in der aktuellen stabilen Version genutzt, auch wenn ein neues Paket abgestimmt wird. Keine Pakete, die nicht mehr gepflegt oder als veraltet (deprecated) markiert sind. Geht die aktuelle Version nicht, im Pull Request sagen, welche Version es ist und warum.
 
 ## Bei jeder Änderung
 

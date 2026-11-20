@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.74.0 · 20.11.2026
+Stand: Version 0.74.1 · 20.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -24,7 +24,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 | Ausbilder | Microsoft Entra ID | zuständige Azubis: planen, abzeichnen, Urlaub genehmigen, Stammdaten, Konten |
 | Super-Admin | lokal mit Passwort | Konten, Protokoll, Fehlermeldungen, Lerninhalte übernehmen – **kein** Zugriff auf Plan, Berichte, Urlaub |
 
-**Technik:** Node.js ab 22.16 mit `node:http` und `node:sqlite` (kein Server-Framework), React 19 mit eigenem Router, ein Stylesheet, esbuild. Betrieb als Docker-Container hinter einem Reverse Proxy. Daten in einer SQLite-Datei in `DATA_DIR`, Lerninhalte als Ordner in `LERN_DIR`.
+**Technik:** Node.js ab 26 mit `node:http` und `node:sqlite` (kein Server-Framework), React 19 mit eigenem Router, ein Stylesheet, esbuild. Betrieb als Docker-Container hinter einem Reverse Proxy. Daten in einer SQLite-Datei in `DATA_DIR`, Lerninhalte als Ordner in `LERN_DIR`.
 
 ## 2. Funktionen
 
