@@ -118,6 +118,8 @@ export interface Grunddaten {
 
 export interface Portal {
   url: string;
+  /** Ordner der Lerninhalte (LERN_DIR) – zum Ändern von Inhalten, während das Portal läuft */
+  lernOrdner: string;
   browser: Browser;
   /** Fehler aus der Konsole aller Seiten (ohne erwartete 401/403/404 von Rechte-Prüfungen) */
   probleme: string[];
@@ -196,6 +198,7 @@ export async function startePortal(o: { lernmodul?: (ordner: string) => void; de
 
   const portal: Portal = {
     url,
+    lernOrdner: join(ordner, 'lernen'),
     browser,
     probleme,
     api: () => new Api(url),

@@ -776,6 +776,7 @@ const AZUBI: Kapitel[] = [
           <Begriff wort="Ampel">Damit schätzt du dich selbst ein: „Offen“ (noch nichts gemacht), „In Arbeit“ (kenne ich, brauche aber noch das Cheatsheet), „Sicher“ (kann ich ohne Hilfe erklären und anwenden).</Begriff>
           <Begriff wort="Lernpunkt">Steht ein Unterthema auf „In Arbeit“, kannst du notieren, was dir noch schwerfällt. Der Text bleibt, auch wenn du später auf „Sicher“ stellst.</Begriff>
           <Begriff wort="Notiz">Eine freie Notiz zu jedem Unterthema, zum Beispiel „in der Berufsschule nachfragen“.</Begriff>
+          <Begriff wort="neu / geändert">Marken an einem Kernbegriff, einer Tabellenzeile, einem Befehl, dem Merksatz, der Prüfungsfrage oder einer Abbildung: Diese Stelle ist neu oder hat sich geändert, seit du das Unterthema zuletzt bewertet oder als gesehen gemerkt hast.</Begriff>
           <Begriff wort="Zusatzwissen">Vertiefungen zu einem Themenfeld, zum Beispiel ein Ablauf Schritt für Schritt oder ein Vergleich. Zusatzwissen ist freiwillig und zählt nicht zur Ampel. Du findest es unten im Themenfeld im gestrichelten Rahmen.</Begriff>
         </dl>
         <h3>Gut zu wissen</h3>
@@ -785,7 +786,7 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Die Ampel eines Themenfelds ergibt sich aus den Unterthemen: „Sicher“, wenn mindestens 80 von 100 Unterthemen sicher sind und keines offen ist. „Offen“, wenn alle offen sind. Sonst „In Arbeit“.</li>
           <li>Die Prozentzahl: sicher zählt ganz, in Arbeit halb, offen gar nicht.</li>
-          <li>Steht bei einem Unterthema „Inhalt aktualisiert“, wurde das Cheatsheet geändert, seit du es bewertet hast. Lies es noch einmal und wähle „Als gesehen merken“. Dass sich etwas geändert hat, zeigt dir auch die Glocke.</li>
+          <li>Steht bei einem Unterthema „Inhalt aktualisiert“, wurde das Cheatsheet geändert, seit du es bewertet hast. Was neu ist oder sich geändert hat, ist markiert: mit einem Strich am Rand und der Marke „neu“ oder „geändert“. Der Hinweis sagt auch, ob Stellen weggefallen sind. Lies die markierten Stellen und wähle „Als gesehen merken“ – dann verschwinden die Markierungen. Stellst du die Ampel um, gilt das ebenfalls als gesehen. Dass sich etwas geändert hat, zeigt dir auch die Glocke.</li>
           <li>Steht an einem Unterthema „Vertiefung“, gibt es dazu Zusatzwissen. Der Link darunter bringt dich hin – manchmal in ein anderes Themenfeld. Beim Zusatzwissen steht umgekehrt unter „Vertieft:“, zu welchen Unterthemen es gehört.</li>
           <li>Bei einem Ablauf gehst du mit „Nächster Schritt“ weiter oder lässt ihn mit „Ablauf abspielen“ von selbst laufen; das Tempo kannst du wählen. Die Tabellen daneben zeigen, was sich in diesem Schritt ändert.</li>
           <li>Hast du ein Zusatzwissen durch, setz den Haken bei „Gelesen“. Auch diesen Haken siehst nur du.</li>
@@ -1703,7 +1704,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                   <strong>Keine Personen:</strong> In die Inhalte gehören keine Namen oder Daten von Azubis oder Kollegen.
                 </li>
                 <li>Bearbeiten mit einem Texteditor (Editor, Notepad++, VS Code) – nicht mit Word. Zeichensatz UTF-8, damit Umlaute stimmen.</li>
-                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Ihre Ampel bleibt. Sobald die neue Fassung im Portal ist, bekommen alle Azubis des Berufs außerdem einen Eintrag in der Glocke („Lerninhalte aktualisiert“) – nur dort, nicht per Teams oder E-Mail. Beim Paket für alle Berufe gilt das für alle Azubis.</li>
+                <li>Änderst du später ein Cheatsheet, sehen Azubis, die das Unterthema schon bewertet haben, den Hinweis „Inhalt aktualisiert“. Die Stellen, die neu sind oder sich geändert haben, tragen bei ihnen die Marke „neu“ oder „geändert“ – je Kernbegriff, Tabellenzeile, Befehl, Merksatz, Prüfungsfrage und Abbildung. Ihre Ampel bleibt. Sobald die neue Fassung im Portal ist, bekommen alle Azubis des Berufs außerdem einen Eintrag in der Glocke („Lerninhalte aktualisiert“) – nur dort, nicht per Teams oder E-Mail. Beim Paket für alle Berufe gilt das für alle Azubis.</li>
                 <li>Ist eine Änderung nur eine Kleinigkeit (Tippfehler, Formulierung), schreib in das Unterthema eine eigene Zeile <code>&lt;!-- kein-hinweis --&gt;</code>. Dann gibt es weder den Hinweis noch die Glocke.</li>
                 <li>Löschst du ein Unterthema, bleibt der Lernstand dazu gespeichert und taucht wieder auf, wenn die Kennung zurückkommt.</li>
                 <li>Den Lernstand der Azubis siehst du nie – auch nicht als Verfasser der Inhalte.</li>

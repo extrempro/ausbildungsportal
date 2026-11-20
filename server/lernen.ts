@@ -11,6 +11,8 @@ import { hoechsteVon, HOECHSTE_STUFE, naechste, OHNE_QUIZ, rangVon, STUFEN, stuf
 import { FAECHER, kartenVon, MEISTER_TAGE, naechstesFach, optionenFuer, QUIZ_BESTANDEN, quizFragen, zufall } from './lernen/ueben';
 import type { FeldStand } from './lernen/abzeichen';
 import { ladeInhalte, unterthemaIndex, zusatzIds } from './lernen/store';
+import { bausteine, vergleiche } from './lernen/bausteine';
+import type { Aenderungen, Bausteine } from './lernen/bausteine';
 import type { Inhalte } from './lernen/store';
 import type { BenutzerZeile } from './typen';
 
@@ -113,6 +115,7 @@ export function lernpakete(k: Kontext): Map<string, Paket> {
     for (const f of fehler.slice(0, 10)) k.log(`  ✖ ${f.datei}${f.zeile ? `:${f.zeile}` : ''}  ${f.text}`);
     uebernimmAenderungen(k.db, paket);
     meldeAenderungen(k, paket);
+    merkeBausteine(k.db, paket);
   }
   for (const id of [...lager.pakete.keys()]) if (!gefunden.has(id)) lager.pakete.delete(id);
   return lager.pakete;
@@ -188,6 +191,33 @@ function meldeAenderungen(k: Kontext, p: Paket): void {
       if (alle.length) merkeLernAktualisierung(db, k.jetzt(), 'anleitungen_aktualisiert', alle, titel, anzahl);
     }
   });
+}
+
+/**
+ * Bausteine jedes Unterthemas für den aktuellen Inhaltsstand merken – damit der Azubi später sieht, was sich geändert hat.
+ * Aufgehoben wird ein Stand, solange er aktuell ist oder ein Lernstand auf ihn verweist; alles andere fällt weg.
+ */
+function merkeBausteine(db: DB, p: Paket): void {
+  const aktuell = p.inhalte.themenfelder.flatMap((f) => f.unterthemen);
+  if (aktuell.length === 0) return; // kaputtes oder leeres Paket: gemerkte Stände behalten
+  transaktion(db, () => {
+    const neu = db.prepare('INSERT OR IGNORE INTO lern_inhalt_version (paket, hash, bausteine) VALUES (?, ?, ?)');
+    for (const u of aktuell) neu.run(p.id, u.hash, JSON.stringify(bausteine(u)));
+    db.prepare(
+      `DELETE FROM lern_inhalt_version
+        WHERE paket = ?
+          AND hash NOT IN (SELECT value FROM json_each(?))
+          AND hash NOT IN (SELECT inhalt_hash FROM lern_status WHERE paket = ? AND inhalt_hash IS NOT NULL)`,
+    ).run(p.id, JSON.stringify(aktuell.map((u) => u.hash)), p.id);
+  });
+}
+
+/** Was hat sich seit dem Stand geändert, den der Azubi zuletzt gesehen hat? null, wenn nichts oder der alte Stand unbekannt ist. */
+function aenderungenSeit(db: DB, p: Paket, u: Themenfeld['unterthemen'][number], s: StatusZeile | undefined): Aenderungen | null {
+  if (!aktualisiert(s, u.hash)) return null;
+  const z = db.prepare('SELECT bausteine FROM lern_inhalt_version WHERE paket = ? AND hash = ?').get(p.id, s!.inhalt_hash) as { bausteine: string } | undefined;
+  if (!z) return null;
+  return vergleiche(u, JSON.parse(z.bausteine) as Bausteine);
 }
 
 /**
@@ -402,7 +432,7 @@ function uebersicht(p: Paket, stand: Map<string, StatusZeile>, gelesen: Set<stri
 }
 
 /** Ein Themenfeld mit allen Inhalten (Cheatsheet) – mit dem Stand eines Azubis oder (Leseansicht) ohne. */
-function themaAnsicht(p: Paket, f: Themenfeld, stand: Map<string, StatusZeile>, gelesen: Set<string>, abzeichen: FeldAbzeichen) {
+function themaAnsicht(db: DB, p: Paket, f: Themenfeld, stand: Map<string, StatusZeile>, gelesen: Set<string>, abzeichen: FeldAbzeichen) {
   const vertieft = vertiefungen(p.inhalte);
   return {
     abzeichen,
@@ -423,7 +453,7 @@ function themaAnsicht(p: Paket, f: Themenfeld, stand: Map<string, StatusZeile>, 
     unterthemen: f.unterthemen.map((u) => {
       const s = stand.get(`${f.id}.${u.id}`);
       const { hash: _hash, keinHinweis: _k, ...inhalt } = u;
-      return { ...inhalt, vertiefung: vertieft.get(`${f.id}.${u.id}`) ?? [], status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash) };
+      return { ...inhalt, vertiefung: vertieft.get(`${f.id}.${u.id}`) ?? [], status: s?.status ?? 'rot', luecke: s?.luecke ?? '', notiz: s?.notiz ?? '', geaendert: s?.geaendert ?? null, inhaltAktualisiert: aktualisiert(s, u.hash), aenderungen: aenderungenSeit(db, p, u, s) };
     }),
   };
 }
@@ -510,7 +540,7 @@ export const LERN_ROUTEN: Route[] = [
       const p = meinPaket(c);
       const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
       if (!f) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
-      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, standVon(c.k.db, c.b.id, p.id), gelesenVon(c.k.db, c.b.id, p.id), abzeichenVon(c, p).felder.get(f.id)!) } };
+      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(c.k.db, p, f, standVon(c.k.db, c.b.id, p.id), gelesenVon(c.k.db, c.b.id, p.id), abzeichenVon(c, p).felder.get(f.id)!) } };
     },
   },
 
@@ -559,7 +589,11 @@ export const LERN_ROUTEN: Route[] = [
         `INSERT INTO lern_status (azubi_id, paket, unterthema_id, status, luecke, notiz, inhalt_hash, geaendert) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(azubi_id, paket, unterthema_id) DO UPDATE SET status = excluded.status, luecke = excluded.luecke, notiz = excluded.notiz, inhalt_hash = excluded.inhalt_hash, geaendert = excluded.geaendert`,
       ).run(c.b.id, p.id, id, neu.status, neu.luecke, neu.notiz, neu.inhalt_hash, neu.geaendert);
-      return { status: 200, body: { id, status: neu.status, luecke: neu.luecke, notiz: neu.notiz, geaendert: neu.geaendert, inhaltAktualisiert: false, ...nachSpeichern(c, p, rangVorher) } };
+      // nur eine Notiz gespeichert: Hinweis und Markierungen bleiben, bis der Azubi den neuen Inhalt bestätigt oder die Ampel setzt
+      const [feld, ut] = id.split('.');
+      const inhalt = p.inhalte.themenfelder.find((f) => f.id === feld)?.unterthemen.find((x) => x.id === ut);
+      const aenderungen = inhalt ? aenderungenSeit(db, p, inhalt, neu) : null;
+      return { status: 200, body: { id, status: neu.status, luecke: neu.luecke, notiz: neu.notiz, geaendert: neu.geaendert, inhaltAktualisiert: aktualisiert(neu, info.hash), aenderungen, ...nachSpeichern(c, p, rangVorher) } };
     },
   },
 
@@ -736,7 +770,7 @@ export const LERN_ROUTEN: Route[] = [
       const p = allgemeines(c);
       const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
       if (!f) throw new Fehler(404, 'Diese Anleitung gibt es nicht');
-      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
+      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(c.k.db, p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
     },
   },
 
@@ -787,7 +821,7 @@ export const LERN_ROUTEN: Route[] = [
       const p = lesePaket(c);
       const f = p.inhalte.themenfelder.find((x) => x.id === c.p.id);
       if (!f) throw new Fehler(404, 'Dieses Themenfeld gibt es nicht');
-      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
+      return { status: 200, body: { paket: paketKopf(p), thema: themaAnsicht(c.k.db, p, f, new Map(), new Set(), OHNE_ABZEICHEN) } };
     },
   },
 ];
