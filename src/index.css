@@ -9837,3 +9837,33 @@ button.lern-navi-feld[aria-current='location'] {
     max-width: 100%;
   }
 }
+
+/* ---------- Konto: angemeldete Geräte ---------- */
+.geraete-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.geraete-liste li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.geraete-liste li:last-child {
+  border-bottom: 0;
+}
+
+.geraete-liste .pille {
+  margin-left: 8px;
+}
+
+.geraete-zeit {
+  display: block;
+  margin-top: 2px;
+}

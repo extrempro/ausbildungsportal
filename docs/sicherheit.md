@@ -76,7 +76,7 @@ Vollständige Prüfung über alle Kapitel von 5.0 an Version 0.74.2, dazu die al
 | V4 API und Web-Services | erfüllt | Nur JSON mit Typprüfung, Antworten mit Typ und Zeichensatz (E6); Grenzen für Anfragen; unbekannte Methoden 405; keine CORS-Freigaben. |
 | V5 Dateien | erfüllt | Erlaubte Typen am Dateianfang, Größen- und Zahlgrenzen, ZIP ohne Pfade nach außen und mit Grenze für den entpackten Inhalt; Auslieferung nur nach Rechteprüfung, `nosniff`, Downloads als Anhang; Dateien in der Datenbank, nicht im Dateisystem. |
 | V6 Authentifizierung | teilweise | Entra (zweiter Faktor dort). Super-Admin: mindestens 14 Zeichen, höchstens 200, keine Zusammensetzungsregeln, Liste häufiger Wörter, Wechsel nur mit altem Passwort, Sperre und Begrenzung je IP, Startpasswort muss geändert werden. Bewusst nicht: zweiter Faktor für den Super-Admin (E2, ausgeglichen) und Abgleich mit Passwörtern aus Datenlecks (E3, Entscheidung des Betreibers). |
-| V7 Sitzungen | teilweise | Zufälliges Token nur als Hash; neue Sitzung je Anmeldung; Leerlauf 8 Stunden, höchstens 24; Abmelden, Sperre und Passwortwechsel beenden Sitzungen; Warnung vor dem Ende. Offen: eine Übersicht der eigenen Sitzungen mit „überall sonst abmelden“ (7.5.2) – vom Betreiber gewünscht, wird gebaut (siehe Offene Punkte). |
+| V7 Sitzungen | erfüllt | Zufälliges Token nur als Hash; neue Sitzung je Anmeldung; Leerlauf 8 Stunden, höchstens 24; Abmelden, Sperre und Passwortwechsel beenden Sitzungen; Warnung vor dem Ende. Seit 0.75.0 unter „Konto“ die eigenen Sitzungen mit Gerät (nur Browser und System), einzeln oder alle anderen abmelden (7.5.2). Abweichung: ohne erneute Anmeldung vor dem Abmelden anderer Geräte (Entscheidung des Betreibers – es ist eine Schutzhandlung). |
 | V8 Autorisierung | erfüllt | Rechte zentral (`server/rechte.ts`), jede Route mit `wer`, fremde Kennung → 404, falsche Rolle → 403 – für jede Route im Test. |
 | V9 Self-contained Tokens | erfüllt | Das Portal stellt keine eigenen Tokens aus; das ID-Token von Entra prüft `openid-client` (Signatur RS256, Aussteller, Empfänger, Ablauf, `nonce`). |
 | V10 OAuth und OIDC | erfüllt | Authorization Code mit PKCE (S256), `state` einmalig und an den Browser gebunden, feste Redirect-URI, Mandant geprüft; Tokens nur im Server, nicht gespeichert; kein Refresh-Token. Gegen einen echten Mandanten nicht geprüft. |
@@ -96,7 +96,7 @@ Vollständige Prüfung über alle Kapitel von 5.0 an Version 0.74.2, dazu die al
   - *personenbezogen, für Betreuende:* Plan, Berichte mit Anhängen, Urlaub, Profil, Profilbild;
   - *ohne Person:* Wünsche zu Lerninhalten;
   - *Geheimnisse:* Webhook-Adressen, SMTP-Zugang, Entra-Schlüssel (nur `.env`), Geheimnis des Kalender-Abos (256 Bit, nur als Link beim Besitzer).
-- **Sitzungen:** Ende nach 8 Stunden ohne Anfrage, spätestens nach 24 Stunden; Anmeldevorgang mit Microsoft 10 Minuten gültig.
+- **Sitzungen:** Ende nach 8 Stunden ohne Anfrage, spätestens nach 24 Stunden; Anmeldevorgang mit Microsoft 10 Minuten gültig. Unter „Konto“ sieht jede Person ihre eigenen Sitzungen (Gerät nur als Browser und System, keine IP-Adresse) und meldet andere Geräte ab – ohne erneute Anmeldung (Entscheidung des Betreibers, 21.11.2026).
 - **Fehlversuche:** Super-Admin nach 5 falschen Passwörtern 15 Minuten gesperrt; je IP höchstens 30 Passwort-Anmeldungen und 600 Microsoft-Anmeldungen in 15 Minuten; Kalender-Abruf höchstens 300 je IP in 15 Minuten. Andere Routen sind nicht begrenzt – sie verlangen eine Anmeldung aus dem eigenen Entra-Mandanten.
 - **Passwörter:** 14 bis 200 Zeichen, keine Zusammensetzungsregeln, keine erzwungenen Wechsel; scrypt.
 - **Dateien:** Anhänge an Berichten nur JPG, PNG, GIF, WebP, HEIC, PDF, DOCX, XLSX, PPTX, ODT, ODS, ODP (ohne Makros), je Datei höchstens 5 MB, 12 je Bericht, zusammen höchstens 30 MB; Logo PNG, JPEG oder WebP bis 150 KB; Lerninhalte als ZIP bis 15 MB, höchstens 600 Dateien, je Datei 5 MB, entpackt 40 MB; jede andere Anfrage höchstens 256 KB.
@@ -107,7 +107,6 @@ Vollständige Prüfung über alle Kapitel von 5.0 an Version 0.74.2, dazu die al
 
 ## Offene Punkte
 
-- **Eigene Sitzungen ansehen und beenden (7.5.2):** eine Liste der angemeldeten Geräte unter „Konto“ mit „überall sonst abmelden“ – vom Betreiber gewünscht (21.11.2026), wird nach Abstimmung gebaut.
 - **Beim Betrieb zu setzen** (steht in `SECURITY.md`): `APP_URL` mit `https://`, `TRUST_PROXY=true` hinter dem Reverse Proxy, Passwort-Anmeldung `POST /api/auth/lokal` am Proxy auf das eigene Netz beschränken; das Container-Log an ein getrenntes System weitergeben (16.4.3), z. B. über den Logging-Treiber von Docker.
 - **Auf GitHub ansehen:** offene Meldungen von Dependabot und CodeQL (Reiter „Security“) – aus der Prüfumgebung nicht lesbar.
 

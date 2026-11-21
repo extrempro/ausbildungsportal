@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.74.1 · 20.11.2026
+Stand: Version 0.75.0 · 21.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -33,6 +33,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Anmeldung über Microsoft Entra ID (OpenID Connect mit PKCE, `state`, `nonce`); Zugang nur mit vorher angelegtem Konto. Rollen kommen aus dem Portal, nicht aus Entra.
 - Super-Admin lokal unter `/super`: Passwort mindestens 14 Zeichen, nach fünf Fehlversuchen 15 Minuten Pause.
 - Sitzung: Ende nach 8 Stunden ohne Anfrage, spätestens nach 24 Stunden; fünf Minuten vorher eine Warnung mit „Angemeldet bleiben“. Wer mit ungespeicherten Eingaben abgemeldet wird, meldet sich im neuen Tab an und speichert danach.
+- Angemeldete Geräte (unter „Konto“, jede Rolle): die eigenen Sitzungen mit Browser und System, Beginn und letzter Anfrage; andere Geräte einzeln oder alle auf einmal abmelden. Niemand sieht die Geräte anderer.
 - Konten anlegen, ändern, sperren, löschen: Ausbilder für Azubis und Beauftragte, Super-Admin für alle. Gesamtsicht für einzelne Ausbilder (alle Azubis). Letzte Anmeldung sieht nur der Super-Admin.
 - Konto-Seite: Unterschrift zeichnen oder aus dem Namen erzeugen, Profilbild aus Microsoft 365 (wenn eingeschaltet), Darstellung hell/dunkel, Hinweis auf neue Versionen, Benachrichtigungen, Kalender-Abo, eigene Ausbildungsdaten.
 
@@ -91,7 +92,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 41 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 036). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 41 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 037). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -119,7 +120,7 @@ erDiagram
 | Tabelle | Inhalt | Schlüssel und Bezüge |
 | --- | --- | --- |
 | `benutzer` | Anmeldeweg, Anmeldename, Entra-Objekt-ID, Anzeigename, Rolle, Passwort-Hash (nur Super-Admin), Status, Fehlversuche, Sperre bis, Farbschema, letzte Anmeldung, Gesamtsicht, Profilbild an/aus, Versionshinweis an/aus | `id` |
-| `sitzung` | Hash des Sitzungs-Tokens, Beginn, letzte Anfrage, Ablauf | `token_hash` → `benutzer` |
+| `sitzung` | Hash des Sitzungs-Tokens, Beginn, letzte Anfrage, Ablauf, Gerät (nur Browser und System, z. B. „Safari · iPhone“; keine IP-Adresse) | `token_hash` → `benutzer` |
 | `anmeldevorgang` | laufende Entra-Anmeldung (`state`, `nonce`, `code_verifier`) | `state` |
 | `unterschrift` | eigene Unterschrift als SVG-Pfad | `benutzer_id` |
 | `benutzer_bild` | Profilbild aus Microsoft 365 (96 × 96) | `benutzer_id` |
@@ -192,7 +193,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | Pfad | Seite | Inhalt |
 | --- | --- | --- |
 | `/anmelden`, `/super` | Anmelden | Microsoft-Anmeldung; `/super` lokal für den Super-Admin |
-| `/konto` | Konto | Unterschrift, Profilbild, Darstellung, Benachrichtigungen, Kalender-Abo, Ausbildungsdaten |
+| `/konto` | Konto | Unterschrift, Profilbild, Darstellung, Benachrichtigungen, Kalender-Abo, Ausbildungsdaten, angemeldete Geräte |
 | `/handbuch` | Handbuch | Kapitel je Rolle, Suche, Lesemodus, Führung neu starten |
 | `/versionen` | Versionshinweise | Änderungen je Version |
 | `/meine-meldungen` | Meine Meldungen | eigene Fehler und Ideen mit Gespräch; im Menü, sobald man etwas gemeldet hat |
@@ -248,7 +249,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 150 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 153 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |

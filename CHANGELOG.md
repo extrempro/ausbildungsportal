@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.75.0] – 2026-11-21
+
+### Neu
+
+- **Konto – angemeldete Geräte:** Unter „Konto“ siehst du jetzt, auf welchen Geräten du gerade angemeldet bist – mit Browser und System (z. B. „Safari · iPhone“), seit wann und wann zuletzt aktiv. Ein Gerät, das du nicht kennst oder an dem du vergessen hast, dich abzumelden, meldest du hier einzeln ab, mehrere mit „Überall sonst abmelden“. Deine Geräte siehst nur du.
+
 ## [0.74.3] – 2026-11-21
 
 ### Behoben

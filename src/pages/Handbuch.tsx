@@ -489,6 +489,36 @@ const PROFILBILD = (rolle: Rolle): Kapitel => ({
   ),
 });
 
+const GERAETE = (rolle: Rolle): Kapitel => ({
+  id: 'geraete',
+  titel: 'Angemeldete Geräte',
+  gruppe: 'Konto und Nachrichten',
+  inhalt: (
+    <>
+      <p>
+        Unter <Link zu="/konto">Konto</Link> steht im Abschnitt „Angemeldete Geräte“, wo du gerade im Portal angemeldet bist. Kennst du ein Gerät nicht, oder hast du dich an einem fremden Rechner nicht abgemeldet, meldest du es hier ab.
+      </p>
+      <h3>So geht's</h3>
+      <ol className="schritte">
+        <li>Öffne „Konto“ und rolle zu „Angemeldete Geräte“.</li>
+        <li>Wähle beim Gerät „Abmelden“ – oder „Überall sonst abmelden“, wenn es mehrere sind.</li>
+        <li>Auf dem abgemeldeten Gerät muss man sich danach neu anmelden. Auf dem Gerät, an dem du gerade bist, bleibst du angemeldet.</li>
+      </ol>
+      <h3>Begriffe</h3>
+      <dl className="begriffe">
+        <Begriff wort="dieses Gerät">Das Gerät, an dem du gerade bist. Hier meldest du dich wie gewohnt über „Abmelden“ im Menü ab.</Begriff>
+        <Begriff wort="Browser und System">Zum Gerät steht nur, mit welchem Browser und welchem System du angemeldet bist, zum Beispiel „Safari · iPhone“. Steht dort „Unbekanntes Gerät“, hat der Browser das nicht verraten.</Begriff>
+      </dl>
+      <h3>Gut zu wissen</h3>
+      <ul className="punkte">
+        <li>Jede Anmeldung endet von selbst: nach 8 Stunden ohne Nutzung, spätestens nach 24 Stunden. Danach steht das Gerät nicht mehr in der Liste.</li>
+        <li>{rolle === 'admin' ? 'Deine Geräte siehst nur du.' : 'Deine Geräte siehst nur du – auch der Super-Admin sieht sie nicht.'} Gespeichert werden keine IP-Adresse und keine Gerätenummer.</li>
+        <li>Fremdes Gerät in der Liste, das du nicht kennst? Melde es ab und {rolle === 'admin' ? 'ändere dein Passwort.' : 'sag der IT Bescheid – dein Microsoft-Konto könnte betroffen sein.'}</li>
+      </ul>
+    </>
+  ),
+});
+
 const APP: Kapitel = {
   id: 'app',
   titel: 'Als App auf Handy oder Tablet einrichten',
@@ -1085,6 +1115,7 @@ const AZUBI: Kapitel[] = [
   GLOCKE('azubi'),
   BENACHRICHTIGUNGEN('azubi'),
   PROFILBILD('azubi'),
+  GERAETE('azubi'),
   FEHLER('azubi'),
   BARRIEREFREIHEIT,
   APP,
@@ -1970,6 +2001,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
   GLOCKE(rolle),
   BENACHRICHTIGUNGEN(rolle),
   PROFILBILD(rolle),
+  GERAETE(rolle),
   FEHLER(rolle),
   BARRIEREFREIHEIT,
   APP,
@@ -2114,6 +2146,7 @@ const ADMIN: Kapitel[] = [
       </>
     ),
   },
+  GERAETE('admin'),
   FEHLER('admin'),
   BARRIEREFREIHEIT,
   APP,
