@@ -51,6 +51,7 @@ Node ab 26. Lokal ohne Microsoft anmelden: `DEV_ANMELDUNG=true` (nie im Echtbetr
 | `docs/bedienregeln.md` | Checkliste für die Bedienung – **vor jedem Pull Request lesen** |
 | `docs/gestaltung.md` | Farben, Schrift und vorhandene Bausteine – **vor neuem CSS lesen** |
 | `docs/barrierefreiheit.md` | Stand nach WCAG 2.2 AA: erfüllt, offen, nicht geprüft – bei Änderungen an Bedienung oder Darstellung mitziehen |
+| `docs/sicherheit.md` | Sicherheitsprüfung nach OWASP ASVS 4.0 Level 2: Funde, Stand je Kapitel, offene Punkte – bei einer neuen Prüfung fortschreiben |
 | `docs/sicherheit-owasp.md` | Stand nach OWASP Top 10:2025 je Kategorie, offen, nicht geprüft; `server/test/owasp.test.ts` ruft jede Route mit Kennung als Fremder auf – neue Routen sind damit automatisch dabei |
 | `docs/handbuch-regeln.md` | Aufbau eines Handbuch-Kapitels (Gruppe, Einleitung, „So geht's“, „Begriffe“, „Gut zu wissen“) – **vor jedem neuen oder geänderten Kapitel lesen**; `handbuch.test.ts` prüft es |
 

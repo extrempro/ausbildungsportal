@@ -128,9 +128,19 @@ export function ladeInhalte(dir: string, vorher?: Inhalte | null): Inhalte {
   return { themenfelder, meta, umbenennungen, planer, meldungen };
 }
 
+/** Zeichenreferenzen in einem Attributwert auflösen (`&#115;`, `&#x73;`, `&colon;` …) – so liest sie der Browser. */
+function entitaetenAufloesen(s: string): string {
+  const benannt: Record<string, string> = { colon: ':', tab: '\t', newline: '\n', sol: '/', lpar: '(', rpar: ')', amp: '&' };
+  return s
+    .replace(/&#x([0-9a-f]+);?/gi, (_, h: string) => String.fromCodePoint(Math.min(parseInt(h, 16), 0x10ffff)))
+    .replace(/&#(\d+);?/g, (_, d: string) => String.fromCodePoint(Math.min(Number(d), 0x10ffff)))
+    .replace(/&([a-z]+);/gi, (ganz, n: string) => benannt[n.toLowerCase()] ?? ganz);
+}
+
 /**
- * Entfernt aus einer SVG alles Ausführbare: <script>, <foreignObject>, Event-Attribute (on…),
- * Verweise nach außen und Adressen mit javascript:, vbscript: oder data:. Die Grafiken werden direkt ins HTML
+ * Entfernt aus einer SVG alles Ausführbare: <script>, <foreignObject>, eingebettete Dokumente und Stilblöcke,
+ * Event-Attribute (on…), Verweise nach außen und Adressen mit javascript:, vbscript: oder data: –
+ * auch wenn sie mit Zeichenreferenzen geschrieben sind (`java&#115;cript:`). Die Grafiken werden direkt ins HTML
  * eingebettet, damit sie die Farben von Hell- und Dunkelmodus übernehmen. Zusätzlich verbietet die CSP jedes Skript
  * im Seitentext – dieser Filter ist die erste von zwei Schutzschichten.
  *
@@ -145,8 +155,10 @@ export function bereinigeSvg(roh: string): string {
     // ganze Blöcke samt Inhalt; das Ende-Tag darf Leerzeichen und Angaben enthalten (`</script foo>`)
     [/<script\b[\s\S]*?(?:<\/script\b[^>]*>|$)/gi, ''],
     [/<foreignObject\b[\s\S]*?(?:<\/foreignObject\b[^>]*>|$)/gi, ''],
+    // eingebettete Dokumente und Stilblöcke (`<iframe srcdoc>`, `<style>@import …`) – in den Grafiken nie nötig
+    [/<(iframe|frame|embed|object|style)\b[\s\S]*?(?:<\/\1\b[^>]*>|$)/gi, ''],
     // übrig gebliebene einzelne Tags dieser Art
-    [/<\/?(?:script|foreignObject)\b[^>]*>/gi, ''],
+    [/<\/?(?:script|foreignObject|iframe|frame|embed|object|style)\b[^>]*>/gi, ''],
     // Event-Attribute, auch direkt nach dem Tag-Namen oder einem Schrägstrich (`<svg/onload=…>`)
     [/[\s/]on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, ' '],
     // Verweise: nur Sprungmarken in der eigenen Grafik (#…) bleiben
@@ -155,11 +167,14 @@ export function bereinigeSvg(roh: string): string {
   // gefährliche Adressen in Attributwerten, auch in Stilangaben (`style="fill:url(javascript:…)"`) – Text bleibt unberührt
   const gefaehrlich = /(?:java|vb)script\s*:|data\s*:/gi;
   const werte = /=\s*("[^"]*"|'[^']*'|[^\s>"']+)/g;
+  // so, wie der Browser den Wert liest: Zeichenreferenzen aufgelöst, Steuerzeichen und Leerraum entfernt
+  const gelesen = (wert: string) => entitaetenAufloesen(wert).replace(/[\u0000-\u0020\u007f]+/g, '');
   let s = roh.replace(/^\uFEFF/, '');
   for (let vorher = ''; vorher !== s; ) {
     vorher = s;
     for (const [muster, ersatz] of regeln) s = s.replace(muster, ersatz);
-    s = s.replace(werte, (wert) => wert.replace(gefaehrlich, ''));
+    // mit Zeichenreferenzen verschleiert: den ganzen Wert leeren
+    s = s.replace(werte, (wert) => (wert.includes('&') && /(?:java|vb)script:|data:/i.test(gelesen(wert)) ? '=""' : wert.replace(gefaehrlich, '')));
   }
   return s.trim();
 }
