@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.73.0 (erzeugt am 18.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.75.0 (erzeugt am 21.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
@@ -78,7 +78,7 @@ Eine freiwillige Figur, die mit der Ausbildungszeit Zubehör bekommt. Nur der Az
 
 ### Konto
 
-Eigene Angaben, Ausbildungsdaten, Darstellung, Benachrichtigungen, Begleiter, Kalender-Abo und Unterschrift.
+Eigene Angaben, Ausbildungsdaten, Darstellung, Benachrichtigungen, Begleiter, Kalender-Abo, Unterschrift und angemeldete Geräte.
 
 ![Konto](azubi-12-konto.png)
 
