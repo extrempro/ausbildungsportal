@@ -285,7 +285,7 @@ async function main() {
       },
     });
     await s.keyboard.press('Escape');
-    await foto(s, '/konto', 'azubi-12-konto', 'Konto', 'Eigene Angaben, Ausbildungsdaten, Darstellung, Benachrichtigungen, Begleiter, Kalender-Abo und Unterschrift.', { ganz: true });
+    await foto(s, '/konto', 'azubi-12-konto', 'Konto', 'Eigene Angaben, Ausbildungsdaten, Darstellung, Benachrichtigungen, Begleiter, Kalender-Abo, Unterschrift und angemeldete Geräte.', { ganz: true });
     await foto(s, '/lernen/grundlagen', 'azubi-14-rueckmeldung', 'Rückmeldung geben', 'Die zwei Daumen oben in der Leiste: Fehler melden, eine Idee fürs Portal schicken oder – nur Azubis – einen Lerninhalt besser erklärt haben wollen. Im Lernmodul ist das Thema schon gewählt; dieser Wunsch geht ohne Namen an die Ausbilder.', {
       vorher: async () => {
         await s.click('button[aria-label="Rückmeldung geben"]');
