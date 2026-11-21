@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.74.2] – 2026-11-21
+
+### Behoben
+
+- **Sicherheit – Grafiken in Lerninhalten:** Der Filter, der aus den Grafiken alles Ausführbare entfernt, erkennt jetzt auch Adressen, die mit Zeichencodes verschleiert sind (z. B. `java&#115;cript:`), und entfernt eingebettete Dokumente und Stilblöcke. Ausgenutzt werden konnte das nicht: Die Sicherheitsregeln der Seite (Content-Security-Policy) hätten es im Browser blockiert. Jetzt greifen wieder beide Schutzschichten.
+
+### Geändert
+
+- **Sicherheitsprüfung nach OWASP ASVS 4.0 (Level 2)** mit unabhängigem Prüfer: Ergebnis, Stand je Kapitel und offene Punkte in `docs/sicherheit.md`.
+
 ## [0.74.1] – 2026-11-20
 
 ### Geändert

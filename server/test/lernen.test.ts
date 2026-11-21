@@ -161,10 +161,19 @@ test('Grafiken: Umgehungen aus zusammengesetzten oder ungewöhnlich geschriebene
     '<svg><image href="data:image/svg+xml,alert(1)"/></svg>',
     '<svg><foreignObject><foreignObject></foreignObject>alert(1)</foreignObject></svg>',
     '<svg><!-- <script>alert(1)</script> --></svg>',
+    // Zeichenreferenzen statt Buchstaben (Sicherheitsprüfung 21.11.2026, E1) – der Browser löst sie in Attributen auf
+    '<svg><a xlink:href="#x"><animate attributeName="href" to="java&#115;cript:alert(1)"/></a></svg>',
+    '<svg><a href="#"><animate attributeName="href" values="&#106;avascript:alert(1)"/></a></svg>',
+    '<svg><set attributeName="href" to="javascript&colon;alert(1)"/></svg>',
+    '<svg><set attributeName="href" to="java&#x09;script&#x3a;alert(1)"/></svg>',
+    '<svg><set attributeName="href" to="&#x64;ata:text/html,x"/></svg>',
+    '<svg><iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe></svg>',
+    '<svg><style>@import "//boese.example/a.css"</style></svg>',
+    '<svg><embed src="//boese.example/x"/><object data="//boese.example/x"></object></svg>',
   ];
   for (const roh of faelle) {
     const s = bereinigeSvg(roh).toLowerCase();
-    for (const verboten of ['<script', 'onload', 'javascript:', 'vbscript:', 'data:', 'foreignobject']) assert.equal(s.includes(verboten), false, `${roh} → ${s} enthält ${verboten}`);
+    for (const verboten of ['<script', 'onload', 'javascript:', 'vbscript:', 'data:', 'foreignobject', '&#', '&colon;', '<iframe', '<style', '<embed', '<object', 'boese.example']) assert.equal(s.includes(verboten), false, `${roh} → ${s} enthält ${verboten}`);
   }
   // was harmlos ist, bleibt: Sprungmarken in der Grafik und das Wort „data:“ im Text
   const ok = bereinigeSvg('<svg><use href="#pfeil"/><text>Metadata: Version</text></svg>');
