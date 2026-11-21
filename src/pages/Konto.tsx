@@ -8,6 +8,7 @@ import { KalenderAbo } from '../kalenderAbo';
 import { ProfilUebersicht } from './AzubiDetail';
 import { UnterschriftBild, UnterschriftFeld } from '../unterschrift';
 import { unterschriftAusName } from '../unterschriftErzeugen';
+import { AngemeldeteGeraete } from '../geraete';
 import { HandbuchLink } from '../handbuchLink';
 import { Avatar } from '../avatar';
 import { Benachrichtigungen } from '../benachrichtigungen';
@@ -223,7 +224,7 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
   return (
     <>
       <h1>Konto</h1>
-      <p className="leise">Deine Angaben, dein Kalender-Abo, deine Unterschrift und die Darstellung des Portals. Was du hier änderst, gilt nur für dich.</p>
+      <p className="leise">Deine Angaben, dein Kalender-Abo, deine Unterschrift, die Darstellung des Portals und wo du angemeldet bist. Was du hier änderst, gilt nur für dich.</p>
       <section className="karte">
         <dl className="daten">
           <dt>Name</dt>
@@ -318,6 +319,11 @@ export function KontoSeite({ konto, profilbild, onGeaendert }: { konto: Konto; p
           </p>
         </section>
       )}
+
+      <section className="karte" id="geraete">
+        <h2>Angemeldete Geräte</h2>
+        <AngemeldeteGeraete />
+      </section>
 
       {konto.anmeldung === 'lokal' && (
         <section className="karte">

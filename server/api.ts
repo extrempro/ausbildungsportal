@@ -16,7 +16,7 @@ import { fehlerText, pkceChallenge, zufall } from './entra';
 import { hashePasswort, pruefePasswort, pruefeRegeln, zufallsPasswort } from './passwort';
 import { leseProtokoll, protokolliere } from './protokoll';
 import { betreuung, darfAzubiSehen, darfAzubiVerwalten, darfKontoLoeschen, darfKontoSehen, darfKontoVerwalten, darfRolleVergeben, sichtbareAzubis, zustaendiger } from './rechte';
-import { beendeAlleSitzungen, beendeSitzung, beginneSitzung, HOECHST_MS, pruefeSitzung, raeumeAuf, sitzungsEnde } from './sitzung';
+import { beendeAlleSitzungen, beendeEigeneSitzung, beendeSitzung, beginneSitzung, eigeneSitzungen, geraetAus, HOECHST_MS, pruefeSitzung, raeumeAuf, sitzungsEnde } from './sitzung';
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
 import { ANHANG_ROUTEN } from './bericht-anhang';
@@ -68,10 +68,10 @@ function setzeCookie(cfg: Config, art: 'sitzung' | 'anmeldung', wert: string, ma
   return `${cookieName(cfg, art)}=${wert}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAlterS}${cfg.sicher ? '; Secure' : ''}`;
 }
 
-function sitzungsAntwort(k: Kontext, b: BenutzerZeile, antwort: Antwort): Antwort {
+function sitzungsAntwort(k: Kontext, a: Anfrage, b: BenutzerZeile, antwort: Antwort): Antwort {
   const jetzt = k.jetzt();
   raeumeAuf(k.db, jetzt);
-  const token = beginneSitzung(k.db, b.id, jetzt);
+  const token = beginneSitzung(k.db, b.id, jetzt, geraetAus(a.headers['user-agent']));
   k.db.prepare('UPDATE benutzer SET letzte_anmeldung = ?, fehlversuche = 0, gesperrt_bis = NULL WHERE id = ?').run(jetzt.toISOString(), b.id);
   return { ...antwort, cookies: [...(antwort.cookies ?? []), setzeCookie(k.cfg, 'sitzung', token, Math.floor(HOECHST_MS / 1000))] };
 }
@@ -176,7 +176,7 @@ export const ROUTEN: Route[] = [
         throw new Fehler(401, FALSCH);
       }
       protokolliere(c.k.db, jetzt, 'konto', 'anmeldung', lokal, null, 'lokal');
-      return sitzungsAntwort(c.k, lokal, { status: 200, body: { ok: true } });
+      return sitzungsAntwort(c.k, c.a, lokal, { status: 200, body: { ok: true } });
     },
   },
 
@@ -265,7 +265,7 @@ export const ROUTEN: Route[] = [
       if (wer.bildFehler) c.k.log(`Profilbild nicht geladen: ${wer.bildFehler}`);
       merkeBild(db, b, wer, jetzt);
       protokolliere(db, jetzt, 'konto', 'anmeldung', b, null, 'Entra');
-      return sitzungsAntwort(c.k, b, { status: 302, redirect: '/', cookies: [setzeCookie(cfg, 'anmeldung', '', 0)] });
+      return sitzungsAntwort(c.k, c.a, b, { status: 302, redirect: '/', cookies: [setzeCookie(cfg, 'anmeldung', '', 0)] });
     },
   },
 
@@ -281,7 +281,7 @@ export const ROUTEN: Route[] = [
       const b = nachAnmeldename(c.k.db, name);
       if (!b || b.anmeldung !== 'entra' || b.status !== 'aktiv') throw new Fehler(401, 'Kein aktives Entra-Konto mit diesem Anmeldenamen');
       protokolliere(c.k.db, c.k.jetzt(), 'konto', 'anmeldung', b, null, 'Entwicklungsanmeldung');
-      return sitzungsAntwort(c.k, b, { status: 200, body: { ok: true } });
+      return sitzungsAntwort(c.k, c.a, b, { status: 200, body: { ok: true } });
     },
   },
 
@@ -317,6 +317,30 @@ export const ROUTEN: Route[] = [
       beendeAlleSitzungen(c.k.db, c.b.id, c.token); // andere Geräte abmelden
       protokolliere(c.k.db, c.k.jetzt(), 'konto', 'passwort_geaendert', c.b);
       return { status: 200, body: { ok: true } };
+    },
+  },
+
+  // „Angemeldete Geräte“ unter Konto: nur die eigenen Sitzungen, für jede Rolle
+  { m: 'GET', p: '/api/ich/sitzungen', wer: 'alle', h: (c) => ({ status: 200, body: { sitzungen: eigeneSitzungen(c.k.db, c.b.id, c.token, c.k.jetzt()) } }) },
+  {
+    m: 'DELETE',
+    p: '/api/ich/sitzungen/:id',
+    wer: 'alle',
+    h: (c) => {
+      // fremde, unbekannte und die eigene aktuelle Sitzung sehen gleich aus – die aktuelle beendet „Abmelden“
+      if (!beendeEigeneSitzung(c.k.db, c.b.id, c.p.id, c.token)) throw new Fehler(404, 'Nicht gefunden');
+      protokolliere(c.k.db, c.k.jetzt(), 'konto', 'abmeldung', c.b, c.b, 'anderes Gerät abgemeldet');
+      return { status: 200, body: { sitzungen: eigeneSitzungen(c.k.db, c.b.id, c.token, c.k.jetzt()) } };
+    },
+  },
+  {
+    m: 'POST',
+    p: '/api/ich/sitzungen/andere-abmelden',
+    wer: 'alle',
+    h: (c) => {
+      beendeAlleSitzungen(c.k.db, c.b.id, c.token);
+      protokolliere(c.k.db, c.k.jetzt(), 'konto', 'abmeldung', c.b, c.b, 'alle anderen Geräte abgemeldet');
+      return { status: 200, body: { sitzungen: eigeneSitzungen(c.k.db, c.b.id, c.token, c.k.jetzt()) } };
     },
   },
 

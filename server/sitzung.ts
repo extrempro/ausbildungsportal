@@ -10,18 +10,86 @@ export function tokenHash(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+/**
+ * Kurzer Text zum Gerät für „Angemeldete Geräte“ – nur Browser und System, grob aus der Browserkennung gelesen.
+ * Mehr wird bewusst nicht gespeichert (keine Version, keine IP-Adresse, keine Gerätekennung).
+ */
+export function geraetAus(kennung: string | undefined): string {
+  const k = kennung ?? '';
+  const browser = /Edg(?:e|A|iOS)?\//.test(k)
+    ? 'Edge'
+    : /OPR\/|Opera/.test(k)
+      ? 'Opera'
+      : /Firefox\/|FxiOS\//.test(k)
+        ? 'Firefox'
+        : /Chrome\/|CriOS\//.test(k)
+          ? 'Chrome'
+          : /Safari\//.test(k)
+            ? 'Safari'
+            : '';
+  const system = /iPhone/.test(k)
+    ? 'iPhone'
+    : /iPad/.test(k)
+      ? 'iPad'
+      : /Android/.test(k)
+        ? 'Android'
+        : /Windows/.test(k)
+          ? 'Windows'
+          : /CrOS/.test(k)
+            ? 'ChromeOS'
+            : /Macintosh|Mac OS X/.test(k)
+              ? 'Mac'
+              : /Linux/.test(k)
+                ? 'Linux'
+                : '';
+  return [browser, system].filter(Boolean).join(' · ');
+}
+
 /** Legt eine Sitzung an und gibt das Token zurück – in der Datenbank steht nur dessen Hash. */
-export function beginneSitzung(db: DB, benutzerId: number, jetzt: Date): string {
+export function beginneSitzung(db: DB, benutzerId: number, jetzt: Date, geraet = ''): string {
   const token = randomBytes(32).toString('base64url');
   const iso = jetzt.toISOString();
-  db.prepare('INSERT INTO sitzung (token_hash, benutzer_id, erstellt, zuletzt, laeuft_ab) VALUES (?, ?, ?, ?, ?)').run(
+  db.prepare('INSERT INTO sitzung (token_hash, benutzer_id, erstellt, zuletzt, laeuft_ab, geraet) VALUES (?, ?, ?, ?, ?, ?)').run(
     tokenHash(token),
     benutzerId,
     iso,
     iso,
     new Date(jetzt.getTime() + HOECHST_MS).toISOString(),
+    geraet.slice(0, 60),
   );
   return token;
+}
+
+/** Kennung einer Sitzung für „Angemeldete Geräte“: der Anfang ihres Hashs – verrät nichts über das Token. */
+const kennungVon = (hash: string) => hash.slice(0, 16);
+
+export interface EigeneSitzung {
+  id: string;
+  geraet: string;
+  erstellt: string;
+  zuletzt: string;
+  /** die Sitzung, mit der gerade gefragt wird */
+  diese: boolean;
+}
+
+/** Die noch gültigen Sitzungen eines Kontos, die aktuelle zuerst, dann die zuletzt aktiven. */
+export function eigeneSitzungen(db: DB, benutzerId: number, token: string | undefined, jetzt: Date): EigeneSitzung[] {
+  const eigene = token ? tokenHash(token) : '';
+  const iso = jetzt.toISOString();
+  const leerlauf = new Date(jetzt.getTime() - LEERLAUF_MS).toISOString();
+  const zeilen = db
+    .prepare('SELECT token_hash, geraet, erstellt, zuletzt FROM sitzung WHERE benutzer_id = ? AND laeuft_ab >= ? AND zuletzt >= ? ORDER BY zuletzt DESC')
+    .all(benutzerId, iso, leerlauf) as { token_hash: string; geraet: string; erstellt: string; zuletzt: string }[];
+  return zeilen
+    .map((z) => ({ id: kennungVon(z.token_hash), geraet: z.geraet, erstellt: z.erstellt, zuletzt: z.zuletzt, diese: z.token_hash === eigene }))
+    .sort((a, b) => Number(b.diese) - Number(a.diese));
+}
+
+/** Beendet eine andere Sitzung desselben Kontos. false, wenn es sie nicht gibt, sie fremd ist oder die aktuelle ist. */
+export function beendeEigeneSitzung(db: DB, benutzerId: number, id: string, token: string | undefined): boolean {
+  if (!/^[0-9a-f]{16}$/.test(id)) return false;
+  const eigene = token ? tokenHash(token) : '';
+  return db.prepare('DELETE FROM sitzung WHERE benutzer_id = ? AND substr(token_hash, 1, 16) = ? AND token_hash <> ?').run(benutzerId, id, eigene).changes > 0;
 }
 
 /** Liefert das aktive Konto zur Sitzung oder null; abgelaufene Sitzungen werden dabei gelöscht. */

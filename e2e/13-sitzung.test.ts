@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import { ANNA, inTagen, mitFoto, montagVon, oeffne, startePortal, text } from './hilfe';
+import { ANNA, HANDY, inTagen, mitFoto, montagVon, oeffne, startePortal, text, ueberlauf } from './hilfe';
 import type { Portal } from './hilfe';
 import type { Page } from 'playwright';
 
@@ -78,5 +78,40 @@ test(
     await s.click('main button.knopf:has-text("Als Entwurf speichern")');
     await oeffne(s, p.url, `/berichtsheft/${montag}`);
     assert.equal(await s.locator('main textarea').first().inputValue(), 'Regale im Lager neu beschriftet', 'gespeichert');
+  }),
+);
+
+test(
+  'Angemeldete Geräte: Anna sieht ihre zwei Geräte und meldet das andere ab – dort ist sie danach abgemeldet',
+  mitFoto(() => p, 'angemeldete-geraete', async () => {
+    const pc = await p.seite(ANNA, { breite: 1280, hoehe: 900, dunkel: true });
+    // Sitzungen aus den Tests davor aufräumen – dann gibt es genau dieses Gerät und gleich das Handy
+    const aufgeraeumt = await pc.evaluate(async (url) => (await fetch(`${url}/api/ich/sitzungen/andere-abmelden`, { method: 'POST' })).status, p.url);
+    assert.equal(aufgeraeumt, 200);
+    const handy = await p.seite(ANNA, HANDY);
+    await oeffne(pc, p.url, '/konto');
+    const liste = pc.locator('#geraete .geraete-liste li');
+    await liste.nth(1).waitFor();
+    assert.equal(await liste.count(), 2);
+    assert.match(await liste.first().innerText(), /dieses Gerät/);
+    assert.match(await liste.first().innerText(), /Chrome · Linux/, 'Browser und System aus der Browserkennung');
+    assert.equal(await liste.first().locator('button').count(), 0, 'dieses Gerät meldet „Abmelden“ im Menü ab');
+
+    await liste.nth(1).locator('button:has-text("Abmelden")').click();
+    await pc.locator('text=Gerät abgemeldet.').waitFor();
+    assert.equal(await liste.count(), 1);
+    await pc.locator('#geraete >> text=Du bist nur auf diesem Gerät angemeldet.').waitFor();
+
+    // das andere Gerät ist abgemeldet und landet bei der Anmeldung
+    await handy.reload();
+    await handy.waitForURL(/\/anmelden|\/$/);
+    await handy.locator('button:has-text("Ohne Microsoft anmelden")').waitFor({ state: 'attached' });
+
+    // am Handy: nichts läuft waagerecht über
+    const nochmal = await p.seite(ANNA, HANDY);
+    await oeffne(nochmal, p.url, '/konto');
+    await nochmal.locator('#geraete .geraete-liste li').first().waitFor();
+    assert.equal(await ueberlauf(nochmal), 0);
+    assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );
