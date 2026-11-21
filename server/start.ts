@@ -9,6 +9,15 @@ import type { Entra } from './entra';
 import { hashePasswort, zufallsPasswort } from './passwort';
 import { MailFehler, sendeMail } from './smtp';
 
+/**
+ * Server-Log ohne eingeschleuste Zeilen (ASVS 5.0, 16.4.1): Steuerzeichen (z. B. Farbcodes fürs Terminal) werden zu „?“,
+ * jede weitere Zeile einer Meldung wird eingerückt. So kann eine Eingabe mit Zeilenumbruch keine eigene, echt aussehende
+ * Log-Zeile erzeugen – Stacktraces bleiben trotzdem lesbar.
+ */
+export function sichererLog(ausgabe: (text: string) => void): (text: string) => void {
+  return (text) => ausgabe(String(text).replace(/\r\n?|[\u2028\u2029]/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '?').replace(/\n/g, '\n    '));
+}
+
 export const REDIRECT_PFAD = '/api/auth/entra/callback';
 
 export function appVersion(): string {
@@ -41,7 +50,7 @@ export async function erzeugeKontext(
     cfg,
     entra,
     version: appVersion(),
-    log: optionen.log ?? console.log,
+    log: sichererLog(optionen.log ?? console.log),
     jetzt,
     dummyHash: await hashePasswort(zufallsPasswort()),
     versuche: new Map(),

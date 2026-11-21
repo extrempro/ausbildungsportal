@@ -55,7 +55,8 @@ test('Sicherheits-Header auf jeder Antwort', async () => {
     assert.equal(h.get('x-content-type-options'), 'nosniff');
     assert.equal(h.get('x-frame-options'), 'DENY');
     assert.equal(h.get('referrer-policy'), 'no-referrer');
-    assert.match(h.get('strict-transport-security') ?? '', /max-age=31536000/);
+    assert.match(h.get('strict-transport-security') ?? '', /max-age=31536000; includeSubDomains/);
+    assert.match(h.get('content-security-policy') ?? '', /object-src 'none'; base-uri 'none'/, pfad);
   }
   assert.equal((await fetch(`${basis}/api/health`)).headers.get('cache-control'), 'no-store');
 });
@@ -119,4 +120,12 @@ test('ungültige Konfiguration wird beim Start abgelehnt', () => {
   assert.equal(loadConfig({ DEV_ANMELDUNG: 'true', NODE_ENV: 'production' }, []).devAnmeldung, false);
   assert.equal(loadConfig({ APP_URL: 'https://portal.test/' }, []).appUrl, 'https://portal.test');
   assert.equal(loadConfig({}, []).sicher, false);
+});
+
+test('jede Antwort mit Inhalt nennt Typ und Zeichensatz – auch Fehlertexte außerhalb der API (ASVS 5.0, 4.1.1)', async () => {
+  for (const [pfad, methode] of [['/assets/gibt-es-nicht.js', 'GET'], ['/favicon.ico', 'GET'], ['/', 'POST'], ['/%c0%ae', 'GET'], ['/api/gibt-es-nicht', 'GET']] as const) {
+    const r = await fetch(basis + pfad, { method: methode });
+    await r.arrayBuffer();
+    assert.match(r.headers.get('content-type') ?? '', /charset=utf-8/, `${methode} ${pfad} → ${r.status}`);
+  }
 });

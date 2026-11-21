@@ -2,7 +2,7 @@
 
 Stand: 13.11.2026 · Durchsicht an Version 0.64.0, Maßnahmen in 0.65.0
 
-Maßstab sind die [OWASP Top 10:2025](https://owasp.org/Top10/2025/) – die zehn häufigsten Schwachstellen von Webanwendungen. Die ausführlichere Prüfung nach OWASP ASVS 4.0 (Level 2) mit unabhängigem Prüfer steht in [sicherheit.md](sicherheit.md) (21.11.2026). Was beim Betrieb zu beachten ist (HTTPS, VPN, Schutz der Super-Admin-Anmeldung am Reverse Proxy), steht in [SECURITY.md](../SECURITY.md).
+Maßstab sind die [OWASP Top 10:2025](https://owasp.org/Top10/2025/) – die zehn häufigsten Schwachstellen von Webanwendungen. Die ausführlichere Prüfung nach OWASP ASVS 5.0 (Level 2) mit unabhängigem Prüfer steht in [sicherheit.md](sicherheit.md) (21.11.2026). Was beim Betrieb zu beachten ist (HTTPS, VPN, Schutz der Super-Admin-Anmeldung am Reverse Proxy), steht in [SECURITY.md](../SECURITY.md).
 
 ## Wie geprüft wurde
 

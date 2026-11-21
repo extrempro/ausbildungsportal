@@ -1,5 +1,19 @@
 # Änderungen
 
+## [0.74.3] – 2026-11-21
+
+### Behoben
+
+- **Sicherheit – Nachprüfung nach OWASP ASVS 5.0 (Level 2):** vier kleine Punkte, die der neuere Standard strenger sieht. Ausnutzbar war keiner.
+  - Kurze Fehlermeldungen außerhalb der Oberfläche (z. B. für eine fehlende Datei) nennen jetzt ihren Typ und Zeichensatz.
+  - HTTPS gilt per HSTS auch für Unteradressen der Adresse des Portals.
+  - Die Sicherheitsregeln der Seite (CSP) verbieten jetzt jede Basis-Adresse (`base-uri 'none'`).
+  - Eingaben mit Zeilenumbruch können im Server-Log keine eigene, echt aussehende Zeile mehr erzeugen; Steuerzeichen werden ersetzt.
+
+### Geändert
+
+- `docs/sicherheit.md` nach ASVS 5.0: Stand je Kapitel, dokumentierte Sicherheitsentscheidungen (Sitzungsdauer, Grenzen, Dateitypen, Datenklassen, Protokoll) und offene Punkte.
+
 ## [0.74.2] – 2026-11-21
 
 ### Behoben
