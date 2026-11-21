@@ -36,7 +36,7 @@ function sicherheitsHeader(k: Kontext): Record<string, string> {
     // nur eigene Quellen: keine fremden Skripte, Schriften oder Bilder, keine Einbettung in fremde Seiten
     'Content-Security-Policy':
       "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; " +
-      "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+      "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer',
@@ -44,7 +44,8 @@ function sicherheitsHeader(k: Kontext): Record<string, string> {
     'Cross-Origin-Resource-Policy': 'same-origin',
     // display-capture: „Bildschirmfoto aufnehmen“ beim Melden eines Fehlers – nur für das Portal selbst
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), display-capture=(self)',
-    ...(k.cfg.sicher ? { 'Strict-Transport-Security': 'max-age=31536000' } : {}),
+    // auch für Unteradressen der Adresse des Portals (ASVS 5.0, 3.4.1) – andere Adressen der Firma betrifft das nicht
+    ...(k.cfg.sicher ? { 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains' } : {}),
   };
 }
 
@@ -86,6 +87,10 @@ async function leseBody(req: IncomingMessage, pfad: string): Promise<unknown> {
 }
 
 function sende(res: ServerResponse, status: number, header: Record<string, string | string[]>, body?: string | Buffer): void {
+  // jede Antwort mit Inhalt nennt ihren Typ samt Zeichensatz (ASVS 5.0, 4.1.1) – auch kurze Fehlertexte außerhalb der API
+  if (body !== undefined && !Object.keys(header).some((n) => n.toLowerCase() === 'content-type')) {
+    header = { ...header, 'Content-Type': typeof body === 'string' && body.startsWith('{') ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8' };
+  }
   res.writeHead(status, header);
   res.end(body);
 }
