@@ -32,7 +32,7 @@ import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
 import { Dialoge, melde, useFensterFokus } from './dialoge';
-import { halteFokusFrei } from './fokusFrei';
+import { halteFokusFrei, halteRueckmeldungSichtbar, halteTastaturFrei } from './fokusFrei';
 import { RueckmeldungFenster } from './fehler';
 import { LESESEITE, LesemodusEnde, setzeBreit, setzeLesemodus, useAnsicht, useBreitesFenster } from './ansicht';
 import { Rueckmeldungen } from './pages/Rueckmeldungen';
@@ -241,6 +241,9 @@ export function App() {
 
   // angeheftete Leisten verdecken nie das Element mit dem Fokus (WCAG 2.4.11)
   useEffect(() => halteFokusFrei(), []);
+  // Rückmeldungen an der Stelle rollen ins Bild, feste Meldungen stehen über der Tastatur – PC, Tablet, Handy
+  useEffect(() => halteRueckmeldungSichtbar(), []);
+  useEffect(() => halteTastaturFrei(), []);
 
   // Menüs schließen sich beim Seitenwechsel, mit Escape und bei einem Klick daneben
   useEffect(() => setMenue(null), [pfad]);

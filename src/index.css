@@ -3971,7 +3971,8 @@ fieldset.vorlage-eintrag legend + * {
 .meldungen {
   position: fixed;
   right: 16px;
-  bottom: 20px;
+  /* über der Bildschirmtastatur am Handy (--tastatur aus fokusFrei.ts) */
+  bottom: calc(20px + var(--tastatur, 0px));
   left: 16px;
   z-index: 85;
   display: flex;
@@ -4040,7 +4041,7 @@ fieldset.vorlage-eintrag legend + * {
 @media (max-width: 1023px) {
   /* über der Leiste unten */
   .meldungen {
-    bottom: calc(84px + env(safe-area-inset-bottom));
+    bottom: calc(84px + env(safe-area-inset-bottom) + var(--tastatur, 0px));
   }
 
   .frage-hintergrund {
@@ -4395,7 +4396,7 @@ fieldset.abschnitt.teil legend + * {
 
   /* Knopf „Nach oben“ und Bestätigungen weichen der Leiste aus */
   body:has(.bericht-leiste) .nach-oben {
-    bottom: calc(156px + env(safe-area-inset-bottom));
+    bottom: calc(156px + env(safe-area-inset-bottom) + var(--tastatur, 0px));
   }
 
   body:has(.bericht-leiste) .meldungen {

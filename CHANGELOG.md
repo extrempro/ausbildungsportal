@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.76.1] – 2026-11-22
+
+### Behoben
+
+- **Rückmeldungen sind immer zu sehen – am PC, am Tablet und am Handy.** Auf langen Seiten stand eine Bestätigung oder ein Fehler oft oben, während man unten auf den Knopf gedrückt hatte (z. B. „Konto angelegt“ in der Verwaltung der Konten) – man sah nicht, ob es geklappt hat. Jetzt rollt die Seite die Rückmeldung ins Bild, frei von Kopfzeile und Leisten. Beim bloßen Öffnen einer Seite springt nichts, und wer gerade tippt, behält sein Feld im Blick.
+- Kurze Bestätigungen unten („Gespeichert“) stehen am Handy über der Bildschirmtastatur statt dahinter.
+
+### Geändert
+
+- Regel für Mitwirkende (`docs/bedienregeln.md`, `CONTRIBUTING.md`, `CLAUDE.md`): Rückmeldungen auf eine Handlung müssen auf allen Geräten ohne Rollen sichtbar sein; ein neuer Browser-Test prüft das bei PC, Tablet und 390 px.
+
 ## [0.76.0] – 2026-11-22
 
 ### Neu
