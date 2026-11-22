@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.76.0] – 2026-11-22
+
+### Neu
+
+- **Schulferien für alle Bundesländer:** Mitgeliefert sind jetzt die Ferien aller 16 Länder für die Schuljahre 2024/25 bis 2028/29, übernommen aus den Übersichten der Kultusministerkonferenz. Im Plan stehen damit die Ferien der eigenen Berufsschule, egal in welchem Land sie liegt. Bewegliche Ferientage legt jede Schule selbst fest – sie stehen nicht drin.
+
+### Geändert
+
+- Beispiele in Tests und Bildschirmfotos sind jetzt neutral („Musterstadt“, „Berufliche Schule Musterstadt“) – sie verweisen auf keinen echten Ort und keine echte Schule mehr.
+- Regel für Mitwirkende (`CONTRIBUTING.md`, `CLAUDE.md`): Nichts ins öffentliche Repository, was Rückschlüsse auf den Betrieb oder auf Personen erlaubt – keine Standorte, echten Schulen oder Kammern, internen Systeme oder Hinweise auf interne Entwürfe, auch nicht als Beispiel.
+
 ## [0.75.0] – 2026-11-21
 
 ### Neu

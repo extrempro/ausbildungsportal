@@ -108,14 +108,22 @@ test('Feiertage: einzelne Daten und Besonderheiten', () => {
   assert.deepEqual(feiertageZwischen('HH', '2026-12-20', '2027-01-05').map((f) => f.datum), ['2026-12-25', '2026-12-26', '2027-01-01']);
 });
 
-test('Ferien: mitgelieferte Datei für Hamburg ist gültig', () => {
-  const fehler: string[] = [];
-  const hh = leseFerienDatei('content/ferien/HH.json', fehler);
-  assert.deepEqual(fehler, []);
-  assert.equal(hh.vorhanden, true);
-  assert.ok(hh.zeiten.length >= 30);
-  assert.ok(hh.quelle.length > 10 && gueltigesDatum(hh.stand));
-  assert.ok(ferienZwischen(hh, '2026-12-01', '2027-01-15').some((z) => z.name === 'Weihnachtsferien'));
+test('Ferien: für alle 16 Bundesländer liegt eine gültige Datei bei', () => {
+  for (const land of ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']) {
+    const fehler: string[] = [];
+    const f = leseFerienDatei(`content/ferien/${land}.json`, fehler);
+    assert.deepEqual(fehler, [], land);
+    assert.equal(f.vorhanden, true, land);
+    assert.ok(f.zeiten.length >= 20, land);
+    assert.ok(f.quelle.length > 10 && gueltigesDatum(f.stand), land);
+    // je Schuljahr von 2024/25 bis 2028/29 Weihnachts- und Sommerferien
+    for (let j = 2024; j <= 2028; j++) {
+      assert.ok(ferienZwischen(f, `${j}-12-15`, `${j + 1}-01-15`).some((z) => z.name === 'Weihnachtsferien'), `${land} Weihnachten ${j}`);
+      assert.ok(ferienZwischen(f, `${j + 1}-06-15`, `${j + 1}-09-15`).some((z) => z.name === 'Sommerferien'), `${land} Sommer ${j + 1}`);
+    }
+    // nichts überschneidet sich
+    for (let i = 1; i < f.zeiten.length; i++) assert.ok(f.zeiten[i - 1].bis < f.zeiten[i].von, `${land}: ${f.zeiten[i - 1].von} / ${f.zeiten[i].von}`);
+  }
 });
 
 test('Ferien: fehlende Datei, kaputte Einträge, Änderungen ohne Neustart', () => {

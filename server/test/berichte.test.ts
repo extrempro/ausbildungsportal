@@ -18,7 +18,7 @@ interface Welt {
   ben: BenutzerZeile;
 }
 
-/** Zwei Azubis mit Ausbildungsbeginn 01.08.2025, Betrieb in Hamburg; alle haben eine Unterschrift hinterlegt. */
+/** Zwei Azubis mit Ausbildungsbeginn 01.08.2025, Betrieb mit Bundesland HH; alle haben eine Unterschrift hinterlegt. */
 async function welt(mitUnterschrift = true): Promise<Welt> {
   const u = await umgebung();
   ohneWechsel(u.db, admin(u.db).id);

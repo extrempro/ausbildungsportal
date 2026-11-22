@@ -1610,7 +1610,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 </Begriff>
                 <Begriff wort="Lerninhalte für alle Berufe">Ein Lernmodul, das alle Azubis nur lesen – siehe Kapitel „Lerninhalte für alle Berufe festlegen“.</Begriff>
                 <Begriff wort="Abteilungen und Firmentermine">Haben eigene Kapitel: „Abteilungen und Einsätze“ und „Firmentermine für alle“.</Begriff>
-                <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind derzeit die Ferien für Hamburg.</Begriff>
+                <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind die Ferien aller Bundesländer (ohne bewegliche Ferientage, die jede Schule selbst festlegt).</Begriff>
               </dl>
               <h3>Gut zu wissen</h3>
               <ul className="punkte">

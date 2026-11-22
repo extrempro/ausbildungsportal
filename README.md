@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.75.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.76.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -187,7 +187,7 @@ Die App ist nicht auf einen Beruf oder ein Bundesland festgelegt:
 
 - **Berufe** legen die Ausbilder unter „Stammdaten“ an, jeweils mit Regeldauer in Monaten (meist 24, 36 oder 42). Aus Ausbildungsbeginn, Regeldauer und Verkürzung berechnet die App Ausbildungsjahr und Ende. Sie rechnet nur – ob eine Verkürzung zulässig ist, entscheidet die zuständige Kammer.
 - **Feiertage** richten sich nach dem Bundesland des Betriebs und werden für alle 16 Länder berechnet. Feiertage, die nur in Teilen eines Landes gelten (z. B. Mariä Himmelfahrt in Bayern, Fronleichnam in Teilen von Sachsen und Thüringen), sind als „teilweise“ gekennzeichnet.
-- **Schulferien** richten sich nach dem Bundesland der Berufsschule und kommen aus Dateien in `content/ferien/`. Mitgeliefert ist bisher nur Hamburg; wie man weitere Länder ergänzt, steht in [content/README.md](content/README.md).
+- **Schulferien** richten sich nach dem Bundesland der Berufsschule und kommen aus Dateien in `content/ferien/`. Mitgeliefert sind alle 16 Länder (Schuljahre 2024/25 bis 2028/29, Quelle: Kultusministerkonferenz); wie man spätere Jahre ergänzt, steht in [content/README.md](content/README.md).
 
 ## Berichtsheft
 

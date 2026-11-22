@@ -91,6 +91,7 @@ Unter [docs/bilder/](docs/bilder/README.md) liegen Bildschirmfotos aller Bereich
 - **Neue Daten über Personen** nennst du im Pull Request ausdrücklich (was, wie lange, wer sieht es). Der Betreiber ergänzt damit die Leistungsbeschreibung für den Betriebsrat.
 - **Meldungen nach außen** (Teams, Mail) enthalten so wenig wie möglich – keine Namen in Teams-Karten für Kanäle, keine Bemerkungen in Mails. Persönliche Benachrichtigungen sprechen nur die Person an, an die sie gehen, und nennen niemanden sonst.
 - **Keine Geheimnisse im Repository.** Es ist öffentlich. `.env`, der Ordner `data/`, Zugangsdaten, Webhook-Adressen und echte Namen oder Mailadressen gehören nicht hinein – auch nicht in Tests, Commits oder Pull Requests.
+- **Nichts, was Rückschlüsse erlaubt** auf den Betrieb, der das Portal einsetzt, oder auf Personen: keine personenbezogenen Daten, keine Standorte, Städte oder Anschriften, keine echten Berufsschulen, Kammern, Abteilungen, internen Systeme, Rechner- oder Netznamen, keine Hinweise auf interne Entwürfe oder Absprachen – auch nicht als Beispiel in Tests, Bildschirmfotos, Kommentaren, Commits oder Pull Requests. Beispiele sind erfunden: „Muster GmbH“, „Musterstadt“, „Berufliche Schule Musterstadt“, `firma.de` / `firma.test`.
 - **Urheberrecht:** keine fremden Bilder, Grafiken oder Texte ohne passende Lizenz. Keine Original-Prüfungsaufgaben. Grafiken werden selbst gezeichnet (SVG).
 - **Lerninhalte** liegen nicht in diesem Repository, sondern als Inhaltspaket daneben (siehe [lerninhalte/README.md](lerninhalte/README.md)).
 
