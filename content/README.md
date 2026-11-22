@@ -6,7 +6,7 @@ Dieser Ordner enthält Daten, die sich ohne Programmieren pflegen lassen. Mit Do
 
 Eine Datei je Bundesland, benannt nach dem Kürzel: `BW`, `BY`, `BE`, `BB`, `HB`, `HH`, `HE`, `MV`, `NI`, `NW`, `RP`, `SL`, `SN`, `ST`, `SH`, `TH`.
 
-Mitgeliefert ist bisher nur **Hamburg** (`HH.json`). Für Berufsschulen in anderen Bundesländern zeigt die App keine Ferien, bis die passende Datei angelegt ist. Die gesetzlichen **Feiertage** aller Bundesländer berechnet die App selbst; dafür ist keine Datei nötig.
+Mitgeliefert sind **alle 16 Bundesländer** für die Schuljahre 2024/25 bis 2028/29, übernommen aus den Ferienübersichten der Kultusministerkonferenz (kmk.org); eine Datei nennt ihre Quelle selbst. Bewegliche Ferientage legt jede Schule selbst fest – sie stehen nicht in den Dateien. Für spätere Schuljahre die Datei um die neuen Termine ergänzen. Die gesetzlichen **Feiertage** aller Bundesländer berechnet die App selbst; dafür ist keine Datei nötig.
 
 ```json
 {

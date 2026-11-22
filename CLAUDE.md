@@ -100,6 +100,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 - Teams-Karten ohne Namen. Benachrichtigungen nennen nur die Person, an die sie gehen (Anrede mit Vornamen) – keine anderen Namen, keine Inhalte. Mails an die Personalstelle ohne Bemerkung und ohne Begründung.
 - Geheimnisse (Webhook-Adressen, SMTP-Zugang, Kalender-Link) stehen nur in `.env` und werden nie protokolliert.
 - Das Repository ist **öffentlich**: keine privaten Daten, keine echten Namen oder Mailadressen, kein `data/`, keine `.env` – auch nicht in Tests, Commits und Pull-Request-Texten.
+- **Nichts, was Rückschlüsse auf den Betreiber oder Personen erlaubt:** keine personenbezogenen Daten, keine Standorte, Städte oder Anschriften des Betriebs, keine echten Berufsschulen, Kammern, Abteilungen, internen Systeme, Rechner- oder Netznamen, Firmen- oder Produktnamen aus dem Betrieb, keine Hinweise auf interne Entwürfe oder Absprachen – auch nicht als Beispiel in Tests, Bildschirmfotos, Kommentaren, Commits und Pull Requests. Beispiele sind erfunden und neutral: „Muster GmbH“, „Musterstadt“, „Berufliche Schule Musterstadt“, `firma.de` / `firma.test`, Vornamen wie Anna und Ben. Im Zweifel nachfragen.
 - Keine fremden Bilder, Grafiken oder Texte ohne Lizenz; keine Original-Prüfungsaufgaben. Grafiken selbst als SVG zeichnen.
 - Lerninhalte gehören nicht in dieses Repository (siehe `lerninhalte/README.md`).
 

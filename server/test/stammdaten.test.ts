@@ -15,7 +15,7 @@ async function mitStammdaten(u: Umgebung, w: Record<Rolle, BenutzerZeile>) {
   const cookies = sitzung(u, w.ausbilder);
   const beruf = koerper(await ruf(u, 'POST', '/api/stammdaten/berufe', { cookies, body: { bezeichnung: 'Fachinformatiker/-in', fachrichtung: 'Systemintegration', regeldauerMonate: 36 } })).beruf;
   const lang = koerper(await ruf(u, 'POST', '/api/stammdaten/berufe', { cookies, body: { bezeichnung: 'Mechatroniker/-in', regeldauerMonate: 42 } })).beruf;
-  const schule = koerper(await ruf(u, 'POST', '/api/stammdaten/berufsschulen', { cookies, body: { name: 'Berufliche Schule ITECH', ort: 'Hamburg', bundesland: 'HH', form: 'block' } })).berufsschule;
+  const schule = koerper(await ruf(u, 'POST', '/api/stammdaten/berufsschulen', { cookies, body: { name: 'Berufliche Schule Musterstadt', ort: 'Musterstadt', bundesland: 'HH', form: 'block' } })).berufsschule;
   return { cookies, beruf, lang, schule };
 }
 
@@ -26,7 +26,7 @@ test('Stammdaten lesen alle Fachrollen, ändern nur Ausbilder; der Super-Admin k
   for (const rolle of ['ausbilder', 'beauftragter', 'azubi'] as const) {
     const s = koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies: sitzung(u, w[rolle]) }));
     assert.equal(s.berufe.length, 2, rolle);
-    assert.equal(s.berufsschulen[0].name, 'Berufliche Schule ITECH');
+    assert.equal(s.berufsschulen[0].name, 'Berufliche Schule Musterstadt');
     assert.equal(s.bundeslaender.length, 16);
     assert.equal(s.ausbilder.length, rolle === 'ausbilder' ? 1 : 0, 'Ausbilder-Liste nur für Ausbilder');
   }
@@ -44,9 +44,9 @@ test('Betrieb speichern; Eingaben werden geprüft', async () => {
   const u = await umgebung();
   const w = alle(u);
   const cookies = sitzung(u, w.ausbilder);
-  const ok = await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: ' Muster GmbH ', anschrift: 'Hafenstraße 1\n20457 Hamburg', bundesland: 'HH' } });
+  const ok = await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: ' Muster GmbH ', anschrift: 'Beispielweg 1\n12345 Musterstadt', bundesland: 'HH' } });
   assert.equal(ok.status, 200);
-  assert.deepEqual(koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies })).betrieb, { name: 'Muster GmbH', anschrift: 'Hafenstraße 1, 20457 Hamburg', bundesland: 'HH', personalMail: '', personalAnrede: '', berichtForm: 'woche' });
+  assert.deepEqual(koerper(await ruf(u, 'GET', '/api/stammdaten', { cookies })).betrieb, { name: 'Muster GmbH', anschrift: 'Beispielweg 1, 12345 Musterstadt', bundesland: 'HH', personalMail: '', personalAnrede: '', berichtForm: 'woche' });
   assert.equal((await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: 'X', bundesland: 'XX' } })).status, 400);
   assert.equal((await ruf(u, 'PUT', '/api/stammdaten/betrieb', { cookies, body: { name: 'X'.repeat(151) } })).status, 400);
 
@@ -172,8 +172,8 @@ test('Kalender: Feiertage nach Bundesland, Ferien aus der Datei, Zeitraum begren
   assert.ok(hh.ferien.zeiten.some((z: { name: string }) => z.name === 'Herbstferien'));
   const by = koerper(await ruf(u, 'GET', '/api/kalender?bundesland=BY&von=2026-10-01&bis=2026-12-31', { cookies }));
   assert.ok(by.feiertage.some((f: { name: string }) => f.name === 'Allerheiligen'));
-  assert.equal(by.ferien.vorhanden, false, 'für Bayern ist keine Feriendatei hinterlegt');
-  assert.deepEqual(by.ferien.zeiten, []);
+  assert.equal(by.ferien.vorhanden, true, 'Ferien liegen für alle Länder bei');
+  assert.ok(by.ferien.zeiten.some((z: { name: string; von: string }) => z.name === 'Herbstferien' && z.von === '2026-11-02'));
   for (const q of ['bundesland=XX&von=2026-01-01&bis=2026-12-31', 'bundesland=HH&von=2026-12-31&bis=2026-01-01', 'bundesland=HH&von=2020-01-01&bis=2030-01-01', 'bundesland=HH', 'bundesland=../HH&von=2026-01-01&bis=2026-12-31']) {
     assert.equal((await ruf(u, 'GET', `/api/kalender?${q}`, { cookies })).status, 400, q);
   }

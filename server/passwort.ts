@@ -13,7 +13,7 @@ const MAX_LAENGE = 200;
 // kleine Auswahl häufiger Passwörter ab 14 Zeichen bzw. naheliegender Muster
 const HAEUFIG = [
   'passwort', 'password', 'kennwort', 'ausbildung', 'administrator', 'willkommen', 'qwertz', 'qwerty',
-  '1234567890', 'abcdefgh', 'sommer20', 'winter20', 'hamburg', 'geheim',
+  '1234567890', 'abcdefgh', 'sommer20', 'winter20', 'berlin', 'hamburg', 'muenchen', 'koeln', 'frankfurt', 'geheim',
 ];
 
 /**

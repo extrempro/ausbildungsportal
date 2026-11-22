@@ -19,7 +19,7 @@ interface Welt {
   ben: BenutzerZeile;
 }
 
-/** Anna (Ausbilderin Petra, Beauftragte Bea) mit 30 Tagen Urlaub im Jahr; Ben gehört einem anderen Ausbilder. Betrieb in Hamburg. */
+/** Anna (Ausbilderin Petra, Beauftragte Bea) mit 30 Tagen Urlaub im Jahr; Ben gehört einem anderen Ausbilder. Betrieb mit Bundesland HH (dafür liegen Ferien bei). */
 async function welt(env: Record<string, string> = {}, mail?: Kontext['mail']): Promise<Welt> {
   const u = await umgebung(env, null, undefined, mail);
   ohneWechsel(u.db, admin(u.db).id);

@@ -15,7 +15,7 @@ interface Welt {
   ben: BenutzerZeile;
 }
 
-/** Zwei Azubis mit Ausbildungsbeginn 01.08.2025 (ein Samstag – die erste Woche beginnt am 28.07.2025), Betrieb in Hamburg. */
+/** Zwei Azubis mit Ausbildungsbeginn 01.08.2025 (ein Samstag – die erste Woche beginnt am 28.07.2025), Betrieb mit Bundesland HH (dafür liegen Ferien bei). */
 async function welt(): Promise<Welt> {
   const u = await umgebung();
   ohneWechsel(u.db, admin(u.db).id);

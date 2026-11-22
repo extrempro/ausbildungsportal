@@ -110,8 +110,8 @@ async function fuelle(url: string, api: () => Api, g: { petra: number; bea: numb
   const anna = await api().als(ANNA);
   const ben = await api().als(BEN);
 
-  await petra.ruf('PUT', '/api/stammdaten/betrieb', { name: 'Muster GmbH', anschrift: 'Beispielweg 1, 20095 Hamburg', bundesland: 'HH', personalMail: '', personalAnrede: '', berichtForm: 'woche' });
-  const schule = (await petra.ruf('POST', '/api/stammdaten/berufsschulen', { name: 'Berufliche Schule Musterstadt', ort: 'Hamburg', bundesland: 'HH', form: 'block' })).berufsschule.id as number;
+  await petra.ruf('PUT', '/api/stammdaten/betrieb', { name: 'Muster GmbH', anschrift: 'Beispielweg 1, 12345 Musterstadt', bundesland: 'HH', personalMail: '', personalAnrede: '', berichtForm: 'woche' });
+  const schule = (await petra.ruf('POST', '/api/stammdaten/berufsschulen', { name: 'Berufliche Schule Musterstadt', ort: 'Musterstadt', bundesland: 'HH', form: 'block' })).berufsschule.id as number;
   const cem = (await petra.ruf('POST', '/api/konten', { rolle: 'azubi', anmeldename: 'cem@firma.test', anzeigename: 'Cem Kaya' })).konto.id as number;
   await petra.ruf('PUT', `/api/azubis/${g.anna}/profil`, { ausbildungsbeginn: inTagen(-470), berufId: g.beruf, berufsschuleId: schule, ausbilderId: g.petra, urlaubstage: 30, planerFrei: true, pruefungen: [{ bezeichnung: 'Abschlussprüfung Teil 1', datum: inTagen(75) }] });
   await petra.ruf('PUT', `/api/azubis/${g.ben}/profil`, { ausbildungsbeginn: inTagen(-105), berufId: g.beruf, berufsschuleId: schule, ausbilderId: g.petra, urlaubstage: 28 });
