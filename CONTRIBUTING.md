@@ -35,6 +35,7 @@ Die Checkliste in [docs/bedienregeln.md](docs/bedienregeln.md) gilt für jede Ä
 Das Wichtigste in Kürze:
 
 - Rückfragen, Bestätigungen und Fehler laufen über die vorhandenen Bausteine, nicht über Fenster des Browsers.
+- Rückmeldungen wie „Gespeichert“, Fehler und Ergebnisse sind auf PC, Tablet und Handy immer im sichtbaren Bereich – auch auf langen Seiten und bei offener Tastatur (Einzelheiten in `docs/bedienregeln.md`).
 - Knöpfe nennen Tätigkeit und Gegenstand („Eintrag speichern“).
 - Alles funktioniert am Handy, mit der Tastatur und ohne Farbe als einzigem Hinweis.
 - Anrede „du“, kurze Sätze, erklärte Fachwörter. Die Azubis sind zwischen 16 und 30 Jahre alt.

@@ -81,6 +81,7 @@ Vollständig in `docs/bedienregeln.md` (Verhalten) und `docs/gestaltung.md` (Aus
 - **Rückfrage:** `rueckfrage(text, { ja: 'Konto löschen', gefahr: true })` – nie `window.confirm`.
 - **Fenster:** `role="dialog"` immer mit `useFensterFokus()` aus `src/dialoge.tsx` (Fokus hinein, Tab bleibt drin, Escape, zurück). Neue angeheftete Leisten in `LEISTEN` in `src/fokusFrei.ts` eintragen, damit sie den Fokus nicht verdecken.
 - **Bestätigung:** `melde('…')`. **Fehler:** an der Stelle, `.hinweis.fehler` mit `role="alert"`.
+- **Rückmeldungen immer sichtbar** (PC, Tablet, Handy): Wer etwas tut, sieht die Antwort, ohne zu rollen – auch auf langen Seiten und über der Tastatur am Handy. Rückmeldungen an der Stelle mit `role="alert"`, als `.hinweis` mit `role="status"` oder mit `data-rueckmeldung` auszeichnen; dann rollt `halteRueckmeldungSichtbar()` sie ins Bild. Nie nur als Text weit weg vom Knopf.
 - **Ungespeichertes:** `useUngespeichert()`; Seitenwechsel nur über `geheZu` oder `<Link>`.
 - **Knöpfe:** Tätigkeit + Gegenstand. Hauptknopf `.knopf`, Nebenknopf `.knopf.schlicht`. Gefüllter roter Knopf ist `knopf rot`; `.gefahr` ist nur rote Schrift für schlichte Knöpfe.
 - **Aufklappen:** `details.karte` oder `details.klapp` – keine eigene Bauform.

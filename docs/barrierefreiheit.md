@@ -31,6 +31,7 @@ Neue Funktionen halten sich an die Punkte „Tastatur“, „Jedes Gerät“ und
 | Überschriften ohne übersprungene Ebene (Konten, Bericht) – ab 0.61.2 | 1.3.1 |
 | Nicht nur Farbe: Ampel, Plan-Arten und Pillen haben immer ein Wort | 1.4.1 |
 | „Gespeichert“ und Fehler werden angesagt (`role="status"`, `role="alert"`) | 4.1.3, 3.3.1 |
+| Rückmeldungen auf eine Handlung rollen ins Bild, frei von angehefteten Leisten; feste Meldungen stehen über der Tastatur (`src/fokusFrei.ts`) – ab 0.76.1 | 4.1.3, 3.3.1 |
 | Reduzierte Bewegung wird beachtet, Hoch- und Querformat | 2.3.3, 1.3.4 |
 | Hilfe (Handbuch, Rückmeldung geben) in jeder Ansicht an derselben Stelle | 3.2.6 |
 | Zeitbegrenzung: fünf Minuten vor dem Abmelden ein Fenster mit „Angemeldet bleiben“ (`src/sitzung.tsx`); wer mit ungespeicherten Eingaben abgemeldet wird, behält sie und meldet sich im neuen Tab an – ab 0.62.0 | 2.2.1 |

@@ -271,7 +271,7 @@ export function Sammelplanung() {
             </button>
             {!bereit && <p className="leise klein">Wähle mindestens einen Azubi und fülle Schritt 2 aus.</p>}
             {ergebnis && (
-              <div role="status" className="sammel-ergebnis">
+              <div role="status" className="sammel-ergebnis" data-rueckmeldung>
                 <p className={`hinweis ${ergebnis.eingetragen > 0 ? 'gut' : 'fehler'}`}>
                   {ergebnis.eingetragen === 0 ? 'Bei niemandem eingetragen.' : `Bei ${ergebnis.eingetragen} von ${ergebnis.ergebnis.length} eingetragen.`}
                   {schonEingetragen && ' Der Knopf ist gesperrt, bis du an Auswahl oder Angaben etwas änderst – so wird nichts doppelt eingetragen.'}
