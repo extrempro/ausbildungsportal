@@ -13,6 +13,7 @@
 
 ### Behoben
 
+- **Führung für Ausbilder:** Bei „Planung“ und „Verwaltung“ leuchtete zusätzlich „Start“ auf, und „Rückmeldung geben“ zeigte auf großen Bildschirmen auf den Knopf „Volle Breite“. Jetzt ist jeweils nur der gemeinte Knopf markiert.
 - **Dienst „import“ ohne Schreibrecht:** Legte Docker den Ordner `data/import` beim ersten Start selbst an, gehörte er root, und der Dienst konnte kein Lebenszeichen schreiben – im Portal hieß es dann, PDFs lesen gehe nicht. Jetzt legt die App den Ordner beim Start selbst an, der Dienst startet erst nach ihr, und beide sagen im Log deutlich, was zu tun ist.
 
 ## [0.79.1] – 2026-11-23
