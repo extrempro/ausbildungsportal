@@ -1,5 +1,3 @@
-import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fehler, koerper } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
@@ -10,6 +8,8 @@ import { gueltigesDatum, montagVon, plusTage } from './kalender';
 import { gleicheSchulbloeckeAb, klasseVon } from './klassen';
 import type { Klasse } from './klassen';
 import { protokolliere } from './protokoll';
+import { dienstBereit, eigeneAuftraege, holeAuftrag, lies, loescheAuftrag, montagDerKw, neuerAuftrag, pruefePdf, raeumeAuf, standDes, stehtImText, zweistellig } from './import-dienst';
+import type { Auftrag } from './import-dienst';
 
 /**
  * Plan der Berufsschule einlesen (Planung → Schulblöcke → „Plan der Schule einlesen“).
@@ -22,14 +22,8 @@ import { protokolliere } from './protokoll';
  *   Gespeichert wird erst, was der Ausbilder übernimmt. Aufträge (mit Datei und Text) werden danach gelöscht, sonst nach 24 Stunden.
  */
 
-const MAX_PDF = 10 * 1024 * 1024;
 const MAX_TEXT = 40_000;
 const MAX_ZEILEN = 300;
-const MAX_AUFTRAEGE_JE_PERSON = 3;
-const AUFBEWAHRUNG_MS = 24 * 3600_000;
-/** so lange gilt das Lebenszeichen des Dienstes – ein großer Auftrag kann einige Minuten dauern */
-const BEREIT_MS = 15 * 60_000;
-const ID = /^[0-9a-f]{32}$/;
 
 export interface Roh {
   /** Name der Klasse, wie er im Plan steht – leer, wenn keiner dabei war */
@@ -46,18 +40,10 @@ export interface Roh {
 // ---------- Muster ----------
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s\-_./]/g, '');
-const zweistellig = (j: string) => (j.length === 2 ? `20${j}` : j);
 const iso = (j: number, m: number, t: number) => `${j}-${String(m).padStart(2, '0')}-${String(t).padStart(2, '0')}`;
 function gueltig(j: number, m: number, t: number): string | null {
   const s = iso(j, m, t);
   return gueltigesDatum(s) ? s : null;
-}
-
-/** Montag der ISO-Kalenderwoche */
-function montagDerKw(jahr: number, kw: number): string {
-  const vierter = new Date(Date.UTC(jahr, 0, 4));
-  const montag1 = new Date(vierter.getTime() - ((vierter.getUTCDay() + 6) % 7) * 86_400_000);
-  return new Date(montag1.getTime() + (kw - 1) * 7 * 86_400_000).toISOString().slice(0, 10);
 }
 
 const DATUM = String.raw`(\d{1,2})\.\s?(\d{1,2})\.(?:\s?(\d{4}|\d{2})(?!\d))?`;
@@ -119,21 +105,6 @@ export function ausModell(json: unknown): Roh[] {
     const titel = typeof x.titel === 'string' && x.titel.trim() ? x.titel.trim().slice(0, 80) : 'Berufsschule';
     return [{ klasse, von: x.von, bis: x.bis, titel, unsicher: false }];
   });
-}
-
-/**
- * Steht ein Datum so im Text? (Tag und Monat, mit oder ohne führende Null – oder die Kalenderwoche.)
- * Sprachmodelle erfinden gelegentlich Daten; was so nicht im Plan steht, kommt nicht in die Vorschau.
- */
-function stehtImText(text: string, datum: string): boolean {
-  const t = Number(datum.slice(8, 10));
-  const m = Number(datum.slice(5, 7));
-  if (new RegExp(`(^|\\D)0?${t}\\.\\s?0?${m}\\.`).test(text)) return true;
-  // Kalenderwoche des Montags dieser Woche
-  const montag = new Date(`${montagVon(datum)}T00:00:00Z`);
-  const donnerstag = new Date(montag.getTime() + 3 * 86_400_000);
-  const kw = Math.floor((donnerstag.getTime() - Date.UTC(donnerstag.getUTCFullYear(), 0, 1)) / 86_400_000 / 7) + 1;
-  return new RegExp(`KW\\s*(\\d{1,2}\\s*(-|–|—|bis)\\s*)?0?${kw}(\\D|$)`, 'i').test(text) || new RegExp(`KW\\s*0?${kw}(\\D|$)`, 'i').test(text);
 }
 
 /**
@@ -227,86 +198,18 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
 
 // ---------- Aufträge an den Dienst ----------
 
-export function importOrdner(k: Kontext): string {
-  return join(k.cfg.dataDir, 'import');
-}
-
-export function dienstBereit(k: Kontext): boolean {
-  try {
-    return k.jetzt().getTime() - statSync(join(importOrdner(k), '.bereit')).mtimeMs < BEREIT_MS;
-  } catch {
-    return false;
-  }
-}
-
-function lies(pfad: string): string | null {
-  try {
-    return readFileSync(pfad, 'utf8');
-  } catch {
-    return null;
-  }
-}
-
-/** Alte Aufträge (älter als 24 Stunden) löschen – samt Datei und Text */
-function raeumeAuf(k: Kontext): void {
-  const ordner = importOrdner(k);
-  if (!existsSync(ordner)) return;
-  for (const name of readdirSync(ordner)) {
-    if (!ID.test(name)) continue;
-    try {
-      if (k.jetzt().getTime() - statSync(join(ordner, name)).mtimeMs > AUFBEWAHRUNG_MS) rmSync(join(ordner, name), { recursive: true, force: true });
-    } catch {
-      // schon weg
-    }
-  }
-}
-
-interface Auftrag {
-  id: string;
-  wer: number;
-  schuleId: number;
-}
-
-function eigeneAuftraege(k: Kontext, wer: number): Auftrag[] {
-  const ordner = importOrdner(k);
-  if (!existsSync(ordner)) return [];
-  return readdirSync(ordner)
-    .filter((n) => ID.test(n))
-    .map((id) => ({ id, wer: Number(lies(join(ordner, id, 'wer'))), schuleId: Number(lies(join(ordner, id, 'schule'))) }))
-    .filter((a) => a.wer === wer);
-}
-
-function holeAuftrag(c: Ctx): Auftrag {
-  const id = String(c.p.id ?? '');
-  const a = ID.test(id) ? eigeneAuftraege(c.k, c.b.id).find((x) => x.id === id) : undefined;
-  if (!a) throw new Fehler(404, 'Diesen Auftrag gibt es nicht (mehr)');
-  return a;
-}
-
 function stand(c: Ctx, a: Auftrag) {
-  const d = join(importOrdner(c.k), a.id);
-  const fehler = lies(join(d, 'fehler'));
-  if (fehler) return { id: a.id, status: 'fehler' as const, fehler: fehler.trim().slice(0, 200) };
-  const fertig = lies(join(d, 'fertig'));
-  if (!fertig) return { id: a.id, status: 'laeuft' as const, fortschritt: Number(lies(join(d, 'fortschritt'))) || 0, dienst: dienstBereit(c.k) };
-  const modell = /modell=ja/.test(fertig);
-  const quelle = /quelle=texterkennung/.test(fertig) ? 'texterkennung' : /quelle=pdf/.test(fertig) ? 'pdf' : 'text';
-  let vomModell: Roh[] = [];
-  if (modell) {
-    try {
-      vomModell = ausModell(JSON.parse(lies(join(d, 'ergebnis.json')) ?? '{}'));
-    } catch {
-      vomModell = [];
-    }
-  }
+  const st = standDes(c.k, a);
+  if (st.status !== 'fertig') return { id: a.id, ...st };
+  const vomModell = st.modell ? ausModell(st.modell) : [];
   // die Muster des Portals zuerst – das Sprachmodell ergänzt nur (es verrechnet sich gelegentlich bei Daten)
-  const klassen = c.k.db.prepare('SELECT * FROM klasse WHERE berufsschule_id = ?').all(a.schuleId) as unknown as Klasse[];
-  const text = (lies(join(d, 'text.txt')) ?? '').slice(0, MAX_TEXT);
+  const schuleId = Number(lies(join(a.ordner, 'schule')));
+  const klassen = c.k.db.prepare('SELECT * FROM klasse WHERE berufsschule_id = ?').all(schuleId) as unknown as Klasse[];
+  const text = st.text.slice(0, MAX_TEXT);
   let roh = zusammenfuehren(erkenneBloecke(text, klassen, heute(c.k.jetzt())), vomModell, text);
-  const ausModellGenutzt = vomModell.length > 0;
   // bei Texterkennung ist alles etwas unsicherer
-  if (quelle === 'texterkennung') roh = roh.map((r) => ({ ...r, unsicher: true }));
-  return { id: a.id, status: 'fertig' as const, quelle, modell: ausModellGenutzt, zeilen: vorschau(c.k, a.schuleId, roh) };
+  if (st.quelle === 'texterkennung') roh = roh.map((r) => ({ ...r, unsicher: true }));
+  return { id: a.id, status: 'fertig' as const, quelle: st.quelle, modell: vomModell.length > 0, zeilen: vorschau(c.k, schuleId, roh) };
 }
 
 function schuleAus(c: Ctx, x: unknown): number {
@@ -324,7 +227,7 @@ export const SCHULPLAN_ROUTEN: Route[] = [
     wer: AUSBILDER,
     h: (c) => {
       raeumeAuf(c.k);
-      return { status: 200, body: { dienst: dienstBereit(c.k), auftraege: eigeneAuftraege(c.k, c.b.id).map((a) => stand(c, a)) } };
+      return { status: 200, body: { dienst: dienstBereit(c.k), auftraege: eigeneAuftraege(c.k, c.b.id, 'schulplan').map((a) => stand(c, a)) } };
     },
   },
   {
@@ -339,9 +242,7 @@ export const SCHULPLAN_ROUTEN: Route[] = [
       const schuleId = schuleAus(c, pdf ? c.a.query.get('schule') : body.schuleId);
       let text = '';
       if (pdf) {
-        if (pdf.length === 0 || pdf.length > MAX_PDF) throw new Fehler(400, 'Die PDF ist leer oder größer als 10 MB');
-        if (!pdf.subarray(0, 5).equals(Buffer.from('%PDF-'))) throw new Fehler(400, 'Das ist keine PDF-Datei');
-        if (!dienstBereit(c.k)) throw new Fehler(409, 'PDFs liest der Dienst „import“ – er läuft gerade nicht. Kopiere den Text aus der PDF und füge ihn ein, oder bitte den Betreiber, den Dienst zu starten.');
+        pruefePdf(c.k, pdf, 'PDFs liest der Dienst „import“ – er läuft gerade nicht. Kopiere den Text aus der PDF und füge ihn ein, oder bitte den Betreiber, den Dienst zu starten.');
       } else {
         text = typeof body.text === 'string' ? body.text.replace(/\r\n?/g, '\n').trim() : '';
         if (!text) throw new Fehler(400, 'Bitte den Text aus dem Plan der Schule einfügen');
@@ -352,27 +253,17 @@ export const SCHULPLAN_ROUTEN: Route[] = [
           return { status: 200, body: { status: 'fertig', quelle: 'text', modell: false, zeilen: vorschau(c.k, schuleId, erkenneBloecke(text, klassen, heute(c.k.jetzt()))) } };
         }
       }
-      if (eigeneAuftraege(c.k, c.b.id).length >= MAX_AUFTRAEGE_JE_PERSON) throw new Fehler(409, 'Du hast schon mehrere Pläne in Arbeit. Übernimm oder verwirf erst einen.');
-      const id = randomBytes(16).toString('hex');
-      const d = join(importOrdner(c.k), id);
-      mkdirSync(d, { recursive: true, mode: 0o700 });
-      writeFileSync(join(d, 'wer'), String(c.b.id));
-      writeFileSync(join(d, 'schule'), String(schuleId));
-      writeFileSync(join(d, 'art'), 'schulplan');
-      if (pdf) writeFileSync(join(d, 'eingang.pdf'), pdf);
-      else writeFileSync(join(d, 'eingang.txt'), text);
-      writeFileSync(join(d, 'auftrag'), '');
+      const id = neuerAuftrag(c.k, c.b.id, 'schulplan', pdf ? { pdf } : { text }, { schule: String(schuleId) });
       return { status: 202, body: { id, status: 'laeuft', fortschritt: 0 } };
     },
   },
-  { m: 'GET', p: '/api/schulbloecke/einlesen/:id', wer: AUSBILDER, h: (c) => ({ status: 200, body: stand(c, holeAuftrag(c)) }) },
+  { m: 'GET', p: '/api/schulbloecke/einlesen/:id', wer: AUSBILDER, h: (c) => ({ status: 200, body: stand(c, holeAuftrag(c.k, c.b.id, 'schulplan', c.p.id)) }) },
   {
     m: 'DELETE',
     p: '/api/schulbloecke/einlesen/:id',
     wer: AUSBILDER,
     h: (c) => {
-      const a = holeAuftrag(c);
-      rmSync(join(importOrdner(c.k), a.id), { recursive: true, force: true });
+      loescheAuftrag(c.k, c.b.id, 'schulplan', holeAuftrag(c.k, c.b.id, 'schulplan', c.p.id).id);
       return { status: 200, body: { ok: true } };
     },
   },
@@ -416,8 +307,7 @@ export const SCHULPLAN_ROUTEN: Route[] = [
         for (const id of azubis) gleicheSchulbloeckeAb(db, jetzt, c.b, id);
         protokolliere(db, jetzt, 'fach', 'schulblock_geaendert', c.b, null, `Plan der Schule eingelesen: ${angelegt} Schulblöcke übernommen`);
       });
-      const id = typeof body.auftrag === 'string' && ID.test(body.auftrag) ? body.auftrag : null;
-      if (id && eigeneAuftraege(c.k, c.b.id).some((a) => a.id === id)) rmSync(join(importOrdner(c.k), id), { recursive: true, force: true });
+      loescheAuftrag(c.k, c.b.id, 'schulplan', body.auftrag);
       const azubis = (db.prepare(`SELECT COUNT(*) AS n FROM azubi_profil p JOIN benutzer b ON b.id = p.benutzer_id WHERE b.status = 'aktiv' AND p.klasse_id IN (${[...klassen].map(() => '?').join(',') || 'NULL'})`).get(...klassen) as { n: number }).n;
       return { status: 200, body: { angelegt, azubis } };
     },

@@ -62,6 +62,10 @@ services:
     container_name: ausbildungsportal-import
     profiles: [import]
     restart: unless-stopped
+    # erst wenn die App läuft: Sie legt data/import mit dem richtigen Besitzer an (sonst täte es Docker als root).
+    depends_on:
+      app:
+        condition: service_healthy
     network_mode: none
     read_only: true
     tmpfs:

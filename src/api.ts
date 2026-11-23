@@ -469,6 +469,8 @@ export interface OffenerBericht {
   stunden: number;
   /** Wochenstunden des Azubis */
   soll: number;
+  /** aus einer Datei eingelesen (alte Berichte) – beim Lesen mit der Originalseite vergleichen */
+  eingelesen?: boolean;
 }
 
 export const STATUS_TEXT: Record<BerichtStatus, string> = {

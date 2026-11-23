@@ -46,6 +46,11 @@ function Zeile({ o, gewaehlt, hatUnterschrift, onWahl, onErledigt, onFehler }: {
           <span className={abweichung ? 'pille gelb' : 'pille gruen'} title="Eingetragene Stunden von den Wochenstunden">
             {h(o.stunden)} von {h(o.soll)} Std.
           </span>
+          {o.eingelesen && (
+            <span className="pille blau" title="Aus alten Berichten eingelesen – die Originalseite hängt am Bericht">
+              eingelesen
+            </span>
+          )}
           <span className="leise klein">eingereicht {zeit(o.eingereichtAm)}</span>
         </div>
         <button type="button" className="knopf schlicht klein" aria-expanded={offen} aria-controls={`abz-${schluessel(o)}`} onClick={schalte}>

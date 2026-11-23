@@ -1709,6 +1709,12 @@ td select {
   border-bottom: 0;
 }
 
+/* Aufzählung innerhalb eines Listeneintrags (z. B. Einträge einer Woche beim Einlesen): ohne Trennlinien */
+.liste .punkte li {
+  padding: 0;
+  border-bottom: 0;
+}
+
 .daten {
   display: grid;
   grid-template-columns: max-content 1fr;

@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.79.1 · 23.11.2026
+Stand: Version 0.80.0 · 23.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -52,7 +52,8 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Fotos und Dateien anhängen (Bilder, PDF, Office ohne Makros; 5 MB je Datei, 12 je Bericht; Typ am Dateianfang geprüft).
 - Ablauf: Entwurf (nur Azubi) → eingereicht (mit Unterschrift) → abgezeichnet (mit Unterschrift) oder zurückgegeben mit Kommentar; Abzeichnung kann ein Ausbilder mit Begründung aufheben. Jeder Schritt steht im Verlauf des Berichts.
 - Ausgabe als PDF (einzeln oder alle) und als Druckansicht.
-- **Abzeichnen:** Liste aller Berichte, die auf die eigene Unterschrift warten.
+- **Abzeichnen:** Liste aller Berichte, die auf die eigene Unterschrift warten; eingelesene Berichte sind markiert.
+- **Alte Berichte einlesen** (nur der Azubi): PDF hochladen (Dienst „import“: Text, Texterkennung bei Scans, einzelne Seiten, Vorschlag des Sprachmodells) oder Text einfügen. Das Portal erkennt Wochen (Zeitraum, „Woche vom …“, KW mit Jahr), die drei Teile, Tage und Stunden selbst; das Sprachmodell ergänzt nur. Übernommen werden angehakte Wochen ohne Bericht als Entwurf, mit Vermerk `eingelesen` im Verlauf und – bei einer PDF – der Originalseite als Anhang. Zeilen zu Krankheit fallen weg. Eingelesene Entwürfe lassen sich gesammelt einreichen (mit Unterschrift). Aufträge wie beim Plan der Schule in `data/import/<id>/`, nur für den Azubi selbst.
 
 ### Urlaub
 
@@ -158,7 +159,7 @@ erDiagram
 | `bericht` | Status, Inhalt (JSON: Form, Zeilen je Abschnitt, Abwesenheit), Kommentar, Zeitpunkte, abgezeichnet von | `azubi_id`, `montag` |
 | `bericht_anhang` | Datei mit Name, Typ, Größe, Tag, Daten | `id` → `bericht` |
 | `bericht_signatur` | Kopie der Unterschrift beim Einreichen und Abzeichnen, mit Name, Rolle, Zeit | `id` → `bericht` |
-| `bericht_verlauf` | jeder Schritt mit Name, Rolle, Kommentar | `id` → `bericht` |
+| `bericht_verlauf` | jeder Schritt mit Name, Rolle, Kommentar (auch `eingelesen`) | `id` → `bericht` |
 
 ### Urlaub
 
@@ -216,6 +217,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/berichtsheft` | Berichtsheft | Wochen mit Stand, PDF |
 | `/berichtsheft/<Montag>` | Bericht | Bericht schreiben, Anhänge, einreichen |
 | `/berichtsheft/druck` | Druckansicht | alle Berichte zum Drucken |
+| `/berichtsheft/einlesen` | Alte Berichte einlesen | PDF oder Text, Vorschau, als Entwurf übernehmen, gesammelt einreichen |
 | `/urlaub` | Urlaub | Anträge, Urlaubskonto |
 | `/jahreskalender` | Jahreskalender | eigenes Jahr |
 | `/lernen`, `/lernen/<Themenfeld>`, `/lernen/kompendium` | Lernen | Themenfelder, Lernstand, Abzeichen |
@@ -260,7 +262,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 168 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 175 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |

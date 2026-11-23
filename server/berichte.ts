@@ -158,7 +158,7 @@ function inhaltAus(z: BerichtZeile): Inhalt {
 }
 
 /** Startwerte für einen neuen Bericht: landesweite Feiertage an Werktagen als Abwesenheit. */
-function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: number): Inhalt {
+export function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: number): Inhalt {
   const inhalt = leererInhalt(berichtFormVon(db, azubiId));
   const tagSoll = Math.round((wochenstunden / 5) * 20) / 20;
   // genehmigter Urlaub der Woche ist schon als Abwesenheit vorgetragen
@@ -198,7 +198,7 @@ export function eigenerAzubi(c: Ctx): BenutzerZeile {
   return c.b;
 }
 
-function vermerke(db: DB, jetzt: Date, azubiId: number, montag: string, aktion: string, wer: BenutzerZeile, kommentar = ''): void {
+export function vermerke(db: DB, jetzt: Date, azubiId: number, montag: string, aktion: string, wer: BenutzerZeile, kommentar = ''): void {
   db.prepare('INSERT INTO bericht_verlauf (azubi_id, montag, zeit, aktion, name, rolle, kommentar) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
     azubiId,
     montag,
@@ -295,6 +295,34 @@ function pruefePfad(x: unknown): string {
   // eine echte Unterschrift hat mehrere Punkte
   if ((pfad.match(/L/g) ?? []).length < 5) throw new Fehler(400, 'Die Unterschrift ist zu kurz – bitte im Feld unterschreiben');
   return pfad;
+}
+
+/**
+ * Reicht Berichte ein – einen oder mehrere (z. B. eingelesene alte Berichte), alles oder nichts.
+ * Jeder bekommt die Unterschrift des Azubis, einen Vermerk im Verlauf und eine Aktivität für die Glocke.
+ */
+export function reicheEin(db: DB, jetzt: Date, azubi: BenutzerZeile, montage: string[]): void {
+  for (const montag of montage) {
+    const z = holeBericht(db, azubi.id, montag);
+    if (!z) throw new Fehler(404, 'Nicht gefunden');
+    if (z.status !== 'entwurf' && z.status !== 'zurueck') throw new Fehler(409, montage.length > 1 ? `Der Bericht ${wocheText(montag)} ist schon eingereicht` : 'Der Bericht ist schon eingereicht');
+    if (summe(inhaltAus(z)).gesamt <= 0) throw new Fehler(400, montage.length > 1 ? `Der Bericht ${wocheText(montag)} enthält noch keine Stunden` : 'Der Bericht enthält noch keine Stunden');
+  }
+  const pfad = unterschriftVon(db, azubi.id);
+  if (!pfad) throw new Fehler(409, 'Zum Einreichen fehlt deine Unterschrift – bitte zuerst unter „Konto“ hinterlegen', 'unterschrift');
+  transaktion(db, () => {
+    for (const montag of montage) {
+      db.prepare("UPDATE bericht SET status = 'eingereicht', eingereicht_am = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?").run(jetzt.toISOString(), jetzt.toISOString(), azubi.id, montag);
+      unterzeichne(db, jetzt, azubi.id, montag, 'azubi', azubi, pfad);
+      vermerke(db, jetzt, azubi.id, montag, 'eingereicht', azubi);
+      merkeAktivitaet(db, jetzt, 'bericht_eingereicht', azubi.id, azubi, montag);
+    }
+  });
+}
+
+/** Wurde der Bericht aus einer Datei eingelesen (alte Berichte)? Steht im Verlauf. */
+export function eingelesen(db: DB, azubiId: number, montag: string): boolean {
+  return !!db.prepare("SELECT 1 FROM bericht_verlauf WHERE azubi_id = ? AND montag = ? AND aktion = 'eingelesen'").get(azubiId, montag);
 }
 
 // ---------- Routen ----------
@@ -468,22 +496,9 @@ export const BERICHT_ROUTEN: Route[] = [
     p: '/api/azubis/:id/berichte/:montag/einreichen',
     wer: ['azubi'],
     h: (c) => {
-      const { db } = c.k;
       const azubi = eigenerAzubi(c);
       const montag = montagAus(c);
-      const z = holeBericht(db, azubi.id, montag);
-      if (!z) throw new Fehler(404, 'Nicht gefunden');
-      if (z.status !== 'entwurf' && z.status !== 'zurueck') throw new Fehler(409, 'Der Bericht ist schon eingereicht');
-      if (summe(inhaltAus(z)).gesamt <= 0) throw new Fehler(400, 'Der Bericht enthält noch keine Stunden');
-      const pfad = unterschriftVon(db, azubi.id);
-      if (!pfad) throw new Fehler(409, 'Zum Einreichen fehlt deine Unterschrift – bitte zuerst unter „Konto“ hinterlegen', 'unterschrift');
-      const jetzt = c.k.jetzt();
-      transaktion(db, () => {
-        db.prepare("UPDATE bericht SET status = 'eingereicht', eingereicht_am = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?").run(jetzt.toISOString(), jetzt.toISOString(), azubi.id, montag);
-        unterzeichne(db, jetzt, azubi.id, montag, 'azubi', azubi, pfad);
-        vermerke(db, jetzt, azubi.id, montag, 'eingereicht', azubi);
-        merkeAktivitaet(db, jetzt, 'bericht_eingereicht', azubi.id, azubi, montag);
-      });
+      reicheEin(c.k.db, c.k.jetzt(), azubi, [montag]);
       return { status: 200, body: berichtAnsicht(c, azubi, montag) };
     },
   },
@@ -523,7 +538,7 @@ export const BERICHT_ROUTEN: Route[] = [
         for (const z of zeilen) {
           // Beauftragte sehen hier nur Wochen, die sie abzeichnen dürfen
           if (!darfAbzeichnen(db, c.b, id, z.montag)) continue;
-          offen.push({ azubiId: id, azubi: azubi.anzeigename, bild: bildPfad(azubi), montag: z.montag, sonntag: plusTage(z.montag, 6), ...kalenderwoche(z.montag), eingereichtAm: z.eingereicht_am, stunden: summe(inhaltAus(z)).gesamt, soll });
+          offen.push({ azubiId: id, azubi: azubi.anzeigename, bild: bildPfad(azubi), montag: z.montag, sonntag: plusTage(z.montag, 6), ...kalenderwoche(z.montag), eingereichtAm: z.eingereicht_am, stunden: summe(inhaltAus(z)).gesamt, soll, eingelesen: eingelesen(db, id, z.montag) });
         }
       }
       return { status: 200, body: { offen, hatUnterschrift: unterschriftVon(db, c.b.id) !== null } };

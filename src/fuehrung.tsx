@@ -32,7 +32,8 @@ const ENDE: Schritt = {
 };
 
 /** Rückmeldung geben: der Knopf mit Daumen hoch und Daumen runter in der Kopfzeile – für alle Rollen */
-const RUECK = (text: string): Schritt => ({ titel: 'Rückmeldung geben', text, pfad: '/', ziel: ['.rueck-knopf'] });
+// nicht der Knopf „Volle Breite“ daneben – er hat dieselbe Form und steht ab 1300 px davor
+const RUECK = (text: string): Schritt => ({ titel: 'Rückmeldung geben', text, pfad: '/', ziel: ['.rueck-knopf:not(.breite-knopf)'] });
 const GLOCKE = (text: string): Schritt => ({ titel: 'Was gibt es Neues?', text, pfad: '/', ziel: ['.glocke-knopf'] });
 
 const AZUBI: Schritt[] = [
@@ -221,7 +222,10 @@ export function Fuehrung({ rolle, bereiche, onEnde }: { rolle: Rolle; bereiche: 
   }, [onEnde]);
 
   const miss = useCallback(() => {
-    const punkt = menuePfad.current ? ([...document.querySelectorAll(`.haupt-nav a[href="${menuePfad.current}"], .tabs a[href="${menuePfad.current}"]`)].find(sichtbar) ?? null) : null;
+    // Zeigt die Station selbst auf etwas in der Kopfzeile oder der Leiste unten (z. B. „Planung“), bleibt der Menüpunkt der
+    // Seite dunkel – sonst leuchten zwei Knöpfe, und es ist nicht klar, welcher gemeint ist.
+    const imMenue = !!ziel.current?.closest('.leiste, .tabs');
+    const punkt = menuePfad.current && !imMenue ? ([...document.querySelectorAll(`.haupt-nav a[href="${menuePfad.current}"], .tabs a[href="${menuePfad.current}"]`)].find(sichtbar) ?? null) : null;
     const pr = punkt?.getBoundingClientRect();
     setMenue(pr ? { top: pr.top - 3, left: pr.left - 3, width: pr.width + 6, height: pr.height + 6 } : null);
     const el = ziel.current;

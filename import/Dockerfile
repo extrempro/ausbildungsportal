@@ -1,6 +1,6 @@
 # Dienst „import“: liest PDFs und Texte für die Importe des Portals – ohne Netz, schreibgeschützt, als Benutzer 1000
 # (wie die App, gemeinsamer Arbeitsordner data/import).
-#   - poppler (pdftotext, pdftoppm): Text aus PDFs, Seitenbilder
+#   - poppler (pdftotext, pdftoppm, pdfseparate): Text aus PDFs, Seitenbilder, einzelne Seiten
 #   - tesseract mit Deutsch: Texterkennung für gescannte PDFs
 #   - llama.cpp mit Gemma 4 E4B (Google, Apache 2.0): macht aus dem Text einen Vorschlag in fester JSON-Form
 # Feste Stände (Commit bzw. Prüfsumme) wie im Dienst „video“ des Intranets.
@@ -39,6 +39,7 @@ RUN apk add --no-cache poppler-utils tesseract-ocr tesseract-ocr-data-deu libstd
 COPY --from=llama /build/bin/llama-completion /usr/local/bin/llama-completion
 COPY --from=sprachmodell /modelle/sprachmodell.gguf /modelle/sprachmodell.gguf
 COPY schulplan /usr/local/share/import/schulplan
+COPY berichtsheft /usr/local/share/import/berichtsheft
 COPY --chmod=0755 lesen.sh /usr/local/bin/lesen.sh
 USER lesen
 ENV ARBEIT=/arbeit SPRACHMODELL=/modelle/sprachmodell.gguf VORLAGEN=/usr/local/share/import
