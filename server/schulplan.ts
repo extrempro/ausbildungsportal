@@ -39,6 +39,8 @@ export interface Roh {
   titel: string;
   /** Jahr ergänzt, Texterkennung oder Ähnliches – bitte genau ansehen */
   unsicher: boolean;
+  /** nur das Sprachmodell hat diesen Zeitraum gefunden, die Muster nicht */
+  nurModell?: boolean;
 }
 
 // ---------- Muster ----------
@@ -119,6 +121,41 @@ export function ausModell(json: unknown): Roh[] {
   });
 }
 
+/**
+ * Steht ein Datum so im Text? (Tag und Monat, mit oder ohne führende Null – oder die Kalenderwoche.)
+ * Sprachmodelle erfinden gelegentlich Daten; was so nicht im Plan steht, kommt nicht in die Vorschau.
+ */
+function stehtImText(text: string, datum: string): boolean {
+  const t = Number(datum.slice(8, 10));
+  const m = Number(datum.slice(5, 7));
+  if (new RegExp(`(^|\\D)0?${t}\\.\\s?0?${m}\\.`).test(text)) return true;
+  // Kalenderwoche des Montags dieser Woche
+  const montag = new Date(`${montagVon(datum)}T00:00:00Z`);
+  const donnerstag = new Date(montag.getTime() + 3 * 86_400_000);
+  const kw = Math.floor((donnerstag.getTime() - Date.UTC(donnerstag.getUTCFullYear(), 0, 1)) / 86_400_000 / 7) + 1;
+  return new RegExp(`KW\\s*(\\d{1,2}\\s*(-|–|—|bis)\\s*)?0?${kw}(\\D|$)`, 'i').test(text) || new RegExp(`KW\\s*0?${kw}(\\D|$)`, 'i').test(text);
+}
+
+/**
+ * Muster zuerst, das Sprachmodell ergänzt: Findet es denselben Zeitraum, übernimmt die Vorschau seinen Titel und seine
+ * Schreibweise der Klasse; was nur das Modell gefunden hat, kommt als „bitte prüfen“ dazu – aber nur, wenn beide Daten
+ * so im Text stehen.
+ */
+export function zusammenfuehren(muster: Roh[], modell: Roh[], text: string): Roh[] {
+  const ergebnis = muster.map((r) => ({ ...r }));
+  for (const m of modell) {
+    const gleich = ergebnis.find((r) => r.von === m.von && r.bis === m.bis && (!r.klasse || !m.klasse || norm(r.klasse) === norm(m.klasse)));
+    if (gleich) {
+      if (m.titel && m.titel !== 'Berufsschule') gleich.titel = m.titel;
+      if (!gleich.klasse && m.klasse) gleich.klasse = m.klasse;
+      continue;
+    }
+    if (!stehtImText(text, m.von) || !stehtImText(text, m.bis)) continue;
+    ergebnis.push({ ...m, unsicher: true, nurModell: true });
+  }
+  return ergebnis;
+}
+
 // ---------- Vorschau ----------
 
 export interface Zeile {
@@ -178,7 +215,10 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
     }
     const inFerien = ferien ? ferienZwischen(ferien, r.von, r.bis) : [];
     if (inFerien.length) hinweise.push(`liegt teils in den ${inFerien.map((f) => f.name).join(', ')} – bitte prüfen`);
-    if (r.unsicher) hinweise.push('Jahr ergänzt – bitte prüfen');
+    if (r.nurModell) {
+      hinweise.push('nur vom Sprachmodell gefunden – bitte mit dem Plan vergleichen');
+      ok = false;
+    } else if (r.unsicher) hinweise.push('Jahr ergänzt oder per Texterkennung gelesen – bitte prüfen');
     zeilen.push({ klasseText: r.klasse, klasseId: passend?.id ?? null, von: r.von, bis: r.bis, titel: r.titel, hinweise, unsicher: r.unsicher || inFerien.length > 0, vorgewaehlt: ok && !!passend });
     if (zeilen.length >= MAX_ZEILEN) break;
   }
@@ -251,18 +291,19 @@ function stand(c: Ctx, a: Auftrag) {
   if (!fertig) return { id: a.id, status: 'laeuft' as const, fortschritt: Number(lies(join(d, 'fortschritt'))) || 0, dienst: dienstBereit(c.k) };
   const modell = /modell=ja/.test(fertig);
   const quelle = /quelle=texterkennung/.test(fertig) ? 'texterkennung' : /quelle=pdf/.test(fertig) ? 'pdf' : 'text';
-  let roh: Roh[] = [];
+  let vomModell: Roh[] = [];
   if (modell) {
     try {
-      roh = ausModell(JSON.parse(lies(join(d, 'ergebnis.json')) ?? '{}'));
+      vomModell = ausModell(JSON.parse(lies(join(d, 'ergebnis.json')) ?? '{}'));
     } catch {
-      roh = [];
+      vomModell = [];
     }
   }
-  // ohne brauchbaren Vorschlag des Modells: selbst im gelesenen Text suchen
+  // die Muster des Portals zuerst – das Sprachmodell ergänzt nur (es verrechnet sich gelegentlich bei Daten)
   const klassen = c.k.db.prepare('SELECT * FROM klasse WHERE berufsschule_id = ?').all(a.schuleId) as unknown as Klasse[];
-  const ausModellGenutzt = roh.length > 0;
-  if (!ausModellGenutzt) roh = erkenneBloecke((lies(join(d, 'text.txt')) ?? '').slice(0, MAX_TEXT), klassen, heute(c.k.jetzt()));
+  const text = (lies(join(d, 'text.txt')) ?? '').slice(0, MAX_TEXT);
+  let roh = zusammenfuehren(erkenneBloecke(text, klassen, heute(c.k.jetzt())), vomModell, text);
+  const ausModellGenutzt = vomModell.length > 0;
   // bei Texterkennung ist alles etwas unsicherer
   if (quelle === 'texterkennung') roh = roh.map((r) => ({ ...r, unsicher: true }));
   return { id: a.id, status: 'fertig' as const, quelle, modell: ausModellGenutzt, zeilen: vorschau(c.k, a.schuleId, roh) };

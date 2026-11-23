@@ -289,6 +289,7 @@ Liest PDFs für Importe – zurzeit den Plan der Berufsschule (Planung → Schul
 - **Was drin ist:** poppler (Text aus PDFs), tesseract mit Deutsch (Texterkennung für Scans) und llama.cpp mit dem Sprachmodell **Gemma 4 E4B** (Google, Apache 2.0), das aus dem Text einen Vorschlag in fester Form macht. Alles mit festem Stand und Prüfsumme.
 - **Abgeschottet:** kein Netz (`network_mode: none`), schreibgeschützt, ohne Linux-Rechte, Grenzen für CPU (`IMPORT_CPUS`, Standard 2) und Speicher (`IMPORT_SPEICHER`, Standard 8g). Er tauscht nur über den Ordner `data/import` mit der App aus. Hochgeladene Dateien und gelesener Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden.
 - **Starten:** `docker compose --profile import up -d`. Das fertige Abbild kommt von `ghcr.io/extrempro/ausbildungsportal-import` (mehrere GB, Version über `IMPORT_VERSION`, Standard `latest`). Es läuft nur auf Servern mit AVX2 (x86-64, etwa seit 2013); eine Grafikkarte braucht es nicht.
+- **Wer entscheidet:** Die Zeiträume liest das Portal zuerst selbst (Muster). Das Sprachmodell ergänzt nur – im Test hat es bei einzelnen Blöcken Daten falsch berechnet. Was allein das Modell findet, steht als „bitte prüfen“ und ist nicht angehakt; Daten, die so nicht im Text stehen, verwirft das Portal.
 - **Ohne den Dienst** lässt sich im Portal keine PDF hochladen – der Knopf ist gesperrt und sagt warum. Text einfügen geht immer; dann sucht das Portal selbst nach Zeiträumen.
 - Ob er läuft, erkennt die App an einem Lebenszeichen im Ordner (`data/import/.bereit`).
 

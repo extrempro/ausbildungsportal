@@ -1520,6 +1520,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Gespeichert wird erst, was du übernimmst. Die hochgeladene Datei und der gelesene Text werden danach gelöscht, spätestens nach 24 Stunden.</li>
                 <li>Läuft der Dienst nicht, lässt sich keine PDF hochladen – der eingefügte Text geht trotzdem. Dann sucht das Portal selbst nach Zeiträumen wie „31.08.–18.09.2026“ oder „KW 5–7 2027“.</li>
                 <li>Ferien, Feiertage und Prüfungen im Plan werden nicht als Schulblock übernommen. Was schon da ist, steht als „schon vorhanden“ und ist nicht angehakt.</li>
+                <li>Das Portal liest die Zeiträume zuerst selbst; das Sprachmodell ergänzt nur. Was allein das Modell gefunden hat, steht als „nur vom Sprachmodell gefunden“ und ist nicht angehakt – Daten, die so gar nicht im Plan stehen, zeigt das Portal nicht an.</li>
                 <li>Handschrift erkennt die Texterkennung oft nicht – dann den Plan lieber abtippen oder als Text einfügen.</li>
               </ul>
             </>

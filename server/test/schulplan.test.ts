@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readdirSync, utimesSync, writeFileSync } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { ausModell, erkenneBloecke } from '../schulplan';
+import { ausModell, erkenneBloecke, zusammenfuehren } from '../schulplan';
 import type { BenutzerZeile } from '../typen';
 import { koerper, konto, ruf, sitzung, umgebung, zustaendig } from './hilfe';
 import type { Umgebung } from './hilfe';
@@ -56,6 +56,25 @@ test('Schulplan: Antwort des Sprachmodells nur in der festen Form', () => {
   ]);
   assert.deepEqual(ausModell({ nichts: 1 }), []);
   assert.deepEqual(ausModell(null), []);
+});
+
+test('Schulplan: Muster zuerst – das Sprachmodell ergänzt nur, erfundene Daten fallen weg', () => {
+  // so hat das Sprachmodell den erfundenen Blockplan im CI gelesen: Block 1 richtig, Block 2 und 3 mit falschen Daten
+  const modell = ausModell({
+    bloecke: [
+      { klasse: 'FI 25a', von: '2026-08-31', bis: '2026-09-18', titel: 'Block 1' },
+      { klasse: 'FI 25a', von: '2027-09-05', bis: '2027-11-27', titel: 'Block 2' },
+      { klasse: 'FI 25a', von: '2027-05-05', bis: '2027-07-07', titel: 'Block 3' },
+      { klasse: 'FI 25b', von: '2026-09-21', bis: '2026-10-09', titel: 'Block 1' },
+    ],
+  });
+  const r = zusammenfuehren(erkenneBloecke(PDF_TEXT, [], '2026-11-10'), modell, PDF_TEXT);
+  assert.deepEqual(sortiert(r), ERWARTET, 'genau die sechs Blöcke aus dem Plan – nichts Erfundenes');
+  assert.equal(r.find((x) => x.von === '2026-08-31')?.titel, 'Block 1', 'Titel des Modells übernommen');
+  assert.ok(r.every((x) => !x.nurModell));
+  // was nur das Modell findet und so im Text steht, kommt als „bitte prüfen“ dazu
+  const extra = zusammenfuehren([], ausModell({ bloecke: [{ klasse: 'FI 25b', von: '2026-11-30', bis: '2026-12-18', titel: 'Block 2' }] }), PDF_TEXT);
+  assert.deepEqual(extra.map((x) => [x.von, x.nurModell, x.unsicher]), [['2026-11-30', true, true]]);
 });
 
 interface Welt {
@@ -135,7 +154,10 @@ test('Schulplan: mit Dienst ein Auftrag im Arbeitsordner – nur für die eigene
   assert.equal(s.status, 'fertig');
   assert.equal(s.modell, true);
   assert.equal(s.quelle, 'texterkennung');
-  assert.deepEqual(s.zeilen.map((z: { titel: string; vorgewaehlt: boolean }) => [z.titel, z.vorgewaehlt]), [['Block 1', true], ['Unsinn', false]]);
+  // Muster zuerst: alle sechs Blöcke aus dem Text, der Titel des Modells für Block 1 – „Unsinn“ steht so nicht im Plan und fällt weg
+  assert.equal(s.zeilen.length, 6);
+  assert.ok(!s.zeilen.some((z: { titel: string }) => z.titel === 'Unsinn'));
+  assert.deepEqual(s.zeilen.filter((z: { klasseId: number | null }) => z.klasseId === w.a).map((z: { titel: string; vorgewaehlt: boolean }) => [z.titel, z.vorgewaehlt]), [['Block 1', true], ['Berufsschule', true], ['Berufsschule', true]]);
   assert.ok(s.zeilen.every((z: { unsicher: boolean }) => z.unsicher), 'Texterkennung ist unsicher');
   // übernehmen löscht den Auftrag
   await ruf(w.u, 'POST', '/api/schulbloecke/uebernehmen', { cookies: c, body: { auftrag: id, zeilen: [{ klasseId: w.a, von: '2026-08-31', bis: '2026-09-18', titel: 'Block 1' }] } });
