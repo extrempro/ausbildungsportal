@@ -129,8 +129,8 @@ test('Benachrichtigungen: je Bereich und Weg wählbar; verschickt wird gebündel
   // der Klick in Teams führt über den Reiter der App zur passenden Seite; die Mail hat eine Text- und eine gestaltete Fassung
   const ziel = (t: { body: any }) => JSON.parse(new URL(t.body.topic.webUrl).searchParams.get('context') ?? '{}').subEntityId;
   assert.ok(anPetra?.body.topic.webUrl.startsWith(`https://teams.microsoft.com/l/entity/${APP_ID}/portal?context=`));
-  assert.equal(ziel(anPetra!), '/abzeichnen');
-  assert.equal(ziel(anAnna), '/');
+  assert.equal(ziel(anPetra!), 'hinweis:/abzeichnen');
+  assert.equal(ziel(anAnna), 'hinweis:/');
   assert.match(mailBea?.html ?? '', /<a href="https:\/\/portal\.test\/abzeichnen"/);
   assert.match(mailBea?.text ?? '', /Zum Portal: https:\/\/portal\.test\/abzeichnen/);
   // die Empfänger stehen nicht im Log

@@ -14,6 +14,8 @@ interface Stand {
   aktiv: boolean;
   version: string | null;
   clientId: string | null;
+  ressource: string | null;
+  sso: boolean;
 }
 
 export function TeamsApp() {
@@ -50,7 +52,7 @@ export function TeamsApp() {
     <section className="karte" id="teams-app">
       <h2>Teams-App</h2>
       <p className="leise">
-        Benachrichtigungen per Teams kommen über die App „Ausbildungsportal“: Sie erscheinen in Teams unter „Aktivität“, ein Klick führt zur passenden Seite. Welche Nachrichten jemand bekommt, stellt jede Person unter „Konto“ selbst ein.{' '}
+        Mit der App „Ausbildungsportal“ läuft das Portal direkt in Teams, und Benachrichtigungen erscheinen in Teams unter „Aktivität“. Welche Nachrichten jemand bekommt, stellt jede Person unter „Konto“ selbst ein.{' '}
         <HandbuchLink kapitel="teams-app">Teams-App einrichten</HandbuchLink>
       </p>
       {ladefehler && (
@@ -75,9 +77,15 @@ export function TeamsApp() {
             </dd>
             <dt>Version des Pakets</dt>
             <dd>{stand.version ?? 'noch keins heruntergeladen'}</dd>
+            <dt>Portal in Teams</dt>
+            <dd>{stand.sso ? 'Möglich – in der App meldet man sich mit dem Microsoft-Konto an.' : 'Nicht möglich – diesem Portal fehlt die Bibliothek für Teams. Die App zeigt dann nur „Im Browser öffnen“.'}</dd>
           </dl>
           <ol className="schritte">
             <li>In Entra bei der App-Registrierung des Portals die Anwendungsberechtigung „TeamsActivity.Send“ (Microsoft Graph) hinzufügen und die Administratorzustimmung erteilen.</li>
+            <li>
+              Ebenfalls in Entra unter „API verfügbar machen“: Anwendungs-ID-URI <code>{stand.ressource}</code>, Bereich „access_as_user“ und Teams als berechtigte Clientanwendung. Damit meldet die App
+              ohne erneute Eingabe an. Die Einzelheiten stehen in der Anleitung zur Einrichtung von Entra.
+            </li>
             <li>Das App-Paket herunterladen und im Teams Admin Center unter „Apps verwalten“ hochladen. Per Setup-Richtlinie für alle installieren, die das Portal nutzen – ohne installierte App kommt nichts an.</li>
             <li>
               {stand.ausEnv ? (

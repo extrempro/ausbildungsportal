@@ -77,10 +77,10 @@ export function ruf(
   u: Umgebung,
   methode: string,
   ziel: string,
-  o: { cookies?: Record<string, string>; body?: unknown; origin?: string | null; ip?: string } = {},
+  o: { cookies?: Record<string, string>; body?: unknown; origin?: string | null; ip?: string; headers?: Record<string, string> } = {},
 ): Promise<Antwort> {
   const url = new URL(ziel, APP);
-  const headers: Record<string, string | undefined> = {};
+  const headers: Record<string, string | undefined> = { ...o.headers };
   if (o.origin !== null && methode !== 'GET') headers.origin = o.origin ?? APP;
   const a: Anfrage = { methode, pfad: url.pathname, query: url.searchParams, headers, cookies: o.cookies ?? {}, body: o.body, ip: o.ip ?? '10.0.0.1' };
   return behandle(u.k, a);

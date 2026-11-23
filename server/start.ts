@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ersterStart } from './api';
 import { erzeugeGraph } from './teams';
+import { microsoftSchluessel } from './teams-sso';
 import type { Kontext } from './api';
 import type { Config } from './config';
 import type { DB } from './db';
@@ -30,7 +31,7 @@ export function appVersion(): string {
 export async function erzeugeKontext(
   db: DB,
   cfg: Config,
-  optionen: { log?: (t: string) => void; jetzt?: () => Date; entra?: Entra | null; sende?: Kontext['sende']; mail?: Kontext['mail']; graph?: Kontext['graph'] } = {},
+  optionen: { log?: (t: string) => void; jetzt?: () => Date; entra?: Entra | null; sende?: Kontext['sende']; mail?: Kontext['mail']; graph?: Kontext['graph']; teamsSchluessel?: Kontext['teamsSchluessel'] } = {},
 ): Promise<Kontext> {
   const jetzt = optionen.jetzt ?? (() => new Date());
   const entra =
@@ -57,6 +58,7 @@ export async function erzeugeKontext(
     versuche: new Map(),
     gemeldeteHerkunft: new Set(),
     mail: optionen.mail ?? ((m) => (cfg.smtp ? sendeMail(cfg.smtp, m, jetzt()) : Promise.reject(new MailFehler('Der Mailversand ist nicht eingerichtet')))),
+    teamsSchluessel: optionen.teamsSchluessel ?? (cfg.entra ? microsoftSchluessel(cfg.entra.tenantId) : async () => null),
     graph: optionen.graph ?? (cfg.entra ? erzeugeGraph(cfg.entra) : () => Promise.reject(new Error('Die Anmeldung mit Microsoft ist nicht eingerichtet'))),
     sende:
       optionen.sende ??

@@ -4,12 +4,14 @@
 
 ### Neu
 
-- **Teams-App „Ausbildungsportal“:** Benachrichtigungen per Teams erscheinen jetzt in Teams unter „Aktivität“ (der Glocke in Teams). Absender ist die App mit dem Zeichen des Portals – nicht mehr „Workflows“. Ein Klick öffnet die App; „Im Browser öffnen“ führt direkt zur passenden Seite im Portal.
+- **Teams-App „Ausbildungsportal“:** Das Portal läuft direkt in Teams – am PC, im Browser und am Handy. Angemeldet wird mit dem Microsoft-Konto, ohne erneute Eingabe (Single Sign-on). In Teams gilt eine eigene Sitzung; unter „Angemeldete Geräte“ steht sie als „Teams“.
+- Benachrichtigungen per Teams erscheinen jetzt in Teams unter „Aktivität“ (der Glocke in Teams). Absender ist die App mit dem Zeichen des Portals – nicht mehr „Workflows“. Ein Klick zeigt „In der App öffnen“ oder „Im Browser öffnen“.
 - Unter „Erscheinungsbild“ lädt der Super-Admin das Paket der App für das Teams Admin Center herunter. Ändern sich Adresse oder Name des Betriebs, bekommt das nächste Paket von selbst eine höhere Version.
 
 ### Geändert
 
-- **Der Weg über einen Teams-Workflow (`TEAMS_CHAT_WEBHOOK_URL`) entfällt.** Nachrichten gehen jetzt über Microsoft Graph mit der App-Registrierung der Anmeldung (Anwendungsberechtigung `TeamsActivity.Send`). Eine geheime Adresse, mit der man jeder Person im Mandanten schreiben konnte, gibt es damit nicht mehr. Einrichtung: `docs/entra-einrichtung.md`, Abschnitt „Freiwillig: Teams-App“. Bis die App eingerichtet ist (`TEAMS_APP_ID`), ist der Haken „Teams“ gesperrt.
+- **Der Weg über einen Teams-Workflow (`TEAMS_CHAT_WEBHOOK_URL`) entfällt.** Nachrichten gehen jetzt über Microsoft Graph mit der App-Registrierung der Anmeldung (Anwendungsberechtigung `TeamsActivity.Send`). Eine geheime Adresse, mit der man jeder Person im Mandanten schreiben konnte, gibt es damit nicht mehr. Für die Anmeldung in Teams kommt in Entra „API verfügbar machen“ mit dem Bereich `access_as_user` dazu. Einrichtung: `docs/entra-einrichtung.md`, Abschnitt „Freiwillig: Teams-App“. Bis die App eingerichtet ist (`TEAMS_APP_ID`), ist der Haken „Teams“ gesperrt.
+- Mit `TEAMS_APP_ID` darf das Portal in Teams und Microsoft 365 eingebettet werden – sonst nirgends, wie bisher.
 - Nachrichten in Teams nennen gar keine Namen mehr – auch keine Anrede. E-Mails sprechen die Person weiter mit ihrem Vornamen an.
 - Konten, die sich noch nie mit Microsoft angemeldet haben, können Teams nicht wählen; unter „Konto“ steht, warum.
 

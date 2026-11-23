@@ -20,6 +20,7 @@ import { beendeAlleSitzungen, beendeEigeneSitzung, beendeSitzung, beginneSitzung
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
 import { TEAMS_ROUTEN } from './teams';
+import { pruefeTeamsToken, TeamsSsoFehler } from './teams-sso';
 import { ANHANG_ROUTEN } from './bericht-anhang';
 import { FIRMENTERMIN_ROUTEN } from './firmentermin';
 import { BERICHT_ROUTEN } from './berichte';
@@ -61,20 +62,58 @@ function nachAnmeldename(db: DB, name: string): BenutzerZeile | undefined {
 // ---------- Cookies ----------
 
 /** Mit HTTPS das Präfix __Host-: Der Browser nimmt das Cookie dann nur mit Secure, Path=/ und ohne Domain an. */
-export function cookieName(cfg: Config, art: 'sitzung' | 'anmeldung'): string {
+export function cookieName(cfg: Config, art: 'sitzung' | 'anmeldung' | 'teams'): string {
   return `${cfg.sicher ? '__Host-' : ''}ap_${art}`;
 }
 
-function setzeCookie(cfg: Config, art: 'sitzung' | 'anmeldung', wert: string, maxAlterS: number): string {
-  return `${cookieName(cfg, art)}=${wert}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAlterS}${cfg.sicher ? '; Secure' : ''}`;
+/**
+ * Sitzung im Browser: SameSite=Lax. Sitzung in der Teams-App (eingebettet in Teams): SameSite=None und partitioniert –
+ * der Browser schickt dieses Cookie nur, wenn das Portal unter Teams eingebettet ist, nie beim Aufruf im Browser.
+ */
+function setzeCookie(cfg: Config, art: 'sitzung' | 'anmeldung' | 'teams', wert: string, maxAlterS: number): string {
+  const art_ = art === 'teams' ? 'SameSite=None; Partitioned' : 'SameSite=Lax';
+  return `${cookieName(cfg, art)}=${wert}; Path=/; HttpOnly; ${art_}; Max-Age=${maxAlterS}${cfg.sicher || art === 'teams' ? '; Secure' : ''}`;
 }
 
-function sitzungsAntwort(k: Kontext, a: Anfrage, b: BenutzerZeile, antwort: Antwort): Antwort {
+function sitzungsAntwort(k: Kontext, a: Anfrage, b: BenutzerZeile, antwort: Antwort, art: 'sitzung' | 'teams' = 'sitzung'): Antwort {
   const jetzt = k.jetzt();
   raeumeAuf(k.db, jetzt);
-  const token = beginneSitzung(k.db, b.id, jetzt, geraetAus(a.headers['user-agent']));
+  const geraet = geraetAus(a.headers['user-agent']);
+  const token = beginneSitzung(k.db, b.id, jetzt, art === 'teams' ? ['Teams', geraet].filter(Boolean).join(' · ') : geraet);
   k.db.prepare('UPDATE benutzer SET letzte_anmeldung = ?, fehlversuche = 0, gesperrt_bis = NULL WHERE id = ?').run(jetzt.toISOString(), b.id);
-  return { ...antwort, cookies: [...(antwort.cookies ?? []), setzeCookie(k.cfg, 'sitzung', token, Math.floor(HOECHST_MS / 1000))] };
+  return { ...antwort, cookies: [...(antwort.cookies ?? []), setzeCookie(k.cfg, art, token, Math.floor(HOECHST_MS / 1000))] };
+}
+
+/**
+ * Konto zu einer Microsoft-Anmeldung: über die Objekt-ID – bei der ersten Anmeldung über den Anmeldenamen, dann fest an die
+ * Objekt-ID gebunden. Ein geänderter Anmeldename in Entra wird nachgezogen. Gilt für die Anmeldung im Browser und in Teams.
+ */
+function entraKonto(db: DB, jetzt: Date, wer: { oid: string; anmeldename: string }): { b: BenutzerZeile } | { fehler: 'kein_zugang' | 'gesperrt' } {
+  let b = db.prepare("SELECT * FROM benutzer WHERE anmeldung = 'entra' AND entra_oid = ?").get(wer.oid) as BenutzerZeile | undefined;
+  if (!b) {
+    // erste Anmeldung: vorab angelegtes Konto über den Anmeldenamen finden und fest an die Objekt-ID binden
+    const neu = wer.anmeldename
+      ? (db.prepare("SELECT * FROM benutzer WHERE anmeldung = 'entra' AND entra_oid IS NULL AND anmeldename = ?").get(wer.anmeldename) as BenutzerZeile | undefined)
+      : undefined;
+    if (neu) {
+      db.prepare('UPDATE benutzer SET entra_oid = ? WHERE id = ?').run(wer.oid, neu.id);
+      protokolliere(db, jetzt, 'konto', 'entra_verknuepft', neu, null);
+      b = neu;
+    }
+  } else if (wer.anmeldename && b.anmeldename !== wer.anmeldename && !nachAnmeldename(db, wer.anmeldename)) {
+    // Anmeldename in Entra geändert (z. B. Namenswechsel): nachziehen, der Zugang hängt an der Objekt-ID
+    db.prepare('UPDATE benutzer SET anmeldename = ? WHERE id = ?').run(wer.anmeldename, b.id);
+    protokolliere(db, jetzt, 'konto', 'konto_geaendert', b, b, `Anmeldename laut Entra jetzt ${wer.anmeldename}`);
+  }
+  if (!b) {
+    protokolliere(db, jetzt, 'konto', 'anmeldung_fehlgeschlagen', null, null, `Entra-Konto ${wer.anmeldename.slice(0, 120)} ohne Konto in der App`);
+    return { fehler: 'kein_zugang' };
+  }
+  if (b.status !== 'aktiv') {
+    protokolliere(db, jetzt, 'konto', 'anmeldung_fehlgeschlagen', null, b, 'Konto gesperrt');
+    return { fehler: 'gesperrt' };
+  }
+  return { b };
 }
 
 // ---------- Konten ----------
@@ -239,34 +278,44 @@ export const ROUTEN: Route[] = [
         return zurueck('entra_fehler');
       }
 
-      let b = db.prepare("SELECT * FROM benutzer WHERE anmeldung = 'entra' AND entra_oid = ?").get(wer.oid) as BenutzerZeile | undefined;
-      if (!b) {
-        // erste Anmeldung: vorab angelegtes Konto über den Anmeldenamen finden und fest an die Objekt-ID binden
-        const neu = db.prepare("SELECT * FROM benutzer WHERE anmeldung = 'entra' AND entra_oid IS NULL AND anmeldename = ?").get(wer.anmeldename) as
-          | BenutzerZeile
-          | undefined;
-        if (neu) {
-          db.prepare('UPDATE benutzer SET entra_oid = ? WHERE id = ?').run(wer.oid, neu.id);
-          protokolliere(db, jetzt, 'konto', 'entra_verknuepft', neu, null);
-          b = neu;
-        }
-      } else if (b.anmeldename !== wer.anmeldename && !nachAnmeldename(db, wer.anmeldename)) {
-        // Anmeldename in Entra geändert (z. B. Namenswechsel): nachziehen, der Zugang hängt an der Objekt-ID
-        db.prepare('UPDATE benutzer SET anmeldename = ? WHERE id = ?').run(wer.anmeldename, b.id);
-        protokolliere(db, jetzt, 'konto', 'konto_geaendert', b, b, `Anmeldename laut Entra jetzt ${wer.anmeldename}`);
-      }
-      if (!b) {
-        protokolliere(db, jetzt, 'konto', 'anmeldung_fehlgeschlagen', null, null, `Entra-Konto ${wer.anmeldename.slice(0, 120)} ohne Konto in der App`);
-        return zurueck('kein_zugang');
-      }
-      if (b.status !== 'aktiv') {
-        protokolliere(db, jetzt, 'konto', 'anmeldung_fehlgeschlagen', null, b, 'Konto gesperrt');
-        return zurueck('gesperrt');
-      }
+      const konto = entraKonto(db, jetzt, wer);
+      if ('fehler' in konto) return zurueck(konto.fehler);
+      const b = konto.b;
       if (wer.bildFehler) c.k.log(`Profilbild nicht geladen: ${wer.bildFehler}`);
       merkeBild(db, b, wer, jetzt);
       protokolliere(db, jetzt, 'konto', 'anmeldung', b, null, 'Entra');
       return sitzungsAntwort(c.k, c.a, b, { status: 302, redirect: '/', cookies: [setzeCookie(cfg, 'anmeldung', '', 0)] });
+    },
+  },
+
+  {
+    // Anmeldung in der Teams-App: Teams gibt dem Reiter ein Token der angemeldeten Person (Single Sign-on), das Portal prüft es
+    // und legt eine Sitzung mit dem Cookie für Teams an (SameSite=None, partitioniert). Ohne Profilbild – dafür bräuchte es Graph.
+    m: 'POST',
+    p: '/api/auth/teams',
+    wer: 'offen',
+    begrenzt: ENTRA_JE_IP,
+    h: async (c) => {
+      const { db, cfg } = c.k;
+      const jetzt = c.k.jetzt();
+      if (!cfg.entra || !cfg.teamsAppId) throw new Fehler(404, 'Die Teams-App ist in diesem Portal nicht eingerichtet');
+      const kopf = String(c.a.headers.authorization ?? '');
+      const token = kopf.startsWith('Bearer ') ? kopf.slice(7).trim() : '';
+      if (!token) throw new Fehler(400, 'Kein Token von Teams erhalten');
+      let wer;
+      try {
+        wer = await pruefeTeamsToken(token, { tenantId: cfg.entra.tenantId, clientId: cfg.entra.clientId, appUrl: cfg.appUrl }, c.k.teamsSchluessel, jetzt);
+      } catch (e) {
+        const grund = e instanceof TeamsSsoFehler ? e.message : 'Die Schlüssel von Microsoft sind nicht erreichbar.';
+        c.k.log(`Teams-Anmeldung abgelehnt: ${grund}`);
+        protokolliere(db, jetzt, 'konto', 'anmeldung_fehlgeschlagen', null, null, `Teams: ${grund}`);
+        throw new Fehler(401, 'Teams konnte dich nicht anmelden. Öffne das Portal im Browser oder wende dich an deinen Ausbilder.');
+      }
+      const konto = entraKonto(db, jetzt, wer);
+      if ('fehler' in konto)
+        throw new Fehler(403, konto.fehler === 'gesperrt' ? 'Dein Konto ist gesperrt.' : 'Für dein Microsoft-Konto gibt es kein Konto im Portal. Wende dich an deinen Ausbilder.', konto.fehler);
+      protokolliere(db, jetzt, 'konto', 'anmeldung', konto.b, null, 'Teams');
+      return sitzungsAntwort(c.k, c.a, konto.b, { status: 200, body: { ok: true } }, 'teams');
     },
   },
 
@@ -294,7 +343,7 @@ export const ROUTEN: Route[] = [
     h: (c) => {
       beendeSitzung(c.k.db, c.token);
       protokolliere(c.k.db, c.k.jetzt(), 'konto', 'abmeldung', c.b);
-      return { status: 200, body: { ok: true }, cookies: [setzeCookie(c.k.cfg, 'sitzung', '', 0)] };
+      return { status: 200, body: { ok: true }, cookies: [setzeCookie(c.k.cfg, 'sitzung', '', 0), setzeCookie(c.k.cfg, 'teams', '', 0)] };
     },
   },
 
@@ -738,7 +787,8 @@ export async function behandle(k: Kontext, a: Anfrage): Promise<Antwort> {
     }
     if (route.begrenzt && zuVieleVersuche(k, a.ip, route.begrenzt)) throw new Fehler(429, 'Zu viele Anmeldeversuche – bitte später erneut versuchen');
 
-    const token = a.cookies[cookieName(k.cfg, 'sitzung')];
+    // im Browser das normale Cookie, in der Teams-App das partitionierte Cookie für Teams
+    const token = a.cookies[cookieName(k.cfg, 'sitzung')] ?? a.cookies[cookieName(k.cfg, 'teams')];
     let b: BenutzerZeile | null = null;
     if (route.wer !== 'offen') {
       b = pruefeSitzung(k.db, token, k.jetzt());

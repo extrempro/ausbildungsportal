@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -88,7 +88,8 @@ test('Teams-App: Meldung im Aktivitätsfeed – kurz, ohne Namen, mit Link auf d
   const a = aktivitaet(APP_ID, ['Dein Urlaub wurde genehmigt.'], '/urlaub');
   assert.equal(a.previewText.content, 'Dein Urlaub wurde genehmigt.');
   assert.equal(a.templateParameters[0].value, 'Dein Urlaub wurde genehmigt.');
-  assert.equal(new URL(a.topic.webUrl).searchParams.get('context'), '{"subEntityId":"/urlaub"}');
+  // aus dem Aktivitätsfeed mit Vorsatz „hinweis:“ – der Reiter zeigt dort nur einen Hinweis
+  assert.equal(new URL(a.topic.webUrl).searchParams.get('context'), '{"subEntityId":"hinweis:/urlaub"}');
   const mehr = aktivitaet(APP_ID, ['Eins.', 'Zwei.', 'x'.repeat(300)], '/');
   assert.equal(mehr.previewText.content, '3 Neuigkeiten im Ausbildungsportal');
   assert.ok(mehr.templateParameters[0].value.length <= 200);
@@ -116,15 +117,20 @@ test('Teams-App: das Umriss-Symbol ist ein gültiges PNG, weiß auf durchsichtig
   assert.ok(gedeckt > 100 && leer > 300, `gedeckt ${gedeckt}, leer ${leer}`);
 });
 
-test('Teams-App: nur der Reiter darf in Teams eingebettet werden – ohne Skript, ohne Daten', async () => {
-  const u = await umgebung({ ...ENTRA, TEAMS_APP_ID: APP_ID });
+test('Teams-App: eingebettet nur in Teams – mit Teams-App das Portal, sonst nur der Reiter; der Reiter ohne Daten', async () => {
   const dist = mkdtempSync(join(tmpdir(), 'ap-dist-'));
   writeFileSync(join(dist, 'index.html'), '<!doctype html><title>Ausbildungsportal</title>');
-  const server = erzeugeServer(u.k, dist);
-  await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
-  const basis = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const starte = async (env: Record<string, string>) => {
+    const u = await umgebung(env);
+    const server = erzeugeServer(u.k, dist);
+    await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
+    return { server, basis: `http://127.0.0.1:${(server.address() as AddressInfo).port}` };
+  };
+  const ohne = await starte(ENTRA);
+  const mit = await starte({ ...ENTRA, TEAMS_APP_ID: APP_ID });
   try {
-    const r = await fetch(`${basis}/teams/app?ziel=/urlaub`);
+    // ohne Teams-App: das Portal ist nirgends einbettbar, der Reiter nur in Teams und ohne Skript
+    const r = await fetch(`${ohne.basis}/teams/app?ziel=hinweis:/urlaub`);
     assert.equal(r.status, 200);
     const csp = r.headers.get('content-security-policy') ?? '';
     assert.match(csp, /frame-ancestors https:\/\/teams\.microsoft\.com/);
@@ -135,16 +141,30 @@ test('Teams-App: nur der Reiter darf in Teams eingebettet werden – ohne Skript
     assert.match(html, /href="https:\/\/portal\.test\/urlaub" target="_blank" rel="noopener"/);
     assert.match(html, /Es gibt Neues für dich/);
     assert.ok(!html.includes('<script'));
-    // fremdes Ziel: zur Startseite, nichts davon im HTML
-    const boese = await (await fetch(`${basis}/teams/app?ziel=${encodeURIComponent('"><script>alert(1)</script>')}`)).text();
+    const boese = await (await fetch(`${ohne.basis}/teams/app?ziel=${encodeURIComponent('"><script>alert(1)</script>')}`)).text();
     assert.ok(!boese.includes('alert'));
     assert.match(boese, /href="https:\/\/portal\.test\/"/);
-    // alle anderen Seiten bleiben uneinbettbar
-    const sonst = await fetch(`${basis}/verwaltung/konten`);
+    const sonst = await fetch(`${ohne.basis}/verwaltung/konten`);
     assert.match(sonst.headers.get('content-security-policy') ?? '', /frame-ancestors 'none'/);
     assert.equal(sonst.headers.get('x-frame-options'), 'DENY');
+
+    // mit Teams-App: das Portal läuft eingebettet in Teams – aber nur dort
+    const portal = await fetch(`${mit.basis}/verwaltung/konten`);
+    const csp2 = portal.headers.get('content-security-policy') ?? '';
+    assert.match(csp2, /frame-ancestors https:\/\/teams\.microsoft\.com https:\/\/\*\.teams\.microsoft\.com/);
+    assert.ok(!csp2.includes("frame-ancestors 'none'") && !/frame-ancestors[^;]*\*(;|$| )/.test(csp2.replace(/https:\/\/\*\./g, '')));
+    assert.equal(portal.headers.get('x-frame-options'), null);
+    // ohne mitgebaute Bibliothek von Microsoft bleibt der Reiter ohne Skript …
+    assert.ok(!(await (await fetch(`${mit.basis}/teams/app`)).text()).includes('<script'));
+    // … mit ihr meldet er über Teams an
+    mkdirSync(join(dist, 'teams'), { recursive: true });
+    writeFileSync(join(dist, 'teams', 'teams.js'), '/* Bibliothek */');
+    const sso = await fetch(`${mit.basis}/teams/app?ziel=/urlaub`);
+    assert.match(await sso.text(), /<script src="\/teams\/einstieg\.js">/);
+    assert.match(sso.headers.get('content-security-policy') ?? '', /script-src 'self'/);
   } finally {
-    server.close();
+    ohne.server.close();
+    mit.server.close();
   }
 });
 

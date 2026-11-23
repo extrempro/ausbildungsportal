@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { behandle } from './api';
-import { teamsReiter } from './teams';
+import { TEAMS_EINBETTEN, teamsReiter } from './teams';
 import type { Anfrage, Kontext } from './api';
 
 /**
@@ -37,9 +37,10 @@ function sicherheitsHeader(k: Kontext): Record<string, string> {
     // nur eigene Quellen: keine fremden Skripte, Schriften oder Bilder, keine Einbettung in fremde Seiten
     'Content-Security-Policy':
       "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; " +
-      "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      `object-src 'none'; base-uri 'none'; form-action 'self'; ${k.cfg.teamsAppId ? TEAMS_EINBETTEN : "frame-ancestors 'none'"}`,
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
+    // mit Teams-App darf das Portal in Teams eingebettet werden – dann gilt nur frame-ancestors (X-Frame-Options kennt keine Liste)
+    ...(k.cfg.teamsAppId ? {} : { 'X-Frame-Options': 'DENY' }),
     'Referrer-Policy': 'no-referrer',
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Cross-Origin-Resource-Policy': 'same-origin',
@@ -164,7 +165,8 @@ export function erzeugeServer(k: Kontext, distDir: string): Server {
     }
     // Reiter der Teams-App: eine eigene kleine Seite, die als einzige in Teams eingebettet werden darf
     if (url.pathname === '/teams/app' && (req.method === 'GET' || req.method === 'HEAD')) {
-      const r = teamsReiter(k, url.searchParams.get('ziel'));
+      // mit Anmeldung über Teams nur, wenn die Bibliothek von Microsoft mitgebaut ist (dist/teams/teams.js)
+      const r = teamsReiter(k, url.searchParams.get('ziel'), Boolean(k.cfg.teamsAppId) && existsSync(join(wurzel, 'teams', 'teams.js')), url.searchParams.has('abgemeldet'));
       const { 'X-Frame-Options': _ohne, ...ohneRahmenverbot } = basis;
       return sende(res, 200, { ...ohneRahmenverbot, 'Content-Security-Policy': r.csp, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, req.method === 'HEAD' ? undefined : r.html);
     }

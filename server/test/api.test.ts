@@ -52,6 +52,7 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/auth/entra/login': 'offen',
     'GET /api/auth/entra/callback': 'offen',
     'POST /api/auth/dev': 'offen',
+    'POST /api/auth/teams': 'offen',
     'POST /api/auth/abmelden': 'alle',
     'GET /api/ich': 'alle',
     'PUT /api/ich/passwort': 'admin',

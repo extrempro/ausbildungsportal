@@ -125,9 +125,9 @@ Freiwillig: Azubis, Ausbildungsbeauftragte und Ausbilder können sich zusätzlic
 
 **E-Mail** nutzt den Mailserver aus „Mail an die Personalstelle“ (`SMTP_…`). Mehr ist nicht einzurichten.
 
-**Teams** kommt über die Teams-App „Ausbildungsportal“: Die Nachrichten erscheinen in Teams unter „Aktivität“, Absender ist die App. Das Portal schickt sie über Microsoft Graph mit der App-Registrierung, die auch die Anmeldung nutzt.
+**Teams** kommt über die Teams-App „Ausbildungsportal“: Die Nachrichten erscheinen in Teams unter „Aktivität“, Absender ist die App. In der App läuft das ganze Portal, angemeldet über das Microsoft-Konto. Das Portal schickt sie über Microsoft Graph mit der App-Registrierung, die auch die Anmeldung nutzt.
 
-1. In Entra der App-Registrierung die Anwendungsberechtigung **TeamsActivity.Send** geben und die Administratorzustimmung erteilen.
+1. In Entra der App-Registrierung die Anwendungsberechtigung **TeamsActivity.Send** geben, die Administratorzustimmung erteilen und unter **API verfügbar machen** den Bereich `access_as_user` für Teams anlegen.
 2. Im Portal als Super-Admin unter **Erscheinungsbild → Teams-App** das **App-Paket herunterladen**.
 3. Im **Teams Admin Center** hochladen und per **Setup-Richtlinie** für alle installieren, die das Portal nutzen.
 4. Die angezeigte **App-ID** in der `.env` als `TEAMS_APP_ID` eintragen, dann `docker compose up -d`.
@@ -137,7 +137,7 @@ Ausführlich mit Fehlersuche: [docs/entra-einrichtung.md](docs/entra-einrichtung
 
 Gut zu wissen:
 
-- Ein Klick auf die Meldung öffnet die App in Teams; „Im Browser öffnen“ führt direkt zur passenden Seite im Portal.
+- Ein Klick auf die Meldung zeigt einen Hinweis mit „In der App öffnen“ – dort läuft das Portal, angemeldet über Teams – und „Im Browser öffnen“.
 - Ohne installierte App kommt bei der Person nichts an. Empfänger ist die Entra-Objekt-ID; Konten, die sich noch nie mit Microsoft angemeldet haben, können Teams nicht wählen.
 - Der frühere Weg über einen Teams-Workflow (`TEAMS_CHAT_WEBHOOK_URL`) wird seit Version 0.77.0 nicht mehr genutzt. Den Eintrag aus der `.env` löschen und den Workflow abschalten.
 - E-Mails gehen an den Anmeldenamen (UPN) der Person. Weicht die Mail-Adresse bei euch vom Anmeldenamen ab, kommen E-Mails nicht an.

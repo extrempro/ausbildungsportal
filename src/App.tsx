@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api, logoFuer, pruefeAufNeueVersion, ROLLE_TEXT, setzeAbmeldung } from './api';
+import { api, eingebettet, logoFuer, pruefeAufNeueVersion, ROLLE_TEXT, setzeAbmeldung } from './api';
 import type { Konto, Logos, Theme } from './api';
 import { Anmelden } from './pages/Anmelden';
 import { AzubiDetail } from './pages/AzubiDetail';
@@ -305,7 +305,14 @@ export function App() {
   const begleiter = useBegleiter(konto?.rolle === 'azubi' && !konto.passwortWechsel, !fuehrung && !angebot);
 
   if (konto === undefined) return <p className="mitte leise">Lädt …</p>;
-  if (konto === null) return <Anmelden superAdmin={pfad === '/super'} />;
+  if (konto === null) {
+    // in der Teams-App: neu über Teams anmelden statt der Anmeldeseite im Rahmen
+    if (eingebettet() && pfad !== '/super') {
+      window.location.replace(`/teams/app?ziel=${encodeURIComponent(pfad)}`);
+      return null;
+    }
+    return <Anmelden superAdmin={pfad === '/super'} />;
+  }
 
   // Schalter in der Kopfzeile: wechselt fest auf hell oder dunkel; „automatisch“ gibt es unter Konto
   const wechsleTheme = async () => {
@@ -318,6 +325,8 @@ export function App() {
 
   const abmelden = async () => {
     await api('POST', '/api/auth/abmelden').catch(() => {});
+    // in der Teams-App zurück zum Einstieg – dort steht „Wieder anmelden“
+    if (eingebettet()) return window.location.replace('/teams/app?abgemeldet=1');
     const ziel = konto.rolle === 'admin' ? '/super' : '/anmelden';
     setKonto(null);
     geheZu(ziel);

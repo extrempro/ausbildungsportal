@@ -53,6 +53,15 @@ export class ApiFehler extends Error {
   }
 }
 
+/** Läuft das Portal eingebettet – in der Teams-App? */
+export function eingebettet(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true; // fremder Rahmen: Zugriff verweigert, also eingebettet
+  }
+}
+
 /** Wird gerufen, wenn die Sitzung abgelaufen ist – die App zeigt dann wieder die Anmeldung. */
 let beiAbmeldung: () => void = () => {};
 export function setzeAbmeldung(fn: () => void): void {

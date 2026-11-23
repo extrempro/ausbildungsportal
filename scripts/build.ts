@@ -37,6 +37,10 @@ rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist/assets', { recursive: true });
 // Dateien aus public/ (z. B. das Favicon) unverändert übernehmen
 if (existsSync('public')) cpSync('public', 'dist', { recursive: true });
+// Teams-App: die Bibliothek von Microsoft für die Anmeldung über Teams – vom eigenen Server, keine fremden Skripte.
+// Fehlt sie, zeigt der Reiter der Teams-App nur „Im Browser öffnen“ (server/http.ts).
+const TEAMS_JS = 'node_modules/@microsoft/teams-js/dist/umd/MicrosoftTeams.min.js';
+if (existsSync(TEAMS_JS)) cpSync(TEAMS_JS, 'dist/teams/teams.js');
 
 if (watch) {
   const ctx = await context({

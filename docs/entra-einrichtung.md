@@ -74,20 +74,28 @@ Gut zu wissen: Ohne den Schalter verlangt das Portal wie bisher nur `openid prof
 
 ### Freiwillig: Teams-App
 
-Benachrichtigungen per Teams kommen über die App „Ausbildungsportal“: Sie erscheinen in Teams unter „Aktivität“, Absender ist die App. Das Portal schickt sie mit dieser App-Registrierung als Anwendung über Microsoft Graph (`/users/{id}/teamwork/sendActivityNotification`). Empfänger ist die Entra-Objekt-ID der Person, Inhalt nur ein kurzer Text ohne Namen.
+Mit der App „Ausbildungsportal“ läuft das Portal direkt in Teams – angemeldet wird mit dem Microsoft-Konto, ohne erneute Eingabe (Single Sign-on). Benachrichtigungen per Teams erscheinen unter „Aktivität“, Absender ist die App. Das Portal schickt sie mit dieser App-Registrierung als Anwendung über Microsoft Graph (`/users/{id}/teamwork/sendActivityNotification`). Empfänger ist die Entra-Objekt-ID der Person, Inhalt nur ein kurzer Text ohne Namen.
 
 1. In der App-Registrierung unter **API-Berechtigungen** → **Berechtigung hinzufügen** → **Microsoft Graph** → **Anwendungsberechtigungen** → **TeamsActivity.Send** wählen.
 2. **Administratorzustimmung erteilen.**
-3. Im Portal als Super-Admin unter **Erscheinungsbild** → **Teams-App** das **App-Paket herunterladen**.
-4. Im **Teams Admin Center** unter **Teams-Apps → Apps verwalten → Hochladen** das Paket hochladen. Unter **Setup-Richtlinien** die App für alle installieren, die das Portal nutzen (z. B. für die Ausbildungsgruppe). Ohne installierte App kommt bei der Person nichts an. Bis eine Richtlinie greift, kann es einige Stunden dauern.
-5. Die **App-ID** (steht unter „Teams-App“) in der `.env` als `TEAMS_APP_ID` eintragen und `docker compose up -d`. Erst dann gehen Nachrichten hinaus. Die ID bleibt so auch bei einer neuen Datenbank gleich – sonst meldet Teams „App nicht gefunden“ und die App müsste neu verteilt werden.
-6. Unter **Konto → Benachrichtigungen** „Testnachricht per Teams senden“ und in Teams am PC, im Browser und am Handy unter „Aktivität“ nachsehen.
+3. **API verfügbar machen** (für die Anmeldung in der App):
+   - **Anwendungs-ID-URI** festlegen: `api://<Host des Portals>/<Client-ID>`, z. B. `api://ausbildung.firma.de/<Client-ID>`. Die genaue Angabe steht im Portal unter „Erscheinungsbild“ → „Teams-App“.
+   - **Bereich hinzufügen:** Name `access_as_user`, zustimmen dürfen „Administratoren und Benutzer“, kurze Beschreibung z. B. „Ausbildungsportal in Teams“.
+   - **Clientanwendung hinzufügen** und den Bereich `access_as_user` anhaken – je einmal für `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (Teams am PC und Handy) und `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams im Browser). Soll die App auch in Outlook und Microsoft 365 laufen, zusätzlich deren Client-IDs (Liste in `server/teams-sso.ts`).
+4. Im Portal als Super-Admin unter **Erscheinungsbild** → **Teams-App** das **App-Paket herunterladen**.
+5. Im **Teams Admin Center** unter **Teams-Apps → Apps verwalten → Hochladen** das Paket hochladen. Unter **Setup-Richtlinien** die App für alle installieren, die das Portal nutzen (z. B. für die Ausbildungsgruppe). Ohne installierte App kommt bei der Person nichts an. Bis eine Richtlinie greift, kann es einige Stunden dauern.
+6. Die **App-ID** (steht unter „Teams-App“) in der `.env` als `TEAMS_APP_ID` eintragen und `docker compose up -d`. Erst dann gehen Nachrichten hinaus. Die ID bleibt so auch bei einer neuen Datenbank gleich – sonst meldet Teams „App nicht gefunden“ und die App müsste neu verteilt werden.
+7. Unter **Konto → Benachrichtigungen** „Testnachricht per Teams senden“ und in Teams am PC, im Browser und am Handy unter „Aktivität“ nachsehen. Die App links in Teams öffnen: Das Portal muss ohne Anmeldeseite erscheinen.
 
 Gut zu wissen:
 
 - Der Server braucht ausgehend `login.microsoftonline.com` und `graph.microsoft.com`.
 - Ändern sich `APP_URL` oder der Name des Betriebs, bekommt das nächste Paket von selbst eine höhere Version. Im Teams Admin Center als Aktualisierung hochladen.
-- Ein Klick auf die Meldung öffnet den Reiter der App (`/teams/app`). Er zeigt einen Hinweis und „Im Browser öffnen“ mit Link auf die passende Seite. Nur diese eine Seite darf in Teams eingebettet werden; sie enthält kein Skript und keine Daten.
+- Ein Klick auf die Meldung zeigt im Bereich „Aktivität“ einen Hinweis mit „In der App öffnen“ und „Im Browser öffnen“ – das ganze Portal öffnet sich dann in der App.
+- Mit `TEAMS_APP_ID` darf das Portal in Teams und Microsoft 365 eingebettet werden (`frame-ancestors` nur für deren Adressen); ohne bleibt jede Einbettung verboten.
+- In Teams gilt eine eigene Sitzung mit einem eigenen Cookie (SameSite=None, partitioniert): Der Browser schickt es nur, wenn das Portal in Teams läuft. Unter „Konto“ → „Angemeldete Geräte“ steht sie als „Teams“.
+- Die Anmeldung prüft das Token von Teams selbst (Signatur mit den Schlüsseln des Mandanten, Aussteller, Empfänger, Gültigkeit, Bereich `access_as_user`, anfordernde App). Bedingter Zugriff (z. B. MFA) gilt auch hier.
+- Fehlt dem Portal die Bibliothek für Teams, zeigt die App nur „Im Browser öffnen“ (Stand unter „Erscheinungsbild“).
 - Der frühere Weg über einen Workflow (`TEAMS_CHAT_WEBHOOK_URL`) wird nicht mehr genutzt. Steht er noch in der `.env`, weist das Log beim Start darauf hin; den Workflow danach abschalten.
 
 ## Schritt 5 – Zugriff auf die Ausbildungsgruppe beschränken (empfohlen)
@@ -146,6 +154,7 @@ Danach die App neu starten (`docker compose up -d` bzw. `npm start`). Fehlen die
 | Anmeldung springt immer wieder zur Anmeldeseite | Cookie wird nicht angenommen: `APP_URL` beginnt mit `https://`, die App wird aber über `http://` aufgerufen | über die HTTPS-Adresse aufrufen bzw. `APP_URL` berichtigen |
 | „Die App ist für die Adresse … eingerichtet, aufgerufen wurde sie über …“ | `APP_URL` stimmt nicht mit der Adresse im Browser überein (z. B. eigener Port über `BIND_PORT` in der `.env`) | `APP_URL` auf die Adresse im Browser setzen, App neu starten |
 | Testnachricht per Teams: „Microsoft lehnt ab … TeamsActivity.Send“ | Anwendungsberechtigung fehlt oder Zustimmung nicht erteilt | Abschnitt „Freiwillig: Teams-App“, Punkte 1–2 |
+| In der App: „Teams konnte dich nicht anmelden“ | „API verfügbar machen“ fehlt oder passt nicht (Anwendungs-ID-URI, Bereich, Clientanwendungen); der genaue Grund steht im Log der App („Teams-Anmeldung abgelehnt: …“) | Abschnitt „Freiwillig: Teams-App“, Punkt 3 |
 | Testnachricht per Teams: „Ist die Teams-App für diese Person installiert?“ | App nicht hochgeladen, Setup-Richtlinie greift noch nicht, oder `TEAMS_APP_ID` passt nicht zum hochgeladenen Paket | Teams Admin Center prüfen; App-ID unter „Erscheinungsbild“ mit dem Paket vergleichen |
 | App meldet „Die Anmeldung über Microsoft ist fehlgeschlagen“ | Entra hat abgelehnt oder das Token war ungültig; der genaue Grund (z. B. `AADSTS…`) steht im Log der App | `docker compose logs app` bzw. die Ausgabe von `npm start` ansehen |
 
@@ -163,3 +172,4 @@ Danach die App neu starten (`docker compose up -d` bzw. `npm start`). Fehlen die
 - [Schnellstart: Nutzer in einer Web-App anmelden](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-web-app-sign-in)
 - [Benachrichtigungen im Aktivitätsfeed von Teams senden](https://learn.microsoft.com/en-us/graph/teams-send-activityfeednotifications)
 - [Eigene Apps im Teams Admin Center hochladen und verwalten](https://learn.microsoft.com/en-us/microsoftteams/manage-apps)
+- [Single Sign-on für Reiter einer Teams-App](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/authentication/tab-sso-overview)

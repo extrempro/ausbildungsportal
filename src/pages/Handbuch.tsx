@@ -411,7 +411,7 @@ const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
         </li>
         <li>Passiert mehreres kurz nacheinander, kommt es nach wenigen Minuten als eine Nachricht. Es dauert also etwas, bis sie da ist.</li>
         <li>
-          <strong>In Teams</strong> kommt die Nachricht von der App „Ausbildungsportal“ und steht unter „Aktivität“ (die Glocke in Teams). Ein Klick darauf öffnet die App; mit „Im Browser öffnen“ kommst du direkt zur passenden Seite im Portal. Die App richtet eure IT ein – fehlt sie bei dir, kommt in Teams nichts an.
+          <strong>In Teams</strong> kommt die Nachricht von der App „Ausbildungsportal“ und steht unter „Aktivität“ (die Glocke in Teams). Ein Klick darauf zeigt „In der App öffnen“: Dann läuft das Portal direkt in Teams, du bist mit deinem Microsoft-Konto schon angemeldet. Oder du wählst „Im Browser öffnen“. Die App richtet eure IT ein – fehlt sie bei dir, kommt in Teams nichts an.
         </li>
         <li>
           <strong>Die E-Mail</strong> trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Ein farbiger Punkt vor jeder Zeile hilft beim Überfliegen: grün für erledigt, gelb für „wartet auf dich“, rot für „bitte ansehen“. Der Knopf „Im Portal öffnen“ führt zur passenden Seite. E-Mails gehen an die Adresse, mit der du dich anmeldest.
@@ -2133,11 +2133,12 @@ const ADMIN: Kapitel[] = [
     inhalt: (
       <>
         <p>
-          Benachrichtigungen per Teams kommen über die App „Ausbildungsportal“. Sie erscheinen in Teams unter „Aktivität“; ein Klick öffnet die App, von dort geht es zur passenden Seite im Portal. Das Paket der App lädst du unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> herunter. Den Rest erledigt, wer Entra und Teams verwaltet.
+          Mit der App „Ausbildungsportal“ läuft das Portal direkt in Teams – angemeldet wird mit dem Microsoft-Konto, ohne erneute Eingabe. Benachrichtigungen per Teams erscheinen unter „Aktivität“. Das Paket der App lädst du unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> herunter. Den Rest erledigt, wer Entra und Teams verwaltet.
         </p>
         <h3>So geht's</h3>
         <ol className="schritte">
           <li>In Entra bekommt die App-Registrierung des Portals die Anwendungsberechtigung „TeamsActivity.Send“ (Microsoft Graph) mit Administratorzustimmung.</li>
+          <li>Ebenfalls in Entra wird unter „API verfügbar machen“ der Bereich „access_as_user“ für Teams angelegt. Die Anwendungs-ID-URI steht unter „Teams-App“.</li>
           <li>Öffne <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> und klicke unter „Teams-App“ auf „App-Paket herunterladen“.</li>
           <li>Das Paket wird im Teams Admin Center unter „Apps verwalten“ hochgeladen und per Setup-Richtlinie für alle installiert, die das Portal nutzen.</li>
           <li>Die App-ID, die unter „Teams-App“ steht, kommt als TEAMS_APP_ID in die Einstellungen des Portals (.env); danach wird das Portal neu gestartet.</li>
@@ -2148,11 +2149,13 @@ const ADMIN: Kapitel[] = [
           <Begriff wort="App-Paket">Eine ZIP-Datei mit der Beschreibung der App (manifest.json) und zwei Symbolen. Nur sie wird im Teams Admin Center hochgeladen.</Begriff>
           <Begriff wort="App-ID">Die feste Kennung der App in Teams. Ändert sie sich, gilt die App als neue App und muss neu verteilt werden.</Begriff>
           <Begriff wort="Aktivität">Der Bereich in Teams mit der Glocke. Dort stehen die Benachrichtigungen aus dem Portal.</Begriff>
+          <Begriff wort="Single Sign-on">Teams meldet die Person mit ihrem Microsoft-Konto im Portal an – ohne erneute Eingabe. In Teams gilt dafür eine eigene Sitzung; unter „Angemeldete Geräte“ steht sie als „Teams“.</Begriff>
         </dl>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
           <li>Ändern sich die Adresse des Portals oder der Name des Betriebs, bekommt das nächste Paket von selbst eine höhere Version. Es wird dann im Teams Admin Center als Aktualisierung hochgeladen.</li>
-          <li>Ohne die App-ID in der .env gehen keine Nachrichten per Teams hinaus. Bei den Personen ist der Haken „Teams“ dann gesperrt, mit Grund.</li>
+          <li>Ohne die App-ID in der .env gehen keine Nachrichten per Teams hinaus, und das Portal lässt sich nicht in Teams öffnen. Bei den Personen ist der Haken „Teams“ dann gesperrt, mit Grund.</li>
+          <li>Klappt die Anmeldung in Teams nicht, zeigt die App „Im Browser öffnen“. Der Grund steht im Log des Portals und im Protokoll.</li>
           <li>Die Nachrichten nennen keine Namen und keine Inhalte – nur, was passiert ist.</li>
           <li>Der frühere Weg über einen Teams-Workflow (TEAMS_CHAT_WEBHOOK_URL) wird nicht mehr genutzt. Der Workflow für den Kanal bei neuen Fehlern und Ideen bleibt.</li>
           <li>Das Herunterladen des Pakets steht im Protokoll.</li>

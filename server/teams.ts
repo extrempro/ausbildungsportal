@@ -5,6 +5,7 @@ import type { Kontext, Route } from './api-basis';
 import { leseBetrieb } from './stammdaten';
 import { protokolliere } from './protokoll';
 import { umrissSymbol } from './png';
+import { teamsRessource } from './teams-sso';
 import { baueZip } from './zip';
 
 /**
@@ -104,9 +105,12 @@ export function sicheresZiel(x: unknown): string {
   return typeof x === 'string' && /^\/[a-z0-9/-]{0,100}$/.test(x) && !x.includes('//') ? x : '/';
 }
 
-/** Link auf den Reiter der App; subEntityId trägt den Pfad im Portal */
-export function teamsLink(appId: string, pfad: string): string {
-  const kontext = JSON.stringify({ subEntityId: sicheresZiel(pfad) });
+/** Vorsatz im Ziel für Links aus dem Aktivitätsfeed: Der Reiter zeigt dann nur einen Hinweis statt des ganzen Portals */
+export const HINWEIS = 'hinweis:';
+
+/** Link auf den Reiter der App; subEntityId trägt den Pfad im Portal (aus dem Aktivitätsfeed mit Vorsatz „hinweis:“) */
+export function teamsLink(appId: string, pfad: string, hinweis = false): string {
+  const kontext = JSON.stringify({ subEntityId: (hinweis ? HINWEIS : '') + sicheresZiel(pfad) });
   return `https://teams.microsoft.com/l/entity/${encodeURIComponent(appId)}/${REITER}?context=${encodeURIComponent(kontext)}`;
 }
 
@@ -114,7 +118,7 @@ export function teamsLink(appId: string, pfad: string): string {
 export function aktivitaet(appId: string, texte: string[], pfad: string) {
   const vorschau = texte.length === 1 ? texte[0] : `${texte.length} Neuigkeiten im Ausbildungsportal`;
   return {
-    topic: { source: 'text', value: 'Ausbildungsportal', webUrl: teamsLink(appId, pfad) },
+    topic: { source: 'text', value: 'Ausbildungsportal', webUrl: teamsLink(appId, pfad, true) },
     activityType: 'systemDefault',
     previewText: { content: vorschau.slice(0, 150) },
     templateParameters: [{ name: 'systemDefaultText', value: texte.join(' · ').slice(0, 200) }],
@@ -149,15 +153,15 @@ export function manifest(k: Kontext, appId: string, version: string): Record<str
     developer: { name: (betrieb || 'Ausbildungsportal').slice(0, 32), websiteUrl: url, privacyUrl: `${url}/handbuch`, termsOfUseUrl: `${url}/handbuch` },
     name: { short: 'Ausbildungsportal', full: betrieb ? `Ausbildungsportal ${betrieb}`.slice(0, 100) : 'Ausbildungsportal' },
     description: {
-      short: 'Neuigkeiten aus dem Ausbildungsportal',
-      full: 'Benachrichtigungen aus dem Ausbildungsportal – Berichtsheft, Urlaub, Ausbildungsplan und Rückmeldungen. Welche du bekommst, stellst du im Portal unter „Konto“ ein. Ein Klick führt zur passenden Seite.',
+      short: 'Das Ausbildungsportal in Teams',
+      full: 'Das Ausbildungsportal direkt in Teams, mit Anmeldung über dein Microsoft-Konto. Benachrichtigungen zu Berichtsheft, Urlaub, Ausbildungsplan und Rückmeldungen erscheinen unter „Aktivität“; welche du bekommst, stellst du im Portal unter „Konto“ ein. Ein Klick führt zur passenden Seite.',
     },
     icons: { color: 'color.png', outline: 'outline.png' },
     accentColor: AKZENT,
     staticTabs: [{ entityId: REITER, name: 'Ausbildungsportal', contentUrl: `${url}/teams/app?ziel={subEntityId}`, websiteUrl: url, scopes: ['personal'] }],
     validDomains: [new URL(url).host],
-    // nötig für Meldungen im Aktivitätsfeed: dieselbe App-Registrierung wie die Anmeldung
-    webApplicationInfo: { id: k.cfg.entra.clientId },
+    // dieselbe App-Registrierung wie die Anmeldung: nötig für Meldungen im Aktivitätsfeed und für die Anmeldung über Teams
+    webApplicationInfo: { id: k.cfg.entra.clientId, resource: teamsRessource(url, k.cfg.entra.clientId) },
     showLoadingIndicator: false,
   };
 }
@@ -195,6 +199,9 @@ function stand(k: Kontext) {
     aktiv: Boolean(k.cfg.teamsAppId),
     version: paket ? `1.0.${paket.stand}` : null,
     clientId: k.cfg.entra?.clientId ?? null,
+    // Anmeldung über Teams: Anwendungs-ID-URI für „API verfügbar machen“; möglich nur mit mitgebauter Bibliothek von Microsoft
+    ressource: k.cfg.entra ? teamsRessource(k.cfg.appUrl, k.cfg.entra.clientId) : null,
+    sso: existsSync(fileURLToPath(new URL('../dist/teams/teams.js', import.meta.url))),
   };
 }
 
@@ -222,21 +229,46 @@ const STIL = `body{margin:0;min-height:100vh;display:grid;place-items:center;fon
 main{max-width:28rem;padding:2rem 16px;text-align:center}
 h1{font-size:1.4rem;margin:0 0 .5rem}
 p{margin:.5rem 0;color:#4b5263}
-a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:1rem;padding:0 1.2rem;border-radius:10px;background:#4338ca;color:#fff;font-weight:600;text-decoration:none}
-a:focus-visible{outline:3px solid #1f2433;outline-offset:3px}
-@media (prefers-color-scheme:dark){body{background:#14161f;color:#e8eaf2}p{color:#b3b8c7}a{background:#a5b4fc;color:#14161f}a:focus-visible{outline-color:#e8eaf2}}`;
+.aus{display:none}
+.knoepfe{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:1rem}
+a,button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 1.2rem;border:0;border-radius:10px;background:#4338ca;color:#fff;font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.schlicht{background:transparent;color:#4338ca;box-shadow:inset 0 0 0 1px #c7cbe0}
+a:focus-visible,button:focus-visible{outline:3px solid #1f2433;outline-offset:3px}
+@media (prefers-color-scheme:dark){body{background:#14161f;color:#e8eaf2}p{color:#b3b8c7}a,button{background:#a5b4fc;color:#14161f}.schlicht{background:transparent;color:#a5b4fc;box-shadow:inset 0 0 0 1px #3a3f55}a:focus-visible,button:focus-visible{outline-color:#e8eaf2}}`;
 const STIL_HASH = createHash('sha256').update(STIL).digest('base64');
 
 /** Wer den Reiter einbetten darf: Teams im Browser, am PC und am Handy (auch über Microsoft 365) */
 export const TEAMS_EINBETTEN = "frame-ancestors https://teams.microsoft.com https://*.teams.microsoft.com https://teams.cloud.microsoft https://*.cloud.microsoft https://*.office.com https://*.microsoft365.com";
 
 /**
- * Inhalt des Reiters in Teams: ein Hinweis und der Knopf „Im Browser öffnen“, der direkt zur passenden Seite führt.
- * Ohne Skript, ohne Anmeldung, ohne Daten – deshalb darf nur diese Seite in Teams eingebettet werden.
+ * Inhalt des Reiters in Teams (/teams/app).
+ *
+ * - Ohne Anmeldung über Teams (Bibliothek von Microsoft nicht mitgebaut): ein Hinweis und „Im Browser öffnen“ – ohne Skript.
+ * - Mit Anmeldung über Teams: einstieg.js meldet per Single Sign-on an (POST /api/auth/teams) und öffnet dann das Ziel im
+ *   Portal – das läuft danach eingebettet in Teams. Kommt der Aufruf aus dem Aktivitätsfeed (Vorsatz „hinweis:“), zeigt er
+ *   dort nur einen Hinweis mit „In der App öffnen“, statt das ganze Portal in den schmalen Bereich zu laden.
+ * Die Seite enthält keine Daten; das Ziel ist immer ein eigener Pfad.
  */
-export function teamsReiter(k: Kontext, ziel: unknown): { html: string; csp: string } {
-  const pfad = sicheresZiel(ziel);
-  const neu = pfad !== '/' || ziel === '/';
+export function teamsReiter(k: Kontext, ziel: unknown, sso = false, abgemeldet = false): { html: string; csp: string } {
+  const roh = typeof ziel === 'string' && ziel.startsWith(HINWEIS) ? ziel.slice(HINWEIS.length) : ziel;
+  const pfad = sicheresZiel(roh);
+  const neu = pfad !== '/' || roh === '/';
+  const browser = esc(k.cfg.appUrl + pfad);
+  const inhalt = sso
+    ? `<p id="status" role="status">${abgemeldet ? 'Du hast dich abgemeldet.' : 'Anmeldung läuft …'}</p>
+<div id="hinweis" class="aus">
+<p>Es gibt Neues für dich im Ausbildungsportal.</p>
+<div class="knoepfe"><button id="zurapp" type="button">In der App öffnen</button><a class="schlicht" href="${browser}" target="_blank" rel="noopener">Im Browser öffnen</a></div>
+</div>
+<div id="fehler" class="${abgemeldet ? '' : 'aus'}">
+<p id="fehlertext" role="alert"></p>
+<div class="knoepfe"><button id="erneut" type="button">${abgemeldet ? 'Wieder anmelden' : 'Noch einmal versuchen'}</button><a class="schlicht" href="${browser}" target="_blank" rel="noopener">Im Browser öffnen</a></div>
+</div>
+<script src="/teams/teams.js"></script>
+<script src="/teams/einstieg.js"></script>`
+    : `<p>${neu ? 'Es gibt Neues für dich im Ausbildungsportal.' : 'Hier kommen deine Benachrichtigungen aus dem Ausbildungsportal an.'}</p>
+<p>Das Portal öffnet sich in deinem Browser.</p>
+<div class="knoepfe"><a href="${browser}" target="_blank" rel="noopener">Im Browser öffnen</a></div>`;
   const html = `<!doctype html>
 <html lang="de">
 <head>
@@ -249,11 +281,11 @@ export function teamsReiter(k: Kontext, ziel: unknown): { html: string; csp: str
 <body>
 <main>
 <h1>Ausbildungsportal</h1>
-<p>${neu ? 'Es gibt Neues für dich im Ausbildungsportal.' : 'Hier kommen deine Benachrichtigungen aus dem Ausbildungsportal an.'}</p>
-<p>Das Portal öffnet sich in deinem Browser.</p>
-<a href="${esc(k.cfg.appUrl + pfad)}" target="_blank" rel="noopener">Im Browser öffnen</a>
+${inhalt}
 </main>
 </body>
 </html>`;
-  return { html, csp: `default-src 'none'; style-src 'sha256-${STIL_HASH}'; base-uri 'none'; form-action 'none'; ${TEAMS_EINBETTEN}` };
+  // die Bibliothek von Microsoft lädt die Liste erlaubter Microsoft-Adressen von res.cdn.office.net
+  const skript = sso ? "script-src 'self'; connect-src 'self' https://res.cdn.office.net; " : '';
+  return { html, csp: `default-src 'none'; ${skript}style-src 'sha256-${STIL_HASH}'; base-uri 'none'; form-action 'none'; ${TEAMS_EINBETTEN}` };
 }
