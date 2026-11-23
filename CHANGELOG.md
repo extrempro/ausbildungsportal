@@ -12,6 +12,7 @@
 
 - **Der Weg über einen Teams-Workflow (`TEAMS_CHAT_WEBHOOK_URL`) entfällt.** Nachrichten gehen jetzt über Microsoft Graph mit der App-Registrierung der Anmeldung (Anwendungsberechtigung `TeamsActivity.Send`). Eine geheime Adresse, mit der man jeder Person im Mandanten schreiben konnte, gibt es damit nicht mehr. Für die Anmeldung in Teams kommt in Entra „API verfügbar machen“ mit dem Bereich `access_as_user` dazu. Einrichtung: `docs/entra-einrichtung.md`, Abschnitt „Freiwillig: Teams-App“. Bis die App eingerichtet ist (`TEAMS_APP_ID`), ist der Haken „Teams“ gesperrt.
 - Mit `TEAMS_APP_ID` darf das Portal in Teams und Microsoft 365 eingebettet werden – sonst nirgends, wie bisher.
+- Neue Abhängigkeit `@microsoft/teams-js` (Bibliothek von Microsoft für Apps in Teams, MIT-Lizenz). Sie wird beim Bauen nach `dist/teams/teams.js` kopiert und vom Portal selbst ausgeliefert – keine fremden Skripte.
 - Nachrichten in Teams nennen gar keine Namen mehr – auch keine Anrede. E-Mails sprechen die Person weiter mit ihrem Vornamen an.
 - Konten, die sich noch nie mit Microsoft angemeldet haben, können Teams nicht wählen; unter „Konto“ steht, warum.
 
