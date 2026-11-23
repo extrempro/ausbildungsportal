@@ -94,8 +94,8 @@ test('Eingaben des Berichts werden geprüft', async () => {
   assert.equal(await status({ betrieb: Array.from({ length: 31 }, () => ({ text: 'x', stunden: 1 })) }), 400);
   assert.equal(await status({ abwesenheit: [{ tag: '2026-11-09', grund: 'urlaub', stunden: 8 }] }), 400, 'Tag außerhalb der Woche');
   assert.equal(await status({ abwesenheit: [{ tag: '2026-11-03', grund: 'faul', stunden: 8 }] }), 400);
-  const ok = koerper(await schreibe(w, w.azubi, WOCHE, { betrieb: [{ text: '', stunden: 0 }, { text: 'A', stunden: 7.6 }] }));
-  assert.deepEqual(ok.inhalt.betrieb, [{ text: 'A', stunden: 7.5 }], 'leere Zeilen fallen weg, Stunden auf Viertelstunden');
+  const ok = koerper(await schreibe(w, w.azubi, WOCHE, { betrieb: [{ text: '', stunden: 0 }, { text: 'A', stunden: 7.8 }, { text: 'B', stunden: 7.63 }] }));
+  assert.deepEqual(ok.inhalt.betrieb, [{ text: 'A', stunden: 7.8 }, { text: 'B', stunden: 7.65 }], 'leere Zeilen fallen weg; 7,8 h bleiben, sonst auf 3 Minuten gerundet');
 });
 
 test('ohne Ausbildungsbeginn lässt sich kein Bericht schreiben', async () => {

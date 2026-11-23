@@ -593,7 +593,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   };
 
   const ist = summeVon(inhalt);
-  const tagSoll = Math.round((b.soll / 5) * 4) / 4;
+  const tagSoll = Math.round((b.soll / 5) * 20) / 20;
   const inSchule = b.plan.some((p) => p.art === 'schule');
   // die Abwesenheit steht hinter den Teilen (Wochenform: 3) bzw. hinter den Tagen
   const tage = inhalt.form === 'tag' ? tageDerWoche(b.montag, inhalt, wochenende) : [];

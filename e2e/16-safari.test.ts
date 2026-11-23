@@ -52,9 +52,12 @@ test(
     await feld.blur();
     assert.equal(await feld.inputValue(), '2,25', 'nach dem Verlassen mit Komma');
     await s.locator('button:has-text("Tätigkeit im Betrieb eintragen")').nth(3).click();
-    await s.getByLabel('Stunden, Donnerstag, Zeile 1').fill('7,6');
+    await s.getByLabel('Stunden, Donnerstag, Zeile 1').fill('7,8');
     await s.getByLabel('Stunden, Donnerstag, Zeile 1').blur();
-    assert.equal(await s.getByLabel('Stunden, Donnerstag, Zeile 1').inputValue(), '7,5', 'auf Viertelstunden gerundet');
+    assert.equal(await s.getByLabel('Stunden, Donnerstag, Zeile 1').inputValue(), '7,8', '7,8 Stunden bleiben (39 h ÷ 5)');
+    await s.getByLabel('Stunden, Donnerstag, Zeile 1').fill('7,82');
+    await s.getByLabel('Stunden, Donnerstag, Zeile 1').blur();
+    assert.equal(await s.getByLabel('Stunden, Donnerstag, Zeile 1').inputValue(), '7,8', 'auf 3 Minuten gerundet');
 
     // gespeichert wird die Zahl
     for (const feldText of await s.locator('.bericht-text textarea').all()) await feldText.fill('Netzwerkkabel verlegt');
@@ -64,7 +67,7 @@ test(
     await api.als(ANNA);
     const b = (await api.ruf('GET', `/api/azubis/${g.anna}/berichte/${montag}`)) as { inhalt: { betrieb: { stunden: number; tag: string }[] } };
     const stunden = b.inhalt.betrieb.map((e) => e.stunden).sort();
-    assert.ok(stunden.includes(2.25) && stunden.includes(7.5), JSON.stringify(stunden));
+    assert.ok(stunden.includes(2.25) && stunden.includes(7.8), JSON.stringify(stunden));
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );
