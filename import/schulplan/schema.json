@@ -1,0 +1,22 @@
+{
+	"type": "object",
+	"properties": {
+		"bloecke": {
+			"type": "array",
+			"maxItems": 200,
+			"items": {
+				"type": "object",
+				"properties": {
+					"klasse": { "type": "string", "maxLength": 40 },
+					"von": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+					"bis": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+					"titel": { "type": "string", "maxLength": 80 }
+				},
+				"required": ["klasse", "von", "bis", "titel"],
+				"additionalProperties": false
+			}
+		}
+	},
+	"required": ["bloecke"],
+	"additionalProperties": false
+}

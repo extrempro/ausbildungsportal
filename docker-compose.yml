@@ -51,3 +51,28 @@ services:
       - ./content:/app/content:ro
       # Lerninhalte (Lernmodul): ein Unterordner je Inhaltspaket, nur lesend – siehe lerninhalte/README.md
       - ./lerninhalte:/app/lerninhalte:ro
+
+  # Dienst „import“ (freiwillig): liest PDFs für Importe, z. B. den Plan der Berufsschule – mit Texterkennung für Scans
+  # und einem lokalen Sprachmodell (Gemma 4 E4B). Ohne Netz, schreibgeschützt, mit Grenzen für CPU und Speicher;
+  # tauscht nur über den Ordner data/import mit der App aus. Ohne den Dienst geht im Portal nur „Text einfügen“.
+  #   Starten:  docker compose --profile import up -d     (fertiges Abbild von ghcr.io, mehrere GB)
+  import:
+    image: ghcr.io/extrempro/ausbildungsportal-import:${IMPORT_VERSION:-latest}
+    container_name: ausbildungsportal-import
+    profiles: [import]
+    restart: unless-stopped
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      THREADS: ${IMPORT_CPUS:-2}
+    volumes:
+      - ./data/import:/arbeit
+    cpus: ${IMPORT_CPUS:-2}
+    mem_limit: ${IMPORT_SPEICHER:-8g}
+    pids_limit: 200
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

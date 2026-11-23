@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.78.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.79.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -207,7 +207,8 @@ Je Azubi ein Plan in Kalenderwochen, von der ersten bis zur letzten Woche der Au
 - **Prüfungen:** Prüfungstermine stehen im Azubi-Profil (Bezeichnung frei, z. B. „Abschlussprüfung Teil 1“). Sie erscheinen in ihrer Woche, im Wochenband und oben in der Kachel „Wochen bis zur Prüfung“; ohne Termin zählt die Kachel bis zum Ende der Ausbildung.
 - **Zuständig:** Bei Einsätzen und Aufgaben lässt sich eine zuständige Person wählen – Ausbilder oder Ausbildungsbeauftragte. Ist es ein Beauftragter, kann der Ausbilder ihn beim Speichern gleich für den Zeitraum zuweisen.
 - **Planbausteine** (früher „Planvorlagen“): Abläufe in Wochen (z. B. „Woche 1–8 Einsatz IT-Support“), je Beruf oder für alle. Ein Baustein wird in den Plan eines Azubis kopiert; danach ist der Plan unabhängig von ihm.
-- **Sammelplanung:** Ausbilder legen Einträge für mehrere Azubis auf einmal an – zum Beispiel einen Schulblock für eine ganze Klasse. Eine Sammelplanung lässt sich als Ganzes zurücknehmen.
+- **Klassen und Schulblöcke:** Jeder Azubi gehört zu einer Klasse seiner Berufsschule (Stammdaten, Profil). Unter **Planung → Schulblöcke** pflegen Ausbilder die Blöcke einmal an der Klasse; sie stehen im Plan jedes Azubis der Klasse und ändern sich mit. Den **Plan der Schule** lesen sie dort ein – als PDF (mit dem Dienst „import“, siehe unten) oder als eingefügten Text –, prüfen die Vorschau und übernehmen.
+- **Sammelplanung:** Ausbilder legen Einträge für mehrere Azubis auf einmal an – zum Beispiel eine gemeinsame Unterweisung. Eine Sammelplanung lässt sich als Ganzes zurücknehmen.
 - Beim Schreiben eines Berichts steht dabei, was laut Plan in der Woche ansteht.
 
 Unten auf jeder Seite führt „Versionshinweise“ zu den Änderungen je Version (aus `CHANGELOG.md`). Hell und dunkel lässt sich im Menü am Namen (am Handy unter „Mehr“) umschalten; „automatisch“ steht unter „Konto“.
@@ -280,6 +281,17 @@ Die App sichert die Datenbank **einmal am Tag** von selbst nach `data/backups/` 
 Das **Protokoll** löscht Einträge nach 90 Tagen von selbst, auch Anmeldungen. Gelöschte Einträge stehen noch in den Sicherungen, bis diese ersetzt sind.
 
 Datenbank-Änderungen kommen als nummerierte Migrationen (`server/migrations/`); vor jeder Migration legt die App automatisch eine Sicherung an.
+
+### Dienst „import“ (freiwillig)
+
+Liest PDFs für Importe – zurzeit den Plan der Berufsschule (Planung → Schulblöcke → „Plan der Schule einlesen“). Er läuft als eigener Container neben der App, wie der Dienst „video“ im Intranet:
+
+- **Was drin ist:** poppler (Text aus PDFs), tesseract mit Deutsch (Texterkennung für Scans) und llama.cpp mit dem Sprachmodell **Gemma 4 E4B** (Google, Apache 2.0), das aus dem Text einen Vorschlag in fester Form macht. Alles mit festem Stand und Prüfsumme.
+- **Abgeschottet:** kein Netz (`network_mode: none`), schreibgeschützt, ohne Linux-Rechte, Grenzen für CPU (`IMPORT_CPUS`, Standard 2) und Speicher (`IMPORT_SPEICHER`, Standard 8g). Er tauscht nur über den Ordner `data/import` mit der App aus. Hochgeladene Dateien und gelesener Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden.
+- **Starten:** `docker compose --profile import up -d`. Das fertige Abbild kommt von `ghcr.io/extrempro/ausbildungsportal-import` (mehrere GB, Version über `IMPORT_VERSION`, Standard `latest`). Es läuft nur auf Servern mit AVX2 (x86-64, etwa seit 2013); eine Grafikkarte braucht es nicht.
+- **Wer entscheidet:** Die Zeiträume liest das Portal zuerst selbst (Muster). Das Sprachmodell ergänzt nur – im Test hat es bei einzelnen Blöcken Daten falsch berechnet. Was allein das Modell findet, steht als „bitte prüfen“ und ist nicht angehakt; Daten, die so nicht im Text stehen, verwirft das Portal.
+- **Ohne den Dienst** lässt sich im Portal keine PDF hochladen – der Knopf ist gesperrt und sagt warum. Text einfügen geht immer; dann sucht das Portal selbst nach Zeiträumen.
+- Ob er läuft, erkennt die App an einem Lebenszeichen im Ordner (`data/import/.bereit`).
 
 ## Aufbau
 
