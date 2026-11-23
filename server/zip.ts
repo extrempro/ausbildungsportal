@@ -89,7 +89,7 @@ export function leseZip(buf: Buffer, g: ZipGrenzen): ZipDatei[] {
   return dateien;
 }
 
-/** Baut eine ZIP-Datei (auf Wunsch gepackt) – für Tests und kleine Beispiele. */
+/** Baut eine ZIP-Datei (auf Wunsch gepackt) – für das Paket der Teams-App, für Tests und kleine Beispiele. */
 export function baueZip(dateien: { name: string; daten: Buffer | string }[], packen = false): Buffer {
   const lokalTeile: Buffer[] = [];
   const verzeichnis: Buffer[] = [];

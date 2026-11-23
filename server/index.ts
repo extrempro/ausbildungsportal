@@ -23,6 +23,8 @@ console.log(
     ? `Microsoft-Anmeldung aktiv. Umleitungs-URI für Entra: ${cfg.appUrl}${REDIRECT_PFAD}`
     : 'Microsoft-Anmeldung nicht eingerichtet (ENTRA_* fehlen) – nur der Super-Admin kann sich anmelden.',
 );
+if (cfg.teamsWebhookAlt) console.warn('HINWEIS: TEAMS_CHAT_WEBHOOK_URL wird nicht mehr genutzt – Benachrichtigungen per Teams kommen jetzt über die Teams-App (README, „Teams-App“). Den Eintrag aus der .env löschen und den Workflow abschalten.');
+console.log(cfg.teamsAppId ? 'Teams-App eingerichtet: Benachrichtigungen per Teams sind möglich.' : 'Teams-App nicht eingerichtet (TEAMS_APP_ID fehlt) – keine Benachrichtigungen per Teams.');
 if (cfg.devAnmeldung) console.warn('WARNUNG: DEV_ANMELDUNG ist an – Anmeldung als Testkonto ohne Passwort möglich.');
 
 /**

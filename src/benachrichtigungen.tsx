@@ -58,7 +58,7 @@ export function Benachrichtigungen({ rolle }: { rolle: Rolle }) {
     setTestFehler('');
     try {
       await api('POST', '/api/ich/benachrichtigungen/test', { weg });
-      melde(weg === 'teams' ? 'Testnachricht gesendet. Sieh in Teams nach – sie kommt vom Absender „Workflows“.' : 'Testnachricht gesendet. Sieh in dein Postfach.');
+      melde(weg === 'teams' ? 'Testnachricht gesendet. Sieh in Teams unter „Aktivität“ nach – sie kommt von der App „Ausbildungsportal“.' : 'Testnachricht gesendet. Sieh in dein Postfach.');
     } catch (e) {
       setTestFehler(`Testnachricht per ${WEG[weg]} nicht gesendet: ${e instanceof Error ? e.message : 'Fehler'}`);
     } finally {
@@ -103,7 +103,7 @@ export function Benachrichtigungen({ rolle }: { rolle: Rolle }) {
               ),
           )}
           <p className="leise klein">
-            Die Nachrichten sprechen dich mit deinem Vornamen an. Andere Namen und Inhalte stehen nicht darin – nur, was passiert ist, und ein Knopf ins Portal. Mehreres kurz nacheinander kommt nach wenigen Minuten als eine Nachricht.
+            In Teams erscheinen die Nachrichten unter „Aktivität“; E-Mails sprechen dich mit deinem Vornamen an. Andere Namen und Inhalte stehen nicht darin – nur, was passiert ist, und der Weg ins Portal. Mehreres kurz nacheinander kommt nach wenigen Minuten als eine Nachricht.
             {daten.mail.adresse && !daten.mail.grund ? ` E-Mails gehen an ${daten.mail.adresse}.` : ''}
           </p>
           {testFehler && (

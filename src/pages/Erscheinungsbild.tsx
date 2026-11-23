@@ -5,6 +5,7 @@ import type { ChangeEvent } from 'react';
 import { api } from '../api';
 import type { Logos } from '../api';
 import { HandbuchLink } from '../handbuchLink';
+import { TeamsApp } from '../teamsApp';
 
 const MAX = 150 * 1024;
 type Schema = 'hell' | 'dunkel';
@@ -78,7 +79,7 @@ function LogoFeld({ schema, logo, ersatz, onGeaendert }: { schema: Schema; logo:
   );
 }
 
-/** Logo des Betriebs – nur für den Super-Admin. Je eines für die helle und die dunkle Darstellung. */
+/** Logo des Betriebs, Begleiter und Teams-App – nur für den Super-Admin. Logo je eines für die helle und die dunkle Darstellung. */
 export function Erscheinungsbild({ logos, onGeaendert }: { logos: Logos; onGeaendert: (l: Logos) => void }) {
   return (
     <>
@@ -91,6 +92,7 @@ export function Erscheinungsbild({ logos, onGeaendert }: { logos: Logos; onGeaen
       <LogoFeld schema="hell" logo={logos.logo} ersatz={null} onGeaendert={onGeaendert} />
       <LogoFeld schema="dunkel" logo={logos.logoDunkel} ersatz={logos.logo} onGeaendert={onGeaendert} />
       <BegleiterSchalter />
+      <TeamsApp />
     </>
   );
 }

@@ -27,12 +27,12 @@ export interface Umgebung {
   logs: string[];
 }
 
-export async function umgebung(env: Record<string, string> = {}, entra: Entra | null = null, sende?: Kontext['sende'], mail?: Kontext['mail']): Promise<Umgebung> {
+export async function umgebung(env: Record<string, string> = {}, entra: Entra | null = null, sende?: Kontext['sende'], mail?: Kontext['mail'], graph?: Kontext['graph']): Promise<Umgebung> {
   const db = await neueDb();
   const cfg = loadConfig({ APP_URL: APP, ADMIN_BENUTZER: 'chef', ADMIN_PASSWORT: 'Start-Passwort-2026!', ...env }, []);
   const uhr = { jetzt: new Date('2026-11-10T09:00:00Z') };
   const logs: string[] = [];
-  const k = await erzeugeKontext(db, cfg, { log: (t) => logs.push(t), jetzt: () => uhr.jetzt, entra, sende: sende ?? (async () => { throw new Error('In Tests geht nichts nach außen'); }), mail: mail ?? (async () => { throw new Error('In Tests geht nichts nach außen'); }) });
+  const k = await erzeugeKontext(db, cfg, { log: (t) => logs.push(t), jetzt: () => uhr.jetzt, entra, sende: sende ?? (async () => { throw new Error('In Tests geht nichts nach außen'); }), mail: mail ?? (async () => { throw new Error('In Tests geht nichts nach außen'); }), graph: graph ?? (async () => { throw new Error('In Tests geht nichts nach außen'); }) });
   return { db, k, cfg, uhr, logs };
 }
 
@@ -77,10 +77,10 @@ export function ruf(
   u: Umgebung,
   methode: string,
   ziel: string,
-  o: { cookies?: Record<string, string>; body?: unknown; origin?: string | null; ip?: string } = {},
+  o: { cookies?: Record<string, string>; body?: unknown; origin?: string | null; ip?: string; headers?: Record<string, string> } = {},
 ): Promise<Antwort> {
   const url = new URL(ziel, APP);
-  const headers: Record<string, string | undefined> = {};
+  const headers: Record<string, string | undefined> = { ...o.headers };
   if (o.origin !== null && methode !== 'GET') headers.origin = o.origin ?? APP;
   const a: Anfrage = { methode, pfad: url.pathname, query: url.searchParams, headers, cookies: o.cookies ?? {}, body: o.body, ip: o.ip ?? '10.0.0.1' };
   return behandle(u.k, a);

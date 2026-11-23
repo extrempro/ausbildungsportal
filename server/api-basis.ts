@@ -1,3 +1,4 @@
+import type { Schluessel } from './teams-sso';
 import type { Config } from './config';
 import type { DB } from './db';
 import type { Entra } from './entra';
@@ -47,7 +48,11 @@ export interface Kontext {
   versuche: Map<string, { anzahl: number; bis: number }>;
   /** Adressen, für die der Hinweis auf eine unpassende APP_URL schon im Log steht */
   gemeldeteHerkunft: Set<string>;
-  /** schickt JSON an eine fremde Adresse (Teams-Webhook); in Tests ersetzt */
+  /** öffentliche Schlüssel von Microsoft für die Anmeldung in der Teams-App; in Tests ersetzt */
+  teamsSchluessel: Schluessel;
+  /** schickt eine Anfrage als App an Microsoft Graph (Teams-App); wirft GraphFehler. In Tests ersetzt */
+  graph: (pfad: string, body: unknown) => Promise<void>;
+  /** schickt JSON an eine fremde Adresse (Teams-Webhook für den Kanal); in Tests ersetzt */
   sende: (url: string, body: unknown) => Promise<{ ok: boolean; status: number }>;
   /** schickt eine Mail über den eingerichteten Mailserver; wirft MailFehler. In Tests ersetzt */
   mail: (m: Mail) => Promise<void>;

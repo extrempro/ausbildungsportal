@@ -133,7 +133,7 @@ export interface Portal {
   stop(): Promise<void>;
 }
 
-export async function startePortal(o: { lernmodul?: (ordner: string) => void; deutsch?: boolean } = {}): Promise<Portal> {
+export async function startePortal(o: { lernmodul?: (ordner: string) => void; deutsch?: boolean; env?: Record<string, string> } = {}): Promise<Portal> {
   const port = await freierPort();
   const url = `http://127.0.0.1:${port}`;
   const ordner = mkdtempSync(join(tmpdir(), 'portal-e2e-'));
@@ -157,6 +157,7 @@ export async function startePortal(o: { lernmodul?: (ordner: string) => void; de
       DEV_ANMELDUNG: 'true',
       ADMIN_BENUTZER: ADMIN.name,
       ADMIN_PASSWORT: ADMIN.start,
+      ...o.env,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

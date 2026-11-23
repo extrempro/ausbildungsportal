@@ -407,11 +407,15 @@ const BENACHRICHTIGUNGEN = (rolle: Rolle): Kapitel => ({
         <li>Für jeden der vier Bereiche wählst du getrennt: per Teams, per E-Mail, beides oder gar nicht. Ein Haken wird sofort gespeichert.</li>
         <li>Du bekommst nur Nachrichten zu dem, was du auch in der Glocke siehst. Was du selbst gemacht hast, wird dir nicht gemeldet.</li>
         <li>
-          <strong>In der Nachricht stehen keine anderen Namen und keine Inhalte.</strong> Sie spricht dich mit deinem Vornamen an und sagt nur, was passiert ist – zum Beispiel „Ein Bericht für KW 46 wurde eingereicht“. Der Knopf „Im Portal öffnen“ führt zur passenden Seite. Dort siehst du alles Weitere.
+          <strong>In der Nachricht stehen keine anderen Namen und keine Inhalte.</strong> Sie sagt nur, was passiert ist – zum Beispiel „Ein Bericht für KW 46 wurde eingereicht“. Eine E-Mail spricht dich mit deinem Vornamen an. Alles Weitere siehst du im Portal.
         </li>
         <li>Passiert mehreres kurz nacheinander, kommt es nach wenigen Minuten als eine Nachricht. Es dauert also etwas, bis sie da ist.</li>
-        <li>Die Nachricht trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Ein farbiger Punkt vor jeder Zeile hilft beim Überfliegen: grün für erledigt, gelb für „wartet auf dich“, rot für „bitte ansehen“.</li>
-        <li>In Teams kommt die Nachricht als Chat vom Absender „Workflows“. E-Mails gehen an die Adresse, mit der du dich anmeldest.</li>
+        <li>
+          <strong>In Teams</strong> kommt die Nachricht von der App „Ausbildungsportal“ und steht unter „Aktivität“ (die Glocke in Teams). Ein Klick darauf zeigt „In der App öffnen“: Dann läuft das Portal direkt in Teams, du bist mit deinem Microsoft-Konto schon angemeldet. Oder du wählst „Im Browser öffnen“. Die App richtet eure IT ein – fehlt sie bei dir, kommt in Teams nichts an.
+        </li>
+        <li>
+          <strong>Die E-Mail</strong> trägt oben „Ausbildungsportal“, den Namen und das Logo eures Betriebs. Ein farbiger Punkt vor jeder Zeile hilft beim Überfliegen: grün für erledigt, gelb für „wartet auf dich“, rot für „bitte ansehen“. Der Knopf „Im Portal öffnen“ führt zur passenden Seite. E-Mails gehen an die Adresse, mit der du dich anmeldest.
+        </li>
         <li>Mit „Testnachricht senden“ probierst du aus, ob und wie die Nachricht bei dir ankommt.</li>
         <li>Ist ein Haken grau, ist dieser Weg in eurem Portal nicht eingerichtet. Darunter steht der Grund. Einrichten kann das nur, wer das Portal betreibt.</li>
         <li>Verlass dich nicht allein darauf: Kommt eine Nachricht einmal nicht an, steht es trotzdem in der Glocke.</li>
@@ -2120,6 +2124,43 @@ const ADMIN: Kapitel[] = [
       <p>
         Unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> (am Handy unter „Mehr“) hinterlegst du das Logo des Betriebs (PNG, JPEG oder WebP, höchstens 150 KB) – eines für die helle und, wenn du möchtest, eines für die dunkle Darstellung. Es steht in der Kopfzeile und auf der Anmeldeseite; „Ausbildungsportal“ bleibt klein daneben stehen.
       </p>
+    ),
+  },
+  {
+    id: 'teams-app',
+    titel: 'Die Teams-App einrichten',
+    gruppe: 'Verwaltung',
+    inhalt: (
+      <>
+        <p>
+          Mit der App „Ausbildungsportal“ läuft das Portal direkt in Teams – angemeldet wird mit dem Microsoft-Konto, ohne erneute Eingabe. Benachrichtigungen per Teams erscheinen unter „Aktivität“. Das Paket der App lädst du unter <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> herunter. Den Rest erledigt, wer Entra und Teams verwaltet.
+        </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>In Entra bekommt die App-Registrierung des Portals die Anwendungsberechtigung „TeamsActivity.Send“ (Microsoft Graph) mit Administratorzustimmung.</li>
+          <li>Ebenfalls in Entra wird unter „API verfügbar machen“ der Bereich „access_as_user“ für Teams angelegt. Die Anwendungs-ID-URI steht unter „Teams-App“.</li>
+          <li>Öffne <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> und klicke unter „Teams-App“ auf „App-Paket herunterladen“.</li>
+          <li>Das Paket wird im Teams Admin Center unter „Apps verwalten“ hochgeladen und per Setup-Richtlinie für alle installiert, die das Portal nutzen.</li>
+          <li>Die App-ID, die unter „Teams-App“ steht, kommt als TEAMS_APP_ID in die Einstellungen des Portals (.env); danach wird das Portal neu gestartet.</li>
+          <li>Unter „Konto“ schickt sich jemand mit Microsoft-Konto eine Testnachricht per Teams.</li>
+        </ol>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="App-Paket">Eine ZIP-Datei mit der Beschreibung der App (manifest.json) und zwei Symbolen. Nur sie wird im Teams Admin Center hochgeladen.</Begriff>
+          <Begriff wort="App-ID">Die feste Kennung der App in Teams. Ändert sie sich, gilt die App als neue App und muss neu verteilt werden.</Begriff>
+          <Begriff wort="Aktivität">Der Bereich in Teams mit der Glocke. Dort stehen die Benachrichtigungen aus dem Portal.</Begriff>
+          <Begriff wort="Single Sign-on">Teams meldet die Person mit ihrem Microsoft-Konto im Portal an – ohne erneute Eingabe. In Teams gilt dafür eine eigene Sitzung; unter „Angemeldete Geräte“ steht sie als „Teams“.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>Ändern sich die Adresse des Portals oder der Name des Betriebs, bekommt das nächste Paket von selbst eine höhere Version. Es wird dann im Teams Admin Center als Aktualisierung hochgeladen.</li>
+          <li>Ohne die App-ID in der .env gehen keine Nachrichten per Teams hinaus, und das Portal lässt sich nicht in Teams öffnen. Bei den Personen ist der Haken „Teams“ dann gesperrt, mit Grund.</li>
+          <li>Klappt die Anmeldung in Teams nicht, zeigt die App „Im Browser öffnen“. Der Grund steht im Log des Portals und im Protokoll.</li>
+          <li>Die Nachrichten nennen keine Namen und keine Inhalte – nur, was passiert ist.</li>
+          <li>Der frühere Weg über einen Teams-Workflow (TEAMS_CHAT_WEBHOOK_URL) wird nicht mehr genutzt. Der Workflow für den Kanal bei neuen Fehlern und Ideen bleibt.</li>
+          <li>Das Herunterladen des Pakets steht im Protokoll.</li>
+        </ul>
+      </>
     ),
   },
   {
