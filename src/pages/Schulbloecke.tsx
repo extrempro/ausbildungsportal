@@ -187,6 +187,11 @@ export function Schulbloecke() {
         Schulblöcke trägst du einmal an der Klasse ein – sie stehen dann im Plan jedes Azubis der Klasse. Verschiebt die Schule einen Block, änderst du ihn hier, und er ändert sich bei allen. Die Azubis erfahren es über die Glocke.{' '}
         <HandbuchLink kapitel="schulbloecke">Schulblöcke der Klassen</HandbuchLink>
       </p>
+      <div className="aktionen links">
+        <Link zu="/planung/schulbloecke/einlesen" className="knopf">
+          Plan der Schule einlesen
+        </Link>
+      </div>
       {!d && <p className="leise">Lädt …</p>}
       {d && klassen === 0 && (
         <p className="hinweis">

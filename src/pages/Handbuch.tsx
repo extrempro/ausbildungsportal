@@ -1484,10 +1484,43 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </dl>
               <h3>Gut zu wissen</h3>
               <ul className="punkte">
+                <li>Den ganzen Plan der Schule kannst du auch einlesen lassen – siehe „Den Plan der Berufsschule einlesen“.</li>
                 <li>Kommt ein Azubi neu in die Klasse, hat er sofort alle ihre Blöcke im Plan. Wechselt er die Klasse, bekommt er die Blöcke der neuen.</li>
                 <li>Die Azubis und ihre Betreuenden erfahren neue und geänderte Blöcke über die Glocke – auf Wunsch auch per Teams oder E-Mail.</li>
                 <li>Ein Block erscheint auch im Jahreskalender, im abonnierten Kalender und als Hinweis im Berichtsheft.</li>
                 <li>Das Anlegen, Ändern und Löschen steht im Protokoll.</li>
+              </ul>
+            </>
+          ),
+        },
+        {
+          id: 'schulplan-einlesen',
+          titel: 'Den Plan der Berufsschule einlesen',
+          gruppe: 'Ausbildungsplan',
+          inhalt: (
+            <>
+              <p>Statt jeden Schulblock abzutippen, liest das Portal den Plan der Schule ein und schlägt die Blöcke je Klasse vor. Du prüfst den Vorschlag und übernimmst, was stimmt.</p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>
+                  <Link zu="/planung/schulbloecke">Planung → Schulblöcke</Link> → „Plan der Schule einlesen“ öffnen und die Berufsschule wählen.
+                </li>
+                <li>Die PDF der Schule hochladen – oder den Text aus PDF, Excel, Mail oder Webseite kopieren, einfügen und „Text einlesen“ wählen.</li>
+                <li>Warten, bis der Plan gelesen ist. Bei einer PDF kann das ein paar Minuten dauern; du kannst die Seite so lange verlassen.</li>
+                <li>Die Vorschau prüfen: Klasse, Zeitraum und Titel je Zeile. Fehlt eine Klasse, legst du sie mit einem Klick an.</li>
+                <li>Mit „Schulblöcke übernehmen“ stehen die angehakten Blöcke an den Klassen und im Plan der Azubis.</li>
+              </ol>
+              <h3>Begriffe</h3>
+              <dl className="begriffe">
+                <Begriff wort="Vorschau">Was das Portal im Plan gefunden hat. Angehakt ist, was sich ohne Weiteres übernehmen lässt; „prüfen“ steht bei allem, was unsicher ist – zum Beispiel ein ergänztes Jahr, Ferien im Zeitraum oder ein gescannter Plan.</Begriff>
+                <Begriff wort="Dienst „import“">Ein eigener Teil des Portals, der PDFs liest – auch gescannte, per Texterkennung – und mit einem Sprachmodell auf dem eigenen Server ordnet. Er hat keinen Zugang zum Internet. Ob er läuft, richtet der Betreiber des Portals ein.</Begriff>
+              </dl>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>Gespeichert wird erst, was du übernimmst. Die hochgeladene Datei und der gelesene Text werden danach gelöscht, spätestens nach 24 Stunden.</li>
+                <li>Läuft der Dienst nicht, lässt sich keine PDF hochladen – der eingefügte Text geht trotzdem. Dann sucht das Portal selbst nach Zeiträumen wie „31.08.–18.09.2026“ oder „KW 5–7 2027“.</li>
+                <li>Ferien, Feiertage und Prüfungen im Plan werden nicht als Schulblock übernommen. Was schon da ist, steht als „schon vorhanden“ und ist nicht angehakt.</li>
+                <li>Handschrift erkennt die Texterkennung oft nicht – dann den Plan lieber abtippen oder als Text einfügen.</li>
               </ul>
             </>
           ),

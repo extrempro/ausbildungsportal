@@ -1,0 +1,13 @@
+Du bekommst den Text aus dem Plan einer Berufsschule, zum Beispiel einen Blockplan, Terminplan oder Jahresplan. Er kann aus einer Tabelle stammen, deren Spalten im Text verrutscht sind.
+
+Antworte nur mit JSON nach dem vorgegebenen Schema, ohne weiteren Text.
+
+bloecke: jeder Zeitraum mit Unterricht in der Schule (Blockunterricht, Schulblock, Berufsschule), je Klasse ein Eintrag. Steht ein Zeitraum für mehrere Klassen, gib ihn für jede Klasse einzeln an.
+
+klasse: der Name der Klasse genau so, wie er im Text steht, zum Beispiel „FI 25a“ oder „IT-25B“. Steht keine Klasse dabei, schreib eine leere Zeichenkette.
+
+von und bis: erster und letzter Tag des Zeitraums als JJJJ-MM-TT. Fehlt im Text das Jahr, nimm das Jahr aus dem Zusammenhang (Schuljahr, Überschrift). Steht nur eine Kalenderwoche da (KW), nimm den Montag dieser Woche als von und den Freitag der letzten Woche als bis.
+
+titel: kurz, zum Beispiel „Blockunterricht“ oder „Block 2“. Steht nichts dabei, schreib „Berufsschule“.
+
+Nimm keine Ferien, Feiertage, Prüfungen, Praktika oder Betriebsphasen auf – nur Zeiträume in der Schule. Erfinde nichts: Was nicht im Text steht, gehört nicht in die Antwort. Nenn keine Namen von Personen.

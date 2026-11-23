@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.78.0 · 23.11.2026
+Stand: Version 0.79.0 · 23.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -43,6 +43,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Einsatz in einer Abteilung weist deren Beauftragte und Stellvertretung für die Dauer automatisch zu.
 - **Planbausteine:** Vorlagen je Beruf. **Sammelplanung:** ein Eintrag oder Baustein für mehrere Azubis auf einmal.
 - **Klassen und Schulblöcke:** Ein Azubi gehört zu einer Klasse seiner Berufsschule (die ganze Ausbildung). Schulblöcke pflegen Ausbilder einmal an der Klasse; sie stehen im Plan jedes Azubis der Klasse und ändern sich mit. Im Plan einzeln geändert oder gelöscht, folgt ein Block dort der Klasse nicht mehr. Neue und geänderte Blöcke stehen in der Glocke.
+- **Plan der Schule einlesen:** PDF hochladen (liest der Dienst „import“: Text, Texterkennung bei Scans, Vorschlag eines lokalen Sprachmodells) oder Text einfügen (das Portal sucht selbst nach Zeiträumen). Vorschau mit Prüfung (Klasse, schon vorhanden, Ferien, genehmigter Urlaub); übernommen wird nur Angehaktes. Aufträge liegen in `data/import/<id>/` und werden nach dem Übernehmen, spätestens nach 24 Stunden gelöscht.
 - **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen; mit Lesemodus.
 
 ### Berichtsheft
@@ -241,6 +242,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | --- | --- | --- |
 | `/planung/sammelplanung` | Sammelplanung | Eintrag oder Baustein für mehrere Azubis |
 | `/planung/schulbloecke` | Schulblöcke | Schulblöcke je Klasse; stehen im Plan aller Azubis der Klasse |
+| `/planung/schulbloecke/einlesen` | Plan der Schule einlesen | PDF oder Text, Vorschau, übernehmen |
 | `/planung/bausteine` | Planbausteine | Vorlagen je Beruf |
 | `/verwaltung/stammdaten` | Stammdaten | Betrieb, Berufe, Schulen mit Klassen, Abteilungen, Firmentermine, Personalstelle, Lernmodul |
 | `/verwaltung/konten` | Konten | Azubis und Beauftragte verwalten |
@@ -258,7 +260,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 163 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 168 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |

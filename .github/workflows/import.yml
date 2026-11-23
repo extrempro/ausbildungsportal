@@ -1,0 +1,45 @@
+# Dienst „import“ (import/): prüft das Abbild bei jeder Änderung daran und veröffentlicht es nach dem Merge auf main
+# als ghcr.io/extrempro/ausbildungsportal-import:<Version> und :latest – der Server lädt es nur herunter.
+name: Dienst import
+
+on:
+  push:
+    branches: [main]
+    paths: [import/**, .github/workflows/import.yml]
+  pull_request:
+    paths: [import/**, .github/workflows/import.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pruefen:
+    # Baut das Abbild (llama.cpp, Sprachmodell) und liest einen erfundenen Blockplan – als PDF und als Scan, ohne Netz
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - name: Abbild bauen und testen
+        run: bash import/ci-test.sh
+
+  veroeffentlichen:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: pruefen
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Bauen und nach ghcr.io schieben
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(node -p "require('./package.json').version")
+          BILD=ghcr.io/extrempro/ausbildungsportal-import
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build -t "$BILD:$V" -t "$BILD:latest" import
+          docker push "$BILD:$V"
+          docker push "$BILD:latest"

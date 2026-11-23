@@ -55,3 +55,37 @@ test(
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
 );
+
+test(
+  'Plan der Schule einlesen: ohne Dienst Text einfügen, Vorschau prüfen, fehlende Klasse anlegen, übernehmen',
+  mitFoto(() => p, 'schulplan-einlesen', async () => {
+    const s = await p.seite(PETRA, HANDY);
+    await oeffne(s, p.url, '/planung/schulbloecke');
+    await s.click('a:has-text("Plan der Schule einlesen")');
+    await s.locator('h1:has-text("Plan der Schule einlesen")').waitFor();
+    // ohne Dienst ist die PDF gesperrt – mit Grund
+    await s.locator('text=PDFs lesen geht gerade nicht').waitFor();
+    assert.ok(await s.locator('input[type=file]').isDisabled());
+    await s.locator('textarea').fill(`Blockplan Schuljahr ${inTagen(0).slice(0, 4)}\nFI 25a  ${tt(inTagen(42))}–${tt(inTagen(56))}\nFI 25c  ${tt(inTagen(70))}–${tt(inTagen(84))}\nHerbstferien ${tt(inTagen(90))}–${tt(inTagen(95))}`);
+    await s.click('button:has-text("Text einlesen")');
+    await s.locator('h2:has-text("Vorschau")').waitFor();
+    assert.match(await text(s, 'main'), /2 Zeiträume aus dem eingefügten Text gelesen/);
+    // FI 25a ist die vorhandene Klasse FI-25a und angehakt; FI 25c gibt es nicht
+    assert.equal(await s.locator('.liste input[type=checkbox]:checked').count(), 1);
+    await s.click('button:has-text("Klasse „FI 25c“ anlegen")');
+    await s.locator('text=Klasse „FI 25c“ angelegt.').waitFor();
+    assert.equal(await s.locator('.liste input[type=checkbox]:checked').count(), 2);
+    assert.equal(await ueberlauf(s), 0);
+    await s.click('button:has-text("2 Schulblöcke übernehmen")');
+    await s.locator('h1:has-text("Schulblöcke")').waitFor();
+    await s.locator('text=2 Schulblöcke übernommen – im Plan von einem Azubi.').waitFor();
+    assert.match(await text(s, 'main'), /FI-25a · 2 Schulblöcke/);
+    assert.match(await text(s, 'main'), /FI 25c · 1 Schulblock · 0 Azubis/);
+    assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
+  }),
+);
+
+/** TT.MM.JJJJ */
+function tt(iso: string): string {
+  return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+}

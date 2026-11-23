@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.79.0] – 2026-11-23
+
+### Neu
+
+- **Plan der Schule einlesen:** Unter „Planung → Schulblöcke“ lesen Ausbilder den Plan der Berufsschule ein – als PDF hochladen oder den Text einfügen (aus PDF, Excel, Mail oder Webseite). Das Portal schlägt die Schulblöcke je Klasse vor. In der Vorschau steht, was schon vorhanden ist, in Ferien fällt oder genehmigten Urlaub berührt; fehlende Klassen lassen sich mit einem Klick anlegen. Übernommen wird nur, was angehakt ist.
+- **Dienst „import“ (freiwillig):** ein eigener Container, der PDFs liest – auch gescannte, per Texterkennung – und mit einem Sprachmodell auf dem eigenen Server (Gemma 4 E4B) ordnet. Ohne Netz, schreibgeschützt, mit Grenzen für CPU und Speicher. Starten mit `docker compose --profile import up -d`; das fertige Abbild kommt von ghcr.io. Ohne den Dienst geht „Text einfügen“, PDFs sind dann gesperrt.
+
 ## [0.78.0] – 2026-11-23
 
 ### Neu
