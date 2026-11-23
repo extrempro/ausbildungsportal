@@ -40,6 +40,7 @@ jobs:
           V=$(node -p "require('./package.json').version")
           BILD=ghcr.io/extrempro/ausbildungsportal-import
           echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker build -t "$BILD:$V" -t "$BILD:latest" import
+          docker build --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
+            --label org.opencontainers.image.version="$V" -t "$BILD:$V" -t "$BILD:latest" import
           docker push "$BILD:$V"
           docker push "$BILD:latest"

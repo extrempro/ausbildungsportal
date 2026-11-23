@@ -1,0 +1,11 @@
+# Abbilder selbst aus dem Quelltext bauen statt von ghcr.io zu laden (Entwicklung, CI, eigene Änderungen):
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+# Der Dienst „import“ (Profil import) lässt sich ebenso selbst bauen – das dauert lange (llama.cpp, Sprachmodell):
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml --profile import up -d --build
+services:
+  app:
+    build: .
+    pull_policy: build
+  import:
+    build: ./import
+    pull_policy: build

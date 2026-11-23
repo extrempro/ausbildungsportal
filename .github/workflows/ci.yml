@@ -61,6 +61,7 @@ jobs:
 
   docker:
     # Baut das Image und prüft, dass der Container startet, gesund wird und seine Daten behält.
+    # Gebaut wird aus dem Quelltext (docker-compose.build.yml) – nicht das veröffentlichte Abbild von ghcr.io.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -74,7 +75,10 @@ jobs:
       # Bewusst kein Vorbereiten von ./data: Docker legt den Ordner als root an – genau der Fall,
       # den der Container beim Start selbst richten muss.
       - name: Bauen und starten
-        run: docker compose up -d --build
+        run: |
+          # ab hier alle Befehle mit der Datei zum Selbstbauen
+          echo "COMPOSE_FILE=docker-compose.yml:docker-compose.build.yml" >> "$GITHUB_ENV"
+          docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
       - name: Warten, bis der Container gesund ist
         run: |
           for i in $(seq 1 45); do

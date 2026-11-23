@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.79.1] – 2026-11-23
+
+### Geändert
+
+- **Fertiges Abbild für das Portal:** Das Portal kommt jetzt wie der Dienst „import“ als fertiges Abbild von ghcr.io (`ghcr.io/extrempro/ausbildungsportal`, Tags `latest` und die Version). Starten und Update gehen ohne Bauen auf dem Server: `git pull`, `docker compose pull`, `docker compose up -d`. Eine feste Version lässt sich mit `PORTAL_VERSION` in der `.env` wählen. Wer selbst bauen will, nimmt zusätzlich `docker-compose.build.yml`.
+
 ## [0.79.0] – 2026-11-23
 
 ### Neu
