@@ -2,12 +2,13 @@
 # Dienst „import“ des Ausbildungsportals: liest hochgeladene PDFs und eingefügte Texte und macht daraus einen Vorschlag.
 # Läuft im eigenen Container ohne Netz; Austausch mit dem Portal nur über den Arbeitsordner (im Portal: data/import):
 #   <ARBEIT>/.bereit              Lebenszeichen des Dienstes (wird bei jeder Runde erneuert)
-#   <ARBEIT>/<id>/art             was gelesen wird: schulplan (schreibt das Portal)
+#   <ARBEIT>/<id>/art             was gelesen wird: schulplan oder berichtsheft (schreibt das Portal)
 #   <ARBEIT>/<id>/eingang.pdf     hochgeladene PDF – oder eingang.txt mit eingefügtem Text (schreibt das Portal)
 #   <ARBEIT>/<id>/auftrag         Auftrag liegt vor (schreibt das Portal zuletzt)
 #   <ARBEIT>/<id>/laeuft          wird gerade gelesen
 #   <ARBEIT>/<id>/fortschritt     Prozent (0–100)
-#   <ARBEIT>/<id>/text.txt        gelesener Text (das Portal sucht darin auch selbst nach Mustern)
+#   <ARBEIT>/<id>/text.txt        gelesener Text, Seiten durch Seitenvorschub getrennt (das Portal sucht darin auch selbst nach Mustern)
+#   <ARBEIT>/<id>/seite-N.pdf     nur berichtsheft: die einzelnen Seiten der PDF (das Portal hängt sie an die Berichte)
 #   <ARBEIT>/<id>/ergebnis.json   Vorschlag des Sprachmodells (prüft das Portal)
 #   <ARBEIT>/<id>/fertig          modell=ja|nein, quelle=pdf|texterkennung|text
 #   <ARBEIT>/<id>/fehler          kurze Meldung
@@ -27,6 +28,7 @@ case "$THREADS" in "" | *[!0-9]* | 0) THREADS=1 ;; esac
 fehler() {
 	printf '%s\n' "$2" >"$1/fehler"
 	rm -f "$1/eingang.pdf" "$1/eingang.txt" "$1/laeuft" "$1/ausgabe.txt" "$1/llama.log" "$1/eingabe.txt"
+	rm -f "$1"/seite-*.pdf
 	rm -rf "${TMPDIR:-/tmp}/seiten-${1##*/}"
 }
 
@@ -59,8 +61,9 @@ pdf_lesen() {
 			[ -f "$bild" ] || continue
 			i=$((i + 1))
 			fortschritt "$d" $((10 + 40 * i / n))
+			# Seiten wie bei pdftotext durch einen Seitenvorschub trennen
+			[ "$i" -gt 1 ] && printf '\f' >>"$d/text.txt"
 			tesseract "$bild" stdout -l deu --psm 6 2>/dev/null >>"$d/text.txt"
-			printf '\n' >>"$d/text.txt"
 		done
 		rm -rf "$tmp"
 		echo "texterkennung"
@@ -96,10 +99,14 @@ lesen() {
 	: >"$d/laeuft"
 	fortschritt "$d" 5
 	art=$(head -c 40 "$d/art" 2>/dev/null | tr -cd 'a-z')
-	case "$art" in schulplan) ;; *) fehler "$d" 'Unbekannte Art des Auftrags.'; return ;; esac
+	case "$art" in schulplan | berichtsheft) ;; *) fehler "$d" 'Unbekannte Art des Auftrags.'; return ;; esac
 	if [ -f "$d/eingang.pdf" ]; then
 		quelle=$(pdf_lesen "$d") || { fehler "$d" 'Die PDF lässt sich nicht lesen.'; return; }
 		[ "$quelle" = zu_viele ] && { fehler "$d" "Die PDF hat mehr als $MAX_SEITEN Seiten."; return; }
+		# alte Berichte: die Seiten einzeln ablegen – das Portal hängt jeder Woche ihre Originalseite an
+		if [ "$art" = berichtsheft ]; then
+			pdfseparate "$d/eingang.pdf" "$d/seite-%d.pdf" 2>/dev/null || rm -f "$d"/seite-*.pdf
+		fi
 	elif [ -f "$d/eingang.txt" ]; then
 		cp "$d/eingang.txt" "$d/text.txt"
 		quelle=text

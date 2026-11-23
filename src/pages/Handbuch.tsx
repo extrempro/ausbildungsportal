@@ -717,6 +717,44 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'berichte-einlesen',
+    titel: 'Alte Berichte einlesen',
+    gruppe: 'Berichtsheft',
+    inhalt: (
+      <>
+        <p>Hast du dein Berichtsheft vor dem Portal auf Papier oder in einer Datei geführt, musst du nichts abtippen: Das Portal liest die alten Berichte ein und macht daraus Entwürfe. Du findest es im Berichtsheft unter „Alte Berichte einlesen“.</p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>
+            <Link zu="/berichtsheft/einlesen">Berichtsheft → „Alte Berichte einlesen“</Link> öffnen.
+          </li>
+          <li>Die PDF hochladen – auch eingescannte Seiten gehen. Oder den Text der Berichte kopieren, einfügen und „Text einlesen“ wählen.</li>
+          <li>Warten, bis alles gelesen ist. Bei einer PDF kann das ein paar Minuten dauern; du kannst die Seite so lange verlassen.</li>
+          <li>Die Vorschau prüfen: je Woche die Kalenderwoche, die Stunden und unter „Einträge ansehen“ den Text. Dann „Wochen als Entwurf übernehmen“.</li>
+          <li>Jeden Entwurf einmal öffnen und verbessern, wo nötig – zum Beispiel fehlende Stunden oder schlecht gelesene Wörter.</li>
+          <li>Unten auf der Seite bei „Eingelesene Entwürfe einreichen“ die Wochen anhaken und einreichen. Dein Ausbilder zeichnet sie ab.</li>
+        </ol>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Vorschau">Was das Portal erkannt hat. Angehakt ist, was sich übernehmen lässt. „prüfen“ steht bei allem, was unsicher ist – zum Beispiel bei einem Scan oder wenn Stunden fehlen.</Begriff>
+          <Begriff wort="Eingelesen">So steht es im Verlauf des Berichts. Auch dein Ausbilder sieht es beim Abzeichnen und kann den Bericht mit der Originalseite vergleichen.</Begriff>
+          <Begriff wort="Original Seite">Bei einer PDF hängt an jedem Bericht die Seite, aus der er stammt – unter „Fotos und Dateien“.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Bis zum Einreichen siehst nur du die Entwürfe.</strong> Die hochgeladene Datei und der gelesene Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden.
+          </li>
+          <li>Das Portal braucht bei jedem Bericht einen Zeitraum („Woche vom 07.09.2026 bis 11.09.2026“) oder die Kalenderwoche mit Jahr („KW 38/2026“). Daran erkennt es die Wochen.</li>
+          <li>Wochen, für die es schon einen Bericht gibt, bleiben, wie sie sind. Wochen vor deiner Ausbildung oder in der Zukunft lassen sich nicht übernehmen.</li>
+          <li>Handschrift liest die Texterkennung oft nur teilweise. Dann hilft die Originalseite am Bericht: Du verbesserst den Text im Entwurf.</li>
+          <li>Zeilen über Krankheit übernimmt das Portal nicht. Trag den Tag im Bericht unter „Abwesenheit“ als „abwesend“ ein.</li>
+          <li>Eine PDF darf höchstens 10 MB und 40 Seiten haben. Ein dickeres Heft liest du in Teilen ein. PDFs gehen nur, wenn der Betreiber den Dienst „import“ eingerichtet hat – Text einfügen geht immer.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'urlaub',
     titel: 'Urlaub beantragen',
     gruppe: 'Urlaub',
@@ -1177,6 +1215,9 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </li>
         </ol>
         <p>Ein abgezeichneter Bericht ist gesperrt. {rolle === 'ausbilder' ? 'Du kannst die Abzeichnung mit Begründung aufheben; der Bericht geht dann zurück an den Azubi.' : 'Aufheben kann die Abzeichnung nur ein Ausbilder.'}</p>
+        <p>
+          <strong>Eingelesen:</strong> So markiert sind alte Berichte, die der Azubi aus einer PDF oder einem Text eingelesen hat. Bei einer PDF hängt die Originalseite unter „Fotos und Dateien“ – vergleich den Bericht damit, bevor du abzeichnest.
+        </p>
         <p className="leise klein">Hinweis für Rückmeldungen: Viele Azubis schreiben zum ersten Mal Berichte. Ein Beispiel („Schreib dazu, womit du gearbeitet hast“) hilft mehr als „zu ungenau“.</p>
       </>
     ),

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Prüft das Abbild des Dienstes „import“ im CI: ohne Netz, schreibgeschützt, als Benutzer 1000.
-# Liest einen erfundenen Blockplan als digitale PDF und als Scan (Texterkennung) und prüft den Vorschlag des Sprachmodells.
+# Liest einen erfundenen Blockplan und erfundene alte Berichte – je als digitale PDF und als Scan (Texterkennung) –
+# und prüft den Vorschlag des Sprachmodells.
 #   bash import/ci-test.sh   (baut ghcr.io/extrempro/ausbildungsportal-import:latest)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -16,10 +17,10 @@ trap 'docker run --rm -v "$ARBEIT:/a" --entrypoint sh "$IMAGE" -c "rm -rf /a/* /
 chmod 777 "$ARBEIT"
 
 lies() {
-	local id=$1 datei=$2
+	local id=$1 datei=$2 art=${3:-schulplan}
 	mkdir -m 777 "$ARBEIT/$id"
 	cp "import/test/$datei" "$ARBEIT/$id/eingang.pdf"
-	echo schulplan >"$ARBEIT/$id/art"
+	echo "$art" >"$ARBEIT/$id/art"
 	: >"$ARBEIT/$id/auftrag"
 	chmod 666 "$ARBEIT/$id"/*
 	docker run --rm --network none --read-only --tmpfs /tmp --cap-drop ALL \
@@ -27,8 +28,22 @@ lies() {
 	[ -f "$ARBEIT/$id/fehler" ] && fehler "$datei: $(cat "$ARBEIT/$id/fehler")"
 	[ -f "$ARBEIT/$id/fertig" ] || fehler "$datei: keine Datei fertig"
 	[ -e "$ARBEIT/$id/eingang.pdf" ] && fehler "$datei: hochgeladene Datei nicht gelöscht"
-	grep -q '31.08' "$ARBEIT/$id/text.txt" || fehler "$datei: Text nicht gelesen"
 	grep -q 'modell=ja' "$ARBEIT/$id/fertig" || fehler "$datei: kein Vorschlag des Sprachmodells: $(cat "$ARBEIT/$id/fertig")"
+	if [ "$art" = berichtsheft ]; then
+		grep -q 'Netzwerkkabel' "$ARBEIT/$id/text.txt" || fehler "$datei: Text nicht gelesen"
+		[ "$(tr -cd '\f' <"$ARBEIT/$id/text.txt" | wc -c)" -ge 1 ] || fehler "$datei: Seiten nicht getrennt"
+		[ -f "$ARBEIT/$id/seite-1.pdf" ] && [ -f "$ARBEIT/$id/seite-2.pdf" ] || fehler "$datei: Seiten nicht einzeln abgelegt"
+		python3 - "$ARBEIT/$id/ergebnis.json" <<'PY' || fehler "$datei: Vorschlag passt nicht"
+import json, sys
+w = json.load(open(sys.argv[1]))["wochen"]
+print(json.dumps(w, ensure_ascii=False))
+assert any(x["von"] == "2026-09-07" and x["betrieb"] for x in w), "Woche vom 07.09.2026 fehlt"
+assert not any("Muster" in e["text"] for x in w for t in ("betrieb", "unterweisung", "schule") for e in x[t]), "Name im Vorschlag"
+PY
+		echo "OK: $datei ($(grep quelle "$ARBEIT/$id/fertig"))"
+		return
+	fi
+	grep -q '31.08' "$ARBEIT/$id/text.txt" || fehler "$datei: Text nicht gelesen"
 	python3 - "$ARBEIT/$id/ergebnis.json" <<'PY' || fehler "$datei: Vorschlag passt nicht"
 import json, sys
 b = json.load(open(sys.argv[1]))["bloecke"]
@@ -45,5 +60,10 @@ grep -q 'quelle=pdf' "$ARBEIT/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/fertig" || fehler
 echo "== gescannte PDF (Texterkennung)"
 lies bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb scan.pdf
 grep -q 'quelle=texterkennung' "$ARBEIT/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/fertig" || fehler "Scan nicht per Texterkennung gelesen"
+echo "== alte Berichte, digitale PDF"
+lies cccccccccccccccccccccccccccccccc berichte.pdf berichtsheft
+echo "== alte Berichte, gescannt (Texterkennung)"
+lies dddddddddddddddddddddddddddddddd berichte-scan.pdf berichtsheft
+grep -q 'quelle=texterkennung' "$ARBEIT/dddddddddddddddddddddddddddddddd/fertig" || fehler "Scan der Berichte nicht per Texterkennung gelesen"
 [ -f "$ARBEIT/.bereit" ] || fehler "kein Lebenszeichen .bereit"
 echo "OK: Dienst import"

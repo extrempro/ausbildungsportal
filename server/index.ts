@@ -9,7 +9,7 @@ import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
 import { lernpakete } from './lernen';
 import { verschickeFaellige } from './benachrichtigung';
-import { bereiteImportOrdner } from './schulplan';
+import { bereiteImportOrdner } from './import-dienst';
 
 const cfg = loadConfig();
 wechsleZumBesitzer(cfg.dataDir);

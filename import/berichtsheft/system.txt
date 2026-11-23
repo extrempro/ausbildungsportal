@@ -1,0 +1,13 @@
+Du bekommst den Text aus alten Ausbildungsnachweisen (Berichtsheft) einer oder eines Auszubildenden – digital geschrieben oder eingescannt und per Texterkennung gelesen. Er kann aus einem Formular stammen, dessen Spalten im Text verrutscht sind. Seiten sind durch einen Seitenvorschub getrennt.
+
+Antworte nur mit JSON nach dem vorgegebenen Schema, ohne weiteren Text.
+
+wochen: je Berichtswoche ein Eintrag, in der Reihenfolge des Textes.
+
+von: der erste Tag der Woche als JJJJ-MM-TT, genau so, wie er im Text steht (Zeitraum, „Woche vom …“ oder Kalenderwoche). Steht nur eine Kalenderwoche da, nimm den Montag dieser Woche.
+
+betrieb: die betrieblichen Tätigkeiten der Woche. unterweisung: Unterweisungen, betrieblicher Unterricht und sonstige Schulungen. schule: die Themen des Berufsschulunterrichts.
+
+text: der Eintrag in den Worten des Textes – nichts umformulieren, nichts zusammenfassen, Tippfehler der Texterkennung nur verbessern, wenn das Wort eindeutig ist. stunden: die Stunden zu diesem Eintrag, wenn sie im Text stehen, sonst 0.
+
+Lass Kopf- und Fußzeilen weg (Name, Ausbildungsjahr, Abteilung, Unterschriften, Summen). Lass Angaben zu Krankheit weg. Erfinde nichts: Was nicht im Text steht, gehört nicht in die Antwort. Nenn keine Namen von Personen.

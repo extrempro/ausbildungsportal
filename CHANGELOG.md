@@ -1,5 +1,20 @@
 # Änderungen
 
+## [0.80.0] – 2026-11-23
+
+### Neu
+
+- **Alte Berichte einlesen:** Wer sein Berichtsheft bisher auf Papier oder in einer Datei geführt hat, muss nichts abtippen. Unter „Berichtsheft → Alte Berichte einlesen“ lädst du die Berichte als PDF hoch – auch eingescannt – oder fügst den Text ein. Das Portal erkennt die Wochen, die drei Teile und die Stunden und zeigt eine Vorschau. Die angehakten Wochen werden Entwürfe; bei einer PDF hängt die Originalseite am Bericht. Danach prüfst du sie und reichst sie auf einmal ein. Zeilen über Krankheit übernimmt das Portal nicht.
+- **Abzeichnen:** Eingelesene Berichte sind als „eingelesen“ markiert, damit Ausbilder sie mit der Originalseite vergleichen können. Im Verlauf des Berichts steht „aus alten Berichten eingelesen“.
+
+### Geändert
+
+- **Dienst „import“:** liest jetzt auch alte Berichte und legt dafür die Seiten einer PDF einzeln ab. Gescannte Seiten sind im gelesenen Text getrennt.
+
+### Behoben
+
+- **Dienst „import“ ohne Schreibrecht:** Legte Docker den Ordner `data/import` beim ersten Start selbst an, gehörte er root, und der Dienst konnte kein Lebenszeichen schreiben – im Portal hieß es dann, PDFs lesen gehe nicht. Jetzt legt die App den Ordner beim Start selbst an, der Dienst startet erst nach ihr, und beide sagen im Log deutlich, was zu tun ist.
+
 ## [0.79.1] – 2026-11-23
 
 ### Geändert

@@ -8,6 +8,7 @@ import { Azubis } from './pages/Azubis';
 import { BerichtSeite } from './pages/Bericht';
 import { Abzeichnen } from './pages/Abzeichnen';
 import { BerichteDruck, Berichtsheft } from './pages/Berichtsheft';
+import { BerichteEinlesen } from './pages/BerichteEinlesen';
 import { Konten } from './pages/Konten';
 import { PlanSeite } from './pages/Plan';
 import { Sammelplanung } from './pages/Sammelplanung';
@@ -385,6 +386,7 @@ export function App() {
   let seite;
   if (pfad === '/' && konto.rolle === 'azubi') seite = <PlanSeite key={konto.id} azubiId={konto.id} />;
   else if (pfad === '/' && konto.rolle !== 'admin') seite = <Start konto={konto} />;
+  else if (pfad === '/berichtsheft/einlesen' && konto.rolle === 'azubi') seite = <BerichteEinlesen key={konto.id} azubiId={konto.id} />;
   else if (heft && heftAzubi !== null && heft[2] === 'druck') seite = <BerichteDruck key={heftAzubi} azubiId={heftAzubi} />;
   else if (heft && heftAzubi !== null && heft[2]) seite = <BerichtSeite key={`${heftAzubi}-${heft[2]}`} azubiId={heftAzubi} montag={heft[2]} eigenes={!heft[1]} />;
   else if (heft && heftAzubi !== null) seite = <Berichtsheft key={heftAzubi} azubiId={heftAzubi} />;

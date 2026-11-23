@@ -134,6 +134,11 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
           )}
         </section>
       )}
+      {daten.eigenes && !daten.beginnFehlt && (
+        <p className="leise klein">
+          Dein Berichtsheft bisher auf Papier oder in einer Datei geführt? <Link zu="/berichtsheft/einlesen">Alte Berichte einlesen</Link>
+        </p>
+      )}
       {daten.eigenes && !hatUnterschrift && (
         <p className="hinweis">
           Bevor du einen Bericht einreichen kannst, brauchst du eine Unterschrift. <Link zu="/konto">Jetzt unter „Konto“ unterschreiben</Link>

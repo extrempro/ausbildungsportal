@@ -74,6 +74,7 @@ const VERLAUF_TEXT: Record<string, string> = {
   zurueckgegeben: 'zurückgegeben',
   abgezeichnet: 'abgezeichnet',
   abzeichnung_aufgehoben: 'Abzeichnung aufgehoben',
+  eingelesen: 'aus alten Berichten eingelesen',
 };
 
 function plusTage(iso: string, n: number): string {

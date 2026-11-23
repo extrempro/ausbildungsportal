@@ -3,7 +3,8 @@ import { mkdirSync, mkdtempSync, readdirSync, utimesSync, writeFileSync } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { ausModell, bereiteImportOrdner, erkenneBloecke, zusammenfuehren } from '../schulplan';
+import { bereiteImportOrdner } from '../import-dienst';
+import { ausModell, erkenneBloecke, zusammenfuehren } from '../schulplan';
 import type { BenutzerZeile } from '../typen';
 import { koerper, konto, ruf, sitzung, umgebung, zustaendig } from './hilfe';
 import type { Umgebung } from './hilfe';
@@ -177,7 +178,6 @@ test('Start: die App legt den Austauschordner für den Dienst selbst an', () => 
   const warnungen: string[] = [];
   bereiteImportOrdner(dir, (t) => warnungen.push(t));
   assert.ok(readdirSync(dir).includes('import'));
-  assert.deepEqual(warnungen, []);
   bereiteImportOrdner(dir, (t) => warnungen.push(t)); // zweiter Start: nichts passiert
-  assert.deepEqual(warnungen, []);
+  assert.equal(warnungen.length, 0);
 });
