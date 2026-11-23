@@ -9,10 +9,12 @@ import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
 import { lernpakete } from './lernen';
 import { verschickeFaellige } from './benachrichtigung';
+import { bereiteImportOrdner } from './schulplan';
 
 const cfg = loadConfig();
 wechsleZumBesitzer(cfg.dataDir);
 const db = await openDatabase(cfg.dataDir);
+bereiteImportOrdner(cfg.dataDir);
 const k = await erzeugeKontext(db, cfg);
 
 if (cfg.production && !cfg.sicher && !/^http:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(cfg.appUrl)) {

@@ -294,7 +294,7 @@ Liest PDFs für Importe – zurzeit den Plan der Berufsschule (Planung → Schul
 - **Starten:** `docker compose --profile import up -d`. Das fertige Abbild kommt von `ghcr.io/extrempro/ausbildungsportal-import` (mehrere GB, Version über `IMPORT_VERSION`, Standard `latest`). Beim Update `docker compose --profile import pull`. Es läuft nur auf Servern mit AVX2 (x86-64, etwa seit 2013); eine Grafikkarte braucht es nicht.
 - **Wer entscheidet:** Die Zeiträume liest das Portal zuerst selbst (Muster). Das Sprachmodell ergänzt nur – im Test hat es bei einzelnen Blöcken Daten falsch berechnet. Was allein das Modell findet, steht als „bitte prüfen“ und ist nicht angehakt; Daten, die so nicht im Text stehen, verwirft das Portal.
 - **Ohne den Dienst** lässt sich im Portal keine PDF hochladen – der Knopf ist gesperrt und sagt warum. Text einfügen geht immer; dann sucht das Portal selbst nach Zeiträumen.
-- Ob er läuft, erkennt die App an einem Lebenszeichen im Ordner (`data/import/.bereit`).
+- Ob er läuft, erkennt die App an einem Lebenszeichen im Ordner (`data/import/.bereit`). Den Ordner legt die App beim Start selbst an; der Dienst startet erst nach ihr. Steht im Log `can't create /arbeit/.bereit` oder „darf der Dienst nicht schreiben“, gehört der Ordner root: `sudo chown -R 1000:1000 data/import`.
 
 ## Aufbau
 

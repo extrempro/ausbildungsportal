@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fehler, koerper } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
@@ -229,6 +229,20 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
 
 export function importOrdner(k: Kontext): string {
   return join(k.cfg.dataDir, 'import');
+}
+
+/**
+ * Beim Start: den Austauschordner selbst anlegen – sonst legt ihn Docker für den Dienst „import“ als root an,
+ * und weder der Dienst noch die App dürfen dort schreiben. Gehört er schon root, steht im Log, was zu tun ist.
+ */
+export function bereiteImportOrdner(dataDir: string, warne: (text: string) => void = console.warn): void {
+  const ordner = join(dataDir, 'import');
+  try {
+    mkdirSync(ordner, { recursive: true });
+    accessSync(ordner, constants.W_OK);
+  } catch {
+    warne(`WARNUNG: In ${ordner} darf die App nicht schreiben – PDFs lesen (Dienst „import“) geht so nicht. Auf dem Server im Ordner des Portals: sudo chown -R 1000:1000 data/import`);
+  }
 }
 
 export function dienstBereit(k: Kontext): boolean {

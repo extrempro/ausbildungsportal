@@ -119,6 +119,12 @@ lesen() {
 	rm -f "$d/laeuft" "$d/fortschritt"
 }
 
+# Darf der Dienst nicht in den Arbeitsordner schreiben (meist: Docker hat data/import als root angelegt),
+# sagt er es deutlich und wartet – nach dem chown geht es ohne Neustart weiter.
+until : >"$ARBEIT/.bereit" 2>/dev/null; do
+	echo "FEHLER: In $ARBEIT darf der Dienst nicht schreiben. Auf dem Server im Ordner des Portals: sudo chown -R 1000:1000 data/import – der Dienst versucht es jede Minute neu."
+	sleep 60
+done
 echo "Dienst import bereit, Arbeitsordner $ARBEIT"
 while :; do
 	: >"$ARBEIT/.bereit" 2>/dev/null

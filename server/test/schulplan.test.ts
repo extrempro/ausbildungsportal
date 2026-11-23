@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readdirSync, utimesSync, writeFileSync } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { ausModell, erkenneBloecke, zusammenfuehren } from '../schulplan';
+import { ausModell, bereiteImportOrdner, erkenneBloecke, zusammenfuehren } from '../schulplan';
 import type { BenutzerZeile } from '../typen';
 import { koerper, konto, ruf, sitzung, umgebung, zustaendig } from './hilfe';
 import type { Umgebung } from './hilfe';
@@ -170,4 +170,14 @@ test('Schulplan: mit Dienst ein Auftrag im Arbeitsordner – nur für die eigene
   assert.equal((await ruf(w.u, 'DELETE', `/api/schulbloecke/einlesen/${f}`, { cookies: c })).status, 200);
   assert.equal((await ruf(w.u, 'GET', `/api/schulbloecke/einlesen/${f}`, { cookies: c })).status, 404);
   assert.equal((await ruf(w.u, 'GET', '/api/schulbloecke/einlesen/../../etc', { cookies: c })).status, 404);
+});
+
+test('Start: die App legt den Austauschordner für den Dienst selbst an', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ap-import-'));
+  const warnungen: string[] = [];
+  bereiteImportOrdner(dir, (t) => warnungen.push(t));
+  assert.ok(readdirSync(dir).includes('import'));
+  assert.deepEqual(warnungen, []);
+  bereiteImportOrdner(dir, (t) => warnungen.push(t)); // zweiter Start: nichts passiert
+  assert.deepEqual(warnungen, []);
 });
