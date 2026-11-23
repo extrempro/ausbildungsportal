@@ -3,6 +3,7 @@ import { merkeAktivitaet } from './aktivitaet';
 import { allgemeinesPaketId, lernpakete, paketListe, setzeAllgemeinesPaket } from './lernen';
 import { planerDesBerufs, planerDesPakets } from './planer';
 import { Fehler, holeBenutzer, idAus, istObjekt, koerper, text } from './api-basis';
+import { alleKlassen, gleicheSchulbloeckeAb, klasseVon } from './klassen';
 import type { Ctx, Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { heute } from './datum';
@@ -52,6 +53,7 @@ interface ProfilZeile {
   benutzer_id: number;
   beruf_id: number | null;
   berufsschule_id: number | null;
+  klasse_id: number | null;
   ausbilder_id: number | null;
   ausbildungsbeginn: string;
   vertragsende: string;
@@ -74,6 +76,8 @@ export interface Pruefung {
 export interface Profil {
   berufId: number | null;
   berufsschuleId: number | null;
+  /** Klasse an der Berufsschule – an ihr hängen die Schulblöcke (bleibt die ganze Ausbildung) */
+  klasseId: number | null;
   ausbilderId: number | null;
   ausbildungsbeginn: string;
   vertragsende: string;
@@ -95,6 +99,7 @@ const STANDARD_REGELDAUER = 36;
 const LEERES_PROFIL: Profil = {
   berufId: null,
   berufsschuleId: null,
+  klasseId: null,
   ausbilderId: null,
   ausbildungsbeginn: '',
   vertragsende: '',
@@ -141,6 +146,7 @@ export function leseProfil(db: DB, azubiId: number): Profil {
   return {
     berufId: z.beruf_id,
     berufsschuleId: z.berufsschule_id,
+    klasseId: z.klasse_id ?? null,
     ausbilderId: z.ausbilder_id,
     ausbildungsbeginn: z.ausbildungsbeginn,
     vertragsende: z.vertragsende,
@@ -294,6 +300,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
         mailversand: c.k.cfg.smtp !== null,
         berufe: alleBerufe(c.k.db),
         berufsschulen: alleSchulen(c.k.db),
+        // Klassen an den Berufsschulen – für die Auswahl im Profil und die Pflege unter Berufsschulen
+        klassen: alleKlassen(c.k.db).map((k) => ({ id: k.id, berufsschuleId: k.berufsschule_id, name: k.name, berufId: k.beruf_id })),
         // Termine des Betriebs für alle – zum Pflegen (Ausbilder) und zur Übersicht
         firmentermine: alleFirmentermine(c.k.db),
         bundeslaender: Object.entries(BUNDESLAENDER).map(([kuerzel, name]) => ({ kuerzel, name })),
@@ -456,6 +464,10 @@ export const STAMMDATEN_ROUTEN: Route[] = [
           profil,
           beruf,
           berufsschule: schule ?? null,
+          klasse: (() => {
+            const k = klasseVon(c.k.db, profil.klasseId);
+            return k ? { id: k.id, name: k.name } : null;
+          })(),
           ausbilder: ausbilder ? { id: ausbilder.id, anzeigename: ausbilder.anzeigename } : null,
           stand,
           hoechsteVerkuerzung: hoechsteVerkuerzung(beruf?.regeldauer_monate ?? STANDARD_REGELDAUER),
@@ -486,6 +498,14 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       if (berufId && !beruf) throw new Fehler(400, 'Diesen Beruf gibt es nicht');
       const schuleId = idOderNull(body.berufsschuleId);
       if (schuleId && !db.prepare('SELECT 1 FROM berufsschule WHERE id = ?').get(schuleId)) throw new Fehler(400, 'Diese Berufsschule gibt es nicht');
+      // fehlt die Angabe (ältere Oberfläche), bleibt die Klasse – solange sie zur Berufsschule passt
+      const klasseRoh = body.klasseId === undefined ? leseProfil(db, id).klasseId : idOderNull(body.klasseId);
+      const klasse = klasseVon(db, klasseRoh);
+      if (klasseRoh && !klasse) throw new Fehler(400, 'Diese Klasse gibt es nicht');
+      if (klasse && klasse.berufsschule_id !== schuleId) {
+        if (body.klasseId !== undefined) throw new Fehler(400, 'Die Klasse gehört zu einer anderen Berufsschule');
+      }
+      const klasseId = klasse && klasse.berufsschule_id === schuleId ? klasse.id : null;
       const ausbilderId = idOderNull(body.ausbilderId);
       if (ausbilderId && holeBenutzer(db, ausbilderId)?.rolle !== 'ausbilder') throw new Fehler(400, 'Zuständig sein kann nur ein Konto mit der Rolle Ausbilder');
 
@@ -532,16 +552,18 @@ export const STAMMDATEN_ROUTEN: Route[] = [
 
       db.prepare(
         `INSERT INTO azubi_profil (benutzer_id, beruf_id, berufsschule_id, ausbilder_id, ausbildungsbeginn, vertragsende, verkuerzung_monate,
-                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form, planer_frei)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form, planer_frei, klasse_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(benutzer_id) DO UPDATE SET
-           beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id,
+           beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id, klasse_id = excluded.klasse_id,
            ausbildungsbeginn = excluded.ausbildungsbeginn, vertragsende = excluded.vertragsende,
            verkuerzung_monate = excluded.verkuerzung_monate, verkuerzung_art = excluded.verkuerzung_art,
            verkuerzung_grund = excluded.verkuerzung_grund, vorzeitige_zulassung = excluded.vorzeitige_zulassung,
            wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von,
            urlaubstage = excluded.urlaubstage, bericht_form = excluded.bericht_form, planer_frei = excluded.planer_frei`,
-      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm, planerFrei ? 1 : 0);
+      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm, planerFrei ? 1 : 0, klasseId);
+      // andere Klasse: Schulblöcke im Plan auf den Stand der neuen Klasse bringen
+      if (klasseId !== vorher.klasseId) gleicheSchulbloeckeAb(db, c.k.jetzt(), c.b, id);
       protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi, planerFrei !== vorher.planerFrei ? (planerFrei ? 'Planer freigeschaltet' : 'Planer gesperrt') : undefined);
       // der Azubi erfährt, dass es für ihn einen neuen Bereich gibt
       if (planerFrei && !vorher.planerFrei && planer) merkeAktivitaet(db, c.k.jetzt(), 'planer_frei', id, c.b, null, planer.titel);

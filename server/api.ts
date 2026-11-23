@@ -20,6 +20,7 @@ import { beendeAlleSitzungen, beendeEigeneSitzung, beendeSitzung, beginneSitzung
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
 import { TEAMS_ROUTEN } from './teams';
+import { KLASSEN_ROUTEN } from './klassen';
 import { pruefeTeamsToken, TeamsSsoFehler } from './teams-sso';
 import { ANHANG_ROUTEN } from './bericht-anhang';
 import { FIRMENTERMIN_ROUTEN } from './firmentermin';
@@ -724,6 +725,7 @@ export const ROUTEN: Route[] = [
   ...EINREICHUNG_ROUTEN,
   ...BENACHRICHTIGUNG_ROUTEN,
   ...TEAMS_ROUTEN,
+  ...KLASSEN_ROUTEN,
   ...ANHANG_ROUTEN,
   ...FIRMENTERMIN_ROUTEN,
   ...PLANER_ROUTEN,

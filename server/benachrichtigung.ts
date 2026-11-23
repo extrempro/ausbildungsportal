@@ -27,7 +27,7 @@ export type Bereich = (typeof BEREICHE)[number];
 /** So lange wird gesammelt, bevor eine Nachricht hinausgeht. */
 export const SAMMEL_MS = 3 * 60_000;
 
-const bereichVon = (art: AktivitaetArt): Bereich => (art.startsWith('meldung_') ? 'rueckmeldungen' : art === 'plan_neu' || art.startsWith('planer_') ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
+const bereichVon = (art: AktivitaetArt): Bereich => (art.startsWith('meldung_') ? 'rueckmeldungen' : art === 'plan_neu' || art === 'schule_geaendert' || art.startsWith('planer_') ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
 
 /**
  * Stellt eine Aktivität für alle ein, die sie in der Glocke sehen und für den Bereich eine Benachrichtigung gewählt haben.
@@ -67,6 +67,7 @@ interface Ereignis {
 /** Texte je Art: [für den Azubi selbst – eins, mehrere; für Betreuende – eins, mehrere]. Ohne Namen. */
 const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
   plan_neu: ['In deinem Ausbildungsplan gibt es einen neuen Eintrag.', 'In deinem Ausbildungsplan gibt es {n} neue Einträge.', 'Im Ausbildungsplan eines Azubis gibt es einen neuen Eintrag.', 'In Ausbildungsplänen deiner Azubis gibt es {n} neue Einträge.'],
+  schule_geaendert: ['In deinem Ausbildungsplan wurde ein Schulblock geändert.', 'In deinem Ausbildungsplan wurden {n} Schulblöcke geändert.', 'Im Ausbildungsplan eines Azubis wurde ein Schulblock geändert.', 'In Ausbildungsplänen deiner Azubis wurden {n} Schulblöcke geändert.'],
   bericht_eingereicht: ['Dein Bericht{kw} wurde eingereicht.', '{n} deiner Berichte wurden eingereicht.', 'Ein Bericht{kw} wurde eingereicht und wartet auf das Abzeichnen.', '{n} Berichte wurden eingereicht und warten auf das Abzeichnen.'],
   bericht_abgezeichnet: ['Dein Bericht{kw} wurde abgezeichnet.', '{n} deiner Berichte wurden abgezeichnet.', 'Ein Bericht{kw} wurde abgezeichnet.', '{n} Berichte wurden abgezeichnet.'],
   bericht_zurueck: ['Dein Bericht{kw} wurde zurückgegeben. Bitte sieh ihn dir noch einmal an.', '{n} deiner Berichte wurden zurückgegeben. Bitte sieh sie dir noch einmal an.', 'Ein Bericht{kw} wurde zurückgegeben.', '{n} Berichte wurden zurückgegeben.'],
@@ -109,7 +110,7 @@ export function zeilenAus(ereignisse: Ereignis[]): Zeile[] {
   for (const e of ereignisse) {
     const s = `${e.art}|${e.eigenes ? 1 : 0}`;
     const g = gruppen.get(s) ?? { art: e.art, eigenes: e.eigenes, n: 0, wochen: new Set<string>() };
-    g.n += e.art === 'plan_neu' ? e.anzahl : 1;
+    g.n += e.art === 'plan_neu' || e.art === 'schule_geaendert' ? e.anzahl : 1;
     if (e.montag) g.wochen.add(e.montag);
     gruppen.set(s, g);
   }

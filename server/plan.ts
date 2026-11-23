@@ -9,6 +9,7 @@ import { feiertageZwischen, istBundesland } from './feiertage';
 import { ferienZwischen, ladeFerien } from './ferien';
 import { firmentermineZwischen } from './firmentermin';
 import { ausbildungsjahrAm, gueltigesDatum, kalenderwoche, montagVon, plusTage } from './kalender';
+import { klasseDesBlocks, machAusnahme } from './klassen';
 import { protokolliere } from './protokoll';
 import { darfAzubiVerwalten, darfPlanBearbeiten, darfPlanEintragAendern, hatGesamtsicht, sichtbareAzubis } from './rechte';
 import { mitPlanerTerminen } from './planer';
@@ -51,6 +52,7 @@ interface EintragZeile {
   tag: string | null;
   zeit_von: string;
   zeit_bis: string;
+  schulblock_id: number | null;
 }
 
 interface VorlageEintrag {
@@ -229,6 +231,8 @@ function ansicht(c: Ctx, z: EintragZeile) {
     zeitBis: z.zeit_bis,
     // vom Azubi selbst angelegt (im Unterschied zu dem, was Ausbilder und Beauftragte geplant haben)
     vomAzubi: z.erstellt_von === z.azubi_id,
+    // Schulblock der Klasse (Planung → Schulblöcke) – ändert sich mit der Klasse, solange er hier nicht einzeln geändert wird
+    klasse: klasseDesBlocks(db, z.schulblock_id),
     bearbeitbar: darfPlanEintragAendern(db, c.b, z, heute(c.k.jetzt())),
   };
 }
@@ -493,6 +497,8 @@ export const PLAN_ROUTEN: Route[] = [
       const jetzt = c.k.jetzt();
       let zugewiesen = false;
       transaktion(db, () => {
+        // ein Schulblock der Klasse, hier einzeln geändert: Er folgt der Klasse ab jetzt nicht mehr
+        machAusnahme(db, alt);
         db.prepare('UPDATE plan_eintrag SET art = ?, von = ?, bis = ?, titel = ?, text = ?, zustaendig_id = ?, erledigt = ?, unteraufgaben = ?, tag = ?, zeit_von = ?, zeit_bis = ?, geaendert_von = ?, geaendert = ? WHERE id = ?').run(
           e.art,
           e.von,
@@ -528,7 +534,11 @@ export const PLAN_ROUTEN: Route[] = [
       const azubi = sichtbarerAzubi(c);
       const alt = holeEintrag(c, azubi.id);
       if (!darfPlanEintragAendern(db, c.b, alt, heute(c.k.jetzt()))) throw new Fehler(403, 'Diesen Eintrag darfst du nicht löschen', 'rolle');
-      db.prepare('DELETE FROM plan_eintrag WHERE id = ?').run(alt.id);
+      transaktion(db, () => {
+        // ein Schulblock der Klasse, hier einzeln gelöscht: Er kommt beim nächsten Abgleich nicht wieder
+        machAusnahme(db, alt);
+        db.prepare('DELETE FROM plan_eintrag WHERE id = ?').run(alt.id);
+      });
       return { status: 200, body: { ok: true } };
     },
   },

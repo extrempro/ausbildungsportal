@@ -1437,7 +1437,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>
                   <Link zu="/planung/sammelplanung">Sammelplanung</Link> öffnen und die Azubis anhaken – einzeln oder per Schnellauswahl nach Ausbildungsjahr, Berufsschule oder Beruf.
                 </li>
-                <li>Einen einzelnen Eintrag ausfüllen (zum Beispiel einen Schulblock) oder einen Baustein mit Startwoche wählen.</li>
+                <li>Einen einzelnen Eintrag ausfüllen (zum Beispiel eine gemeinsame Unterweisung) oder einen Baustein mit Startwoche wählen. Schulblöcke trägst du besser an der Klasse ein – siehe „Schulblöcke der Klassen pflegen“.</li>
                 <li>„Eintragen“. Danach steht bei jedem Azubi, ob es geklappt hat. Wer in dem Zeitraum nicht in der Ausbildung ist, wird ausgelassen.</li>
               </ol>
               <p>
@@ -1452,6 +1452,42 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>
                   Bausteine lassen sich als Datei exportieren und wieder importieren – zur Sicherung oder für ein anderes Portal. Wie die Datei aussehen muss, steht im Kapitel „Bausteine importieren: Aufbau der Datei“ gleich darunter.
                 </li>
+              </ul>
+            </>
+          ),
+        },
+        {
+          id: 'schulbloecke',
+          titel: 'Schulblöcke der Klassen pflegen',
+          gruppe: 'Ausbildungsplan',
+          inhalt: (
+            <>
+              <p>
+                Schulblöcke trägst du einmal an der Klasse ein. Sie stehen dann im Ausbildungsplan jedes Azubis der Klasse – und ändern sich bei allen, wenn du sie änderst.
+              </p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>
+                  Einmalig: Unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei der Berufsschule die Klassen anlegen (z. B. „FI-25a“) und im Profil jedes Azubis seine Klasse wählen.
+                </li>
+                <li>
+                  <Link zu="/planung/schulbloecke">Planung → Schulblöcke</Link> öffnen und die Klasse aufklappen.
+                </li>
+                <li>Unter „Schulblock hinzufügen“ Titel, ersten und letzten Tag eintragen und „Schulblock eintragen“ wählen.</li>
+                <li>Verschiebt die Schule einen Block: „Schulblock ändern“ – die Änderung gilt für alle Azubis der Klasse.</li>
+              </ol>
+              <h3>Begriffe</h3>
+              <dl className="begriffe">
+                <Begriff wort="Klasse">Die Klasse an der Berufsschule. Ein Azubi gehört die ganze Ausbildung zu einer Klasse; eingetragen wird sie im Profil.</Begriff>
+                <Begriff wort="Schulblock">Ein Zeitraum Berufsschule. Wie jeder Eintrag im Plan gilt er für ganze Wochen.</Begriff>
+                <Begriff wort="Abweichend">Wurde ein Block im Plan eines Azubis einzeln geändert oder gelöscht, folgt er für diesen Azubi der Klasse nicht mehr. Die Seite zeigt, bei wie vielen das so ist.</Begriff>
+              </dl>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>Kommt ein Azubi neu in die Klasse, hat er sofort alle ihre Blöcke im Plan. Wechselt er die Klasse, bekommt er die Blöcke der neuen.</li>
+                <li>Die Azubis und ihre Betreuenden erfahren neue und geänderte Blöcke über die Glocke – auf Wunsch auch per Teams oder E-Mail.</li>
+                <li>Ein Block erscheint auch im Jahreskalender, im abonnierten Kalender und als Hinweis im Berichtsheft.</li>
+                <li>Das Anlegen, Ändern und Löschen steht im Protokoll.</li>
               </ul>
             </>
           ),
@@ -1578,6 +1614,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <h3>Begriffe</h3>
               <dl className="begriffe">
                 <Begriff wort="Ausbildungsberuf, Berufsschule">Aus den Stammdaten. Der Beruf bestimmt die Regeldauer, die Berufsschule das Bundesland für die Schulferien.</Begriff>
+                <Begriff wort="Klasse">Die Klasse an der Berufsschule – erst wählbar, wenn die Berufsschule feststeht. Die Schulblöcke der Klasse stehen dann im Plan. Mehr im Kapitel „Schulblöcke der Klassen pflegen“.</Begriff>
                 <Begriff wort="Zuständiger Ausbilder">Bestimmt, wer den Azubi sieht und voll bearbeitet. Mehr im Kapitel „Meine Azubis, Übernehmen, Vertretung“.</Begriff>
                 <Begriff wort="Ausbildungsbeginn">Erst damit gibt es Berichtsheft und Plan. Die erste Woche ist die Woche mit diesem Tag.</Begriff>
                 <Begriff wort="Vertragsende">Nur eintragen, wenn es vom berechneten Ende abweicht.</Begriff>
@@ -1615,6 +1652,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Lerninhalte für alle Berufe">Ein Lernmodul, das alle Azubis nur lesen – siehe Kapitel „Lerninhalte für alle Berufe festlegen“.</Begriff>
                 <Begriff wort="Abteilungen und Firmentermine">Haben eigene Kapitel: „Abteilungen und Einsätze“ und „Firmentermine für alle“.</Begriff>
                 <Begriff wort="Berufsschulen">Name, Ort und Bundesland. Das Bundesland bestimmt die Schulferien im Plan; hinterlegt sind die Ferien aller Bundesländer (ohne bewegliche Ferientage, die jede Schule selbst festlegt).</Begriff>
+                <Begriff wort="Klassen">Unter jeder Berufsschule bei „Klassen“: Name (z. B. „FI-25a“) und, wenn es hilft, der Beruf. An einer Klasse hängen die Schulblöcke – siehe „Schulblöcke der Klassen pflegen“. Löschen lässt sich eine Klasse erst, wenn niemand mehr in ihr ist.</Begriff>
               </dl>
               <h3>Gut zu wissen</h3>
               <ul className="punkte">

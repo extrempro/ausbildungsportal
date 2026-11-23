@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.78.0] – 2026-11-23
+
+### Neu
+
+- **Klassen:** Unter Stammdaten bekommt jede Berufsschule ihre Klassen (z. B. „FI-25a“). Im Profil eines Azubis wählt der Ausbilder seine Klasse – sie gilt die ganze Ausbildung.
+- **Schulblöcke an der Klasse:** Unter „Planung → Schulblöcke“ tragen Ausbilder die Schulblöcke einmal an der Klasse ein. Sie stehen im Ausbildungsplan jedes Azubis der Klasse, im Jahreskalender und im abonnierten Kalender. Verschiebt die Schule einen Block, ändert er sich bei allen. Kommt ein Azubi neu in die Klasse, hat er sofort alle Blöcke.
+- Im Plan steht bei solchen Blöcken „Klasse …“. Wird ein Block im Plan eines Azubis einzeln geändert oder gelöscht, gilt das nur für ihn – die Seite „Schulblöcke“ zeigt, bei wie vielen ein Block abweicht.
+- **Glocke:** neue Schulblöcke kommen als „Neuer Eintrag im Ausbildungsplan“, geänderte oder entfernte als „Schulblock im Ausbildungsplan geändert“ – auf Wunsch auch per Teams oder E-Mail.
+
+### Geändert
+
+- Die Führung für Ausbilder und das Handbuch nennen die Schulblöcke; die Sammelplanung bleibt für alles andere, was mehrere Azubis betrifft.
+
 ## [0.77.1] – 2026-11-23
 
 ### Behoben

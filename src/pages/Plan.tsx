@@ -27,6 +27,8 @@ interface Entwurf {
   tag: string;
   zeitVon: string;
   zeitBis: string;
+  /** Schulblock der Klasse – Hinweis im Fenster, dass eine Änderung hier nur für diesen Azubi gilt */
+  klasse?: string | null;
 }
 
 const REIHENFOLGE: PlanArt[] = ['schule', 'einsatz', 'termin', 'aufgabe', 'notiz'];
@@ -107,6 +109,12 @@ function EintragFormular({ daten, start, onFertig, onAbbruch }: { daten: PlanAnt
             )
           }
         />
+        {e.klasse && (
+          <p className="ganz hilfe-zeile">
+            <strong>Schulblock der Klasse {e.klasse}.</strong> Änderst oder löschst du ihn hier, gilt das nur für {daten.eigenes ? 'dich' : 'diesen Azubi'} – spätere Änderungen an der Klasse kommen hier dann nicht mehr an.{' '}
+            <HandbuchLink kapitel="schulbloecke">Schulblöcke der Klassen</HandbuchLink>
+          </p>
+        )}
         {fehler && (
           <p className="hinweis fehler ganz" role="alert">
             {fehler}
@@ -223,6 +231,7 @@ function EintragKarte({ e, woche, voll, eigenes, a }: { e: PlanEintrag; woche: W
     e.unteraufgaben.length > 0 && `${erledigt} von ${e.unteraufgaben.length} Unteraufgaben erledigt`,
     // Termine sieht nur der Azubi selbst – das steht dabei, damit er es nicht vergisst
     e.art === 'termin' ? 'nur für dich sichtbar' : e.vomAzubi && (eigenes ? 'von dir eingetragen' : 'vom Azubi eingetragen'),
+    e.klasse && `Klasse ${e.klasse}`,
   ].filter(Boolean);
   // Einsatz in einer Abteilung: in der ersten Woche (und in den Karten oben) ausführlich mit Ansprechpersonen, danach eine Zeile
   if (e.art === 'einsatz' && e.abteilungId !== null) {
@@ -828,7 +837,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     }
   };
   const a: Aktionen = {
-    bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, abteilungId: e.abteilungId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben, tag: e.tag ?? e.von, zeitVon: e.zeitVon, zeitBis: e.zeitBis }),
+    bearbeite: (e) => oeffne({ id: e.id, art: e.art, titel: e.titel, von: e.von, bis: e.bis === e.von ? '' : plusTage(e.bis, 6), text: e.text, zustaendigId: e.zustaendigId, abteilungId: e.abteilungId, zuweisen: false, erledigt: e.erledigt, unteraufgaben: e.unteraufgaben, tag: e.tag ?? e.von, zeitVon: e.zeitVon, zeitBis: e.zeitBis, klasse: e.klasse }),
     hake: (e, body) => void hake(e, body),
   };
   const uebernimm = async () => {
