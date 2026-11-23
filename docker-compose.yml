@@ -1,5 +1,7 @@
 # Ausbildungsportal mit Docker (Docker Compose ab Version 2.24)
-#   Starten:      docker compose up -d --build
+#   Starten:      docker compose pull && docker compose up -d     (fertiges Abbild von ghcr.io)
+#   Update:       git pull && docker compose pull && docker compose up -d
+#   Selbst bauen: docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 #   Logs:         docker compose logs -f app      (beim ersten Start steht hier das Startpasswort des Super-Admins)
 #   Stoppen:      docker compose down             (die Daten in ./data bleiben erhalten)
 #   Sicherung:    docker compose exec app npm run backup
@@ -7,9 +9,8 @@
 
 services:
   app:
-    build:
-      context: .
-    image: ausbildungsportal:latest
+    # fertiges Abbild, nach jedem Merge auf main gebaut (.github/workflows/abbild.yml); Version über PORTAL_VERSION
+    image: ghcr.io/extrempro/ausbildungsportal:${PORTAL_VERSION:-latest}
     container_name: ausbildungsportal
     restart: unless-stopped
     # Härtung: Der Prozess kann sich keine Rechte dazuholen, und der Container hat nur die Linux-Rechte, die das

@@ -1,0 +1,36 @@
+# Abbild des Portals: nach jedem Merge auf main gebaut und als ghcr.io/extrempro/ausbildungsportal:<Version> und :latest
+# veröffentlicht – der Server lädt es nur (docker compose pull). Geprüft wird vorher in der CI (Job „docker“).
+# Das Abbild des Dienstes „import“ veröffentlicht .github/workflows/import.yml.
+name: Abbild Portal
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: [import/**, docs/**, '**.md', e2e/**, server/test/**, .github/workflows/import.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: abbild-portal
+
+jobs:
+  veroeffentlichen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Bauen und nach ghcr.io schieben
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(node -p "require('./package.json').version")
+          BILD=ghcr.io/extrempro/ausbildungsportal
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
+            --label org.opencontainers.image.version="$V" -t "$BILD:$V" -t "$BILD:latest" .
+          docker push "$BILD:$V"
+          docker push "$BILD:latest"
