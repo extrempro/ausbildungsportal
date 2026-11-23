@@ -86,7 +86,7 @@ function leererInhalt(form: BerichtForm = 'woche'): Inhalt {
 function stunden(x: unknown, feld: string): number {
   const n = typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' ? Number(x.replace(',', '.')) : NaN;
   if (!Number.isFinite(n) || n < 0 || n > 60) throw new Fehler(400, `${feld}: Stunden müssen zwischen 0 und 60 liegen`);
-  return Math.round(n * 4) / 4; // Viertelstunden
+  return Math.round(n * 20) / 20; // auf 3 Minuten (0,05 Stunden) – so gehen 7,8 h (39 h ÷ 5) ebenso wie Viertelstunden
 }
 
 function freitext(x: unknown, max: number, feld: string): string {
@@ -160,7 +160,7 @@ function inhaltAus(z: BerichtZeile): Inhalt {
 /** Startwerte für einen neuen Bericht: landesweite Feiertage an Werktagen als Abwesenheit. */
 function vorbelegung(db: DB, azubiId: number, montag: string, wochenstunden: number): Inhalt {
   const inhalt = leererInhalt(berichtFormVon(db, azubiId));
-  const tagSoll = Math.round((wochenstunden / 5) * 4) / 4;
+  const tagSoll = Math.round((wochenstunden / 5) * 20) / 20;
   // genehmigter Urlaub der Woche ist schon als Abwesenheit vorgetragen
   const urlaub: Abwesenheit[] = genehmigteTage(db, azubiId, montag, plusTage(montag, 4)).map((tag) => ({ tag, grund: 'urlaub', stunden: tagSoll, text: '' }));
   const land = leseBetrieb(db).bundesland;

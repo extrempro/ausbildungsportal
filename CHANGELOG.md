@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.77.1] – 2026-11-23
+
+### Behoben
+
+- **Stunden genauer eintragen:** Im Berichtsheft (und im Planer für die Prüfung) wurde jede Angabe auf Viertelstunden gerundet – 7,8 Stunden am Tag (bei 39 Wochenstunden) wurden so zu 7,75. Jetzt gilt die Angabe auf 3 Minuten genau (0,05 Stunden); 7,8 bleibt 7,8. Auch die Vorbelegung für Urlaub und Feiertage nimmt jetzt genau ein Fünftel der Wochenstunden. Die Pfeiltasten ändern weiter um eine Viertelstunde.
+
 ## [0.77.0] – 2026-11-23
 
 ### Neu

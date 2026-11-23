@@ -191,7 +191,7 @@ function langtext(x: unknown, max: number, feld: string): string {
 function stunden(x: unknown, feld: string): number {
   const n = typeof x === 'number' ? x : Number(String(x ?? '').replace(',', '.'));
   if (!Number.isFinite(n) || n < 0 || n > MAX_STUNDEN) throw new Fehler(400, `${feld}: Stunden zwischen 0 und ${MAX_STUNDEN}`);
-  return Math.round(n * 4) / 4;
+  return Math.round(n * 20) / 20; // auf 3 Minuten, wie im Berichtsheft
 }
 
 export const PLANER_ROUTEN: Route[] = [

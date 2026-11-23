@@ -216,8 +216,8 @@ test('Eintragen: Angaben, Haken, Zeitplanung, Stichworte, Notizen', async () => 
   assert.equal((await ruf(w.u, 'PATCH', '/api/planer/haken', { cookies: c, body: { id: 'gespraech.warum', an: true } })).status, 404, 'eine Frage ist kein Checklisten-Punkt');
   assert.equal((await ruf(w.u, 'PATCH', '/api/planer/haken', { cookies: c, body: { id: 'antrag.thema' } })).status, 400);
 
-  const phasen = koerper(await ruf(w.u, 'PUT', '/api/planer/phasen', { cookies: c, body: { phasen: [{ name: 'Planung', soll: '8,3', ist: 2 }] } })).daten;
-  assert.deepEqual(phasen.phasen, [{ name: 'Planung', soll: 8.25, ist: 2 }], 'auf Viertelstunden gerundet');
+  const phasen = koerper(await ruf(w.u, 'PUT', '/api/planer/phasen', { cookies: c, body: { phasen: [{ name: 'Planung', soll: '8,32', ist: 2 }] } })).daten;
+  assert.deepEqual(phasen.phasen, [{ name: 'Planung', soll: 8.3, ist: 2 }], 'auf 3 Minuten gerundet');
   assert.equal(phasen.phasenVorschlag, false);
   assert.equal((await ruf(w.u, 'PUT', '/api/planer/phasen', { cookies: c, body: { phasen: [{ name: '', soll: 1, ist: 0 }] } })).status, 400);
   assert.equal((await ruf(w.u, 'PUT', '/api/planer/phasen', { cookies: c, body: { phasen: [{ name: 'A', soll: -1, ist: 0 }] } })).status, 400);

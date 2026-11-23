@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
 /**
- * Eingabe für Stunden in Viertelstunden – mit Komma oder Punkt.
+ * Eingabe für Stunden – mit Komma oder Punkt, genau auf 3 Minuten (0,05 Stunden): 7,8 h (39 h ÷ 5) geht ebenso wie 7,75.
  * Bewusst kein `type="number"`: Safari (iPhone und Mac) nimmt dort kein Komma an, die deutsche Tastatur am iPhone
  * bietet aber nur das Komma – „1,5“ wurde so zu einer ganzen Zahl. Pfeil hoch/runter ändert um eine Viertelstunde.
+ * Früher wurde auf Viertelstunden gerundet – 7,8 h am Tag ließen sich so nicht eintragen.
  */
 const ERLAUBT = /^\d{0,4}([.,]\d{0,2})?$/;
 
@@ -35,7 +36,7 @@ export function StundenFeld({
   }, [wert, leerBeiNull]);
 
   const setze = (n: number) => {
-    const sauber = Math.max(0, Math.min(max, Math.round(n * 4) / 4));
+    const sauber = Math.max(0, Math.min(max, Math.round(n * 20) / 20));
     setText(alsText(sauber, leerBeiNull));
     // nur melden, was sich wirklich ändert – sonst stünde schon nach bloßem Durchklicken „Noch nicht gespeichert“
     if (sauber !== wert) onWert(sauber);
@@ -60,7 +61,7 @@ export function StundenFeld({
         setText(t);
         onWert(Math.min(max, alsZahl(t)));
       }}
-      // beim Verlassen auf Viertelstunden runden und einheitlich mit Komma zeigen
+      // beim Verlassen auf 3 Minuten (0,05) runden und einheitlich mit Komma zeigen
       onBlur={() => setze(alsZahl(text))}
     />
   );
