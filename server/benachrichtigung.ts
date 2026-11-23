@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { PERSOENLICH } from './aktivitaet';
 import type { AktivitaetArt } from './aktivitaet';
 import { Fehler, koerper } from './api-basis';
@@ -6,12 +5,11 @@ import type { Kontext, Route } from './api-basis';
 import type { DB } from './db';
 import { heute } from './datum';
 import { sichtbareAzubis } from './rechte';
-import { logoBild } from './branding';
 import { gestalteMail } from './mail-gestalt';
 import type { MailFarbe } from './mail-gestalt';
 import { istMailAdresse, MailFehler } from './smtp';
 import type { Mail } from './smtp';
-import { leseBetrieb } from './stammdaten';
+import { sendeTeams, teamsFehlertext } from './teams';
 import type { BenutzerZeile } from './typen';
 
 /**
@@ -135,58 +133,14 @@ export function vorname(anzeigename: string): string {
 const anrede = (b: Pick<BenutzerZeile, 'anzeigename'>) => (vorname(b.anzeigename) ? `Hallo ${vorname(b.anzeigename)},` : 'Hallo,');
 
 /** Wohin der Knopf führt: geht es nur um einen Bereich, direkt dorthin – sonst zur Startseite. */
-function zielVon(k: Kontext, b: Pick<BenutzerZeile, 'rolle'>, zeilen: Zeile[]): string {
+function zielPfad(b: Pick<BenutzerZeile, 'rolle'>, zeilen: Zeile[]): string {
   const bereiche = new Set(zeilen.map((z) => z.bereich));
   const einer = bereiche.size === 1 ? [...bereiche][0] : null;
-  const pfad = einer === 'rueckmeldungen' ? '/meine-meldungen' : einer === 'urlaub' ? '/urlaub' : einer === 'berichtsheft' ? (b.rolle === 'azubi' ? '/berichtsheft' : '/abzeichnen') : '/';
-  return `${k.cfg.appUrl}${pfad}`;
+  return einer === 'rueckmeldungen' ? '/meine-meldungen' : einer === 'urlaub' ? '/urlaub' : einer === 'berichtsheft' ? (b.rolle === 'azubi' ? '/berichtsheft' : '/abzeichnen') : '/';
 }
+const zielVon = (k: Kontext, b: Pick<BenutzerZeile, 'rolle'>, zeilen: Zeile[]) => `${k.cfg.appUrl}${zielPfad(b, zeilen)}`;
 
-type Empfaenger = Pick<BenutzerZeile, 'anmeldename' | 'anzeigename' | 'rolle'>;
-
-const TEAMS_FARBE: Record<Ton, string> = { gut: 'Good', wartet: 'Warning', achtung: 'Attention', neutral: 'Accent' };
-
-/**
- * Karte für Teams: Kopf mit Logo und Betrieb, Anrede, je Neuigkeit eine Zeile mit farbigem Punkt, Knopf zur passenden Seite.
- * Genannt wird nur die Person, an die die Nachricht geht – nie jemand anderes.
- */
-export function teamsKarte(k: Kontext, b: Empfaenger, zeilen: Zeile[]): unknown {
-  const betrieb = leseBetrieb(k.db).name;
-  const logo = logoBild(k.db);
-  // die Adresse wechselt mit dem Logo, damit Teams kein altes Bild zeigt
-  const logoUrl = logo ? `${k.cfg.appUrl}/api/branding/logo?v=${createHash('sha256').update(logo.inhalt).digest('hex').slice(0, 10)}` : null;
-  const titel = {
-    type: 'Column',
-    width: 'stretch',
-    verticalContentAlignment: 'Center',
-    items: [
-      { type: 'TextBlock', text: 'Ausbildungsportal', weight: 'Bolder', size: 'Medium', color: 'Accent', wrap: true },
-      ...(betrieb ? [{ type: 'TextBlock', text: betrieb, isSubtle: true, size: 'Small', spacing: 'None', wrap: true }] : []),
-    ],
-  };
-  return {
-    empfaenger: b.anmeldename,
-    karte: {
-      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-      type: 'AdaptiveCard',
-      version: '1.4',
-      body: [
-        { type: 'ColumnSet', columns: [...(logoUrl ? [{ type: 'Column', width: 'auto', verticalContentAlignment: 'Center', items: [{ type: 'Image', url: logoUrl, height: '36px', altText: betrieb ? `Logo ${betrieb}` : 'Logo' }] }] : []), titel] },
-        { type: 'TextBlock', text: anrede(b), wrap: true, spacing: 'Medium', separator: true },
-        ...zeilen.map((z) => ({
-          type: 'ColumnSet',
-          spacing: 'Small',
-          columns: [
-            { type: 'Column', width: 'auto', items: [{ type: 'TextBlock', text: '●', color: TEAMS_FARBE[z.ton] }] },
-            { type: 'Column', width: 'stretch', items: [{ type: 'TextBlock', text: z.text, wrap: true }] },
-          ],
-        })),
-        { type: 'TextBlock', text: 'Welche Nachrichten du bekommst, stellst du im Portal unter „Konto“ ein.', wrap: true, isSubtle: true, size: 'Small', spacing: 'Medium' },
-      ],
-      actions: [{ type: 'Action.OpenUrl', title: 'Im Portal öffnen', url: zielVon(k, b, zeilen) }],
-    },
-  };
-}
+type Empfaenger = Pick<BenutzerZeile, 'anmeldename' | 'anzeigename' | 'rolle' | 'entra_oid'>;
 
 const MAIL_FARBE: Record<Ton, MailFarbe> = { gut: 'gruen', wartet: 'gelb', achtung: 'rot', neutral: 'blau' };
 
@@ -210,27 +164,28 @@ export function mailAus(k: Kontext, b: Empfaenger, zeilen: Zeile[]): Pick<Mail, 
 }
 
 /** Warum ein Weg gerade nicht geht – oder null. */
-function hindernis(k: Kontext, weg: 'teams' | 'mail', b: Pick<BenutzerZeile, 'anmeldename'>): string | null {
-  if (weg === 'teams') return k.cfg.teamsChatWebhook ? null : 'Nachrichten per Teams sind in diesem Portal nicht eingerichtet. Das macht der Betreiber des Portals.';
+function hindernis(k: Kontext, weg: 'teams' | 'mail', b: Pick<BenutzerZeile, 'anmeldename' | 'entra_oid'>): string | null {
+  if (weg === 'teams') {
+    if (!k.cfg.teamsAppId) return 'Nachrichten per Teams sind in diesem Portal nicht eingerichtet. Das macht der Betreiber des Portals.';
+    return b.entra_oid ? null : 'Dein Konto ist noch nicht mit Microsoft verknüpft. Melde dich einmal mit Microsoft an, dann geht es.';
+  }
   if (!k.cfg.smtp) return 'Der Mailversand ist in diesem Portal nicht eingerichtet. Das macht der Betreiber des Portals.';
   return istMailAdresse(b.anmeldename) ? null : 'Dein Anmeldename ist keine Mail-Adresse – dorthin kann das Portal nichts schicken.';
 }
 
-/** Schickt über einen Weg; gibt bei einem Fehler den Grund zurück. Im Log steht nie die Adresse des Workflows und nie der Empfänger. */
+/** Schickt über einen Weg; gibt bei einem Fehler den Grund zurück. Im Log steht nie der Empfänger. */
 async function schicke(k: Kontext, weg: 'teams' | 'mail', b: Empfaenger, zeilen: Zeile[]): Promise<string | null> {
   const grund = hindernis(k, weg, b);
   if (grund) return grund;
   try {
     if (weg === 'teams') {
-      const r = await k.sende(k.cfg.teamsChatWebhook as string, teamsKarte(k, b, zeilen));
-      if (r.ok) return null;
-      k.log(`Benachrichtigung per Teams fehlgeschlagen: die Gegenstelle antwortet mit Status ${r.status}`);
-      return `Teams antwortet mit einem Fehler (Status ${r.status}).`;
+      await sendeTeams(k, b.entra_oid as string, zeilen.map((z) => z.text), zielPfad(b, zeilen));
+      return null;
     }
     await k.mail({ an: b.anmeldename, ...mailAus(k, b, zeilen) });
     return null;
   } catch (e) {
-    const text = weg === 'mail' ? (e instanceof MailFehler ? e.message : 'Die Mail konnte nicht gesendet werden.') : e instanceof Error && e.name === 'TimeoutError' ? 'Teams antwortet nicht.' : 'Teams ist nicht erreichbar.';
+    const text = weg === 'mail' ? (e instanceof MailFehler ? e.message : 'Die Mail konnte nicht gesendet werden.') : teamsFehlertext(e);
     k.log(`Benachrichtigung per ${weg === 'teams' ? 'Teams' : 'E-Mail'} fehlgeschlagen: ${text}`);
     return text;
   }

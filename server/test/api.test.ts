@@ -173,6 +173,8 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'GET /api/ich/benachrichtigungen': 'ausbilder,beauftragter,azubi',
     'PUT /api/ich/benachrichtigungen': 'ausbilder,beauftragter,azubi',
     'POST /api/ich/benachrichtigungen/test': 'ausbilder,beauftragter,azubi',
+    'GET /api/teams': 'admin',
+    'GET /api/teams/paket': 'admin',
     'POST /api/berichte/abzeichnen': 'ausbilder,beauftragter',
     'POST /api/azubis/:id/berichte/:montag/zurueckgeben': 'ausbilder,beauftragter',
     'POST /api/azubis/:id/berichte/:montag/oeffnen': 'ausbilder',

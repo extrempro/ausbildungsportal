@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.76.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.77.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -94,7 +94,7 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
 | `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung, jeder neuen Idee fürs Portal und jeder Antwort auf eine Rückfrage benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
 | `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung bzw. der Antwort nach Teams; Standard `false` |
-| `TEAMS_CHAT_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der eine Nachricht als Chat an eine einzelne Person schickt (siehe „Benachrichtigungen per Teams und E-Mail“) |
+| `TEAMS_APP_ID` | freiwillig: ID der Teams-App (steht im Portal unter „Erscheinungsbild“ → „Teams-App“); erst damit gehen Benachrichtigungen per Teams hinaus. Braucht die Anmeldung mit Microsoft (siehe „Benachrichtigungen per Teams und E-Mail“) |
 | `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle und für Benachrichtigungen per E-Mail (siehe „Mail an die Personalstelle“) |
 | `SMTP_PORT`, `SMTP_SICHERHEIT` | Port und `starttls` (Vorgabe, Port 587), `tls` (Port 465) oder `keine` (Port 25, nur internes Relay ohne Anmeldung) |
 | `SMTP_BENUTZER`, `SMTP_PASSWORT` | Anmeldung am Mailserver, falls er eine verlangt |
@@ -125,33 +125,30 @@ Freiwillig: Azubis, Ausbildungsbeauftragte und Ausbilder können sich zusätzlic
 
 **E-Mail** nutzt den Mailserver aus „Mail an die Personalstelle“ (`SMTP_…`). Mehr ist nicht einzurichten.
 
-**Teams** braucht einen eigenen Workflow, der eine Karte als Chat an eine einzelne Person schickt – ein anderer als der für den Kanal:
+**Teams** kommt über die Teams-App „Ausbildungsportal“: Die Nachrichten erscheinen in Teams unter „Aktivität“, Absender ist die App. Das Portal schickt sie über Microsoft Graph mit der App-Registrierung, die auch die Anmeldung nutzt.
 
-1. Unter `make.powerautomate.com` (oder in Teams unter **Apps → Workflows**) einen neuen Flow **ohne Vorlage** anlegen.
-2. Auslöser: **„Beim Empfang einer Teams-Webhookanforderung“**. Bei „Wer kann den Flow auslösen?“ **Jeder** wählen – mit „Beliebige Person in meinem Mandanten“ verlangt der Flow eine Anmeldung, die das Portal nicht mitbringt (Fehler `DirectApiAuthorizationRequired`).
-3. Aktion: **„Karte in einem Chat oder Kanal veröffentlichen“** mit
-   - Veröffentlichen als: **Flow-Bot**
-   - Veröffentlichen in: **Chat mit Flow-Bot**
-   - Empfänger (als Ausdruck): `triggerBody()?['empfaenger']`
-   - Adaptive Karte (als Ausdruck): `triggerBody()?['karte']`
-4. Speichern, die HTTP-URL des Auslösers kopieren und in der `.env` als `TEAMS_CHAT_WEBHOOK_URL` eintragen, dann `docker compose up -d`.
+1. In Entra der App-Registrierung die Anwendungsberechtigung **TeamsActivity.Send** geben und die Administratorzustimmung erteilen.
+2. Im Portal als Super-Admin unter **Erscheinungsbild → Teams-App** das **App-Paket herunterladen**.
+3. Im **Teams Admin Center** hochladen und per **Setup-Richtlinie** für alle installieren, die das Portal nutzen.
+4. Die angezeigte **App-ID** in der `.env` als `TEAMS_APP_ID` eintragen, dann `docker compose up -d`.
 5. Im Portal unter **Konto → Benachrichtigungen** auf „Testnachricht per Teams senden“ klicken.
+
+Ausführlich mit Fehlersuche: [docs/entra-einrichtung.md](docs/entra-einrichtung.md), Abschnitt „Freiwillig: Teams-App“.
 
 Gut zu wissen:
 
-- Das Portal schickt `{ "empfaenger": "<Anmeldename>", "karte": { …Adaptive Card… } }`. Die Namen der Vorlagen und Felder können je nach Teams-Version abweichen; der vereinfachte Editor in Teams bietet den Chat an eine einzelne Person nicht immer an – dann den Flow unter `make.powerautomate.com` anlegen.
-- Die Adresse ist ein Geheimnis: Wer sie kennt, kann jeder Person im Mandanten über den Bot schreiben. Sie gehört nur in die `.env`.
-- Der Absender in Teams heißt „Workflows“. Das lässt sich auf diesem Weg nicht ändern.
-- Der Workflow gehört dem Konto, das ihn anlegt. Wird dieses Konto gelöscht oder der Flow abgeschaltet, kommen keine Nachrichten mehr an.
-- Empfänger ist der Anmeldename (UPN) der Person; E-Mails gehen an dieselbe Adresse. Weicht die Mail-Adresse bei euch vom Anmeldenamen ab, kommen E-Mails nicht an.
-- **In den Nachrichten stehen keine anderen Namen und keine Inhalte.** Sie sprechen die Person mit ihrem Vornamen an („Hallo Petra,“) und sagen nur, was passiert ist („Ein Bericht für KW 46 wurde eingereicht“); der Knopf führt zur passenden Seite. Verschickt wird nur, was die Person auch in der Glocke sieht.
+- Ein Klick auf die Meldung öffnet die App in Teams; „Im Browser öffnen“ führt direkt zur passenden Seite im Portal.
+- Ohne installierte App kommt bei der Person nichts an. Empfänger ist die Entra-Objekt-ID; Konten, die sich noch nie mit Microsoft angemeldet haben, können Teams nicht wählen.
+- Der frühere Weg über einen Teams-Workflow (`TEAMS_CHAT_WEBHOOK_URL`) wird seit Version 0.77.0 nicht mehr genutzt. Den Eintrag aus der `.env` löschen und den Workflow abschalten.
+- E-Mails gehen an den Anmeldenamen (UPN) der Person. Weicht die Mail-Adresse bei euch vom Anmeldenamen ab, kommen E-Mails nicht an.
+- **In den Nachrichten stehen keine anderen Namen und keine Inhalte.** Sie sagen nur, was passiert ist („Ein Bericht für KW 46 wurde eingereicht“); die Mail spricht die Person mit ihrem Vornamen an („Hallo Petra,“), ihr Knopf führt zur passenden Seite. Verschickt wird nur, was die Person auch in der Glocke sieht.
 - Der Vorname kommt aus dem Anzeigenamen des Kontos („Petra Lang“ oder „Lang, Petra“). Lässt er sich nicht sicher erkennen – etwa bei „Dr. Petra Lang“ –, heißt es nur „Hallo,“.
-- **Gestaltung:** Karte und Mail tragen „Ausbildungsportal“, den Namen des Betriebs aus den Stammdaten und das Logo aus „Erscheinungsbild“ (helle Fassung). Für die Karte lädt Teams das Logo selbst von `<APP_URL>/api/branding/logo` – das Portal muss dafür aus dem Internet erreichbar sein, sonst fehlt das Bild. In der Mail hängt das Logo an; ein Logo im Format WebP lässt das Portal dort weg, weil Outlook es nicht zeigt. Manche Mailprogramme zeigen Bilder erst nach einem Klick.
+- **Gestaltung:** Die Mail trägt „Ausbildungsportal“, den Namen des Betriebs aus den Stammdaten und das Logo aus „Erscheinungsbild“ (helle Fassung). Das Logo hängt an der Mail; ein Logo im Format WebP lässt das Portal dort weg, weil Outlook es nicht zeigt. Manche Mailprogramme zeigen Bilder erst nach einem Klick.
 - Die Mail geht in zwei Fassungen hinaus: gestaltet und als reiner Text.
 - Was kurz nacheinander passiert, sammelt das Portal etwa drei Minuten und schickt es als eine Nachricht je Person.
 - Gespeichert wird die Auswahl je Person und – bis zum Versand – was noch zu verschicken ist. Einen Verlauf verschickter Nachrichten gibt es nicht.
 - Scheitert der Versand, steht der Grund im Log (`docker compose logs app`, ohne Adresse und ohne Empfänger); die Nachricht wird nicht wiederholt, die Glocke zeigt das Ereignis weiterhin.
-- Erprobt ist der Versand per Teams und per E-Mail in einer Installation mit einem echten Teams-Workflow und einem echten Mailserver.
+- Erprobt ist der Versand per E-Mail mit einem echten Mailserver. Die Teams-App ist mit einem echten Mandanten noch nicht erprobt.
 
 ### Mail an die Personalstelle
 

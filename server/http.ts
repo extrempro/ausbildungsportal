@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { behandle } from './api';
+import { teamsReiter } from './teams';
 import type { Anfrage, Kontext } from './api';
 
 /**
@@ -160,6 +161,12 @@ export function erzeugeServer(k: Kontext, distDir: string): Server {
       url = new URL(req.url ?? '/', 'http://x');
     } catch {
       return sende(res, 400, basis, 'Ungültige Adresse');
+    }
+    // Reiter der Teams-App: eine eigene kleine Seite, die als einzige in Teams eingebettet werden darf
+    if (url.pathname === '/teams/app' && (req.method === 'GET' || req.method === 'HEAD')) {
+      const r = teamsReiter(k, url.searchParams.get('ziel'));
+      const { 'X-Frame-Options': _ohne, ...ohneRahmenverbot } = basis;
+      return sende(res, 200, { ...ohneRahmenverbot, 'Content-Security-Policy': r.csp, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, req.method === 'HEAD' ? undefined : r.html);
     }
     if (url.pathname.startsWith('/api/')) {
       api(k, req, res, url, basis).catch((e) => {

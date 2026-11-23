@@ -23,6 +23,7 @@ const AKTION: Record<string, string> = {
   profil_geaendert: 'Azubi-Profil geändert',
   stammdaten_geaendert: 'Stammdaten geändert',
   logo_geaendert: 'Logo geändert',
+  teams_paket: 'Paket der Teams-App heruntergeladen',
   logo_entfernt: 'Logo entfernt',
   begleiter_eingeschaltet: 'Begleiter für Azubis eingeschaltet',
   begleiter_ausgeschaltet: 'Begleiter für Azubis ausgeschaltet',

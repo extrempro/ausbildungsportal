@@ -1,5 +1,18 @@
 # Änderungen
 
+## [0.77.0] – 2026-11-23
+
+### Neu
+
+- **Teams-App „Ausbildungsportal“:** Benachrichtigungen per Teams erscheinen jetzt in Teams unter „Aktivität“ (der Glocke in Teams). Absender ist die App mit dem Zeichen des Portals – nicht mehr „Workflows“. Ein Klick öffnet die App; „Im Browser öffnen“ führt direkt zur passenden Seite im Portal.
+- Unter „Erscheinungsbild“ lädt der Super-Admin das Paket der App für das Teams Admin Center herunter. Ändern sich Adresse oder Name des Betriebs, bekommt das nächste Paket von selbst eine höhere Version.
+
+### Geändert
+
+- **Der Weg über einen Teams-Workflow (`TEAMS_CHAT_WEBHOOK_URL`) entfällt.** Nachrichten gehen jetzt über Microsoft Graph mit der App-Registrierung der Anmeldung (Anwendungsberechtigung `TeamsActivity.Send`). Eine geheime Adresse, mit der man jeder Person im Mandanten schreiben konnte, gibt es damit nicht mehr. Einrichtung: `docs/entra-einrichtung.md`, Abschnitt „Freiwillig: Teams-App“. Bis die App eingerichtet ist (`TEAMS_APP_ID`), ist der Haken „Teams“ gesperrt.
+- Nachrichten in Teams nennen gar keine Namen mehr – auch keine Anrede. E-Mails sprechen die Person weiter mit ihrem Vornamen an.
+- Konten, die sich noch nie mit Microsoft angemeldet haben, können Teams nicht wählen; unter „Konto“ steht, warum.
+
 ## [0.76.1] – 2026-11-22
 
 ### Behoben
