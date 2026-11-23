@@ -32,6 +32,8 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
       <dd>{berufName(p.beruf) || '–'}</dd>
       <dt>Berufsschule</dt>
       <dd>{p.berufsschule ? [p.berufsschule.name, p.berufsschule.ort].filter(Boolean).join(', ') : '–'}</dd>
+      <dt>Klasse</dt>
+      <dd>{p.klasse?.name ?? '–'}</dd>
       <dt>Zuständiger Ausbilder</dt>
       <dd>{p.ausbilder?.anzeigename ?? '–'}</dd>
       <dt>Ausbildungszeit</dt>
@@ -118,7 +120,8 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
         </label>
         <label>
           Berufsschule
-          <select value={wert.berufsschuleId ?? ''} onChange={(e) => setze('berufsschuleId', idOderNull(e.target.value))}>
+          {/* eine andere Schule hat andere Klassen – die Klasse wird dann neu gewählt */}
+          <select value={wert.berufsschuleId ?? ''} onChange={(e) => setWert((alt) => ({ ...alt, berufsschuleId: idOderNull(e.target.value), klasseId: null }))}>
             <option value="">– noch nicht festgelegt –</option>
             {stammdaten.berufsschulen.map((s) => (
               <option key={s.id} value={s.id}>
@@ -126,6 +129,20 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
               </option>
             ))}
           </select>
+        </label>
+        <label>
+          Klasse
+          <select value={wert.klasseId ?? ''} disabled={!wert.berufsschuleId} onChange={(e) => setze('klasseId', idOderNull(e.target.value))}>
+            <option value="">{wert.berufsschuleId ? '– noch nicht festgelegt –' : '– erst die Berufsschule wählen –'}</option>
+            {stammdaten.klassen
+              .filter((k) => k.berufsschuleId === wert.berufsschuleId)
+              .map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.name}
+                </option>
+              ))}
+          </select>
+          <span className="leise klein">Die Schulblöcke der Klasse stehen dann im Plan. Klassen legst du unter Stammdaten bei der Berufsschule an.</span>
         </label>
         <label>
           Zuständiger Ausbilder

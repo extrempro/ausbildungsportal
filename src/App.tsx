@@ -11,6 +11,7 @@ import { BerichteDruck, Berichtsheft } from './pages/Berichtsheft';
 import { Konten } from './pages/Konten';
 import { PlanSeite } from './pages/Plan';
 import { Sammelplanung } from './pages/Sammelplanung';
+import { Schulbloecke } from './pages/Schulbloecke';
 import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
@@ -393,6 +394,7 @@ export function App() {
   else if (pfad === '/urlaub' && betreut) seite = <UrlaubListe konto={konto} onGeaendert={ladeUrlaubZuTun} />;
   else if (urlaubAzubi && betreut) seite = <UrlaubAzubi key={urlaubAzubi} azubiId={Number(urlaubAzubi)} />;
   else if (pfad === '/planung/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
+  else if (pfad === '/planung/schulbloecke' && konto.rolle === 'ausbilder') seite = <Schulbloecke />;
   else if (pfad === '/planung/bausteine' && konto.rolle === 'ausbilder') seite = <Vorlagen />;
   else if (pfad === '/versionen') seite = <Versionen />;
   else if (pfad === '/handbuch') seite = <Handbuch rolle={konto.rolle} onFuehrung={starteFuehrung} />;
@@ -483,6 +485,7 @@ export function App() {
     konto.rolle === 'ausbilder'
       ? [
           { zu: '/planung/sammelplanung', text: 'Sammelplanung', icon: 'sammel' },
+          { zu: '/planung/schulbloecke', text: 'Schulblöcke', icon: 'schule' },
           { zu: '/planung/bausteine', text: 'Planbausteine', icon: 'baustein' },
           { zu: '/lerninhalte', text: 'Lerninhalte', icon: 'lernen', aktivAb: '/lerninhalte' },
         ]

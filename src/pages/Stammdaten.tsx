@@ -3,7 +3,7 @@ import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, datum } from '../api';
-import { useEingaben } from '../router';
+import { Link, useEingaben } from '../router';
 import type { Beruf, Berufsschule, Firmentermin, Stammdaten as Daten } from '../api';
 import { HandbuchLink } from '../handbuchLink';
 
@@ -277,6 +277,87 @@ function FirmenterminFormular({ termin, onFertig }: { termin?: Firmentermin; onF
   );
 }
 
+/** Eine Klasse an der Berufsschule: Name und – wenn es hilft – der Beruf. An ihr hängen die Schulblöcke (Planung → Schulblöcke). */
+function KlasseFormular({ klasse, schuleId, daten, onFertig }: { klasse?: Daten['klassen'][number]; schuleId: number; daten: Daten; onFertig: (text: string) => Promise<void> }) {
+  const eingaben = useEingaben();
+  const [fehler, setFehler] = useState('');
+  const sende = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const body = { berufsschuleId: schuleId, name: f.get('name'), berufId: f.get('berufId') || null };
+    try {
+      if (klasse) await api('PATCH', `/api/stammdaten/klassen/${klasse.id}`, body);
+      else await api('POST', '/api/stammdaten/klassen', body);
+      if (!klasse) form.reset();
+      eingaben.gespeichert();
+      setFehler('');
+      await onFertig(klasse ? 'Klasse gespeichert.' : 'Klasse angelegt.');
+    } catch (err) {
+      setFehler(err instanceof Error ? err.message : 'Fehler');
+    }
+  };
+  const loesche = async () => {
+    if (!klasse || !(await rueckfrage(`Klasse „${klasse.name}“ löschen?
+
+Ihre Schulblöcke verschwinden damit auch aus den Plänen.`, { ja: 'Klasse löschen', gefahr: true }))) return;
+    try {
+      await api('DELETE', `/api/stammdaten/klassen/${klasse.id}`);
+      await onFertig('Klasse gelöscht.');
+    } catch (err) {
+      setFehler(err instanceof Error ? err.message : 'Fehler');
+    }
+  };
+  return (
+    <form className="reihe" onSubmit={sende} onInput={eingaben.merke}>
+      <label>
+        {klasse ? 'Klasse' : 'Neue Klasse'}
+        <input name="name" defaultValue={klasse?.name} maxLength={40} placeholder="z. B. FI-25a" required />
+      </label>
+      <label>
+        Beruf (freiwillig)
+        <select name="berufId" defaultValue={klasse?.berufId ?? ''}>
+          <option value="">– alle –</option>
+          {daten.berufe.map((b) => (
+            <option key={b.id} value={b.id}>
+              {[b.bezeichnung, b.fachrichtung].filter(Boolean).join(' – ')}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="aktionen links">
+        <button className={klasse ? 'knopf schlicht' : 'knopf'}>{klasse ? 'Klasse speichern' : 'Klasse anlegen'}</button>
+        {klasse && (
+          <button type="button" className="knopf schlicht gefahr" onClick={() => void loesche()}>
+            Klasse löschen
+          </button>
+        )}
+      </div>
+      {fehler && (
+        <p className="hinweis fehler ganz" role="alert">
+          {fehler}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function Klassen({ schuleId, daten, onFertig }: { schuleId: number; daten: Daten; onFertig: (text: string) => Promise<void> }) {
+  const klassen = daten.klassen.filter((k) => k.berufsschuleId === schuleId);
+  return (
+    <details className="klapp">
+      <summary>Klassen ({klassen.length})</summary>
+      <p className="leise klein">
+        Jeder Azubi gehört zu einer Klasse – das trägst du im Profil ein. Die Schulblöcke einer Klasse pflegst du unter <Link zu="/planung/schulbloecke">Schulblöcke</Link>.
+      </p>
+      {klassen.map((k) => (
+        <KlasseFormular key={`${k.id}-${k.name}-${k.berufId}`} klasse={k} schuleId={schuleId} daten={daten} onFertig={onFertig} />
+      ))}
+      <KlasseFormular schuleId={schuleId} daten={daten} onFertig={onFertig} />
+    </details>
+  );
+}
+
 export function Stammdaten() {
   const eingaben = useEingaben();
   const [daten, setDaten] = useState<Daten | null>(null);
@@ -459,7 +540,10 @@ export function Stammdaten() {
         <h2>Berufsschulen</h2>
         {daten.berufsschulen.length === 0 && <p className="leise">Noch keine Berufsschule angelegt.</p>}
         {daten.berufsschulen.map((s) => (
-          <SchulFormular key={`${s.id}-${s.name}-${s.ort}-${s.bundesland}-${s.form}`} schule={s} daten={daten} onFertig={fertig} />
+          <div key={s.id}>
+            <SchulFormular key={`${s.id}-${s.name}-${s.ort}-${s.bundesland}-${s.form}`} schule={s} daten={daten} onFertig={fertig} />
+            <Klassen schuleId={s.id} daten={daten} onFertig={fertig} />
+          </div>
         ))}
         <h3>Neue Berufsschule</h3>
         {/* key: Bundesland des Betriebs als Vorbelegung übernehmen, sobald es gespeichert ist */}

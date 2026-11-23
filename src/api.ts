@@ -232,6 +232,13 @@ export interface Beruf {
   lernpaket: string | null;
 }
 
+export interface Klasse {
+  id: number;
+  berufsschuleId: number;
+  name: string;
+  berufId: number | null;
+}
+
 export interface Berufsschule {
   id: number;
   name: string;
@@ -255,6 +262,8 @@ export interface Stammdaten {
   mailversand: boolean;
   berufe: Beruf[];
   berufsschulen: Berufsschule[];
+  /** Klassen an den Berufsschulen – an ihnen hängen die Schulblöcke */
+  klassen: Klasse[];
   firmentermine: Firmentermin[];
   bundeslaender: { kuerzel: string; name: string }[];
   ausbilder: { id: number; anzeigename: string }[];
@@ -267,6 +276,8 @@ export interface Stammdaten {
 export interface Profil {
   berufId: number | null;
   berufsschuleId: number | null;
+  /** Klasse an der Berufsschule (bleibt die ganze Ausbildung) – an ihr hängen die Schulblöcke */
+  klasseId: number | null;
   ausbilderId: number | null;
   ausbildungsbeginn: string;
   vertragsende: string;
@@ -312,6 +323,7 @@ export interface ProfilAntwort {
   profil: Profil;
   beruf: Beruf | null;
   berufsschule: Berufsschule | null;
+  klasse: { id: number; name: string } | null;
   ausbilder: { id: number; anzeigename: string } | null;
   stand: Stand;
   hoechsteVerkuerzung: number;
@@ -527,6 +539,8 @@ export interface PlanEintrag {
   zeitBis: string;
   /** vom Azubi selbst angelegt */
   vomAzubi: boolean;
+  /** Schulblock der Klasse (Planung → Schulblöcke): Name der Klasse – sonst null */
+  klasse: string | null;
   /** das angemeldete Konto darf den Eintrag ändern und löschen */
   bearbeitbar: boolean;
 }

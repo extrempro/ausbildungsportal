@@ -13,6 +13,8 @@ import { stelleEin } from './benachrichtigung';
  */
 export type AktivitaetArt =
   | 'plan_neu'
+  // ein Schulblock der Klasse wurde verschoben, geändert oder entfernt (Planung → Schulblöcke)
+  | 'schule_geaendert'
   | 'bericht_eingereicht'
   | 'bericht_abgezeichnet'
   | 'bericht_zurueck'

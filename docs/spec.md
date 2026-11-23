@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.77.0 · 23.11.2026
+Stand: Version 0.78.0 · 23.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -42,6 +42,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Je Azubi eine Zeitleiste nach Kalenderwochen: Schulblöcke, Einsätze in Abteilungen, Aufgaben (mit Unteraufgaben, abhakbar), Notizen, private Termine des Azubis, Prüfungstermine, Firmentermine, Ferien und Feiertage.
 - Einsatz in einer Abteilung weist deren Beauftragte und Stellvertretung für die Dauer automatisch zu.
 - **Planbausteine:** Vorlagen je Beruf. **Sammelplanung:** ein Eintrag oder Baustein für mehrere Azubis auf einmal.
+- **Klassen und Schulblöcke:** Ein Azubi gehört zu einer Klasse seiner Berufsschule (die ganze Ausbildung). Schulblöcke pflegen Ausbilder einmal an der Klasse; sie stehen im Plan jedes Azubis der Klasse und ändern sich mit. Im Plan einzeln geändert oder gelöscht, folgt ein Block dort der Klasse nicht mehr. Neue und geänderte Blöcke stehen in der Glocke.
 - **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen; mit Lesemodus.
 
 ### Berichtsheft
@@ -72,7 +73,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ### Glocke, Benachrichtigungen, Kalender
 
-- **Glocke:** neue Einträge, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Freischaltung des Planers, aktualisierte Lerninhalte, Rückfragen zu eigenen Rückmeldungen; Löschung nach 60 Tagen.
+- **Glocke:** neue Einträge, geänderte Schulblöcke, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Freischaltung des Planers, aktualisierte Lerninhalte, Rückfragen zu eigenen Rückmeldungen; Löschung nach 60 Tagen.
 - **Benachrichtigungen** per Teams und E-Mail, je Bereich (Berichtsheft, Urlaub, Ausbildungsplan, Rückmeldungen) selbst einschaltbar; ohne fremde Namen, ohne Inhalte. Teams über die Teams-App „Ausbildungsportal“ (Aktivitätsfeed über Microsoft Graph, Anwendungsberechtigung `TeamsActivity.Send`, Empfänger ist die Entra-Objekt-ID); ein Klick zeigt im Bereich „Aktivität“ einen Hinweis mit „In der App öffnen“. **In der App läuft das Portal**, angemeldet über Teams (Single Sign-on: Token von Teams, geprüft in `server/teams-sso.ts`; eigene Sitzung mit Cookie `ap_teams`, SameSite=None, partitioniert).
 - **Kalender-Abo:** ein geheimer Link (iCal) mit Schule, Einsätzen, Prüfungen, genehmigtem Urlaub, privaten Terminen.
 
@@ -92,7 +93,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 41 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 037). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 44 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 038). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -101,6 +102,10 @@ erDiagram
   benutzer ||--o| azubi_profil : "ist Azubi mit"
   beruf ||--o{ azubi_profil : ""
   berufsschule ||--o{ azubi_profil : ""
+  berufsschule ||--o{ klasse : ""
+  klasse ||--o{ azubi_profil : ""
+  klasse ||--o{ schulblock : ""
+  schulblock ||--o{ plan_eintrag : "im Plan der Klasse"
   benutzer ||--o{ plan_eintrag : "Azubi"
   benutzer ||--o{ bericht : "Azubi, je Montag"
   bericht ||--o{ bericht_anhang : ""
@@ -132,12 +137,15 @@ erDiagram
 
 | Tabelle | Inhalt | Schlüssel und Bezüge |
 | --- | --- | --- |
-| `azubi_profil` | Beruf, Berufsschule, zuständiger Ausbilder, Beginn, Vertragsende, Verkürzung, vorzeitige Zulassung, Wochenstunden, Prüfungen (JSON), Urlaubstage, Berichtsform, Planer frei | `benutzer_id` → `beruf`, `berufsschule`, `benutzer` |
+| `azubi_profil` | Beruf, Berufsschule, Klasse, zuständiger Ausbilder, Beginn, Vertragsende, Verkürzung, vorzeitige Zulassung, Wochenstunden, Prüfungen (JSON), Urlaubstage, Berichtsform, Planer frei | `benutzer_id` → `beruf`, `berufsschule`, `klasse`, `benutzer` |
 | `beruf` | Bezeichnung, Fachrichtung, Regeldauer, Lernpaket | `id` |
 | `berufsschule` | Name, Ort, Bundesland, Form (Block oder Teilzeit) | `id` |
+| `klasse` | Klasse an der Berufsschule: Name (je Schule einmalig), Beruf (freiwillig) | `id` → `berufsschule`, `beruf` |
+| `schulblock` | Schulblock einer Klasse: Zeitraum (Wochen), Titel, Text, geändert von | `id` → `klasse` |
+| `schulblock_ausnahme` | Block wurde im Plan eines Azubis einzeln geändert oder gelöscht – folgt der Klasse dort nicht mehr | `schulblock_id`, `azubi_id` |
 | `abteilung`, `abteilung_person` | Abteilungen mit Beauftragten und Stellvertretung | `abteilung_id`, `benutzer_id` |
 | `zuweisung` | Azubi ↔ Beauftragte oder Vertretung mit Zeitraum; aus einem Einsatz oder von Hand | `id` → `benutzer`, `plan_eintrag` |
-| `plan_eintrag` | Art (Schule, Einsatz, Aufgabe, Notiz, privater Termin), Zeitraum, Titel, Text, Zuständige, erledigt, Unteraufgaben (JSON), Abteilung, Sammelplanung | `id` → `benutzer`, `abteilung`, `sammelplanung` |
+| `plan_eintrag` | Art (Schule, Einsatz, Aufgabe, Notiz, privater Termin), Zeitraum, Titel, Text, Zuständige, erledigt, Unteraufgaben (JSON), Abteilung, Sammelplanung, Schulblock der Klasse | `id` → `benutzer`, `abteilung`, `sammelplanung`, `schulblock` |
 | `planvorlage` | Planbaustein je Beruf, Einträge als JSON | `id` → `beruf` |
 | `sammelplanung` | eine Sammelplanung: Azubis und Einträge (JSON) | `id` |
 | `firmentermin` | Termin für alle, Zeitraum, Hinweis | `id` |
@@ -232,8 +240,9 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | Pfad | Seite | Inhalt |
 | --- | --- | --- |
 | `/planung/sammelplanung` | Sammelplanung | Eintrag oder Baustein für mehrere Azubis |
+| `/planung/schulbloecke` | Schulblöcke | Schulblöcke je Klasse; stehen im Plan aller Azubis der Klasse |
 | `/planung/bausteine` | Planbausteine | Vorlagen je Beruf |
-| `/verwaltung/stammdaten` | Stammdaten | Betrieb, Berufe, Schulen, Abteilungen, Firmentermine, Personalstelle, Lernmodul |
+| `/verwaltung/stammdaten` | Stammdaten | Betrieb, Berufe, Schulen mit Klassen, Abteilungen, Firmentermine, Personalstelle, Lernmodul |
 | `/verwaltung/konten` | Konten | Azubis und Beauftragte verwalten |
 | `/rueckmeldungen` | Rückmeldungen | Ideen (mit Rückfrage) und Wünsche zu Lerninhalten |
 
@@ -249,7 +258,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 156 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 163 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |
@@ -258,7 +267,7 @@ Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen
 | Azubi-bezogen | `/api/azubis/:id/…` |
 | Urlaub | `/api/urlaub/…` |
 | Lernmodul, Planer, Begleiter | `/api/lernen/…`, `/api/planer/…`, `/api/begleiter/…`, `/api/anleitungen/…` |
-| Verwaltung | `/api/konten/…`, `/api/stammdaten/…`, `/api/abteilungen/…`, `/api/planvorlagen/…`, `/api/protokoll`, `/api/branding/…`, `/api/teams/…`, `/api/lernpakete/…`, `/api/lerninhalte/…` |
+| Verwaltung | `/api/konten/…`, `/api/stammdaten/…`, `/api/abteilungen/…`, `/api/planvorlagen/…`, `/api/protokoll`, `/api/branding/…`, `/api/teams/…`, `/api/schulbloecke/…`, `/api/lernpakete/…`, `/api/lerninhalte/…` |
 | Rückmeldungen | `/api/fehlermeldungen/…`, `/api/rueckmeldungen/…`, `/api/meine-meldungen/…` |
 | Sonstiges | `/api/aktivitaeten/…` (Glocke), `/api/jahreskalender`, `/api/abo/…` (Kalender), `/api/health` |
 

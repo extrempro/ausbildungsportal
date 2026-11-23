@@ -14,6 +14,7 @@ import { HandbuchLink } from './handbuchLink';
  */
 type Art =
   | 'plan_neu'
+  | 'schule_geaendert'
   | 'bericht_eingereicht'
   | 'bericht_abgezeichnet'
   | 'bericht_zurueck'
@@ -107,6 +108,14 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
         farbe: 'blau',
         kopf: n === 1 ? 'Neuer Eintrag im Ausbildungsplan' : `${n} neue Einträge im Ausbildungsplan`,
         mitte: aufzaehlung(g.titel, g.titel.some((t) => t.startsWith('Baustein ') || t.startsWith('Vorlage ')) ? 0 : Math.max(0, n - g.titel.length)),
+        zu: azubi ? '/' : `/azubis/${g.azubiId}/plan`,
+      };
+    case 'schule_geaendert':
+      return {
+        icon: 'plan',
+        farbe: 'gelb',
+        kopf: n === 1 ? 'Schulblock im Ausbildungsplan geändert' : `${n} Schulblöcke im Ausbildungsplan geändert`,
+        mitte: wochenText(g.wochen),
         zu: azubi ? '/' : `/azubis/${g.azubiId}/plan`,
       };
     case 'bericht_eingereicht':

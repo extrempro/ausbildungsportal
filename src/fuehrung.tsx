@@ -113,7 +113,7 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     ? [
         {
           titel: 'Planung',
-          text: 'Was mehrere Azubis betrifft: In der Sammelplanung trägst du etwa einen Schulblock für alle auf einmal ein. Planbausteine sind Stationen, die du in jeden Plan ab der passenden Woche einfügst.',
+          text: 'Was mehrere Azubis betrifft: Schulblöcke trägst du einmal an der Klasse ein – sie stehen dann bei allen Azubis der Klasse im Plan. Die Sammelplanung ist für anderes, Planbausteine fügst du in einen Plan ab der passenden Woche ein.',
           pfad: '/',
           ziel: ['button[aria-controls="menue-planung"]', '.tabs button'],
         },
