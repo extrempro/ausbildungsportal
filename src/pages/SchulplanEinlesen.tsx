@@ -28,6 +28,8 @@ interface Stand {
   fehler?: string;
   quelle?: 'pdf' | 'texterkennung' | 'text';
   modell?: boolean;
+  /** Berufsschule des Auftrags – nach dem Neuladen der Seite wieder gewählt, damit die Klassen zur Auswahl stehen */
+  schuleId?: number;
   zeilen?: Zeile[];
 }
 interface Wahl extends Zeile {
@@ -64,6 +66,7 @@ export function SchulplanEinlesen() {
 
   const zeige = (s: Stand) => {
     setStand(s);
+    if (s.schuleId) setSchule(s.schuleId);
     if (s.status === 'fertig') setZeilen((s.zeilen ?? []).map((z) => ({ ...z, an: z.vorgewaehlt })));
   };
 

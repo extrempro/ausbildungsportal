@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.80.3] – 2026-11-24
+
+### Geändert
+
+- **Plan der Schule einlesen – Pläne als Tabelle:** Der Titel jedes Schulblocks nennt jetzt auch das Thema, das im Plan unter der Klasse steht, z. B. „Block C1 – Video/Netzwerk/Software“. So hat jede Klasse ihr eigenes Thema für denselben Block.
+
+### Behoben
+
+- **Plan der Schule einlesen:** Nach dem Neuladen der Seite, während ein Plan gelesen wurde, war die Berufsschule nicht mehr gewählt – in der Vorschau standen dann keine Klassen zur Auswahl. Jetzt merkt sich der Auftrag seine Schule; die Klasse lässt sich in jeder Zeile von Hand ändern.
+
 ## [0.80.2] – 2026-11-24
 
 ### Behoben

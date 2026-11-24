@@ -117,18 +117,24 @@ const KLASSENARTIG = /^(?:\p{L}{0,5}-?\d{1,2}\p{L}{0,2}|\p{L}{1,3})$/u;
  * Eine Zeile einer Tabelle mit Klassen: mindestens drei Zellen, fast nur Klassennamen, mindestens eine angelegte Klasse.
  * Die Zellen sind alle Klassennamen der Zeile – auch die nicht angelegten, damit ein Zeitraum nicht der falschen Spalte zufällt.
  */
-function klassenReihe(zeile: string, bekannt: Pick<Klasse, 'name'>[]): { klasse: string | null; spalte: number }[] | null {
+interface Zelle {
+  klasse: string | null;
+  spalte: number;
+  /** Mitte der Zelle in der Zeile – Texte darunter (Themen) stehen meist mittig */
+  mitte: number;
+}
+function klassenReihe(zeile: string, bekannt: Pick<Klasse, 'name'>[]): Zelle[] | null {
   const woerter = [...zeile.matchAll(/\S+/g)].map((m) => ({ wort: m[0], spalte: m.index ?? 0 }));
   if (woerter.length < 3 || woerter.filter((w) => KLASSENARTIG.test(w.wort)).length < woerter.length * 0.8) return null;
   const bekannte = klassenMitSpalte(zeile, bekannt).map((k) => ({ ...k, ende: k.spalte + (zeile.slice(k.spalte).match(klassenMuster(k.klasse) ?? /$/)?.[0].length ?? 0) }));
   if (!bekannte.length) return null;
-  const zellen: { klasse: string | null; spalte: number }[] = bekannte.map((k) => ({ klasse: k.klasse, spalte: k.spalte }));
+  const zellen: Zelle[] = bekannte.map((k) => ({ klasse: k.klasse, spalte: k.spalte, mitte: (k.spalte + k.ende) / 2 }));
   for (const w of woerter) {
     if (!KLASSENARTIG.test(w.wort) || bekannte.some((k) => w.spalte >= k.spalte && w.spalte < k.ende)) continue;
     // „FI 25c“: der zweite Teil gehört zur Zelle davor
     const davor = zellen.filter((z) => z.spalte < w.spalte).sort((a, b) => b.spalte - a.spalte)[0];
     if (davor && !davor.klasse && w.spalte - davor.spalte <= 4) continue;
-    zellen.push({ klasse: null, spalte: w.spalte });
+    zellen.push({ klasse: null, spalte: w.spalte, mitte: w.spalte + w.wort.length / 2 });
   }
   return zellen.length >= 3 ? zellen.sort((a, b) => a.spalte - b.spalte) : null;
 }
@@ -140,8 +146,31 @@ const median = (l: number[]) => [...l].sort((a, b) => a - b)[Math.floor(l.length
  * Klassenzeile zu der Klasse, die in seiner Spalte steht. Eine Kopfzeile mit Blocknamen („A1  B1  C1 …“) gibt den Titel.
  */
 function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJahr: number): Roh[] | null {
-  const reihen = zeilen.map((z) => klassenReihe(z, bekannt)).filter((r): r is { klasse: string | null; spalte: number }[] => r !== null);
+  const reihen = zeilen.flatMap((z, i) => {
+    const zellen = klassenReihe(z, bekannt);
+    return zellen ? [{ zeile: i, zellen }] : [];
+  });
   if (!reihen.length) return null;
+  const weiteVon = (zellen: Zelle[]) => Math.max(4, median(zellen.slice(1).map((r, i) => r.spalte - zellen[i].spalte)) * 0.6);
+  // Thema je Klasse und Block: der Text unter der Klassenzeile (bis zur nächsten Zeile mit Team, Ausbildungsjahr, Tagen,
+  // Datum oder Klassen), Stück für Stück der Zelle zugeordnet, über deren Mitte er steht
+  const themen = new Map<Zelle, string>();
+  for (const r of reihen) {
+    const weite = weiteVon(r.zellen);
+    for (const zeile of zeilen.slice(r.zeile + 1, r.zeile + 9)) {
+      if (!zeile.trim()) continue;
+      if (/\bTeam\b|Ausbildungsjahr|\bTage\b/i.test(zeile) || zeitraeumeIn(zeile, kontextJahr).length || klassenReihe(zeile, bekannt)) break;
+      for (const m of zeile.matchAll(/\S+(?: \S+)*/g)) {
+        const mitte = (m.index ?? 0) + m[0].length / 2;
+        const z = [...r.zellen].sort((a, b) => Math.abs(a.mitte - mitte) - Math.abs(b.mitte - mitte))[0];
+        if (!z || Math.abs(z.mitte - mitte) > weite) continue;
+        const bisher = themen.get(z) ?? '';
+        // „Prüfungs-“ + „vorbereitung“ = „Prüfungsvorbereitung“, „Video/Netzwerk/“ + „Software“ ohne Leerzeichen
+        const neu = !bisher ? m[0] : /-$/.test(bisher) && /^\p{Ll}/u.test(m[0]) ? bisher.slice(0, -1) + m[0] : /[/-]$/.test(bisher) ? bisher + m[0] : `${bisher} ${m[0]}`;
+        themen.set(z, neu.slice(0, 100));
+      }
+    }
+  }
   const kopf = zeilen
     .map((z) => [...z.matchAll(/\S+/g)].map((m) => ({ name: m[0], spalte: m.index ?? 0 })))
     .find((t) => t.length >= 3 && t.every((x) => BLOCKNAME.test(x.name)));
@@ -153,13 +182,15 @@ function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJa
   for (const zeile of zeilen) {
     if (KEIN_UNTERRICHT.test(zeile)) continue;
     for (const f of zeitraeumeIn(zeile, kontextJahr)) {
-      for (const reihe of reihen) {
+      for (const { zellen } of reihen) {
         // höchstens gut eine halbe Spaltenbreite daneben
-        const weite = Math.max(4, median(reihe.slice(1).map((r, i) => r.spalte - reihe[i].spalte)) * 0.6);
-        const k = naechste(reihe, f.spalte, weite);
+        const weite = weiteVon(zellen);
+        const k = naechste(zellen, f.spalte, weite);
         if (!k?.klasse) continue;
         const block = kopf ? naechste(kopf, f.spalte, weite) : undefined;
-        ergebnis.push({ klasse: k.klasse, von: f.von, bis: f.bis, titel: block ? `Block ${block.name}` : 'Berufsschule', unsicher: f.unsicher });
+        const thema = themen.get(k);
+        const titel = [block ? `Block ${block.name}` : '', thema ?? ''].filter(Boolean).join(' – ') || 'Berufsschule';
+        ergebnis.push({ klasse: k.klasse, von: f.von, bis: f.bis, titel: titel.slice(0, 120), unsicher: f.unsicher });
       }
     }
   }
@@ -351,10 +382,10 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
 
 function stand(c: Ctx, a: Auftrag) {
   const st = standDes(c.k, a);
-  if (st.status !== 'fertig') return { id: a.id, ...st };
+  const schuleId = Number(lies(join(a.ordner, 'schule')));
+  if (st.status !== 'fertig') return { id: a.id, schuleId, ...st };
   const vomModell = st.modell ? ausModell(st.modell) : [];
   // die Muster des Portals zuerst – das Sprachmodell ergänzt nur (es verrechnet sich gelegentlich bei Daten)
-  const schuleId = Number(lies(join(a.ordner, 'schule')));
   const klassen = c.k.db.prepare('SELECT * FROM klasse WHERE berufsschule_id = ?').all(schuleId) as unknown as Klasse[];
   const text = st.text.slice(0, MAX_TEXT);
   const muster = erkenneBloecke(text, klassen, heute(c.k.jetzt()));
@@ -363,7 +394,7 @@ function stand(c: Ctx, a: Auftrag) {
   let roh = zusammenfuehren(muster, modell, text);
   // bei Texterkennung ist alles etwas unsicherer
   if (st.quelle === 'texterkennung') roh = roh.map((r) => ({ ...r, unsicher: true }));
-  return { id: a.id, status: 'fertig' as const, quelle: st.quelle, modell: vomModell.length > 0, zeilen: vorschau(c.k, schuleId, roh) };
+  return { id: a.id, status: 'fertig' as const, schuleId, quelle: st.quelle, modell: vomModell.length > 0, zeilen: vorschau(c.k, schuleId, roh) };
 }
 
 function schuleAus(c: Ctx, x: unknown): number {
