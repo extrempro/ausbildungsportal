@@ -1383,7 +1383,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </p>
               <h3>So geht's</h3>
               <ol className="schritte">
-                <li>Öffne unter „Azubis“ einen Azubi und wähle den Reiter „Zeitleiste“.</li>
+                <li>Tippe auf der Karte des Azubis (Startseite oder „Azubis“) auf „Zeitleiste“ – oder wähle bei einem Azubi den Reiter „Zeitleiste“.</li>
                 <li>Mit „Zeigen“ blendest du Einsätze, Schulblöcke oder Urlaub aus und ein.</li>
                 <li>Mit „Zoom“ siehst du einen kürzeren Zeitraum genauer: ganze Ausbildung, ein Jahr, ein Halbjahr oder ein Quartal. Danach steht „heute“ in der Mitte; seitlich schiebst du weiter.</li>
                 <li>Ein Klick auf eine Zeile öffnet die Woche im Ausbildungsplan.</li>

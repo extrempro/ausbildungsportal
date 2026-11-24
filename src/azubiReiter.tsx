@@ -6,6 +6,8 @@ let rolle: Rolle | null = null;
 export function merkeRolle(r: Rolle): void {
   rolle = r;
 }
+/** Sieht das angemeldete Konto die Zeitleiste? (Reiter und Azubi-Karte) */
+export const zeigtZeitleiste = () => rolle === 'ausbilder';
 
 /**
  * Die gleichrangigen Seiten eines Azubis für Ausbilder und Beauftragte: Profil, Ausbildungsplan, Berichtsheft, Urlaub –
@@ -19,7 +21,7 @@ export function AzubiReiter({ id, name }: { id: number; name: string }) {
       <Link zu={`/azubis/${id}/plan`}>Ausbildungsplan</Link>
       <Link zu={`/azubis/${id}/berichtsheft`}>Berichtsheft</Link>
       <Link zu={`/azubis/${id}/urlaub`}>Urlaub</Link>
-      {rolle === 'ausbilder' && <Link zu={`/azubis/${id}/zeitleiste`}>Zeitleiste</Link>}
+      {zeigtZeitleiste() && <Link zu={`/azubis/${id}/zeitleiste`}>Zeitleiste</Link>}
     </nav>
   );
 }
