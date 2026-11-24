@@ -25,7 +25,7 @@ interface Woche {
   schule: Eintrag[];
   seiten: number[];
   stunden: number;
-  stand: 'neu' | 'vorhanden' | 'ausserhalb' | 'zukunft';
+  stand: 'neu' | 'leer' | 'vorhanden' | 'ausserhalb' | 'zukunft';
   hinweise: string[];
   unsicher: boolean;
   vorgewaehlt: boolean;
@@ -279,7 +279,7 @@ export function BerichteEinlesen({ azubiId }: { azubiId: number }) {
             {wochen.map((w) => (
               <li key={w.montag}>
                 <label className="haken">
-                  <input type="checkbox" checked={wahl.has(w.montag)} disabled={w.stand !== 'neu'} onChange={() => schalte(wahl, setWahl, w.montag)} />
+                  <input type="checkbox" checked={wahl.has(w.montag)} disabled={w.stand !== 'neu' && w.stand !== 'leer'} onChange={() => schalte(wahl, setWahl, w.montag)} />
                   <span>
                     <strong>
                       KW {w.kw}/{w.jahr}
@@ -293,7 +293,7 @@ export function BerichteEinlesen({ azubiId }: { azubiId: number }) {
                 </label>
                 {(w.hinweise.length > 0 || w.unsicher) && (
                   <p className="klein">
-                    {w.unsicher && w.stand === 'neu' && <span className="pille gelb">prüfen</span>} <span className="leise">{w.hinweise.join(' · ')}</span>
+                    {w.unsicher && (w.stand === 'neu' || w.stand === 'leer') && <span className="pille gelb">prüfen</span>} <span className="leise">{w.hinweise.join(' · ')}</span>
                   </p>
                 )}
                 {(['betrieb', 'unterweisung', 'schule'] as const).some((t) => w[t].length > 0) && (

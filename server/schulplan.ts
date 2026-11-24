@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { Fehler, koerper } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
+import { merkeAktivitaet } from './aktivitaet';
+import type { DB } from './db';
 import { transaktion } from './db';
 import { heute } from './datum';
 import { ferienZwischen, ladeFerien } from './ferien';
@@ -347,6 +349,32 @@ export interface Zeile {
   unsicher: boolean;
   /** schon vorhanden oder nicht zuzuordnen – anfangs nicht angehakt */
   vorgewaehlt: boolean;
+  /** Blöcke der Klasse, die sich mit diesem Zeitraum überschneiden (nicht genau gleich) – lassen sich ersetzen */
+  ueberschneidung: { id: number; von: string; bis: string; titel: string }[];
+  /** so viele Azubis der Klasse haben in diesen Wochen schon einen eigenen Eintrag „Berufsschule“ (ohne Klasse) */
+  eigeneEintraege: number;
+}
+
+const tt = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
+
+/** Blöcke der Klasse, die sich mit dem Zeitraum überschneiden, aber nicht genau gleich sind (Wochen über ihren Montag) */
+function ueberschneidendeBloecke(db: DB, klasseId: number, von: string, bis: string): { id: number; von: string; bis: string; titel: string }[] {
+  const v = montagVon(von);
+  const b = montagVon(bis);
+  return db.prepare('SELECT id, von, bis, titel FROM schulblock WHERE klasse_id = ? AND von <= ? AND bis >= ? AND NOT (von = ? AND bis = ?) ORDER BY von').all(klasseId, b, v, v, b) as unknown as { id: number; von: string; bis: string; titel: string }[];
+}
+
+/** Aktive Azubis der Klasse mit einem eigenen Eintrag „Berufsschule“ (nicht von der Klasse) in diesen Wochen – je Azubi die Einträge */
+function azubisMitEigenemEintrag(db: DB, klasseId: number, von: string, bis: string): { azubi: number; eintraege: number[] }[] {
+  const zeilen = db
+    .prepare(
+      `SELECT e.azubi_id AS azubi, e.id FROM plan_eintrag e JOIN azubi_profil p ON p.benutzer_id = e.azubi_id JOIN benutzer b ON b.id = e.azubi_id
+        WHERE p.klasse_id = ? AND b.status = 'aktiv' AND e.art = 'schule' AND e.schulblock_id IS NULL AND e.von <= ? AND e.bis >= ?`,
+    )
+    .all(klasseId, montagVon(bis), montagVon(von)) as unknown as { azubi: number; id: number }[];
+  const je = new Map<number, number[]>();
+  for (const z of zeilen) je.set(z.azubi, [...(je.get(z.azubi) ?? []), z.id]);
+  return [...je].map(([azubi, eintraege]) => ({ azubi, eintraege }));
 }
 
 /** Prüft die gefundenen Zeiträume gegen Klassen, vorhandene Blöcke, Ferien und genehmigten Urlaub. */
@@ -376,12 +404,22 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
       ok = false;
     }
     if (!passend) hinweise.push('keine Klasse erkannt – bitte zuordnen');
+    let ueberschneidung: Zeile['ueberschneidung'] = [];
+    let eigeneEintraege = 0;
     if (passend) {
       const vorhanden = db.prepare('SELECT 1 FROM schulblock WHERE klasse_id = ? AND von = ? AND bis = ?').get(passend.id, montagVon(r.von), montagVon(r.bis));
       if (vorhanden) {
         hinweise.push('schon vorhanden');
         ok = false;
+      } else {
+        ueberschneidung = ueberschneidendeBloecke(db, passend.id, r.von, r.bis);
+        if (ueberschneidung.length) {
+          hinweise.push(`überschneidet sich mit ${ueberschneidung.map((b) => `„${b.titel}“ (${tt(b.von)}–${tt(plusTage(b.bis, 4))})`).join(', ')}`);
+          ok = false;
+        }
       }
+      eigeneEintraege = azubisMitEigenemEintrag(db, passend.id, r.von, r.bis).length;
+      if (eigeneEintraege > 0) hinweise.push(`${eigeneEintraege === 1 ? 'ein Azubi hat' : `${eigeneEintraege} Azubis haben`} in diesen Wochen schon einen eigenen Eintrag „Berufsschule“`);
       const urlaub = (
         db
           .prepare(
@@ -398,7 +436,7 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
       hinweise.push('nur vom Sprachmodell gefunden – bitte mit dem Plan vergleichen');
       ok = false;
     } else if (r.unsicher) hinweise.push('Jahr ergänzt oder per Texterkennung gelesen – bitte prüfen');
-    zeilen.push({ klasseText: r.klasse, klasseId: passend?.id ?? null, von: r.von, bis: r.bis, titel: r.titel, hinweise, unsicher: r.unsicher || inFerien.length > 0, vorgewaehlt: ok && !!passend });
+    zeilen.push({ klasseText: r.klasse, klasseId: passend?.id ?? null, von: r.von, bis: r.bis, titel: r.titel, hinweise, unsicher: r.unsicher || inFerien.length > 0, vorgewaehlt: ok && !!passend, ueberschneidung, eigeneEintraege });
     if (zeilen.length >= MAX_ZEILEN) break;
   }
   return zeilen.sort((a, b) => a.klasseText.localeCompare(b.klasseText) || a.von.localeCompare(b.von));
@@ -490,6 +528,8 @@ export const SCHULPLAN_ROUTEN: Route[] = [
       const body = koerper(c);
       const zeilen = body.zeilen;
       if (!Array.isArray(zeilen) || zeilen.length === 0 || zeilen.length > MAX_ZEILEN) throw new Fehler(400, 'Keine Schulblöcke zum Übernehmen gewählt');
+      const ersetzt = new Set<number>();
+      const eigeneEntfernen = body.eigeneEntfernen === true;
       const neu = zeilen.map((z, i) => {
         const x = (z ?? {}) as Record<string, unknown>;
         const klasse = klasseVon(db, Number(x.klasseId));
@@ -501,28 +541,58 @@ export const SCHULPLAN_ROUTEN: Route[] = [
         if (bis > plusTage(von, 7 * 25)) throw new Fehler(400, `Zeile ${i + 1}: höchstens 26 Wochen`);
         const titel = typeof x.titel === 'string' && x.titel.trim() ? x.titel.trim().slice(0, 120) : 'Berufsschule';
         if (/[\u0000-\u001f\u007f]/.test(titel)) throw new Fehler(400, `Zeile ${i + 1}: Der Titel enthält unzulässige Zeichen`);
-        return { klasse, von, bis, titel };
+        // vorhandene Blöcke derselben Klasse ersetzen (sie überschneiden sich mit diesem Zeitraum)
+        const ersetzenRoh = Array.isArray(x.ersetzen) ? x.ersetzen : [];
+        if (ersetzenRoh.length > 20) throw new Fehler(400, `Zeile ${i + 1}: zu viele Blöcke zum Ersetzen`);
+        const ersetzen = ersetzenRoh.map((id) => {
+          const b = db.prepare('SELECT id FROM schulblock WHERE id = ? AND klasse_id = ?').get(Number(id), klasse.id) as { id: number } | undefined;
+          if (!b) throw new Fehler(400, `Zeile ${i + 1}: Der Block zum Ersetzen gehört nicht zu dieser Klasse`);
+          if (ersetzt.has(b.id)) throw new Fehler(400, `Zeile ${i + 1}: Derselbe Block soll zweimal ersetzt werden`);
+          ersetzt.add(b.id);
+          return b.id;
+        });
+        return { klasse, von, bis, titel, ersetzen };
       });
       const jetzt = c.k.jetzt();
       const klassen = new Set<number>();
       let angelegt = 0;
+      let ersetztAnzahl = 0;
+      // eigene Einträge „Berufsschule“ der Azubis, die der neue Block ersetzt: je Azubi die erste Woche und die Anzahl
+      const entfernt = new Map<number, { montag: string; anzahl: number }>();
       transaktion(db, () => {
         for (const z of neu) {
-          if (db.prepare('SELECT 1 FROM schulblock WHERE klasse_id = ? AND von = ? AND bis = ?').get(z.klasse.id, z.von, z.bis)) continue;
-          db.prepare('INSERT INTO schulblock (klasse_id, von, bis, titel, text, geaendert, geaendert_von) VALUES (?, ?, ?, ?, ?, ?, ?)').run(z.klasse.id, z.von, z.bis, z.titel, '', jetzt.toISOString(), c.b.id);
+          if (z.ersetzen.length) {
+            // der erste überschneidende Block bekommt den neuen Zeitraum, die übrigen fallen weg – bei allen Azubis der Klasse
+            db.prepare('UPDATE schulblock SET von = ?, bis = ?, titel = ?, geaendert = ?, geaendert_von = ? WHERE id = ?').run(z.von, z.bis, z.titel, jetzt.toISOString(), c.b.id, z.ersetzen[0]);
+            for (const id of z.ersetzen.slice(1)) db.prepare('DELETE FROM schulblock WHERE id = ?').run(id);
+            ersetztAnzahl += z.ersetzen.length;
+          } else if (db.prepare('SELECT 1 FROM schulblock WHERE klasse_id = ? AND von = ? AND bis = ?').get(z.klasse.id, z.von, z.bis)) continue;
+          else {
+            db.prepare('INSERT INTO schulblock (klasse_id, von, bis, titel, text, geaendert, geaendert_von) VALUES (?, ?, ?, ?, ?, ?, ?)').run(z.klasse.id, z.von, z.bis, z.titel, '', jetzt.toISOString(), c.b.id);
+            angelegt++;
+          }
           klassen.add(z.klasse.id);
-          angelegt++;
+          if (eigeneEntfernen) {
+            for (const { azubi, eintraege } of azubisMitEigenemEintrag(db, z.klasse.id, z.von, z.bis)) {
+              for (const id of eintraege) db.prepare('DELETE FROM plan_eintrag WHERE id = ?').run(id);
+              const vorher = entfernt.get(azubi);
+              entfernt.set(azubi, { montag: vorher && vorher.montag < z.von ? vorher.montag : z.von, anzahl: (vorher?.anzahl ?? 0) + eintraege.length });
+            }
+          }
         }
+        // der Azubi erfährt, dass Einträge in seinem Plan weggefallen sind
+        for (const [azubi, e] of entfernt) merkeAktivitaet(db, jetzt, 'schule_geaendert', azubi, c.b, e.montag, '', e.anzahl);
         const azubis = new Set<number>();
         for (const id of klassen) {
           for (const a of db.prepare("SELECT p.benutzer_id AS id FROM azubi_profil p JOIN benutzer b ON b.id = p.benutzer_id WHERE p.klasse_id = ? AND b.status = 'aktiv'").all(id) as unknown as { id: number }[]) azubis.add(a.id);
         }
         for (const id of azubis) gleicheSchulbloeckeAb(db, jetzt, c.b, id);
-        protokolliere(db, jetzt, 'fach', 'schulblock_geaendert', c.b, null, `Plan der Schule eingelesen: ${angelegt} Schulblöcke übernommen`);
+        const entfernteEintraege = [...entfernt.values()].reduce((n, e) => n + e.anzahl, 0);
+        protokolliere(db, jetzt, 'fach', 'schulblock_geaendert', c.b, null, `Plan der Schule eingelesen: ${angelegt} Schulblöcke übernommen${ersetztAnzahl ? `, ${ersetztAnzahl} ersetzt` : ''}${entfernteEintraege ? `, ${entfernteEintraege} eigene Einträge „Berufsschule“ entfernt` : ''}`);
       });
       loescheAuftrag(c.k, c.b.id, 'schulplan', body.auftrag);
       const azubis = (db.prepare(`SELECT COUNT(*) AS n FROM azubi_profil p JOIN benutzer b ON b.id = p.benutzer_id WHERE b.status = 'aktiv' AND p.klasse_id IN (${[...klassen].map(() => '?').join(',') || 'NULL'})`).get(...klassen) as { n: number }).n;
-      return { status: 200, body: { angelegt, azubis } };
+      return { status: 200, body: { angelegt, ersetzt: ersetztAnzahl, entfernt: [...entfernt.values()].reduce((n, e) => n + e.anzahl, 0), azubis } };
     },
   },
 ];

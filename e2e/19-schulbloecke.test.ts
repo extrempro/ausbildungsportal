@@ -81,6 +81,26 @@ test(
   }),
 );
 
+test(
+  'Plan der Schule einlesen: ein verschobener Block überschneidet sich mit dem vorhandenen – ersetzen statt doppelt',
+  mitFoto(() => p, 'schulplan-ersetzen', async () => {
+    const s = await p.seite(PETRA, PC);
+    await oeffne(s, p.url, '/planung/schulbloecke/einlesen');
+    // die Schule hat den Block um eine Woche verschoben
+    await s.locator('textarea').fill(`Blockplan Schuljahr ${inTagen(0).slice(0, 4)}\nFI 25a  ${tt(inTagen(49))}–${tt(inTagen(63))}`);
+    await s.click('button:has-text("Text einlesen")');
+    await s.locator('h2:has-text("Vorschau")').waitFor();
+    assert.match(await text(s, '.liste'), /überschneidet sich mit „Berufsschule“/);
+    assert.equal(await s.locator('.liste input[type=checkbox]:checked').count(), 0, 'nicht angehakt');
+    await s.getByLabel('Vorhandenen Block ersetzen').check();
+    assert.equal(await s.locator('.liste input[type=checkbox]:checked').count(), 2, 'Zeile und Ersetzen angehakt');
+    await s.click('button:has-text("Einen Schulblock übernehmen")');
+    await s.locator('text=Ein Block ersetzt – im Plan von einem Azubi.').waitFor();
+    assert.match(await text(s, 'main'), /FI-25a · 2 Schulblöcke/);
+    assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
+  }),
+);
+
 /** TT.MM.JJJJ */
 function tt(iso: string): string {
   return `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;

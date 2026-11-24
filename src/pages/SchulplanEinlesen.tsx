@@ -20,6 +20,10 @@ interface Zeile {
   hinweise: string[];
   unsicher: boolean;
   vorgewaehlt: boolean;
+  /** Blöcke der Klasse, die sich mit diesem Zeitraum überschneiden – lassen sich ersetzen */
+  ueberschneidung: { id: number; von: string; bis: string; titel: string }[];
+  /** Azubis der Klasse mit einem eigenen Eintrag „Berufsschule“ in diesen Wochen */
+  eigeneEintraege: number;
 }
 interface Stand {
   id?: string;
@@ -34,6 +38,10 @@ interface Stand {
 }
 interface Wahl extends Zeile {
   an: boolean;
+  /** die überschneidenden Blöcke ersetzen (nur, solange die erkannte Klasse gewählt ist) */
+  ersetzen: boolean;
+  /** Klasse, für die die Vorschau gerechnet hat */
+  klasseVorschau: number | null;
 }
 
 const QUELLE: Record<string, string> = { pdf: 'aus der PDF gelesen', texterkennung: 'per Texterkennung gelesen (Scan) – bitte besonders genau prüfen', text: 'aus dem eingefügten Text gelesen' };
@@ -48,6 +56,7 @@ export function SchulplanEinlesen() {
   const [zeilen, setZeilen] = useState<Wahl[]>([]);
   const [fehler, setFehler] = useState('');
   const [laeuft, setLaeuft] = useState(false);
+  const [eigeneEntfernen, setEigeneEntfernen] = useState(false);
 
   const ladeStamm = useCallback(() => api<Stammdaten>('GET', '/api/stammdaten').then(setStamm), []);
   useEffect(() => {
@@ -67,7 +76,7 @@ export function SchulplanEinlesen() {
   const zeige = (s: Stand) => {
     setStand(s);
     if (s.schuleId) setSchule(s.schuleId);
-    if (s.status === 'fertig') setZeilen((s.zeilen ?? []).map((z) => ({ ...z, an: z.vorgewaehlt })));
+    if (s.status === 'fertig') setZeilen((s.zeilen ?? []).map((z) => ({ ...z, an: z.vorgewaehlt, ersetzen: false, klasseVorschau: z.klasseId })));
   };
 
   // solange der Dienst liest: alle zwei Sekunden nachsehen
@@ -109,14 +118,27 @@ export function SchulplanEinlesen() {
   const setze = (i: number, teil: Partial<Wahl>) => setZeilen((alt) => alt.map((z, j) => (j === i ? { ...z, ...teil } : z)));
 
   const gewaehlt = zeilen.filter((z) => z.an);
+  const ersetzbar = (z: Wahl) => z.ueberschneidung.length > 0 && z.klasseId !== null && z.klasseId === z.klasseVorschau;
+  // angehakte Zeilen, bei denen Azubis schon eigene Einträge „Berufsschule“ haben (je Zeile gezählt)
+  const eigene = gewaehlt.filter((z) => z.klasseId === z.klasseVorschau).reduce((n, z) => n + z.eigeneEintraege, 0);
   const ohneKlasse = gewaehlt.filter((z) => !z.klasseId).length;
   const uebernimm = async () => {
     setLaeuft(true);
     setFehler('');
     try {
-      const r = await api<{ angelegt: number; azubis: number }>('POST', '/api/schulbloecke/uebernehmen', { auftrag: stand?.id, zeilen: gewaehlt.map((z) => ({ klasseId: z.klasseId, von: z.von, bis: z.bis, titel: z.titel })) });
+      const r = await api<{ angelegt: number; ersetzt: number; entfernt: number; azubis: number }>('POST', '/api/schulbloecke/uebernehmen', {
+        auftrag: stand?.id,
+        eigeneEntfernen: eigeneEntfernen && eigene > 0,
+        zeilen: gewaehlt.map((z) => ({ klasseId: z.klasseId, von: z.von, bis: z.bis, titel: z.titel, ersetzen: ersetzbar(z) && z.ersetzen ? z.ueberschneidung.map((b) => b.id) : [] })),
+      });
       setZeilen([]);
-      melde(`${r.angelegt === 1 ? 'Ein Schulblock' : `${r.angelegt} Schulblöcke`} übernommen${r.azubis ? ` – im Plan von ${r.azubis === 1 ? 'einem Azubi' : `${r.azubis} Azubis`}` : ''}.`);
+      const teile = [
+        r.angelegt || !r.ersetzt ? `${r.angelegt === 1 ? 'ein Schulblock' : `${r.angelegt} Schulblöcke`} übernommen` : '',
+        r.ersetzt ? `${r.ersetzt === 1 ? 'ein Block' : `${r.ersetzt} Blöcke`} ersetzt` : '',
+        r.entfernt ? `${r.entfernt === 1 ? 'ein eigener Eintrag' : `${r.entfernt} eigene Einträge`} entfernt` : '',
+      ].filter(Boolean);
+      const satz = teile.join(', ');
+      melde(`${satz.charAt(0).toUpperCase()}${satz.slice(1)}${r.azubis ? ` – im Plan von ${r.azubis === 1 ? 'einem Azubi' : `${r.azubis} Azubis`}` : ''}.`);
       geheZu('/planung/schulbloecke', true);
     } catch (e) {
       setFehler(e instanceof Error ? e.message : 'Fehler');
@@ -284,9 +306,24 @@ export function SchulplanEinlesen() {
                     {z.unsicher && <span className="pille gelb">prüfen</span>} <span className="leise">{z.hinweise.join(' · ')}</span>
                   </p>
                 )}
+                {ersetzbar(z) && (
+                  <label className="haken">
+                    <input type="checkbox" checked={z.ersetzen} onChange={(e) => setze(i, { ersetzen: e.target.checked, an: e.target.checked || z.an })} />
+                    {z.ueberschneidung.length === 1 ? 'Vorhandenen Block ersetzen' : `Die ${z.ueberschneidung.length} vorhandenen Blöcke ersetzen`}
+                  </label>
+                )}
               </li>
             ))}
           </ul>
+          {eigene > 0 && (
+            <div className="hinweis">
+              <label className="haken">
+                <input type="checkbox" checked={eigeneEntfernen} onChange={(e) => setEigeneEntfernen(e.target.checked)} />
+                Eigene Einträge „Berufsschule“ der Azubis in diesen Wochen entfernen
+              </label>
+              <p className="klein">Diese Einträge hängen an keiner Klasse – zum Beispiel von Hand oder über die Sammelplanung eingetragen. Ohne Haken bleiben sie neben dem neuen Block stehen.</p>
+            </div>
+          )}
           {ohneKlasse > 0 && (
             <p className="hinweis" role="status">
               {ohneKlasse === 1 ? 'Eine angehakte Zeile hat' : `${ohneKlasse} angehakte Zeilen haben`} noch keine Klasse.

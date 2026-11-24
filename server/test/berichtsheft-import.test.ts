@@ -243,3 +243,25 @@ test('Alte Berichte: Einträge am Samstag nur mit Freischaltung im Profil', asyn
   assert.equal(koerper(await ruf(w.u, 'POST', pfad, { cookies: c, body: { text } })).wochen[0].vorgewaehlt, true);
   assert.equal(koerper(await ruf(w.u, 'POST', `${pfad}/uebernehmen`, { cookies: c, body: { wochen: [daten] } })).angelegt, 1);
 });
+
+test('Alte Berichte: ein leerer Entwurf wird ersetzt, ein Entwurf mit Inhalt bleibt', async () => {
+  const w = await welt();
+  const c = sitzung(w.u, w.anna);
+  const pfad = `/api/azubis/${w.anna.id}/einlesen`;
+  // KW 37: leerer Entwurf (nur gespeichert), KW 38: Entwurf mit einem Eintrag
+  await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/berichte/2026-09-07`, { cookies: c, body: { inhalt: { betrieb: [] } } });
+  await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/berichte/2026-09-14`, { cookies: c, body: { inhalt: { betrieb: [{ text: 'Schon geschrieben', stunden: 8 }] } } });
+  const r = koerper(await ruf(w.u, 'POST', pfad, { cookies: c, body: { text: FORMULAR } }));
+  assert.deepEqual(r.wochen.map((x: { montag: string; stand: string; vorgewaehlt: boolean }) => [x.montag, x.stand, x.vorgewaehlt]), [
+    ['2026-09-07', 'leer', true],
+    ['2026-09-14', 'vorhanden', false],
+  ]);
+  assert.match(r.wochen[0].hinweise[0], /Ersetzt deinen leeren Entwurf/);
+  const woche = (x: Record<string, unknown>) => ({ montag: x.montag, form: x.form, betrieb: x.betrieb, unterweisung: x.unterweisung, schule: x.schule, seiten: [] });
+  assert.equal((await ruf(w.u, 'POST', `${pfad}/uebernehmen`, { cookies: c, body: { wochen: [woche(r.wochen[1])] } })).status, 409);
+  assert.equal(koerper(await ruf(w.u, 'POST', `${pfad}/uebernehmen`, { cookies: c, body: { wochen: [woche(r.wochen[0])] } })).angelegt, 1);
+  const b = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/berichte/2026-09-07`, { cookies: c }));
+  assert.equal(b.summe.gesamt, 31.5);
+  assert.deepEqual(b.verlauf.map((v: { aktion: string }) => v.aktion), ['eingelesen']);
+  assert.equal(koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/berichte/2026-09-14`, { cookies: c })).inhalt.betrieb[0].text, 'Schon geschrieben');
+});
