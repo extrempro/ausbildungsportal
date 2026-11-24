@@ -3,6 +3,7 @@
 # Läuft im eigenen Container ohne Netz; Austausch mit dem Portal nur über den Arbeitsordner (im Portal: data/import):
 #   <ARBEIT>/.bereit              Lebenszeichen des Dienstes (wird bei jeder Runde erneuert)
 #   <ARBEIT>/<id>/art             was gelesen wird: schulplan oder berichtsheft (schreibt das Portal)
+#   <ARBEIT>/<id>/klassen.txt     nur schulplan: die im Portal angelegten Klassen, eine je Zeile (schreibt das Portal)
 #   <ARBEIT>/<id>/eingang.pdf     hochgeladene PDF – oder eingang.txt mit eingefügtem Text (schreibt das Portal)
 #   <ARBEIT>/<id>/auftrag         Auftrag liegt vor (schreibt das Portal zuletzt)
 #   <ARBEIT>/<id>/laeuft          wird gerade gelesen
@@ -77,7 +78,12 @@ vorschlag() {
 	art="$2"
 	[ -f "$SPRACHMODELL" ] && command -v llama-completion >/dev/null 2>&1 || return 1
 	[ -f "$VORLAGEN/$art/system.txt" ] && [ -f "$VORLAGEN/$art/schema.json" ] || return 1
-	head -c "$MAX_ZEICHEN" "$d/text.txt" >"$d/eingabe.txt"
+	: >"$d/eingabe.txt"
+	# Schulplan: die im Portal angelegten Klassen stehen vor dem Text – nur ihnen soll das Modell Zeiträume zuordnen
+	if [ -s "$d/klassen.txt" ]; then
+		printf 'Angelegte Klassen: %s\n\n' "$(head -c 2000 "$d/klassen.txt" | tr '\n' ',' | sed -e 's/,$//' -e 's/,/, /g')" >>"$d/eingabe.txt"
+	fi
+	head -c "$MAX_ZEICHEN" "$d/text.txt" >>"$d/eingabe.txt"
 	llama-completion -m "$SPRACHMODELL" --jinja -rea off -st --no-display-prompt --no-warmup \
 		-c "$KONTEXT" -n 6000 -t "$THREADS" --temp 0.1 --top-p 0.9 \
 		-sysf "$VORLAGEN/$art/system.txt" --json-schema-file "$VORLAGEN/$art/schema.json" \

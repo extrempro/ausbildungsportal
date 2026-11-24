@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { bereiteImportOrdner } from '../import-dienst';
-import { ausModell, erkenneBloecke, zusammenfuehren } from '../schulplan';
+import { ausModell, erkenneBloecke, nurAngelegte, zusammenfuehren } from '../schulplan';
 import type { BenutzerZeile } from '../typen';
 import { koerper, konto, ruf, sitzung, umgebung, zustaendig } from './hilfe';
 import type { Umgebung } from './hilfe';
@@ -29,26 +29,56 @@ Berufliche Schule Musterstadt — Fachinformatiker
 | FI 25b |21.09.-09.10.2026 |30.11.2026 — 18.12.2026/|15.2.27 - 5.3.27
 Herbstferien 12.10.-23.10.2026`;
 
+const KLASSEN = [{ name: 'FI-25a' }, { name: 'FI-25b' }];
 const ERWARTET = [
-  ['FI 25a', '2026-08-31', '2026-09-18'],
-  ['FI 25a', '2026-11-09', '2026-11-27'],
-  ['FI 25a', '2027-02-01', '2027-02-19'],
-  ['FI 25b', '2026-09-21', '2026-10-09'],
-  ['FI 25b', '2026-11-30', '2026-12-18'],
-  ['FI 25b', '2027-02-15', '2027-03-05'],
+  ['FI-25a', '2026-08-31', '2026-09-18'],
+  ['FI-25a', '2026-11-09', '2026-11-27'],
+  ['FI-25a', '2027-02-01', '2027-02-19'],
+  ['FI-25b', '2026-09-21', '2026-10-09'],
+  ['FI-25b', '2026-11-30', '2026-12-18'],
+  ['FI-25b', '2027-02-15', '2027-03-05'],
 ];
 const sortiert = (r: { klasse: string; von: string; bis: string }[]) => r.map((x) => [x.klasse, x.von, x.bis]).sort((a, b) => a.join().localeCompare(b.join()));
 
-test('Schulplan: Muster finden Zeiträume, Kalenderwochen und Klassen – Ferien nicht', () => {
-  assert.deepEqual(sortiert(erkenneBloecke(PDF_TEXT, [], '2026-11-10')), ERWARTET);
-  assert.deepEqual(sortiert(erkenneBloecke(SCAN_TEXT, [], '2026-11-10')), ERWARTET);
-  // bekannte Klassen werden in ihrer Schreibweise erkannt
-  assert.deepEqual(new Set(erkenneBloecke(PDF_TEXT, [{ name: 'FI-25a' }, { name: 'FI-25b' }], '2026-11-10').map((r) => r.klasse)), new Set(['FI-25a', 'FI-25b']));
-  // ohne Jahr: aus dem Zusammenhang, über den Jahreswechsel richtig – und als unsicher markiert
-  const ohneJahr = erkenneBloecke('Plan 2027\nIT-26c 14.12.–15.01.', [], '2026-11-10');
-  assert.deepEqual(ohneJahr.map((r) => [r.klasse, r.von, r.bis, r.unsicher]), [['IT-26c', '2026-12-14', '2027-01-15', true]]);
+test('Schulplan: Muster finden Zeiträume und Kalenderwochen der angelegten Klassen – Ferien nicht', () => {
+  assert.deepEqual(sortiert(erkenneBloecke(PDF_TEXT, KLASSEN, '2026-11-10')), ERWARTET);
+  assert.deepEqual(sortiert(erkenneBloecke(SCAN_TEXT, KLASSEN, '2026-11-10')), ERWARTET);
+  // nur angelegte Klassen: Die Zeilen der FI 25b gehören nicht zur FI-25a darüber
+  assert.deepEqual(sortiert(erkenneBloecke(PDF_TEXT, [{ name: 'FI-25a' }], '2026-11-10')), ERWARTET.slice(0, 3));
+  // ohne angelegte Klasse im Plan: Zeiträume ohne Klasse, zum Zuordnen; ohne Jahr aus dem Zusammenhang, über den Jahreswechsel
+  const ohneJahr = erkenneBloecke('Plan 2027\nIT-26c 14.12.–15.01.', KLASSEN, '2026-11-10');
+  assert.deepEqual(ohneJahr.map((r) => [r.klasse, r.von, r.bis, r.unsicher]), [['', '2026-12-14', '2027-01-15', true]]);
   // ungültige Daten fallen weg
-  assert.deepEqual(erkenneBloecke('FI 25a 31.02.–05.03.2027', [], '2026-11-10'), []);
+  assert.deepEqual(erkenneBloecke('FI 25a 31.02.–05.03.2027', KLASSEN, '2026-11-10'), []);
+});
+
+test('Schulplan: Klassen in Blöcke eingeteilt – die Klassen unter einem Block bekommen seine Zeiträume, Blöcke sind keine Klassen', () => {
+  const text = `Blockplan Schuljahr 2026/27
+Block A        31.08.–18.09.2026        09.11.–27.11.2026
+               FI 25a     FI 25b
+Block B        21.09.–09.10.2026        30.11.–18.12.2026
+               FI 25c
+               IT 25a
+Herbstferien 12.10.–23.10.2026`;
+  const r = erkenneBloecke(text, [...KLASSEN, { name: 'IT-25a' }], '2026-11-10');
+  assert.deepEqual(sortiert(r), [
+    ['FI-25a', '2026-08-31', '2026-09-18'],
+    ['FI-25a', '2026-11-09', '2026-11-27'],
+    ['FI-25b', '2026-08-31', '2026-09-18'],
+    ['FI-25b', '2026-11-09', '2026-11-27'],
+    ['IT-25a', '2026-09-21', '2026-10-09'],
+    ['IT-25a', '2026-11-30', '2026-12-18'],
+  ]);
+  // auch in einer Zeile: Block, Zeitraum und mehrere Klassen
+  assert.deepEqual(sortiert(erkenneBloecke('Block 1: 31.08.–18.09.2026 für FI 25a, FI 25b', KLASSEN, '2026-11-10')), [
+    ['FI-25a', '2026-08-31', '2026-09-18'],
+    ['FI-25b', '2026-08-31', '2026-09-18'],
+  ]);
+  // das Sprachmodell: nur angelegte Klassen, in der Schreibweise des Portals – „Block 2“ ist keine
+  assert.deepEqual(
+    nurAngelegte(ausModell({ bloecke: [{ klasse: 'FI 25a', von: '2026-08-31', bis: '2026-09-18', titel: '' }, { klasse: 'Block 2', von: '2026-09-21', bis: '2026-10-09', titel: '' }] }), KLASSEN).map((x) => x.klasse),
+    ['FI-25a'],
+  );
 });
 
 test('Schulplan: Antwort des Sprachmodells nur in der festen Form', () => {
@@ -69,12 +99,12 @@ test('Schulplan: Muster zuerst – das Sprachmodell ergänzt nur, erfundene Date
       { klasse: 'FI 25b', von: '2026-09-21', bis: '2026-10-09', titel: 'Block 1' },
     ],
   });
-  const r = zusammenfuehren(erkenneBloecke(PDF_TEXT, [], '2026-11-10'), modell, PDF_TEXT);
+  const r = zusammenfuehren(erkenneBloecke(PDF_TEXT, KLASSEN, '2026-11-10'), nurAngelegte(modell, KLASSEN), PDF_TEXT);
   assert.deepEqual(sortiert(r), ERWARTET, 'genau die sechs Blöcke aus dem Plan – nichts Erfundenes');
   assert.equal(r.find((x) => x.von === '2026-08-31')?.titel, 'Block 1', 'Titel des Modells übernommen');
   assert.ok(r.every((x) => !x.nurModell));
   // was nur das Modell findet und so im Text steht, kommt als „bitte prüfen“ dazu
-  const extra = zusammenfuehren([], ausModell({ bloecke: [{ klasse: 'FI 25b', von: '2026-11-30', bis: '2026-12-18', titel: 'Block 2' }] }), PDF_TEXT);
+  const extra = zusammenfuehren([], nurAngelegte(ausModell({ bloecke: [{ klasse: 'FI 25b', von: '2026-11-30', bis: '2026-12-18', titel: 'Block 2' }] }), KLASSEN), PDF_TEXT);
   assert.deepEqual(extra.map((x) => [x.von, x.nurModell, x.unsicher]), [['2026-11-30', true, true]]);
 });
 
@@ -109,8 +139,8 @@ test('Schulplan: ohne Dienst gleich eine Vorschau aus dem Text; PDF geht dann ni
   const fi25a = r.zeilen.filter((z: { klasseId: number | null }) => z.klasseId === w.a);
   assert.equal(fi25a.length, 3, 'FI 25a ist die Klasse FI-25a');
   assert.ok(fi25a.every((z: { vorgewaehlt: boolean }) => z.vorgewaehlt));
-  const fi25b = r.zeilen.filter((z: { klasseText: string }) => z.klasseText === 'FI 25b');
-  assert.ok(fi25b.every((z: { klasseId: null; vorgewaehlt: boolean; hinweise: string[] }) => z.klasseId === null && !z.vorgewaehlt && z.hinweise[0].includes('gibt es an dieser Schule nicht')));
+  // die FI 25b ist nicht angelegt: ihre Zeilen kommen gar nicht vor
+  assert.equal(r.zeilen.length, 3);
   // die PDF verlangt den Dienst
   const pdf = await ruf(w.u, 'POST', `/api/schulbloecke/einlesen?schule=${w.schule}`, { cookies: c, body: Buffer.from('%PDF-1.7 Test') });
   assert.equal(pdf.status, 409);
@@ -141,7 +171,9 @@ test('Schulplan: mit Dienst ein Auftrag im Arbeitsordner – nur für die eigene
   assert.equal(r.status, 202);
   const id = koerper(r).id as string;
   assert.match(id, /^[0-9a-f]{32}$/);
-  assert.deepEqual(readdirSync(join(w.ordner, id)).sort(), ['art', 'auftrag', 'eingang.pdf', 'schule', 'wer']);
+  assert.deepEqual(readdirSync(join(w.ordner, id)).sort(), ['art', 'auftrag', 'eingang.pdf', 'klassen.txt', 'schule', 'wer']);
+  // das Sprachmodell bekommt die angelegten Klassen der Schule
+  assert.equal(readFileSync(join(w.ordner, id, 'klassen.txt'), 'utf8'), 'FI-25a');
   assert.equal(koerper(await ruf(w.u, 'GET', `/api/schulbloecke/einlesen/${id}`, { cookies: c })).status, 'laeuft');
   // eine andere Person sieht den Auftrag nicht
   const bea = konto(w.u.db, 'ausbilder', 'Bea Zweite');
@@ -155,8 +187,8 @@ test('Schulplan: mit Dienst ein Auftrag im Arbeitsordner – nur für die eigene
   assert.equal(s.status, 'fertig');
   assert.equal(s.modell, true);
   assert.equal(s.quelle, 'texterkennung');
-  // Muster zuerst: alle sechs Blöcke aus dem Text, der Titel des Modells für Block 1 – „Unsinn“ steht so nicht im Plan und fällt weg
-  assert.equal(s.zeilen.length, 6);
+  // Muster zuerst: die drei Blöcke der angelegten Klasse, der Titel des Modells für Block 1 – „Unsinn“ steht so nicht im Plan und fällt weg
+  assert.equal(s.zeilen.length, 3);
   assert.ok(!s.zeilen.some((z: { titel: string }) => z.titel === 'Unsinn'));
   assert.deepEqual(s.zeilen.filter((z: { klasseId: number | null }) => z.klasseId === w.a).map((z: { titel: string; vorgewaehlt: boolean }) => [z.titel, z.vorgewaehlt]), [['Block 1', true], ['Berufsschule', true], ['Berufsschule', true]]);
   assert.ok(s.zeilen.every((z: { unsicher: boolean }) => z.unsicher), 'Texterkennung ist unsicher');

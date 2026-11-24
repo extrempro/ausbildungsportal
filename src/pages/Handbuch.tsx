@@ -1548,7 +1548,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 </li>
                 <li>Die PDF der Schule hochladen – oder den Text aus PDF, Excel, Mail oder Webseite kopieren, einfügen und „Text einlesen“ wählen.</li>
                 <li>Warten, bis der Plan gelesen ist. Bei einer PDF kann das ein paar Minuten dauern; du kannst die Seite so lange verlassen.</li>
-                <li>Die Vorschau prüfen: Klasse, Zeitraum und Titel je Zeile. Fehlt eine Klasse, legst du sie mit einem Klick an.</li>
+                <li>Die Vorschau prüfen: Klasse, Zeitraum und Titel je Zeile.</li>
                 <li>Mit „Schulblöcke übernehmen“ stehen die angehakten Blöcke an den Klassen und im Plan der Azubis.</li>
               </ol>
               <h3>Begriffe</h3>
@@ -1558,6 +1558,10 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               </dl>
               <h3>Gut zu wissen</h3>
               <ul className="punkte">
+                <li>
+                  <strong>Nur angelegte Klassen:</strong> Das Portal ordnet Zeiträume nur den Klassen zu, die unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei der Schule angelegt sind. Lege fehlende Klassen also vorher an. Andere Klassen im Plan und Bezeichnungen wie „Block 2“ übergeht es.
+                </li>
+                <li>Es versteht beide üblichen Aufbauten: eine Zeile je Klasse mit ihren Zeiträumen – oder Blöcke mit ihren Zeiträumen und darunter die Klassen, die den Block haben.</li>
                 <li>Gespeichert wird erst, was du übernimmst. Die hochgeladene Datei und der gelesene Text werden danach gelöscht, spätestens nach 24 Stunden.</li>
                 <li>Läuft der Dienst nicht, lässt sich keine PDF hochladen – der eingefügte Text geht trotzdem. Dann sucht das Portal selbst nach Zeiträumen wie „31.08.–18.09.2026“ oder „KW 5–7 2027“.</li>
                 <li>Ferien, Feiertage und Prüfungen im Plan werden nicht als Schulblock übernommen. Was schon da ist, steht als „schon vorhanden“ und ist nicht angehakt.</li>

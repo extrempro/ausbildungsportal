@@ -105,19 +105,6 @@ export function SchulplanEinlesen() {
   };
   const setze = (i: number, teil: Partial<Wahl>) => setZeilen((alt) => alt.map((z, j) => (j === i ? { ...z, ...teil } : z)));
 
-  // eine Klasse aus dem Plan, die es noch nicht gibt: gleich anlegen und allen Zeilen mit diesem Namen zuordnen
-  const legeKlasseAn = async (name: string) => {
-    if (!schule) return;
-    try {
-      const r = await api<{ klasse: { id: number } }>('POST', '/api/stammdaten/klassen', { berufsschuleId: schule, name });
-      await ladeStamm();
-      setZeilen((alt) => alt.map((z) => (z.klasseText === name && !z.klasseId ? { ...z, klasseId: r.klasse.id, an: !z.hinweise.includes('schon vorhanden'), hinweise: z.hinweise.filter((h) => !h.startsWith('Klasse „')) } : z)));
-      melde(`Klasse „${name}“ angelegt.`);
-    } catch (e) {
-      setFehler(e instanceof Error ? e.message : 'Fehler');
-    }
-  };
-
   const gewaehlt = zeilen.filter((z) => z.an);
   const ohneKlasse = gewaehlt.filter((z) => !z.klasseId).length;
   const uebernimm = async () => {
@@ -137,7 +124,6 @@ export function SchulplanEinlesen() {
 
   if (ladefehler) return <Ladefehler titel="Plan der Schule einlesen" text={ladefehler} />;
   const klassen = stamm?.klassen.filter((k) => k.berufsschuleId === schule) ?? [];
-  const unbekannt = [...new Set(zeilen.filter((z) => !z.klasseId && z.klasseText).map((z) => z.klasseText))];
 
   return (
     <>
@@ -189,6 +175,9 @@ export function SchulplanEinlesen() {
               ))}
             </select>
           </label>
+          <p className="leise klein">
+            Das Portal liest nur die Klassen, die unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei der Schule angelegt sind{klassen.length ? `: ${klassen.map((k) => k.name).join(', ')}` : ' – an dieser Schule gibt es noch keine'}.
+          </p>
           <h2>PDF hochladen</h2>
           {dienst === false && (
             <p className="hinweis" role="note">
@@ -246,21 +235,9 @@ export function SchulplanEinlesen() {
           <h2>Vorschau</h2>
           <p className="leise">
             {zeilen.length === 0
-              ? 'Im Plan wurden keine Schulblöcke gefunden. Versuch es mit dem eingefügten Text oder trag die Blöcke von Hand ein.'
+              ? 'Im Plan wurden keine Schulblöcke der angelegten Klassen gefunden. Steht die Klasse im Plan anders da, oder fehlt sie noch? Klassen legst du unter Stammdaten an.'
               : `${zeilen.length === 1 ? 'Ein Zeitraum' : `${zeilen.length} Zeiträume`} ${QUELLE[stand.quelle ?? 'text']}${stand.modell ? ', geordnet vom Sprachmodell' : ''}. Angehakt ist, was sich ohne Weiteres übernehmen lässt.`}
           </p>
-          {unbekannt.length > 0 && (
-            <div className="hinweis">
-              <p>Diese Klassen gibt es an der Schule noch nicht. Lege sie an oder ordne die Zeilen einer vorhandenen Klasse zu:</p>
-              <div className="aktionen links">
-                {unbekannt.map((n) => (
-                  <button key={n} type="button" className="knopf schlicht klein" onClick={() => void legeKlasseAn(n)}>
-                    Klasse „{n}“ anlegen
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
           <ul className="liste">
             {zeilen.map((z, i) => (
               <li key={i}>
@@ -271,7 +248,6 @@ export function SchulplanEinlesen() {
                     <span className="leise">
                       {' '}
                       · {datum(z.von)} – {datum(z.bis)}
-                      {z.klasseText ? ` · im Plan: „${z.klasseText}“` : ''}
                     </span>
                   </span>
                 </label>
