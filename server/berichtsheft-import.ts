@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { Fehler, istObjekt, koerper } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
 import { MAX_ANHANG } from './bericht-anhang';
-import { BERICHT_FORMEN, eigenerAzubi, holeBericht, pruefeInhalt, reicheEin, summe, vermerke, vorbelegung } from './berichte';
+import { BERICHT_FORMEN, eigenerAzubi, holeBericht, pruefeInhalt, pruefeWochenende, reicheEin, summe, vermerke, vorbelegung } from './berichte';
 import type { BerichtForm, Eintrag, Inhalt } from './berichte';
 import { transaktion } from './db';
 import { heute } from './datum';
@@ -291,8 +291,11 @@ function vorschau(k: Kontext, azubiId: number, roh: RohWoche[], quelle: Quelle):
     const stunden = TEILE.reduce((n, t) => n + w[t].reduce((m, e) => m + e.stunden, 0), 0);
     if (stand === 'neu' && !leer(w) && stunden === 0) hinweise.push('Es sind keine Stunden erkannt – trag sie vor dem Einreichen im Bericht ein.');
     if (stand === 'neu' && leer(w)) hinweise.push('In dieser Woche wurden keine Einträge erkannt.');
+    // Einträge am Samstag oder Sonntag gehen nur mit Freischaltung im Profil
+    const amWochenende = w.form === 'tag' && !profil.wochenende && TEILE.some((t) => w[t].some((e) => e.tag === plusTage(w.montag, 5) || e.tag === plusTage(w.montag, 6)));
+    if (stand === 'neu' && amWochenende) hinweise.push('Hier stehen Einträge am Samstag oder Sonntag. Die sind in deinem Berichtsheft nicht freigeschaltet – frag deinen Ausbilder.');
     const unsicher = quelle === 'texterkennung' || !!w.nurModell || hinweise.length > 0;
-    return { ...w, ...kalenderwoche(w.montag), stunden, stand, hinweise, unsicher, vorgewaehlt: stand === 'neu' && !leer(w) && !w.nurModell };
+    return { ...w, ...kalenderwoche(w.montag), stunden, stand, hinweise, unsicher, vorgewaehlt: stand === 'neu' && !leer(w) && !w.nurModell && !amWochenende };
   });
 }
 
@@ -404,6 +407,11 @@ export const BERICHTSHEFT_IMPORT_ROUTEN: Route[] = [
         const abwesenheit = vorbelegung(db, azubi.id, montag, profil.wochenstunden).abwesenheit;
         const inhalt: Inhalt = pruefeInhalt({ betrieb: x.betrieb, unterweisung: x.unterweisung, schule: x.schule, abwesenheit }, montag, form);
         if (TEILE.every((t) => inhalt[t].length === 0)) throw new Fehler(400, `${name} hat keine Einträge`);
+        try {
+          pruefeWochenende(inhalt, montag, profil.wochenende, null);
+        } catch (e) {
+          throw e instanceof Fehler ? new Fehler(400, `${name}: ${e.message}`) : e;
+        }
         const seitenRoh = Array.isArray(x.seiten) ? x.seiten.slice(0, MAX_SEITEN_JE_WOCHE) : [];
         const seiten = auftrag ? seitenRoh.flatMap((n) => {
           const daten = seiteAus(auftrag, Number(n));

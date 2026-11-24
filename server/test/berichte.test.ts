@@ -490,8 +490,12 @@ test('Tagesform: der Betrieb wählt sie; Einträge gehören zu einem Tag; gespei
     assert.equal(r.status, 400, falsch.text);
     assert.match(koerper(r).fehler, /Der Tag muss in der Berichtswoche liegen/);
   }
-  // Samstag ist erlaubt
-  assert.equal((await schreibe(w, w.azubi, NEU, { ...tage, betrieb: [{ text: 'Messe', stunden: 4, tag: '2026-10-31' }] })).status, 200);
+  // Samstag nur mit Freischaltung im Profil
+  const samstag = { ...tage, betrieb: [{ text: 'Messe', stunden: 4, tag: '2026-10-31' }] };
+  assert.equal((await schreibe(w, w.azubi, NEU, samstag)).status, 400);
+  const annasProfil = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.azubi.id}/profil`, { cookies: als(w, w.ausbilder) })).profil;
+  await ruf(w.u, 'PUT', `/api/azubis/${w.azubi.id}/profil`, { cookies: als(w, w.ausbilder), body: { ...annasProfil, wochenende: true } });
+  assert.equal((await schreibe(w, w.azubi, NEU, samstag)).status, 200);
   assert.equal((await schreibe(w, w.azubi, NEU, tage)).status, 200);
 
   // Einreichen und Abzeichnen wie gehabt; die Betreuerin sieht dieselbe Form
@@ -566,4 +570,32 @@ test('Migration 034: „krank“ und „sonstiges“ werden in vorhandenen Beric
   assert.deepEqual(nachher.abwesenheit.map((a: { grund: string }) => a.grund), ['abwesend', 'abwesend', 'urlaub']);
   assert.equal(nachher.abwesenheit[1].text, 'Behördengang');
   assert.equal(nachher.betrieb[0].text, inhalt.betrieb[0].text, 'Freitext bleibt unberührt');
+});
+
+test('Tagesform: Samstag und Sonntag nur mit Freischaltung im Profil – schon Eingetragenes bleibt', async () => {
+  const w = await welt();
+  const profilPfad = `/api/azubis/${w.azubi.id}/profil`;
+  const alt = koerper(await ruf(w.u, 'GET', profilPfad, { cookies: als(w, w.ausbilder) })).profil;
+  assert.equal(alt.wochenende, false);
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt, berichtForm: 'tag' } });
+  const samstag = '2026-11-07';
+  const mitSamstag = { betrieb: [{ text: 'Messeaufbau', stunden: 6, tag: samstag }, { text: 'Werkstatt', stunden: 8, tag: WOCHE }] };
+  const ohne = await schreibe(w, w.azubi, WOCHE, mitSamstag);
+  assert.equal(ohne.status, 400);
+  assert.match(koerper(ohne).fehler, /nicht freigeschaltet/);
+  assert.equal((await lies(w, w.azubi)).wochenende, false);
+  // nur der Ausbilder schaltet frei – der Azubi nicht
+  assert.equal((await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.azubi), body: { ...alt, berichtForm: 'tag', wochenende: true } })).status, 403);
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt, berichtForm: 'tag', wochenende: true } });
+  assert.equal((await lies(w, w.azubi)).wochenende, true);
+  assert.equal((await schreibe(w, w.azubi, WOCHE, mitSamstag)).status, 200);
+  // wieder gesperrt: der gespeicherte Samstag bleibt bearbeitbar, ein neuer Sonntag nicht
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt, berichtForm: 'tag', wochenende: false } });
+  assert.equal((await schreibe(w, w.azubi, WOCHE, { betrieb: [{ text: 'Messeaufbau und Abbau', stunden: 7, tag: samstag }] })).status, 200);
+  assert.equal((await schreibe(w, w.azubi, WOCHE, { betrieb: [{ text: 'Abbau', stunden: 4, tag: '2026-11-08' }] })).status, 400);
+  // ein Profil aus einer älteren Oberfläche ohne die Angabe lässt die Freischaltung, wie sie ist
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...alt, berichtForm: 'tag', wochenende: true } });
+  const { wochenende: _w, ...ohneAngabe } = alt;
+  await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...ohneAngabe, berichtForm: 'tag' } });
+  assert.equal(koerper(await ruf(w.u, 'GET', profilPfad, { cookies: als(w, w.ausbilder) })).profil.wochenende, true);
 });

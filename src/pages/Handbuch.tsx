@@ -700,7 +700,7 @@ const AZUBI: Kapitel[] = [
             In jedem Kasten wählst du, was du einträgst: <strong>„Tätigkeit im Betrieb eintragen“</strong>, <strong>„Unterweisung eintragen“</strong> oder <strong>„Berufsschule eintragen“</strong>. Über dem Textfeld steht dann, wozu die Zeile gehört.
           </li>
           <li>Stunden trägst du als Kommazahl ein: 0,25 ist eine Viertelstunde, 1,5 sind anderthalb Stunden, 7,8 sind 7 Stunden und 48 Minuten. Komma und Punkt gehen beide; mit den Pfeiltasten hoch und runter änderst du um eine Viertelstunde. Genauer als auf 3 Minuten (0,05) rundet das Portal beim Verlassen des Felds.</li>
-          <li>Hast du am Samstag oder Sonntag gearbeitet, wähle unter den Tagen „Wochenende anzeigen“.</li>
+          <li>Arbeitest du auch am Wochenende, kann dein Ausbilder Samstag und Sonntag in deinem Profil freischalten. Dann stehen sie in jedem Bericht. Ohne Freischaltung gibt es nur Montag bis Freitag.</li>
           <li>Urlaub, Feiertage und andere Abwesenheit trägst du weiter unten bei „Abwesenheit“ ein. Im Kasten des Tages steht dann ein gelber Hinweis.</li>
           <li>Unter „Deine Woche“ siehst du zusätzlich die Stunden je Tag – und welche Tage noch leer sind.</li>
           <li>Es bleibt ein Bericht für die ganze Woche: Du reichst ihn einmal ein, und er wird einmal abgezeichnet.</li>
@@ -1701,6 +1701,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <Begriff wort="Verkürzung">Monate und Art: „Ausbildung endet früher“ oder „am Anfang angerechnet“ (Start in einem höheren Ausbildungsjahr). Das Portal rechnet nur mit den Monaten – ob eine Verkürzung zulässig ist, entscheidet die Kammer.</Begriff>
                 <Begriff wort="Wochenstunden">Daran misst der Bericht, ob die eingetragenen Stunden zur Woche passen.</Begriff>
                 <Begriff wort="Form des Berichtshefts">Ob dieser Azubi die Woche im Ganzen beschreibt oder Tag für Tag. „Wie im Betrieb eingestellt“ übernimmt, was in den Stammdaten steht. Gilt für Berichte, die ab dann begonnen werden; schon gespeicherte behalten ihre Form.</Begriff>
+                <Begriff wort="Samstag und Sonntag im Berichtsheft">Nur bei Einträgen je Tag: Für Azubis, die auch am Wochenende arbeiten, stehen dann Samstag und Sonntag in jedem Bericht. Ohne Freischaltung gibt es nur Montag bis Freitag; was schon am Wochenende eingetragen ist, bleibt. Die Wochenstunden je Tag rechnet das Portal weiter durch fünf.</Begriff>
                 <Begriff wort="Urlaubstage im Jahr">Der Urlaubsanspruch in Arbeitstagen je Kalenderjahr. Daraus rechnet das Urlaubskonto, was noch frei ist. Bleibt das Feld leer, lässt sich Urlaub trotzdem beantragen – nur ohne Rechnung.</Begriff>
                 <Begriff wort="Planer für die Prüfung">Schaltet für diesen Azubi den Planer seines Berufs frei, zum Beispiel für das Abschlussprojekt. Gesperrt, solange es für den Beruf keinen gibt. Mehr im Kapitel „Planer für die Prüfung freischalten“.</Begriff>
                 <Begriff wort="Prüfungstermine">Bis zu acht, mit freier Bezeichnung. Sie erscheinen im Plan des Azubis, in der Kachel „Wochen bis zur Prüfung“ und im abonnierten Kalender.</Begriff>

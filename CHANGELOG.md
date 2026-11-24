@@ -1,5 +1,22 @@
 # Änderungen
 
+## [0.81.1] – 2026-11-24
+
+### Behoben
+
+- **Plan der Schule einlesen – Datum ohne Jahr:** Steht bei einem Zeitraum kein Jahr (z. B. „28.02. - 03.03.“), nimmt das Portal jetzt das Jahr, mit dem er ins Schuljahr des Plans fällt – bisher das erste Jahr im Plan, also im zweiten Halbjahr ein Jahr zu früh.
+- **Plan der Schule einlesen – Termine im Block:** Ein Zeitraum, der ganz in einem Block derselben Klasse liegt (z. B. eine praktische Zwischenprüfung), wird nicht mehr als eigener Schulblock vorgeschlagen.
+
+## [0.81.0] – 2026-11-24
+
+### Neu
+
+- **Samstag und Sonntag im Berichtsheft freischalten:** Ausbilder schalten im Profil eines Azubis „Samstag und Sonntag im Berichtsheft“ frei – für Azubis, die auch am Wochenende arbeiten. Dann stehen beide Tage in jedem Bericht mit Einträgen je Tag. Der Schalter gilt nur für die Tagesform; sonst ist er gesperrt und sagt warum. Die Wochenstunden je Tag rechnet das Portal weiter durch fünf.
+
+### Geändert
+
+- **Ohne Freischaltung kein Wochenende mehr:** Bisher konnte jeder Azubi in der Tagesform Samstag und Sonntag selbst einblenden. Das geht jetzt nur noch mit Freischaltung. Was schon am Wochenende eingetragen ist, bleibt stehen und lässt sich weiter bearbeiten. Auch beim Einlesen alter Berichte sind Einträge am Wochenende erst mit Freischaltung übernehmbar.
+
 ## [0.80.3] – 2026-11-24
 
 ### Geändert

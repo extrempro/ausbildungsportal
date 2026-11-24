@@ -138,6 +138,20 @@ export function pruefeInhalt(roh: unknown, montag: string, form: BerichtForm = '
   };
 }
 
+/**
+ * Samstag und Sonntag in der Tagesform gibt es nur, wenn der Ausbilder sie im Profil freigeschaltet hat. Tage, die im
+ * gespeicherten Bericht schon Einträge haben, bleiben bearbeitbar – nach dem Sperren geht nichts verloren.
+ */
+export function pruefeWochenende(inhalt: Inhalt, montag: string, erlaubt: boolean, vorher: Inhalt | null): void {
+  if (erlaubt || inhalt.form !== 'tag') return;
+  const wochenende = new Set([plusTage(montag, 5), plusTage(montag, 6)]);
+  const tageVon = (i: Inhalt) => [...i.betrieb, ...i.unterweisung, ...i.schule].map((e) => e.tag ?? '').concat(i.abwesenheit.map((a) => a.tag));
+  const schonDa = new Set(vorher ? tageVon(vorher).filter((t) => wochenende.has(t)) : []);
+  if (tageVon(inhalt).some((t) => wochenende.has(t) && !schonDa.has(t))) {
+    throw new Fehler(400, 'Samstag und Sonntag sind in deinem Berichtsheft nicht freigeschaltet. Arbeitest du am Wochenende, kann dein Ausbilder sie in deinem Profil freischalten.');
+  }
+}
+
 export function summe(i: Inhalt) {
   const s = (l: { stunden: number }[]) => l.reduce((n, x) => n + x.stunden, 0);
   const teile = { betrieb: s(i.betrieb), unterweisung: s(i.unterweisung), schule: s(i.schule), abwesenheit: s(i.abwesenheit) };
@@ -255,6 +269,8 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
     inhalt,
     summe: summe(inhalt),
     soll: profil.wochenstunden,
+    // Samstag und Sonntag in der Tagesform – vom Ausbilder im Profil freigeschaltet
+    wochenende: profil.wochenende,
     kommentar: z?.kommentar ?? '',
     // Fotos und Dateien zum Bericht (ohne die Dateien selbst); z ist nur gesetzt, wenn der Bericht für diese Person sichtbar ist
     anhaenge: z ? anhaengeVon(db, azubi.id, montag) : [],
@@ -468,7 +484,9 @@ export const BERICHT_ROUTEN: Route[] = [
         throw new Fehler(409, z.status === 'abgezeichnet' ? 'Der Bericht ist abgezeichnet und gesperrt' : 'Der Bericht ist eingereicht – zum Ändern zuerst zurückziehen');
       }
       // ein gespeicherter Bericht behält seine Form; ein neuer bekommt die des Azubis (eigene Einstellung, sonst die des Betriebs)
-      const inhalt = JSON.stringify(pruefeInhalt(koerper(c).inhalt, montag, z ? inhaltAus(z).form : berichtFormVon(db, azubi.id)));
+      const geprueft = pruefeInhalt(koerper(c).inhalt, montag, z ? inhaltAus(z).form : berichtFormVon(db, azubi.id));
+      pruefeWochenende(geprueft, montag, leseProfil(db, azubi.id).wochenende, z ? inhaltAus(z) : null);
+      const inhalt = JSON.stringify(geprueft);
       const jetzt = c.k.jetzt().toISOString();
       if (z) db.prepare('UPDATE bericht SET inhalt = ?, geaendert = ? WHERE azubi_id = ? AND montag = ?').run(inhalt, jetzt, azubi.id, montag);
       else db.prepare("INSERT INTO bericht (azubi_id, montag, status, inhalt, geaendert) VALUES (?, ?, 'entwurf', ?, ?)").run(azubi.id, montag, inhalt, jetzt);

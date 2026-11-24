@@ -224,3 +224,22 @@ test('Alte Berichte: mit Dienst ein Auftrag – die Originalseiten hängen danac
   assert.deepEqual(b.anhaenge.map((a: { name: string; art: string }) => [a.name, a.art]), [['Original Seite 1.pdf', 'pdf']]);
   assert.equal((await ruf(w.u, 'GET', `${pfad}/${id}`, { cookies: c })).status, 404, 'der Auftrag ist gelöscht');
 });
+
+test('Alte Berichte: Einträge am Samstag nur mit Freischaltung im Profil', async () => {
+  const w = await welt();
+  const c = sitzung(w.u, w.anna);
+  const pfad = `/api/azubis/${w.anna.id}/einlesen`;
+  const text = 'Zeitraum: 14.09.2026 - 18.09.2026\nMontag, 14.09.2026\nNetzwerkkabel verlegt 8\nSamstag\nMesseaufbau 6';
+  const [woche] = koerper(await ruf(w.u, 'POST', pfad, { cookies: c, body: { text } })).wochen;
+  assert.equal(woche.vorgewaehlt, false);
+  assert.match(woche.hinweise.join(' '), /Samstag oder Sonntag/);
+  const daten = { montag: woche.montag, form: woche.form, betrieb: woche.betrieb, unterweisung: [], schule: [], seiten: [] };
+  const r = await ruf(w.u, 'POST', `${pfad}/uebernehmen`, { cookies: c, body: { wochen: [daten] } });
+  assert.equal(r.status, 400);
+  assert.match(koerper(r).fehler, /^KW 38\/2026: Samstag und Sonntag/);
+  // freigeschaltet: angehakt und übernehmbar
+  const profil = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/profil`, { cookies: sitzung(w.u, w.petra) })).profil;
+  await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/profil`, { cookies: sitzung(w.u, w.petra), body: { ...profil, wochenende: true } });
+  assert.equal(koerper(await ruf(w.u, 'POST', pfad, { cookies: c, body: { text } })).wochen[0].vorgewaehlt, true);
+  assert.equal(koerper(await ruf(w.u, 'POST', `${pfad}/uebernehmen`, { cookies: c, body: { wochen: [daten] } })).angelegt, 1);
+});

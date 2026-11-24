@@ -62,12 +62,27 @@ interface Fund {
   /** Spalte, an der der Zeitraum in der Zeile beginnt – für Pläne als Tabelle */
   spalte: number;
 }
-function zeitraeumeIn(zeile: string, kontextJahr: number): Fund[] {
+/** Zeitraum aller Daten mit Jahr im Plan (z. B. das Schuljahr) – daran richtet sich das Jahr von Daten ohne Jahr */
+interface Spanne {
+  von: string;
+  bis: string;
+}
+
+function zeitraeumeIn(zeile: string, kontextJahr: number, spanne?: Spanne): Fund[] {
   const ergebnis: Fund[] = [];
   for (const m of zeile.matchAll(ZEITRAUM)) {
     const j2 = m[6] ? Number(zweistellig(m[6])) : null;
     const j1 = m[3] ? Number(zweistellig(m[3])) : null;
-    const jahrBis = j2 ?? j1 ?? kontextJahr;
+    // ohne jedes Jahr: das Jahr, mit dem der Zeitraum in die Spanne des Plans fällt (Schuljahr über den Jahreswechsel)
+    let jahrOhne = kontextJahr;
+    if (!j1 && !j2 && spanne) {
+      const passt = [kontextJahr, kontextJahr + 1, kontextJahr - 1].find((j) => {
+        const v = gueltig(j, Number(m[5]), Number(m[4]));
+        return v && v >= plusTage(spanne.von, -45) && v <= plusTage(spanne.bis, 45);
+      });
+      if (passt) jahrOhne = passt;
+    }
+    const jahrBis = j2 ?? j1 ?? jahrOhne;
     // ohne Jahr beim Beginn: das Jahr des Endes – liegt der Beginn dann nach dem Ende, war es das Jahr davor
     let jahrVon = j1 ?? jahrBis;
     if (!j1 && (Number(m[2]) > Number(m[5]) || (Number(m[2]) === Number(m[5]) && Number(m[1]) > Number(m[4])))) jahrVon = jahrBis - 1;
@@ -145,7 +160,7 @@ const median = (l: number[]) => [...l].sort((a, b) => a - b)[Math.floor(l.length
  * (der Text kommt aus pdftotext -layout, die Spalten bleiben an ihrer Stelle). Jeder Zeitraum gehört in jeder
  * Klassenzeile zu der Klasse, die in seiner Spalte steht. Eine Kopfzeile mit Blocknamen („A1  B1  C1 …“) gibt den Titel.
  */
-function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJahr: number): Roh[] | null {
+function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], zeitraeume: (zeile: string) => Fund[]): Roh[] | null {
   const reihen = zeilen.flatMap((z, i) => {
     const zellen = klassenReihe(z, bekannt);
     return zellen ? [{ zeile: i, zellen }] : [];
@@ -159,7 +174,7 @@ function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJa
     const weite = weiteVon(r.zellen);
     for (const zeile of zeilen.slice(r.zeile + 1, r.zeile + 9)) {
       if (!zeile.trim()) continue;
-      if (/\bTeam\b|Ausbildungsjahr|\bTage\b/i.test(zeile) || zeitraeumeIn(zeile, kontextJahr).length || klassenReihe(zeile, bekannt)) break;
+      if (/\bTeam\b|Ausbildungsjahr|\bTage\b/i.test(zeile) || zeitraeume(zeile).length || klassenReihe(zeile, bekannt)) break;
       for (const m of zeile.matchAll(/\S+(?: \S+)*/g)) {
         const mitte = (m.index ?? 0) + m[0].length / 2;
         const z = [...r.zellen].sort((a, b) => Math.abs(a.mitte - mitte) - Math.abs(b.mitte - mitte))[0];
@@ -181,7 +196,7 @@ function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJa
   };
   for (const zeile of zeilen) {
     if (KEIN_UNTERRICHT.test(zeile)) continue;
-    for (const f of zeitraeumeIn(zeile, kontextJahr)) {
+    for (const f of zeitraeume(zeile)) {
       for (const { zellen } of reihen) {
         // höchstens gut eine halbe Spaltenbreite daneben
         const weite = weiteVon(zellen);
@@ -195,6 +210,14 @@ function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJa
     }
   }
   return ergebnis;
+}
+
+/**
+ * Ein Zeitraum, der ganz in einem anderen derselben Klasse liegt, ist meist ein Termin im Block (z. B. „Praktische
+ * Zwischenprüfung 20.03. - 24.03.“ im Block 20.03. - 31.03.) – kein eigener Schulblock. Doppelte fallen auch weg.
+ */
+function ohneEnthaltene(roh: Roh[]): Roh[] {
+  return roh.filter((r, i) => !roh.some((x, j) => j !== i && x.klasse === r.klasse && x.von <= r.von && x.bis >= r.bis && (x.von !== r.von || x.bis !== r.bis || j < i)));
 }
 
 /** Die angelegten Klassen, die in einer Zeile stehen – auch mehrere („FI 25a, FI 25b“), in ihrer Schreibweise im Portal */
@@ -227,12 +250,15 @@ export function erkenneBloecke(text: string, klassen: Pick<Klasse, 'name'>[], he
   const kontextJahr = jahre[0] ?? Number(heuteIso.slice(0, 4));
   const bekannt = [...klassen].sort((a, b) => b.name.length - a.name.length);
   const roheZeilen = text.replace(/\r/g, '').split(/[\n\f]/);
+  const mitJahr = roheZeilen.flatMap((z) => zeitraeumeIn(z, kontextJahr)).filter((f) => !f.unsicher);
+  const spanne = mitJahr.length ? { von: mitJahr.map((f) => f.von).sort()[0], bis: mitJahr.map((f) => f.bis).sort().at(-1) as string } : undefined;
+  const lies = (z: string) => zeitraeumeIn(z, kontextJahr, spanne);
   // Klassen in mehreren Spalten nebeneinander: ein Plan als Tabelle
-  const tabelle = ausTabelle(roheZeilen, bekannt, kontextJahr);
-  if (tabelle) return tabelle;
+  const tabelle = ausTabelle(roheZeilen, bekannt, lies);
+  if (tabelle) return ohneEnthaltene(tabelle);
   const zeilen = roheZeilen
     .filter((z) => z.trim())
-    .map((z) => ({ klassen: klassenIn(z, bekannt), zeitraeume: KEIN_UNTERRICHT.test(z) ? [] : zeitraeumeIn(z, kontextJahr), fremd: KLASSE_ALLGEMEIN.test(z) }));
+    .map((z) => ({ klassen: klassenIn(z, bekannt), zeitraeume: KEIN_UNTERRICHT.test(z) ? [] : lies(z), fremd: KLASSE_ALLGEMEIN.test(z) }));
   const erste = zeilen.find((z) => (z.klassen.length > 0) !== (z.zeitraeume.length > 0));
   const blockZuerst = !!erste && erste.zeitraeume.length > 0;
   const ergebnis: Roh[] = [];
@@ -262,7 +288,7 @@ export function erkenneBloecke(text: string, klassen: Pick<Klasse, 'name'>[], he
   }
   if (blockZuerst) trage(offen.klassen, offen.zeitraeume);
   // stehen angelegte Klassen im Plan, gehört ein Zeitraum ohne Klasse zu einer anderen
-  return ergebnis.some((r) => r.klasse) ? ergebnis.filter((r) => r.klasse) : ergebnis;
+  return ohneEnthaltene(ergebnis.some((r) => r.klasse) ? ergebnis.filter((r) => r.klasse) : ergebnis);
 }
 
 /** Nur angelegte Klassen – in ihrer Schreibweise im Portal; andere Zeilen fallen weg (Zeilen ohne Klasse bleiben). */

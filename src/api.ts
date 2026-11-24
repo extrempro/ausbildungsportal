@@ -292,6 +292,8 @@ export interface Profil {
   berichtForm: 'woche' | 'tag' | null;
   /** Planer für das Prüfungsvorhaben (z. B. Abschlussprojekt) für diesen Azubi freigeschaltet */
   planerFrei: boolean;
+  /** Samstag und Sonntag im Berichtsheft (Tagesform) freigeschaltet */
+  wochenende: boolean;
   pruefungen: Pruefung[];
 }
 
@@ -428,6 +430,8 @@ export interface Bericht {
   anhaenge: BerichtAnhang[];
   summe: { betrieb: number; unterweisung: number; schule: number; abwesenheit: number; gesamt: number };
   soll: number;
+  /** Tagesform: Samstag und Sonntag vom Ausbilder im Profil freigeschaltet */
+  wochenende: boolean;
   kommentar: string;
   plan: { art: PlanArt; titel: string }[];
   eingereichtAm: string | null;
