@@ -1,5 +1,16 @@
 # Änderungen
 
+## [0.82.0] – 2026-11-24
+
+### Neu
+
+- **Plan der Schule einlesen – verschobene Blöcke ersetzen:** Überschneidet sich ein Zeitraum aus dem Plan mit einem Block, der schon an der Klasse liegt, sagt die Vorschau das und hakt die Zeile nicht an. Mit „Vorhandenen Block ersetzen“ bekommt der alte Block den neuen Zeitraum – bei allen Azubis der Klasse, mit Hinweis in der Glocke. Vorher standen danach beide Blöcke im Plan.
+- **Plan der Schule einlesen – eigene Einträge entfernen:** Haben Azubis der Klasse in diesen Wochen schon einen eigenen Eintrag „Berufsschule“ (von Hand oder über die Sammelplanung, ohne Klasse), sagt die Vorschau das. Auf Wunsch entfernt das Übernehmen diese Einträge, damit nur der Block der Klasse bleibt; die Azubis erfahren es über die Glocke.
+
+### Geändert
+
+- **Alte Berichte einlesen:** Ein leerer Entwurf – gespeichert, aber ohne Einträge und ohne Anhänge – wird jetzt ersetzt, statt die Woche zu sperren. Entwürfe mit Inhalt sowie eingereichte und abgezeichnete Berichte bleiben unverändert.
+
 ## [0.81.1] – 2026-11-24
 
 ### Behoben

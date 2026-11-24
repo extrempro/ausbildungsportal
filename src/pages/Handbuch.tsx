@@ -746,7 +746,7 @@ const AZUBI: Kapitel[] = [
             <strong>Bis zum Einreichen siehst nur du die Entwürfe.</strong> Die hochgeladene Datei und der gelesene Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden.
           </li>
           <li>Das Portal braucht bei jedem Bericht einen Zeitraum („Woche vom 07.09.2026 bis 11.09.2026“) oder die Kalenderwoche mit Jahr („KW 38/2026“). Daran erkennt es die Wochen.</li>
-          <li>Wochen, für die es schon einen Bericht gibt, bleiben, wie sie sind. Wochen vor deiner Ausbildung oder in der Zukunft lassen sich nicht übernehmen.</li>
+          <li>Wochen, für die es schon einen Bericht gibt, bleiben, wie sie sind. Nur einen leeren Entwurf – gespeichert, aber noch ohne Einträge und ohne Anhänge – ersetzt das Einlesen; dann steht „Ersetzt deinen leeren Entwurf“ dabei. Wochen vor deiner Ausbildung oder in der Zukunft lassen sich nicht übernehmen.</li>
           <li>Handschrift liest die Texterkennung oft nur teilweise. Dann hilft die Originalseite am Bericht: Du verbesserst den Text im Entwurf.</li>
           <li>Zeilen über Krankheit übernimmt das Portal nicht. Trag den Tag im Bericht unter „Abwesenheit“ als „abwesend“ ein.</li>
           <li>Eine PDF darf höchstens 10 MB und 40 Seiten haben. Ein dickeres Heft liest du in Teilen ein. PDFs gehen nur, wenn der Betreiber den Dienst „import“ eingerichtet hat – Text einfügen geht immer.</li>
@@ -1566,6 +1566,12 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>Gespeichert wird erst, was du übernimmst. Die hochgeladene Datei und der gelesene Text werden danach gelöscht, spätestens nach 24 Stunden.</li>
                 <li>Läuft der Dienst nicht, lässt sich keine PDF hochladen – der eingefügte Text geht trotzdem. Dann sucht das Portal selbst nach Zeiträumen wie „31.08.–18.09.2026“ oder „KW 5–7 2027“.</li>
                 <li>Ferien, Feiertage und Prüfungen im Plan werden nicht als Schulblock übernommen. Was schon da ist, steht als „schon vorhanden“ und ist nicht angehakt.</li>
+                <li>
+                  <strong>Verschobene Blöcke:</strong> Überschneidet sich ein Zeitraum mit einem Block, der schon an der Klasse liegt, steht das in der Zeile, und sie ist nicht angehakt. Mit „Vorhandenen Block ersetzen“ bekommt der alte Block den neuen Zeitraum – bei allen Azubis der Klasse, mit Hinweis in der Glocke. Ohne Haken stünden beide Blöcke im Plan.
+                </li>
+                <li>
+                  <strong>Eigene Einträge:</strong> Hat ein Azubi in diesen Wochen schon einen eigenen Eintrag „Berufsschule“ (von Hand oder über die Sammelplanung, ohne Klasse), steht das in der Zeile. Mit „Eigene Einträge „Berufsschule“ der Azubis in diesen Wochen entfernen“ bleibt nur der Block der Klasse; ohne Haken bleiben sie stehen.
+                </li>
                 <li>Das Portal liest die Zeiträume zuerst selbst; das Sprachmodell ergänzt nur. Was allein das Modell gefunden hat, steht als „nur vom Sprachmodell gefunden“ und ist nicht angehakt – Daten, die so gar nicht im Plan stehen, zeigt das Portal nicht an.</li>
                 <li>Handschrift erkennt die Texterkennung oft nicht – dann den Plan lieber abtippen oder als Text einfügen.</li>
               </ul>

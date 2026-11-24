@@ -5,6 +5,7 @@ import type { Ctx, Kontext, Route } from './api-basis';
 import { MAX_ANHANG } from './bericht-anhang';
 import { BERICHT_FORMEN, eigenerAzubi, holeBericht, pruefeInhalt, pruefeWochenende, reicheEin, summe, vermerke, vorbelegung } from './berichte';
 import type { BerichtForm, Eintrag, Inhalt } from './berichte';
+import type { DB } from './db';
 import { transaktion } from './db';
 import { heute } from './datum';
 import { dienstBereit, eigeneAuftraege, holeAuftrag, loescheAuftrag, montagDerKw, neuerAuftrag, pruefePdf, raeumeAuf, standDes, stehtImText, zweistellig } from './import-dienst';
@@ -273,9 +274,28 @@ export interface Woche extends RohWoche {
   jahr: number;
   stunden: number;
   /** neu: lässt sich übernehmen; sonst der Grund, warum nicht */
-  stand: 'neu' | 'vorhanden' | 'ausserhalb' | 'zukunft';
+  /** neu: lässt sich übernehmen; leer: auch – ersetzt einen leeren Entwurf; sonst der Grund, warum nicht */
+  stand: 'neu' | 'leer' | 'vorhanden' | 'ausserhalb' | 'zukunft';
   vorgewaehlt: boolean;
   unsicher: boolean;
+}
+
+/**
+ * Ein leerer Entwurf: noch nichts in den drei Teilen, keine eigene Abwesenheit (vorbelegte Feiertage und Urlaub zählen
+ * nicht) und keine Anhänge. Ihn darf das Einlesen ersetzen – alles andere bleibt, wie es ist.
+ */
+function leererEntwurf(db: DB, azubiId: number, montag: string): boolean {
+  const z = holeBericht(db, azubiId, montag);
+  if (!z || z.status !== 'entwurf') return false;
+  let i: Partial<Inhalt>;
+  try {
+    i = JSON.parse(z.inhalt) as Partial<Inhalt>;
+  } catch {
+    return false;
+  }
+  if (TEILE.some((t) => (i[t] ?? []).some((e) => e.text.trim() || e.stunden > 0))) return false;
+  if ((i.abwesenheit ?? []).some((a) => a.grund === 'abwesend' || a.text.trim())) return false;
+  return !db.prepare('SELECT 1 FROM bericht_anhang WHERE azubi_id = ? AND montag = ?').get(azubiId, montag);
 }
 
 function vorschau(k: Kontext, azubiId: number, roh: RohWoche[], quelle: Quelle): Woche[] {
@@ -283,19 +303,21 @@ function vorschau(k: Kontext, azubiId: number, roh: RohWoche[], quelle: Quelle):
   const dauer = dauerVon(k.db, profil);
   const dieseWoche = montagVon(heute(k.jetzt()));
   return roh.slice(0, MAX_WOCHEN).map((w) => {
-    const stand: Woche['stand'] = holeBericht(k.db, azubiId, w.montag) ? 'vorhanden' : !dauer || w.montag < montagVon(dauer.beginn) || w.montag > dauer.ende ? 'ausserhalb' : w.montag > dieseWoche ? 'zukunft' : 'neu';
+    const stand: Woche['stand'] = holeBericht(k.db, azubiId, w.montag) ? (leererEntwurf(k.db, azubiId, w.montag) ? 'leer' : 'vorhanden') : !dauer || w.montag < montagVon(dauer.beginn) || w.montag > dauer.ende ? 'ausserhalb' : w.montag > dieseWoche ? 'zukunft' : 'neu';
     const hinweise = [...w.hinweise];
     if (stand === 'vorhanden') hinweise.unshift('Für diese Woche gibt es schon einen Bericht – er bleibt, wie er ist.');
     if (stand === 'ausserhalb') hinweise.unshift(dauer ? 'Die Woche liegt außerhalb deiner Ausbildungszeit.' : 'Für dich ist noch kein Ausbildungsbeginn eingetragen.');
     if (stand === 'zukunft') hinweise.unshift('Die Woche liegt in der Zukunft.');
+    if (stand === 'leer') hinweise.unshift('Ersetzt deinen leeren Entwurf dieser Woche.');
     const stunden = TEILE.reduce((n, t) => n + w[t].reduce((m, e) => m + e.stunden, 0), 0);
-    if (stand === 'neu' && !leer(w) && stunden === 0) hinweise.push('Es sind keine Stunden erkannt – trag sie vor dem Einreichen im Bericht ein.');
-    if (stand === 'neu' && leer(w)) hinweise.push('In dieser Woche wurden keine Einträge erkannt.');
+    const frei = stand === 'neu' || stand === 'leer';
+    if (frei && !leer(w) && stunden === 0) hinweise.push('Es sind keine Stunden erkannt – trag sie vor dem Einreichen im Bericht ein.');
+    if (frei && leer(w)) hinweise.push('In dieser Woche wurden keine Einträge erkannt.');
     // Einträge am Samstag oder Sonntag gehen nur mit Freischaltung im Profil
     const amWochenende = w.form === 'tag' && !profil.wochenende && TEILE.some((t) => w[t].some((e) => e.tag === plusTage(w.montag, 5) || e.tag === plusTage(w.montag, 6)));
-    if (stand === 'neu' && amWochenende) hinweise.push('Hier stehen Einträge am Samstag oder Sonntag. Die sind in deinem Berichtsheft nicht freigeschaltet – frag deinen Ausbilder.');
+    if (frei && amWochenende) hinweise.push('Hier stehen Einträge am Samstag oder Sonntag. Die sind in deinem Berichtsheft nicht freigeschaltet – frag deinen Ausbilder.');
     const unsicher = quelle === 'texterkennung' || !!w.nurModell || hinweise.length > 0;
-    return { ...w, ...kalenderwoche(w.montag), stunden, stand, hinweise, unsicher, vorgewaehlt: stand === 'neu' && !leer(w) && !w.nurModell && !amWochenende };
+    return { ...w, ...kalenderwoche(w.montag), stunden, stand, hinweise, unsicher, vorgewaehlt: frei && !leer(w) && !w.nurModell && !amWochenende };
   });
 }
 
@@ -402,7 +424,9 @@ export const BERICHTSHEFT_IMPORT_ROUTEN: Route[] = [
         gesehen.add(montag);
         if (montag < montagVon(dauer.beginn) || montag > dauer.ende) throw new Fehler(400, `${name} liegt außerhalb deiner Ausbildungszeit`);
         if (montag > dieseWoche) throw new Fehler(400, `${name} liegt in der Zukunft`);
-        if (holeBericht(db, azubi.id, montag)) throw new Fehler(409, `Für ${name} gibt es schon einen Bericht`);
+        // ein leerer Entwurf wird ersetzt; jeder andere Bericht bleibt
+        const ersetzt = holeBericht(db, azubi.id, montag) ? leererEntwurf(db, azubi.id, montag) : false;
+        if (holeBericht(db, azubi.id, montag) && !ersetzt) throw new Fehler(409, `Für ${name} gibt es schon einen Bericht`);
         const form = BERICHT_FORMEN.includes(x.form as BerichtForm) ? (x.form as BerichtForm) : 'woche';
         const abwesenheit = vorbelegung(db, azubi.id, montag, profil.wochenstunden).abwesenheit;
         const inhalt: Inhalt = pruefeInhalt({ betrieb: x.betrieb, unterweisung: x.unterweisung, schule: x.schule, abwesenheit }, montag, form);
@@ -417,11 +441,12 @@ export const BERICHTSHEFT_IMPORT_ROUTEN: Route[] = [
           const daten = seiteAus(auftrag, Number(n));
           return daten ? [{ n: Number(n), daten }] : [];
         }) : [];
-        return { montag, inhalt, seiten };
+        return { montag, inhalt, seiten, ersetzt };
       });
       const jetzt = c.k.jetzt();
       transaktion(db, () => {
         for (const w of neu) {
+          if (w.ersetzt) db.prepare("DELETE FROM bericht WHERE azubi_id = ? AND montag = ? AND status = 'entwurf'").run(azubi.id, w.montag);
           db.prepare("INSERT INTO bericht (azubi_id, montag, status, inhalt, geaendert) VALUES (?, ?, 'entwurf', ?, ?)").run(azubi.id, w.montag, JSON.stringify(w.inhalt), jetzt.toISOString());
           vermerke(db, jetzt, azubi.id, w.montag, 'eingelesen', azubi);
           for (const s of w.seiten) {

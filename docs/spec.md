@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.81.1 · 24.11.2026
+Stand: Version 0.82.0 · 24.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -43,7 +43,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Einsatz in einer Abteilung weist deren Beauftragte und Stellvertretung für die Dauer automatisch zu.
 - **Planbausteine:** Vorlagen je Beruf. **Sammelplanung:** ein Eintrag oder Baustein für mehrere Azubis auf einmal.
 - **Klassen und Schulblöcke:** Ein Azubi gehört zu einer Klasse seiner Berufsschule (die ganze Ausbildung). Schulblöcke pflegen Ausbilder einmal an der Klasse; sie stehen im Plan jedes Azubis der Klasse und ändern sich mit. Im Plan einzeln geändert oder gelöscht, folgt ein Block dort der Klasse nicht mehr. Neue und geänderte Blöcke stehen in der Glocke.
-- **Plan der Schule einlesen:** PDF hochladen (liest der Dienst „import“: Text, Texterkennung bei Scans, Vorschlag eines lokalen Sprachmodells) oder Text einfügen (das Portal sucht selbst nach Zeiträumen). Nur angelegte Klassen der Schule (auch dem Sprachmodell vorgegeben); Aufbau „Klasse zuerst“, „Block zuerst, darunter die Klassen“ oder Tabelle (Spalte je Block, Klassenzeilen darunter; Zuordnung über die Spalte im Text von `pdftotext -layout`, Titel aus der Kopfzeile und dem Thema unter der Klasse). Vorschau mit Prüfung (schon vorhanden, Ferien, genehmigter Urlaub); übernommen wird nur Angehaktes. Aufträge liegen in `data/import/<id>/` und werden nach dem Übernehmen, spätestens nach 24 Stunden gelöscht.
+- **Plan der Schule einlesen:** PDF hochladen (liest der Dienst „import“: Text, Texterkennung bei Scans, Vorschlag eines lokalen Sprachmodells) oder Text einfügen (das Portal sucht selbst nach Zeiträumen). Nur angelegte Klassen der Schule (auch dem Sprachmodell vorgegeben); Aufbau „Klasse zuerst“, „Block zuerst, darunter die Klassen“ oder Tabelle (Spalte je Block, Klassenzeilen darunter; Zuordnung über die Spalte im Text von `pdftotext -layout`, Titel aus der Kopfzeile und dem Thema unter der Klasse). Vorschau mit Prüfung (schon vorhanden, Überschneidung mit einem Block der Klasse – wahlweise ersetzen –, eigene Einträge „Berufsschule“ ohne Klasse bei Azubis der Klasse – wahlweise entfernen –, Ferien, genehmigter Urlaub); übernommen wird nur Angehaktes. Aufträge liegen in `data/import/<id>/` und werden nach dem Übernehmen, spätestens nach 24 Stunden gelöscht.
 - **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen; mit Lesemodus.
 
 ### Berichtsheft
@@ -53,7 +53,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Ablauf: Entwurf (nur Azubi) → eingereicht (mit Unterschrift) → abgezeichnet (mit Unterschrift) oder zurückgegeben mit Kommentar; Abzeichnung kann ein Ausbilder mit Begründung aufheben. Jeder Schritt steht im Verlauf des Berichts.
 - Ausgabe als PDF (einzeln oder alle) und als Druckansicht.
 - **Abzeichnen:** Liste aller Berichte, die auf die eigene Unterschrift warten; eingelesene Berichte sind markiert.
-- **Alte Berichte einlesen** (nur der Azubi): PDF hochladen (Dienst „import“: Text, Texterkennung bei Scans, einzelne Seiten, Vorschlag des Sprachmodells) oder Text einfügen. Das Portal erkennt Wochen (Zeitraum, „Woche vom …“, KW mit Jahr), die drei Teile, Tage und Stunden selbst; das Sprachmodell ergänzt nur. Übernommen werden angehakte Wochen ohne Bericht als Entwurf, mit Vermerk `eingelesen` im Verlauf und – bei einer PDF – der Originalseite als Anhang. Zeilen zu Krankheit fallen weg. Eingelesene Entwürfe lassen sich gesammelt einreichen (mit Unterschrift). Aufträge wie beim Plan der Schule in `data/import/<id>/`, nur für den Azubi selbst.
+- **Alte Berichte einlesen** (nur der Azubi): PDF hochladen (Dienst „import“: Text, Texterkennung bei Scans, einzelne Seiten, Vorschlag des Sprachmodells) oder Text einfügen. Das Portal erkennt Wochen (Zeitraum, „Woche vom …“, KW mit Jahr), die drei Teile, Tage und Stunden selbst; das Sprachmodell ergänzt nur. Übernommen werden angehakte Wochen ohne Bericht (oder mit leerem Entwurf, der ersetzt wird) als Entwurf, mit Vermerk `eingelesen` im Verlauf und – bei einer PDF – der Originalseite als Anhang. Zeilen zu Krankheit fallen weg. Eingelesene Entwürfe lassen sich gesammelt einreichen (mit Unterschrift). Aufträge wie beim Plan der Schule in `data/import/<id>/`, nur für den Azubi selbst.
 
 ### Urlaub
 

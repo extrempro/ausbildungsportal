@@ -272,3 +272,40 @@ test('Start: die App legt den Austauschordner für den Dienst selbst an', () => 
   bereiteImportOrdner(dir, (t) => warnungen.push(t)); // zweiter Start: nichts passiert
   assert.equal(warnungen.length, 0);
 });
+
+test('Schulplan: Doppelungen – überschneidende Blöcke ersetzen, eigene Einträge „Berufsschule“ entfernen', async () => {
+  const w = await welt();
+  const c = sitzung(w.u, w.petra);
+  const plan = async () => (koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/plan`, { cookies: c })).eintraege as { art: string; von: string; bis: string; titel: string }[]).filter((e) => e.art === 'schule');
+  // an der Klasse liegt schon ein Block, der sich mit Block 1 (31.08.–18.09.) überschneidet
+  await ruf(w.u, 'POST', '/api/schulbloecke', { cookies: c, body: { klasseId: w.a, von: '2026-09-07', bis: '2026-09-21', titel: 'Alter Block' } });
+  // Anna hat aus der Zeit vor den Klassen einen eigenen Eintrag „Berufsschule“ im November
+  await ruf(w.u, 'POST', `/api/azubis/${w.anna.id}/plan`, { cookies: c, body: { art: 'schule', titel: 'Berufsschule', von: '2026-11-09', bis: '2026-11-23' } });
+  const r = koerper(await ruf(w.u, 'POST', '/api/schulbloecke/einlesen', { cookies: c, body: { schuleId: w.schule, text: PDF_TEXT } }));
+  const block1 = r.zeilen.find((z: { von: string }) => z.von === '2026-08-31');
+  assert.equal(block1.vorgewaehlt, false, 'Überschneidung: nicht angehakt');
+  assert.match(block1.hinweise.join(' '), /überschneidet sich mit „Alter Block“ \(07\.09\.–25\.09\.\)/);
+  assert.equal(block1.ueberschneidung.length, 1);
+  const block2 = r.zeilen.find((z: { von: string }) => z.von === '2026-11-09');
+  assert.equal(block2.eigeneEintraege, 1);
+  assert.match(block2.hinweise.join(' '), /ein Azubi hat in diesen Wochen schon einen eigenen Eintrag „Berufsschule“/);
+
+  // ersetzen nur mit Blöcken derselben Klasse
+  const b = koerper(await ruf(w.u, 'POST', '/api/stammdaten/klassen', { cookies: c, body: { berufsschuleId: w.schule, name: 'FI-25b' } })).klasse.id as number;
+  const zeile = (z: { klasseId: number; von: string; bis: string; titel: string }, ersetzen: number[] = []) => ({ klasseId: z.klasseId, von: z.von, bis: z.bis, titel: z.titel, ersetzen });
+  assert.equal((await ruf(w.u, 'POST', '/api/schulbloecke/uebernehmen', { cookies: c, body: { zeilen: [{ ...zeile(block1, block1.ueberschneidung.map((x: { id: number }) => x.id)), klasseId: b }] } })).status, 400);
+
+  const ue = koerper(await ruf(w.u, 'POST', '/api/schulbloecke/uebernehmen', { cookies: c, body: { eigeneEntfernen: true, zeilen: [zeile(block1, block1.ueberschneidung.map((x: { id: number }) => x.id)), zeile(block2)] } }));
+  assert.deepEqual([ue.angelegt, ue.ersetzt, ue.entfernt], [1, 1, 1]);
+  // im Plan: der ersetzte Block mit neuem Zeitraum, Block 2 von der Klasse – der eigene Eintrag ist weg
+  assert.deepEqual((await plan()).map((e) => [e.von, e.bis, e.titel]).sort(), [
+    ['2026-08-31', '2026-09-14', 'Berufsschule'],
+    ['2026-11-09', '2026-11-23', 'Berufsschule'],
+  ]);
+  // ohne Haken bleiben eigene Einträge stehen
+  await ruf(w.u, 'POST', `/api/azubis/${w.anna.id}/plan`, { cookies: c, body: { art: 'schule', titel: 'Eigener', von: '2027-02-01', bis: '2027-02-15' } });
+  const r2 = koerper(await ruf(w.u, 'POST', '/api/schulbloecke/einlesen', { cookies: c, body: { schuleId: w.schule, text: PDF_TEXT } }));
+  const block3 = r2.zeilen.find((z: { von: string }) => z.von === '2027-02-01');
+  assert.equal(koerper(await ruf(w.u, 'POST', '/api/schulbloecke/uebernehmen', { cookies: c, body: { zeilen: [zeile(block3)] } })).entfernt, 0);
+  assert.ok((await plan()).some((e) => e.titel === 'Eigener'));
+});
