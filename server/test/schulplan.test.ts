@@ -215,6 +215,8 @@ test('Schulplan: mit Dienst ein Auftrag im Arbeitsordner – nur für die eigene
   // das Sprachmodell bekommt die angelegten Klassen der Schule
   assert.equal(readFileSync(join(w.ordner, id, 'klassen.txt'), 'utf8'), 'FI-25a');
   assert.equal(koerper(await ruf(w.u, 'GET', `/api/schulbloecke/einlesen/${id}`, { cookies: c })).status, 'laeuft');
+  // nach dem Neuladen der Seite kennt sie die Schule des Auftrags wieder – sonst stünden keine Klassen zur Auswahl
+  assert.equal(koerper(await ruf(w.u, 'GET', '/api/schulbloecke/einlesen', { cookies: c })).auftraege[0].schuleId, w.schule);
   // eine andere Person sieht den Auftrag nicht
   const bea = konto(w.u.db, 'ausbilder', 'Bea Zweite');
   assert.equal((await ruf(w.u, 'GET', `/api/schulbloecke/einlesen/${id}`, { cookies: sitzung(w.u, bea) })).status, 404);

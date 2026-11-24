@@ -351,10 +351,10 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
 
 function stand(c: Ctx, a: Auftrag) {
   const st = standDes(c.k, a);
-  if (st.status !== 'fertig') return { id: a.id, ...st };
+  const schuleId = Number(lies(join(a.ordner, 'schule')));
+  if (st.status !== 'fertig') return { id: a.id, schuleId, ...st };
   const vomModell = st.modell ? ausModell(st.modell) : [];
   // die Muster des Portals zuerst – das Sprachmodell ergänzt nur (es verrechnet sich gelegentlich bei Daten)
-  const schuleId = Number(lies(join(a.ordner, 'schule')));
   const klassen = c.k.db.prepare('SELECT * FROM klasse WHERE berufsschule_id = ?').all(schuleId) as unknown as Klasse[];
   const text = st.text.slice(0, MAX_TEXT);
   const muster = erkenneBloecke(text, klassen, heute(c.k.jetzt()));
@@ -363,7 +363,7 @@ function stand(c: Ctx, a: Auftrag) {
   let roh = zusammenfuehren(muster, modell, text);
   // bei Texterkennung ist alles etwas unsicherer
   if (st.quelle === 'texterkennung') roh = roh.map((r) => ({ ...r, unsicher: true }));
-  return { id: a.id, status: 'fertig' as const, quelle: st.quelle, modell: vomModell.length > 0, zeilen: vorschau(c.k, schuleId, roh) };
+  return { id: a.id, status: 'fertig' as const, schuleId, quelle: st.quelle, modell: vomModell.length > 0, zeilen: vorschau(c.k, schuleId, roh) };
 }
 
 function schuleAus(c: Ctx, x: unknown): number {
