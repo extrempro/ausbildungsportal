@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.80.2] – 2026-11-24
+
+### Behoben
+
+- **Plan der Schule einlesen – Pläne als Tabelle:** Steht im Plan je Block eine Spalte mit ihren Zeiträumen und darunter in Zeilen die Klassen, bekam bisher jede Klasse alle Zeiträume. Jetzt bekommt jede Klasse nur die Zeiträume der Spalten, in denen sie steht, und der Schulblock heißt nach seiner Spalte (z. B. „Block A1“). Ein Zeitraum ohne Punkt nach dem Monat („15.03 - 19.03.2027“) wird jetzt auch erkannt. Was die Muster schon zugeordnet haben, ordnet das Sprachmodell nicht anders zu.
+
 ## [0.80.1] – 2026-11-24
 
 ### Geändert

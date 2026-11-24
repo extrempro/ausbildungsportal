@@ -48,14 +48,22 @@ function gueltig(j: number, m: number, t: number): string | null {
 
 const DATUM = String.raw`(\d{1,2})\.\s?(\d{1,2})\.(?:\s?(\d{4}|\d{2})(?!\d))?`;
 const STRICH = String.raw`\s*(?:-|–|—|bis)\s*`;
-const ZEITRAUM = new RegExp(`${DATUM}${STRICH}${DATUM}`, 'g');
+// beim ersten Datum darf der Punkt nach dem Monat fehlen („15.03 - 19.03.2027“)
+const ZEITRAUM = new RegExp(`${DATUM.replace(String.raw`(\d{1,2})\.(?:`, String.raw`(\d{1,2})\.?(?:`)}${STRICH}${DATUM}`, 'g');
 const KW = /KW\s*(\d{1,2})(?:\s*(?:-|–|—|bis)\s*(\d{1,2}))?(?:\s*[/ ]\s*(\d{4}))?/gi;
 const KLASSE_ALLGEMEIN = /\b([A-Za-zÄÖÜäöü]{2,5})[\s-]?(\d{2})[\s-]?([A-Za-z])\b/;
 const KEIN_UNTERRICHT = /ferien|feiertag|prüfung|pruefung|praktikum|betriebsphase|frei\b/i;
 
 /** Zeiträume und Kalenderwochen in einer Zeile */
-function zeitraeumeIn(zeile: string, kontextJahr: number): { von: string; bis: string; unsicher: boolean }[] {
-  const ergebnis: { von: string; bis: string; unsicher: boolean }[] = [];
+interface Fund {
+  von: string;
+  bis: string;
+  unsicher: boolean;
+  /** Spalte, an der der Zeitraum in der Zeile beginnt – für Pläne als Tabelle */
+  spalte: number;
+}
+function zeitraeumeIn(zeile: string, kontextJahr: number): Fund[] {
+  const ergebnis: Fund[] = [];
   for (const m of zeile.matchAll(ZEITRAUM)) {
     const j2 = m[6] ? Number(zweistellig(m[6])) : null;
     const j1 = m[3] ? Number(zweistellig(m[3])) : null;
@@ -66,14 +74,94 @@ function zeitraeumeIn(zeile: string, kontextJahr: number): { von: string; bis: s
     const von = gueltig(jahrVon, Number(m[2]), Number(m[1]));
     const bis = gueltig(jahrBis, Number(m[5]), Number(m[4]));
     if (!von || !bis || bis < von) continue;
-    ergebnis.push({ von, bis, unsicher: !j2 && !j1 });
+    ergebnis.push({ von, bis, unsicher: !j2 && !j1, spalte: m.index ?? 0 });
   }
   for (const m of zeile.matchAll(KW)) {
     const jahr = m[3] ? Number(m[3]) : kontextJahr;
     const a = Number(m[1]);
     const b = m[2] ? Number(m[2]) : a;
     if (a < 1 || a > 53 || b < a || b > 53) continue;
-    ergebnis.push({ von: montagDerKw(jahr, a), bis: plusTage(montagDerKw(jahr, b), 4), unsicher: !m[3] });
+    ergebnis.push({ von: montagDerKw(jahr, a), bis: plusTage(montagDerKw(jahr, b), 4), unsicher: !m[3], spalte: m.index ?? 0 });
+  }
+  return ergebnis;
+}
+
+const zeichen = (c: string) => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** Muster für einen Klassennamen: Leerzeichen, Bindestriche und Punkte dazwischen sind egal, davor und danach kein Buchstabe und keine Ziffer */
+function klassenMuster(name: string): RegExp | null {
+  const teile = [...name.replace(/[\s\-_./]/g, '')];
+  return teile.length ? new RegExp(`(?<![\\p{L}\\d])${teile.map(zeichen).join('[\\s\\-_./]?')}(?![\\p{L}\\d])`, 'giu') : null;
+}
+
+/** Angelegte Klassen mit ihrer Spalte in der Zeile */
+function klassenMitSpalte(zeile: string, bekannt: Pick<Klasse, 'name'>[]): { klasse: string; spalte: number }[] {
+  const funde: { klasse: string; spalte: number; ende: number }[] = [];
+  for (const k of bekannt) {
+    const re = klassenMuster(k.name);
+    if (!re) continue;
+    for (const m of zeile.matchAll(re)) {
+      const spalte = m.index ?? 0;
+      // längere Namen zuerst: was schon zu einer anderen Klasse gehört, zählt nicht doppelt
+      if (funde.some((f) => spalte < f.ende && spalte + m[0].length > f.spalte)) continue;
+      funde.push({ klasse: k.name, spalte, ende: spalte + m[0].length });
+    }
+  }
+  return funde.sort((a, b) => a.spalte - b.spalte).map(({ klasse, spalte }) => ({ klasse, spalte }));
+}
+
+const BLOCKNAME = /^[A-ZÄÖÜ]{1,2}\d{1,2}(?:\.\d{1,2})?$/;
+/** sieht aus wie (ein Teil von) einem Klassennamen: „VT6a“, „FI-25a“, „25a“, „FI“ */
+const KLASSENARTIG = /^(?:\p{L}{0,5}-?\d{1,2}\p{L}{0,2}|\p{L}{1,3})$/u;
+
+/**
+ * Eine Zeile einer Tabelle mit Klassen: mindestens drei Zellen, fast nur Klassennamen, mindestens eine angelegte Klasse.
+ * Die Zellen sind alle Klassennamen der Zeile – auch die nicht angelegten, damit ein Zeitraum nicht der falschen Spalte zufällt.
+ */
+function klassenReihe(zeile: string, bekannt: Pick<Klasse, 'name'>[]): { klasse: string | null; spalte: number }[] | null {
+  const woerter = [...zeile.matchAll(/\S+/g)].map((m) => ({ wort: m[0], spalte: m.index ?? 0 }));
+  if (woerter.length < 3 || woerter.filter((w) => KLASSENARTIG.test(w.wort)).length < woerter.length * 0.8) return null;
+  const bekannte = klassenMitSpalte(zeile, bekannt).map((k) => ({ ...k, ende: k.spalte + (zeile.slice(k.spalte).match(klassenMuster(k.klasse) ?? /$/)?.[0].length ?? 0) }));
+  if (!bekannte.length) return null;
+  const zellen: { klasse: string | null; spalte: number }[] = bekannte.map((k) => ({ klasse: k.klasse, spalte: k.spalte }));
+  for (const w of woerter) {
+    if (!KLASSENARTIG.test(w.wort) || bekannte.some((k) => w.spalte >= k.spalte && w.spalte < k.ende)) continue;
+    // „FI 25c“: der zweite Teil gehört zur Zelle davor
+    const davor = zellen.filter((z) => z.spalte < w.spalte).sort((a, b) => b.spalte - a.spalte)[0];
+    if (davor && !davor.klasse && w.spalte - davor.spalte <= 4) continue;
+    zellen.push({ klasse: null, spalte: w.spalte });
+  }
+  return zellen.length >= 3 ? zellen.sort((a, b) => a.spalte - b.spalte) : null;
+}
+const median = (l: number[]) => [...l].sort((a, b) => a - b)[Math.floor(l.length / 2)] ?? 0;
+
+/**
+ * Plan als Tabelle: je Block eine Spalte, darin die Zeiträume, darunter Zeilen mit den Klassen, die den Block haben
+ * (der Text kommt aus pdftotext -layout, die Spalten bleiben an ihrer Stelle). Jeder Zeitraum gehört in jeder
+ * Klassenzeile zu der Klasse, die in seiner Spalte steht. Eine Kopfzeile mit Blocknamen („A1  B1  C1 …“) gibt den Titel.
+ */
+function ausTabelle(zeilen: string[], bekannt: Pick<Klasse, 'name'>[], kontextJahr: number): Roh[] | null {
+  const reihen = zeilen.map((z) => klassenReihe(z, bekannt)).filter((r): r is { klasse: string | null; spalte: number }[] => r !== null);
+  if (!reihen.length) return null;
+  const kopf = zeilen
+    .map((z) => [...z.matchAll(/\S+/g)].map((m) => ({ name: m[0], spalte: m.index ?? 0 })))
+    .find((t) => t.length >= 3 && t.every((x) => BLOCKNAME.test(x.name)));
+  const ergebnis: Roh[] = [];
+  const naechste = <T extends { spalte: number }>(liste: T[], spalte: number, weite: number): T | undefined => {
+    const t = [...liste].sort((a, b) => Math.abs(a.spalte - spalte) - Math.abs(b.spalte - spalte))[0];
+    return t && Math.abs(t.spalte - spalte) <= weite ? t : undefined;
+  };
+  for (const zeile of zeilen) {
+    if (KEIN_UNTERRICHT.test(zeile)) continue;
+    for (const f of zeitraeumeIn(zeile, kontextJahr)) {
+      for (const reihe of reihen) {
+        // höchstens gut eine halbe Spaltenbreite daneben
+        const weite = Math.max(4, median(reihe.slice(1).map((r, i) => r.spalte - reihe[i].spalte)) * 0.6);
+        const k = naechste(reihe, f.spalte, weite);
+        if (!k?.klasse) continue;
+        const block = kopf ? naechste(kopf, f.spalte, weite) : undefined;
+        ergebnis.push({ klasse: k.klasse, von: f.von, bis: f.bis, titel: block ? `Block ${block.name}` : 'Berufsschule', unsicher: f.unsicher });
+      }
+    }
   }
   return ergebnis;
 }
@@ -107,19 +195,21 @@ export function erkenneBloecke(text: string, klassen: Pick<Klasse, 'name'>[], he
   const jahre = [...text.matchAll(/\b(20\d{2})\b/g)].map((m) => Number(m[1]));
   const kontextJahr = jahre[0] ?? Number(heuteIso.slice(0, 4));
   const bekannt = [...klassen].sort((a, b) => b.name.length - a.name.length);
-  const zeilen = text
-    .replace(/\r/g, '')
-    .split(/[\n\f]/)
+  const roheZeilen = text.replace(/\r/g, '').split(/[\n\f]/);
+  // Klassen in mehreren Spalten nebeneinander: ein Plan als Tabelle
+  const tabelle = ausTabelle(roheZeilen, bekannt, kontextJahr);
+  if (tabelle) return tabelle;
+  const zeilen = roheZeilen
     .filter((z) => z.trim())
     .map((z) => ({ klassen: klassenIn(z, bekannt), zeitraeume: KEIN_UNTERRICHT.test(z) ? [] : zeitraeumeIn(z, kontextJahr), fremd: KLASSE_ALLGEMEIN.test(z) }));
   const erste = zeilen.find((z) => (z.klassen.length > 0) !== (z.zeitraeume.length > 0));
   const blockZuerst = !!erste && erste.zeitraeume.length > 0;
   const ergebnis: Roh[] = [];
-  const trage = (ks: string[], zs: { von: string; bis: string; unsicher: boolean }[]) => {
+  const trage = (ks: string[], zs: Fund[]) => {
     for (const z of zs) for (const k of ks.length ? ks : ['']) ergebnis.push({ klasse: k, von: z.von, bis: z.bis, titel: 'Berufsschule', unsicher: z.unsicher });
   };
   let letzte: string[] = [];
-  let offen: { zeitraeume: { von: string; bis: string; unsicher: boolean }[]; klassen: string[] } = { zeitraeume: [], klassen: [] };
+  let offen: { zeitraeume: Fund[]; klassen: string[] } = { zeitraeume: [], klassen: [] };
   for (const z of zeilen) {
     if (z.klassen.length && z.zeitraeume.length) {
       trage(z.klassen, z.zeitraeume);
@@ -180,6 +270,8 @@ export function zusammenfuehren(muster: Roh[], modell: Roh[], text: string): Roh
       if (!gleich.klasse && m.klasse) gleich.klasse = m.klasse;
       continue;
     }
+    // denselben Zeitraum haben die Muster schon einer Klasse zugeordnet (z. B. über die Spalte einer Tabelle) – das gilt
+    if (muster.some((r) => r.von === m.von && r.bis === m.bis)) continue;
     if (!stehtImText(text, m.von) || !stehtImText(text, m.bis)) continue;
     ergebnis.push({ ...m, unsicher: true, nurModell: true });
   }
