@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.80.1] – 2026-11-24
+
+### Geändert
+
+- **Plan der Schule einlesen: nur angelegte Klassen.** Das Portal ordnet Zeiträume nur noch den Klassen zu, die in den Stammdaten bei der Schule angelegt sind – auch das Sprachmodell bekommt ihre Namen vorgegeben. Bezeichnungen wie „Block 2“ und Klassen, die es im Portal nicht gibt, kommen nicht mehr in die Vorschau. Der Knopf „Klasse anlegen“ in der Vorschau entfällt.
+
+### Behoben
+
+- **Plan der Schule einlesen:** Pläne, in denen die Klassen in Blöcke eingeteilt sind (der Block mit seinen Zeiträumen, darunter die Klassen), werden jetzt richtig gelesen – jede Klasse bekommt die Zeiträume ihres Blocks. Mehrere Klassen in einer Zeile gehen auch.
+
 ## [0.80.0] – 2026-11-23
 
 ### Neu

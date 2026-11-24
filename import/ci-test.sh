@@ -21,6 +21,7 @@ lies() {
 	mkdir -m 777 "$ARBEIT/$id"
 	cp "import/test/$datei" "$ARBEIT/$id/eingang.pdf"
 	echo "$art" >"$ARBEIT/$id/art"
+	[ "$art" = schulplan ] && printf 'FI-25a\nFI-25b\n' >"$ARBEIT/$id/klassen.txt"
 	: >"$ARBEIT/$id/auftrag"
 	chmod 666 "$ARBEIT/$id"/*
 	docker run --rm --network none --read-only --tmpfs /tmp --cap-drop ALL \
@@ -49,6 +50,8 @@ import json, sys
 b = json.load(open(sys.argv[1]))["bloecke"]
 print(json.dumps(b, ensure_ascii=False))
 assert any(x["von"] == "2026-08-31" and "25" in x["klasse"] and "a" in x["klasse"].lower() for x in b), "Block 1 der FI 25a fehlt"
+norm = lambda k: "".join(c for c in k.lower() if c.isalnum())
+assert all(norm(x["klasse"]) in ("fi25a", "fi25b") for x in b), "nur angelegte Klassen"
 assert not any(x["von"] == "2026-10-12" for x in b), "Herbstferien als Schulblock"
 PY
 	echo "OK: $datei ($(grep quelle "$ARBEIT/$id/fertig"))"

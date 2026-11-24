@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.80.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.80.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -34,7 +34,7 @@ docker compose up -d
 docker compose logs app   # beim ersten Start steht hier das Startpasswort des Super-Admins
 ```
 
-- Das **Abbild** `ghcr.io/extrempro/ausbildungsportal` wird nach jedem Merge auf `main` gebaut (Tags `latest` und die Version, z. B. `0.80.0`). Eine bestimmte Version: in der `.env` `PORTAL_VERSION=0.80.0`. **Selbst bauen** aus dem Quelltext (Entwicklung, eigene Änderungen): `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
+- Das **Abbild** `ghcr.io/extrempro/ausbildungsportal` wird nach jedem Merge auf `main` gebaut (Tags `latest` und die Version, z. B. `0.80.1`). Eine bestimmte Version: in der `.env` `PORTAL_VERSION=0.80.1`. **Selbst bauen** aus dem Quelltext (Entwicklung, eigene Änderungen): `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
 
 - Die App lauscht danach auf `127.0.0.1:3000` – nur auf dem Server selbst. Davor gehört ein **Reverse Proxy mit HTTPS**; `APP_URL` in der `.env` ist die Adresse dieses Proxys, und `TRUST_PROXY=true` gehört dazu.
 - **Andere Adresse oder anderer Port:** in der `.env` `BIND_ADRESSE` und `BIND_PORT` eintragen, z. B. `BIND_ADRESSE=100.64.0.10` und `BIND_PORT=8989`. Ohne Angabe gilt `127.0.0.1:3000`. Übernommen wird das mit `docker compose up -d` (nicht mit `restart`). Kontrolle: `docker compose config` zeigt, was gilt, `docker compose ps` den tatsächlich offenen Port – im Log der App steht immer Port 3000, das ist der Port im Container. `BIND_ADRESSE=0.0.0.0` öffnet die App in allen Netzen des Servers; das ist nur sinnvoll, wenn ein Reverse Proxy auf einem anderen Rechner oder eine Firewall davorsteht.
@@ -293,7 +293,7 @@ Liest PDFs für Importe – den Plan der Berufsschule (Planung → Schulblöcke 
 - **Was drin ist:** poppler (Text aus PDFs, einzelne Seiten), tesseract mit Deutsch (Texterkennung für Scans) und llama.cpp mit dem Sprachmodell **Gemma 4 E4B** (Google, Apache 2.0), das aus dem Text einen Vorschlag in fester Form macht. Alles mit festem Stand und Prüfsumme.
 - **Abgeschottet:** kein Netz (`network_mode: none`), schreibgeschützt, ohne Linux-Rechte, Grenzen für CPU (`IMPORT_CPUS`, Standard 2) und Speicher (`IMPORT_SPEICHER`, Standard 8g). Er tauscht nur über den Ordner `data/import` mit der App aus. Hochgeladene Dateien und gelesener Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden.
 - **Starten:** `docker compose --profile import up -d`. Das fertige Abbild kommt von `ghcr.io/extrempro/ausbildungsportal-import` (mehrere GB, Version über `IMPORT_VERSION`, Standard `latest`). Beim Update `docker compose --profile import pull`. Es läuft nur auf Servern mit AVX2 (x86-64, etwa seit 2013); eine Grafikkarte braucht es nicht.
-- **Wer entscheidet:** Die Zeiträume liest das Portal zuerst selbst (Muster). Das Sprachmodell ergänzt nur – im Test hat es bei einzelnen Blöcken Daten falsch berechnet. Was allein das Modell findet, steht als „bitte prüfen“ und ist nicht angehakt; Daten, die so nicht im Text stehen, verwirft das Portal.
+- **Wer entscheidet:** Die Zeiträume liest das Portal zuerst selbst (Muster) – beim Schulplan nur für die Klassen, die im Portal angelegt sind; ihre Namen bekommt auch das Sprachmodell. Das Sprachmodell ergänzt nur – im Test hat es bei einzelnen Blöcken Daten falsch berechnet. Was allein das Modell findet, steht als „bitte prüfen“ und ist nicht angehakt; Daten, die so nicht im Text stehen, verwirft das Portal.
 - **Ohne den Dienst** lässt sich im Portal keine PDF hochladen – der Knopf ist gesperrt und sagt warum. Text einfügen geht immer; dann sucht das Portal selbst nach Zeiträumen.
 - Ob er läuft, erkennt die App an einem Lebenszeichen im Ordner (`data/import/.bereit`). Den Ordner legt die App beim Start selbst an; der Dienst startet erst nach ihr. Steht im Log `can't create /arbeit/.bereit` oder „darf der Dienst nicht schreiben“, gehört der Ordner root: `sudo chown -R 1000:1000 data/import`.
 

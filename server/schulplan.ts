@@ -53,45 +53,104 @@ const KW = /KW\s*(\d{1,2})(?:\s*(?:-|–|—|bis)\s*(\d{1,2}))?(?:\s*[/ ]\s*(\d{
 const KLASSE_ALLGEMEIN = /\b([A-Za-zÄÖÜäöü]{2,5})[\s-]?(\d{2})[\s-]?([A-Za-z])\b/;
 const KEIN_UNTERRICHT = /ferien|feiertag|prüfung|pruefung|praktikum|betriebsphase|frei\b/i;
 
+/** Zeiträume und Kalenderwochen in einer Zeile */
+function zeitraeumeIn(zeile: string, kontextJahr: number): { von: string; bis: string; unsicher: boolean }[] {
+  const ergebnis: { von: string; bis: string; unsicher: boolean }[] = [];
+  for (const m of zeile.matchAll(ZEITRAUM)) {
+    const j2 = m[6] ? Number(zweistellig(m[6])) : null;
+    const j1 = m[3] ? Number(zweistellig(m[3])) : null;
+    const jahrBis = j2 ?? j1 ?? kontextJahr;
+    // ohne Jahr beim Beginn: das Jahr des Endes – liegt der Beginn dann nach dem Ende, war es das Jahr davor
+    let jahrVon = j1 ?? jahrBis;
+    if (!j1 && (Number(m[2]) > Number(m[5]) || (Number(m[2]) === Number(m[5]) && Number(m[1]) > Number(m[4])))) jahrVon = jahrBis - 1;
+    const von = gueltig(jahrVon, Number(m[2]), Number(m[1]));
+    const bis = gueltig(jahrBis, Number(m[5]), Number(m[4]));
+    if (!von || !bis || bis < von) continue;
+    ergebnis.push({ von, bis, unsicher: !j2 && !j1 });
+  }
+  for (const m of zeile.matchAll(KW)) {
+    const jahr = m[3] ? Number(m[3]) : kontextJahr;
+    const a = Number(m[1]);
+    const b = m[2] ? Number(m[2]) : a;
+    if (a < 1 || a > 53 || b < a || b > 53) continue;
+    ergebnis.push({ von: montagDerKw(jahr, a), bis: plusTage(montagDerKw(jahr, b), 4), unsicher: !m[3] });
+  }
+  return ergebnis;
+}
+
+/** Die angelegten Klassen, die in einer Zeile stehen – auch mehrere („FI 25a, FI 25b“), in ihrer Schreibweise im Portal */
+function klassenIn(zeile: string, bekannt: Pick<Klasse, 'name'>[]): string[] {
+  let kurz = norm(zeile);
+  const gefunden: string[] = [];
+  for (const k of bekannt) {
+    const n = norm(k.name);
+    if (!n || !kurz.includes(n)) continue;
+    gefunden.push(k.name);
+    kurz = kurz.split(n).join('|');
+  }
+  return gefunden;
+}
+
 /**
- * Sucht im Text eines Schulplans nach Zeiträumen und Klassen. Zeilen über Ferien, Feiertage, Prüfungen und Praktika
- * zählen nicht. Steht in einer Zeile keine Klasse, gilt die zuletzt genannte.
+ * Sucht im Text eines Schulplans nach Zeiträumen der **angelegten** Klassen. Andere Namen (z. B. „Block 2“ oder eine
+ * Klasse, die es im Portal noch nicht gibt) gelten nicht als Klasse. Zeilen über Ferien, Feiertage, Prüfungen und
+ * Praktika zählen nicht.
+ *
+ * Zwei Aufbauten kommen vor – welcher gilt, entscheidet, was zuerst im Plan steht:
+ * - **Klasse zuerst** (eine Zeile je Klasse, oder die Klasse als Überschrift): Zeiträume ohne Klasse gehören zur zuletzt
+ *   genannten. Steht in der Zeile ein anderer Klassenname, gehört sie zu keiner angelegten Klasse.
+ * - **Block zuerst** (Zeiträume eines Blocks, darunter die Klassen, die ihn haben): Die Klassen bekommen die Zeiträume
+ *   darüber, bis wieder Zeiträume kommen.
+ * Ohne angelegte Klasse im Text kommen die Zeiträume ohne Klasse in die Vorschau – zum Zuordnen.
  */
 export function erkenneBloecke(text: string, klassen: Pick<Klasse, 'name'>[], heuteIso: string): Roh[] {
   const jahre = [...text.matchAll(/\b(20\d{2})\b/g)].map((m) => Number(m[1]));
   const kontextJahr = jahre[0] ?? Number(heuteIso.slice(0, 4));
   const bekannt = [...klassen].sort((a, b) => b.name.length - a.name.length);
+  const zeilen = text
+    .replace(/\r/g, '')
+    .split(/[\n\f]/)
+    .filter((z) => z.trim())
+    .map((z) => ({ klassen: klassenIn(z, bekannt), zeitraeume: KEIN_UNTERRICHT.test(z) ? [] : zeitraeumeIn(z, kontextJahr), fremd: KLASSE_ALLGEMEIN.test(z) }));
+  const erste = zeilen.find((z) => (z.klassen.length > 0) !== (z.zeitraeume.length > 0));
+  const blockZuerst = !!erste && erste.zeitraeume.length > 0;
   const ergebnis: Roh[] = [];
-  let letzteKlasse = '';
-  for (const zeile of text.replace(/\r/g, '').split('\n')) {
-    if (!zeile.trim()) continue;
-    const kurz = norm(zeile);
-    const k = bekannt.find((x) => norm(x.name) && kurz.includes(norm(x.name)));
-    const allgemein = KLASSE_ALLGEMEIN.exec(zeile);
-    const klasse = k?.name ?? (allgemein ? allgemein[0].trim() : '');
-    if (klasse) letzteKlasse = klasse;
-    if (KEIN_UNTERRICHT.test(zeile)) continue;
-    for (const m of zeile.matchAll(ZEITRAUM)) {
-      const j2 = m[6] ? Number(zweistellig(m[6])) : null;
-      const j1 = m[3] ? Number(zweistellig(m[3])) : null;
-      const jahrBis = j2 ?? j1 ?? kontextJahr;
-      // ohne Jahr beim Beginn: das Jahr des Endes – liegt der Beginn dann nach dem Ende, war es das Jahr davor
-      let jahrVon = j1 ?? jahrBis;
-      if (!j1 && (Number(m[2]) > Number(m[5]) || (Number(m[2]) === Number(m[5]) && Number(m[1]) > Number(m[4])))) jahrVon = jahrBis - 1;
-      const von = gueltig(jahrVon, Number(m[2]), Number(m[1]));
-      const bis = gueltig(jahrBis, Number(m[5]), Number(m[4]));
-      if (!von || !bis || bis < von) continue;
-      ergebnis.push({ klasse: klasse || letzteKlasse, von, bis, titel: 'Berufsschule', unsicher: !j2 && !j1 });
-    }
-    for (const m of zeile.matchAll(KW)) {
-      const jahr = m[3] ? Number(m[3]) : kontextJahr;
-      const a = Number(m[1]);
-      const b = m[2] ? Number(m[2]) : a;
-      if (a < 1 || a > 53 || b < a || b > 53) continue;
-      ergebnis.push({ klasse: klasse || letzteKlasse, von: montagDerKw(jahr, a), bis: plusTage(montagDerKw(jahr, b), 4), titel: 'Berufsschule', unsicher: !m[3] });
+  const trage = (ks: string[], zs: { von: string; bis: string; unsicher: boolean }[]) => {
+    for (const z of zs) for (const k of ks.length ? ks : ['']) ergebnis.push({ klasse: k, von: z.von, bis: z.bis, titel: 'Berufsschule', unsicher: z.unsicher });
+  };
+  let letzte: string[] = [];
+  let offen: { zeitraeume: { von: string; bis: string; unsicher: boolean }[]; klassen: string[] } = { zeitraeume: [], klassen: [] };
+  for (const z of zeilen) {
+    if (z.klassen.length && z.zeitraeume.length) {
+      trage(z.klassen, z.zeitraeume);
+      letzte = z.klassen;
+    } else if (blockZuerst) {
+      if (z.zeitraeume.length) {
+        if (offen.klassen.length) {
+          trage(offen.klassen, offen.zeitraeume);
+          offen = { zeitraeume: [], klassen: [] };
+        }
+        offen.zeitraeume.push(...z.zeitraeume);
+      } else if (z.klassen.length) offen.klassen.push(...z.klassen);
+    } else if (z.klassen.length) letzte = z.klassen;
+    else if (z.zeitraeume.length) {
+      // ein anderer Klassenname in der Zeile: Das ist nicht die zuletzt genannte angelegte Klasse
+      if (z.fremd) letzte = [];
+      else trage(letzte, z.zeitraeume);
     }
   }
-  return ergebnis;
+  if (blockZuerst) trage(offen.klassen, offen.zeitraeume);
+  // stehen angelegte Klassen im Plan, gehört ein Zeitraum ohne Klasse zu einer anderen
+  return ergebnis.some((r) => r.klasse) ? ergebnis.filter((r) => r.klasse) : ergebnis;
+}
+
+/** Nur angelegte Klassen – in ihrer Schreibweise im Portal; andere Zeilen fallen weg (Zeilen ohne Klasse bleiben). */
+export function nurAngelegte(roh: Roh[], klassen: Pick<Klasse, 'name'>[]): Roh[] {
+  return roh.flatMap((r) => {
+    if (!r.klasse) return [r];
+    const k = klassen.find((x) => norm(x.name) === norm(r.klasse));
+    return k ? [{ ...r, klasse: k.name }] : [];
+  });
 }
 
 /** Antwort des Sprachmodells: nur, was in die feste Form passt */
@@ -167,7 +226,7 @@ export function vorschau(k: Kontext, schuleId: number, roh: Roh[]): Zeile[] {
       hinweise.push('länger als 26 Wochen – so lässt sich der Block nicht übernehmen');
       ok = false;
     }
-    if (!passend) hinweise.push(r.klasse ? `Klasse „${r.klasse}“ gibt es an dieser Schule nicht – zuordnen oder anlegen` : 'keine Klasse erkannt – bitte zuordnen');
+    if (!passend) hinweise.push('keine Klasse erkannt – bitte zuordnen');
     if (passend) {
       const vorhanden = db.prepare('SELECT 1 FROM schulblock WHERE klasse_id = ? AND von = ? AND bis = ?').get(passend.id, montagVon(r.von), montagVon(r.bis));
       if (vorhanden) {
@@ -206,7 +265,10 @@ function stand(c: Ctx, a: Auftrag) {
   const schuleId = Number(lies(join(a.ordner, 'schule')));
   const klassen = c.k.db.prepare('SELECT * FROM klasse WHERE berufsschule_id = ?').all(schuleId) as unknown as Klasse[];
   const text = st.text.slice(0, MAX_TEXT);
-  let roh = zusammenfuehren(erkenneBloecke(text, klassen, heute(c.k.jetzt())), vomModell, text);
+  const muster = erkenneBloecke(text, klassen, heute(c.k.jetzt()));
+  // auch beim Sprachmodell nur angelegte Klassen; Zeilen ohne Klasse nur, wenn die Muster keine Klasse gefunden haben
+  const modell = nurAngelegte(vomModell, klassen).filter((r) => r.klasse || !muster.some((m) => m.klasse));
+  let roh = zusammenfuehren(muster, modell, text);
   // bei Texterkennung ist alles etwas unsicherer
   if (st.quelle === 'texterkennung') roh = roh.map((r) => ({ ...r, unsicher: true }));
   return { id: a.id, status: 'fertig' as const, quelle: st.quelle, modell: vomModell.length > 0, zeilen: vorschau(c.k, schuleId, roh) };
@@ -253,7 +315,9 @@ export const SCHULPLAN_ROUTEN: Route[] = [
           return { status: 200, body: { status: 'fertig', quelle: 'text', modell: false, zeilen: vorschau(c.k, schuleId, erkenneBloecke(text, klassen, heute(c.k.jetzt()))) } };
         }
       }
-      const id = neuerAuftrag(c.k, c.b.id, 'schulplan', pdf ? { pdf } : { text }, { schule: String(schuleId) });
+      // das Sprachmodell soll nur die angelegten Klassen zuordnen – es bekommt ihre Namen vor den Text
+      const namen = (c.k.db.prepare('SELECT name FROM klasse WHERE berufsschule_id = ? ORDER BY name').all(schuleId) as { name: string }[]).map((k) => k.name);
+      const id = neuerAuftrag(c.k, c.b.id, 'schulplan', pdf ? { pdf } : { text }, { schule: String(schuleId), 'klassen.txt': namen.join('\n') });
       return { status: 202, body: { id, status: 'laeuft', fortschritt: 0 } };
     },
   },
