@@ -1561,7 +1561,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
                 <li>
                   <strong>Nur angelegte Klassen:</strong> Das Portal ordnet Zeiträume nur den Klassen zu, die unter <Link zu="/verwaltung/stammdaten">Stammdaten</Link> bei der Schule angelegt sind. Lege fehlende Klassen also vorher an. Andere Klassen im Plan und Bezeichnungen wie „Block 2“ übergeht es.
                 </li>
-                <li>Es versteht die üblichen Aufbauten: eine Zeile je Klasse mit ihren Zeiträumen, Blöcke mit ihren Zeiträumen und darunter die Klassen – und Pläne als Tabelle mit einer Spalte je Block, in der die Klassen stehen. Dann heißt jeder Schulblock nach seiner Spalte, zum Beispiel „Block A1“.</li>
+                <li>Es versteht die üblichen Aufbauten: eine Zeile je Klasse mit ihren Zeiträumen, Blöcke mit ihren Zeiträumen und darunter die Klassen – und Pläne als Tabelle mit einer Spalte je Block, in der die Klassen stehen. Dann heißt jeder Schulblock nach seiner Spalte und dem Thema, das unter der Klasse steht – zum Beispiel „Block A1 – Studioprojekt“. Klasse und Titel kannst du in jeder Zeile ändern.</li>
                 <li>Die Vorschau hat eine Zeile je Klasse und Zeitraum. Haben drei Klassen denselben Block, stehen dort drei Zeilen; ein Block mit zwei Zeiträumen hat zwei.</li>
                 <li>Gespeichert wird erst, was du übernimmst. Die hochgeladene Datei und der gelesene Text werden danach gelöscht, spätestens nach 24 Stunden.</li>
                 <li>Läuft der Dienst nicht, lässt sich keine PDF hochladen – der eingefügte Text geht trotzdem. Dann sucht das Portal selbst nach Zeiträumen wie „31.08.–18.09.2026“ oder „KW 5–7 2027“.</li>

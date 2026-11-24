@@ -98,22 +98,30 @@ test('Schulplan als Tabelle: je Block eine Spalte, darunter Zeilen mit Klassen �
     zeile([108, 'Praktische Zwischenprüfung']),
     zeile([17, '17 Tage'], [48, '15 Tage'], [79, '15 Tage'], [108, '15 Tage']),
     zeile([17, 'MT6a'], [48, 'MT5a'], [79, 'MT4a'], [108, 'MT6a']),
-    zeile([17, 'Studioprojekt'], [48, 'Clubkonzert'], [79, 'Packliste'], [108, 'Prüfen und Warten']),
+    zeile([17, 'Studioprojekt'], [48, 'Theater-'], [79, 'Video/Netzwerk/'], [108, 'Prüfen und Warten']),
+    zeile([48, 'exkursion'], [82, 'Software']),
+    zeile([17, 'B-Team'], [48, 'A-Team'], [79, 'C-Team'], [108, 'A-Team']),
     zeile([17, 'MT5b'], [48, 'MT4b'], [78, 'MT6b'], [108, 'MT5b']),
   ].join('\n');
   const alle = ['MT4a', 'MT5a', 'MT6a', 'MT4b', 'MT5b', 'MT6b'].map((name) => ({ name }));
   const r = erkenneBloecke(text, alle, '2026-11-10');
   assert.equal(r.length, 10, 'fünf Zeiträume, je zwei Klassen');
   const von = (k: string) => r.filter((x) => x.klasse === k).map((x) => [x.titel, x.von, x.bis]).sort((a, b) => a[1].localeCompare(b[1]));
+  // Titel: Block aus der Kopfzeile, dazu das Thema unter der Klasse (über mehrere Zeilen, Trennstrich und Schrägstrich zusammengefügt)
   assert.deepEqual(von('MT6a'), [
-    ['Block A1', '2026-08-20', '2026-09-11'],
-    ['Block A2', '2026-11-09', '2026-11-27'],
+    ['Block A1 – Studioprojekt', '2026-08-20', '2026-09-11'],
+    ['Block A2 – Prüfen und Warten', '2026-11-09', '2026-11-27'],
   ]);
   assert.deepEqual(von('MT4a'), [
+    ['Block C1 – Video/Netzwerk/Software', '2026-10-05', '2026-10-16'],
+    ['Block C1 – Video/Netzwerk/Software', '2026-11-02', '2026-11-06'],
+  ]);
+  assert.deepEqual(von('MT5a').map((x) => x[0]), ['Block B1 – Theaterexkursion']);
+  // ohne Thema unter der Klasse: nur der Block
+  assert.deepEqual(von('MT6b'), [
     ['Block C1', '2026-10-05', '2026-10-16'],
     ['Block C1', '2026-11-02', '2026-11-06'],
   ]);
-  assert.deepEqual(von('MT6b'), von('MT4a'));
   // nur eine Klasse angelegt: nur ihre Spalten – die anderen Klassennamen halten die Spalten trotzdem auseinander
   assert.deepEqual(erkenneBloecke(text, [{ name: 'MT6a' }], '2026-11-10').map((x) => x.von).sort(), ['2026-08-20', '2026-11-09']);
   // das Sprachmodell ordnet denselben Zeitraum einer anderen Klasse zu: Die Spalte gilt
