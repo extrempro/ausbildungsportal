@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.83.2] – 2026-11-24
+
+### Geändert
+
+- **Erinnerungen vor dem Einsatz:** Ausbildungsbeauftragte können sich schon erinnern lassen, bevor ein Azubi über einen Einsatz in ihre Abteilung kommt. Im Formular stehen dann nur die Einsätze bei ihnen.
+- **Erinnerungen nach dem Ende einer Zuweisung:** Siehst du einen Azubi nicht mehr, behält die Erinnerung ihren Tag, zeigt den Einsatz aber nicht mehr und wandert nicht mehr mit.
+
+### Behoben
+
+- **Alte Berichte als PDF einlesen:** Das Hochladen einer PDF brach mit „Anfrage muss gültiges JSON sein“ ab. Jetzt kommt die Datei beim Dienst „import“ an.
+- **Sicherheit:** Das Portal liest vom Dienst „import“ nur noch echte Dateien, keine Verweise auf andere Dateien (Ergebnis der Sicherheitsprüfung).
+
 ## [0.83.1] – 2026-11-24
 
 ### Geändert

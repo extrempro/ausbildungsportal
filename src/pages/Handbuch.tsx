@@ -1436,9 +1436,12 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           <li>
             <strong>Nur du siehst deine Erinnerungen</strong> – weder der Azubi noch {rolle === 'beauftragter' ? 'die Ausbilder' : 'andere Ausbilder oder Beauftragte'} noch der Super-Admin.
           </li>
-          <li>Wählen kannst du die Azubis, die du gerade siehst{rolle === 'beauftragter' ? ' – also die dir zugewiesen sind' : ''}.</li>
+          <li>
+            Wählen kannst du die Azubis, die du gerade siehst
+            {rolle === 'beauftragter' ? ' – und schon vorher die, die über einen Einsatz in deiner Abteilung zu dir kommen. Dann stehen zur Auswahl nur diese Einsätze.' : '.'}
+          </li>
           <li>Hast du Benachrichtigungen für den Ausbildungsplan per Teams oder E-Mail gewählt, kommt dort nur „Eine deiner Erinnerungen ist fällig“ – ohne Namen und ohne Text.</li>
-          <li>Wird der Einsatz gelöscht, bleibt die Erinnerung mit dem zuletzt errechneten Tag stehen.</li>
+          <li>Wird der Einsatz gelöscht oder siehst du den Azubi nicht mehr, bleibt die Erinnerung mit dem zuletzt errechneten Tag stehen.</li>
         </ul>
       </>
     ),

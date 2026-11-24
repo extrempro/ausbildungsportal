@@ -1,4 +1,3 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fehler, istObjekt, koerper } from './api-basis';
 import type { Ctx, Kontext, Route } from './api-basis';
@@ -8,7 +7,7 @@ import type { BerichtForm, Eintrag, Inhalt } from './berichte';
 import type { DB } from './db';
 import { transaktion } from './db';
 import { heute } from './datum';
-import { dienstBereit, eigeneAuftraege, holeAuftrag, loescheAuftrag, montagDerKw, neuerAuftrag, pruefePdf, raeumeAuf, standDes, stehtImText, zweistellig } from './import-dienst';
+import { dienstBereit, eigeneAuftraege, holeAuftrag, liesRoh, loescheAuftrag, montagDerKw, neuerAuftrag, pruefePdf, raeumeAuf, standDes, stehtImText, zweistellig } from './import-dienst';
 import type { Auftrag, Quelle } from './import-dienst';
 import { gueltigesDatum, istMontag, kalenderwoche, montagVon, plusTage } from './kalender';
 import { dauerVon, leseProfil } from './stammdaten';
@@ -334,10 +333,9 @@ function stand(c: Ctx, azubiId: number, a: Auftrag) {
 /** Eine Originalseite aus dem Auftrag – nur echte PDFs bis zur Größe eines Anhangs. */
 function seiteAus(a: Auftrag, n: number): Buffer | null {
   if (!Number.isInteger(n) || n < 1 || n > 200) return null;
-  const pfad = join(a.ordner, `seite-${n}.pdf`);
-  if (!existsSync(pfad) || statSync(pfad).size > MAX_ANHANG) return null;
-  const daten = readFileSync(pfad);
-  return daten.subarray(0, 5).toString('latin1') === '%PDF-' ? daten : null;
+  // nur eine echte Datei aus dem Auftrag, kein Verweis (liesRoh)
+  const daten = liesRoh(join(a.ordner, `seite-${n}.pdf`), MAX_ANHANG);
+  return daten && daten.subarray(0, 5).toString('latin1') === '%PDF-' ? daten : null;
 }
 
 const AZUBI: Route['wer'] = ['azubi'];

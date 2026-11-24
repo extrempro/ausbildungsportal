@@ -90,3 +90,37 @@ test('Erinnerungen sind privat: fremde gibt es nicht, nur die eigene Glocke meld
   assert.equal((await ruf(w.u, 'DELETE', `/api/erinnerungen/${id}`, { cookies: als(w, w.bea) })).status, 200);
   assert.equal((await liste(w, w.bea)).erinnerungen.length, 0);
 });
+
+test('Erinnerungen: wer den Azubi nicht mehr sieht, verfolgt über die Erinnerung nicht weiter dessen Plan', async () => {
+  const w = await welt();
+  const einsatz = koerper(await ruf(w.u, 'POST', `/api/azubis/${w.anna.id}/plan`, { cookies: als(w, w.petra), body: { art: 'einsatz', von: '2027-02-08', bis: '2027-03-01', titel: 'Lager' } })).eintrag.id;
+  await lege(w, w.bea, { azubiId: w.anna.id, text: 'Arbeitsplatz vorbereiten', einsatzId: einsatz, tageVorher: 7 });
+  // die Zuweisung endet, danach wird der Einsatz umbenannt und verschoben
+  w.u.db.prepare('DELETE FROM zuweisung WHERE beauftragter_id = ?').run(w.bea.id);
+  const alt = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/plan`, { cookies: als(w, w.petra) })).eintraege.find((x: { id: number }) => x.id === einsatz);
+  assert.equal((await ruf(w.u, 'PUT', `/api/azubis/${w.anna.id}/plan/${einsatz}`, { cookies: als(w, w.petra), body: { ...alt, art: 'einsatz', titel: 'Neues Projekt', von: '2027-05-03', bis: '2027-05-10' } })).status, 200);
+  const e = (await liste(w, w.bea)).erinnerungen[0];
+  assert.deepEqual([e.datum, e.einsatz, e.text], ['2027-02-01', null, 'Arbeitsplatz vorbereiten'], 'weder neuer Titel noch neuer Tag');
+});
+
+test('Erinnerungen: Beauftragte schon vor einer künftigen Zuweisung – nur mit den Einsätzen in ihrer Abteilung', async () => {
+  const w = await welt();
+  // Ben kommt im Februar über einen Einsatz in Beas Abteilung zu ihr; einen anderen Einsatz hat er davor
+  const abteilung = koerper(await ruf(w.u, 'POST', '/api/abteilungen', { cookies: als(w, w.olaf), body: { name: 'Lager', beauftragte: [w.bea.id] } })).abteilung.id;
+  const lager = koerper(await ruf(w.u, 'POST', `/api/azubis/${w.ben.id}/plan`, { cookies: als(w, w.olaf), body: { art: 'einsatz', von: '2027-02-08', bis: '2027-03-01', abteilungId: abteilung } })).eintrag.id;
+  const anders = koerper(await ruf(w.u, 'POST', `/api/azubis/${w.ben.id}/plan`, { cookies: als(w, w.olaf), body: { art: 'einsatz', von: '2027-01-04', bis: '2027-01-25', titel: 'Werkstatt' } })).eintrag.id;
+  // Bea sieht Ben noch nicht – im Formular steht er aber, nur mit dem Einsatz bei ihr
+  assert.equal((await ruf(w.u, 'GET', `/api/azubis/${w.ben.id}/plan`, { cookies: als(w, w.bea) })).status, 404);
+  const ben = (await liste(w, w.bea)).azubis.find((a: { id: number }) => a.id === w.ben.id);
+  assert.deepEqual(ben.einsaetze.map((e: { id: number }) => e.id), [lager]);
+  assert.equal((await lege(w, w.bea, { azubiId: w.ben.id, text: 'Spind vorbereiten', einsatzId: lager, tageVorher: 7 })).status, 201);
+  assert.equal((await lege(w, w.bea, { azubiId: w.ben.id, text: 'x', einsatzId: anders, tageVorher: 1 })).status, 400);
+  assert.equal((await lege(w, w.bea, { azubiId: w.ben.id, text: 'Begrüßung', datum: '2027-02-08' })).status, 201);
+  // andere Beauftragte nicht
+  const bodo = konto(w.u.db, 'beauftragter', 'Bodo Ohne');
+  assert.equal((await lege(w, bodo, { azubiId: w.ben.id, text: 'x', datum: '2027-02-08' })).status, 400);
+  // die Erinnerung folgt dem Einsatz, solange die Zuweisung besteht
+  const alt = koerper(await ruf(w.u, 'GET', `/api/azubis/${w.ben.id}/plan`, { cookies: als(w, w.olaf) })).eintraege.find((x: { id: number }) => x.id === lager);
+  await ruf(w.u, 'PUT', `/api/azubis/${w.ben.id}/plan/${lager}`, { cookies: als(w, w.olaf), body: { ...alt, art: 'einsatz', abteilungId: abteilung, von: '2027-02-15', bis: '2027-03-08' } });
+  assert.deepEqual((await liste(w, w.bea)).erinnerungen.map((e: { datum: string; einsatz: unknown }) => [e.datum, e.einsatz !== null]), [['2027-02-08', true], ['2027-02-08', false]]);
+});

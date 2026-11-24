@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.83.1 · 24.11.2026
+Stand: Version 0.83.2 · 24.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -45,7 +45,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - **Klassen und Schulblöcke:** Ein Azubi gehört zu einer Klasse seiner Berufsschule (die ganze Ausbildung). Schulblöcke pflegen Ausbilder einmal an der Klasse; sie stehen im Plan jedes Azubis der Klasse und ändern sich mit. Im Plan einzeln geändert oder gelöscht, folgt ein Block dort der Klasse nicht mehr. Neue und geänderte Blöcke stehen in der Glocke.
 - **Plan der Schule einlesen:** PDF hochladen (liest der Dienst „import“: Text, Texterkennung bei Scans, Vorschlag eines lokalen Sprachmodells) oder Text einfügen (das Portal sucht selbst nach Zeiträumen). Nur angelegte Klassen der Schule (auch dem Sprachmodell vorgegeben); Aufbau „Klasse zuerst“, „Block zuerst, darunter die Klassen“ oder Tabelle (Spalte je Block, Klassenzeilen darunter; Zuordnung über die Spalte im Text von `pdftotext -layout`, Titel aus der Kopfzeile und dem Thema unter der Klasse). Vorschau mit Prüfung (schon vorhanden, Überschneidung mit einem Block der Klasse – wahlweise ersetzen –, eigene Einträge „Berufsschule“ ohne Klasse bei Azubis der Klasse – wahlweise entfernen –, Ferien, genehmigter Urlaub); übernommen wird nur Angehaktes. Aufträge liegen in `data/import/<id>/` und werden nach dem Übernehmen, spätestens nach 24 Stunden gelöscht.
 - **Einsatzwünsche:** Der Azubi wünscht sich einen Einsatz in einer Abteilung aus den Stammdaten (ganze Wochen, höchstens 26, freiwilliger Grund). Entscheiden kann nur, wer den Azubi verwaltet (Ausbilder): genehmigen – auch mit angepasstem Zeitraum – legt einen Einsatz mit Abteilung im Plan an (ohne den Grund), ablehnen nur mit Begründung. Hinweise bei Überschneidung mit Schulblock, Einsatz oder Urlaub. Ausbildungsbeauftragte sehen Wünsche nicht, auch nicht in der Glocke.
-- **Erinnerungen:** Beauftragte und Ausbilder setzen sich private Erinnerungen zu Azubis, die sie sehen – vor einem Einsatz (Tage vorher; wandert mit, wenn der Einsatz verschoben wird) oder an einem festen Tag. Fällige stehen in der eigenen Glocke (einmal je Tag), per Teams und E-Mail ohne Inhalt. Erledigte werden nach 90 Tagen gelöscht.
+- **Erinnerungen:** Beauftragte und Ausbilder setzen sich private Erinnerungen zu Azubis, die sie sehen (Beauftragte auch schon vor einer künftigen Zuweisung, dann nur zu deren Einsätzen) – vor einem Einsatz (Tage vorher; wandert mit, wenn der Einsatz verschoben wird) oder an einem festen Tag. Fällige stehen in der eigenen Glocke (einmal je Tag), per Teams und E-Mail ohne Inhalt. Sieht die Person den Azubi nicht mehr, löst sich die Erinnerung vom Einsatz. Erledigte werden nach 90 Tagen gelöscht.
 - **Zeitleiste (nur Ausbilder):** Reiter je Azubi mit der ganzen Ausbildung als Wasserfall (Einsätze, Schulblöcke, genehmigter Urlaub, Prüfungen), Linie für heute, Zoom bis auf ein Quartal; ein Klick öffnet die Woche im Plan (`…/plan#kw-<Montag>`). Nur Ansicht aus vorhandenen Daten.
 - **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen; mit Lesemodus.
 
