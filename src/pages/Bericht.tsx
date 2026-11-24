@@ -40,7 +40,7 @@ interface Tag {
   summe: number;
 }
 
-/** Tagesform: die Einträge der drei Teile nach Tagen geordnet. Montag bis Freitag immer, Samstag und Sonntag nur mit Inhalt (oder wenn gewünscht). */
+/** Tagesform: die Einträge der drei Teile nach Tagen geordnet. Montag bis Freitag immer, Samstag und Sonntag nur mit Inhalt oder wenn freigeschaltet. */
 function tageDerWoche(montag: string, i: BerichtInhalt, mitWochenende = false): Tag[] {
   return TAGE.map((name, t): Tag => {
     const tag = plusTage(montag, t);
@@ -357,7 +357,7 @@ function EintragListe({ nr, art, titel, hilfe, beispiel, liste, onAendern }: { n
 }
 
 /** Tagesform: je Tag eine Karte mit den Zeilen des Tages. Jede Zeile gehört zu Betrieb, Unterweisung oder Berufsschule. */
-function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAendern, anhaenge }: { montag: string; inhalt: BerichtInhalt; tagSoll: number; wochenende: boolean; onWochenende: () => void; onAendern: (teil: Partial<BerichtInhalt>) => void; /** zeichnet die Anhänge eines Tages */ anhaenge: (tag: string, name: string) => ReactNode }) {
+function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onAendern, anhaenge }: { montag: string; inhalt: BerichtInhalt; tagSoll: number; /** Samstag und Sonntag vom Ausbilder freigeschaltet */ wochenende: boolean; onAendern: (teil: Partial<BerichtInhalt>) => void; /** zeichnet die Anhänge eines Tages */ anhaenge: (tag: string, name: string) => ReactNode }) {
   const tage = tageDerWoche(montag, inhalt, wochenende);
   const setze = (z: TagZeile, teil: Partial<BerichtEintrag>) => onAendern({ [z.art]: inhalt[z.art].map((e, j) => (j === z.index ? { ...e, ...teil } : e)) });
   const entferne = (z: TagZeile) => onAendern({ [z.art]: inhalt[z.art].filter((_, j) => j !== z.index) });
@@ -417,13 +417,7 @@ function TagesEingabe({ montag, inhalt, tagSoll, wochenende, onWochenende, onAen
           {anhaenge(t.tag, t.name)}
         </fieldset>
       ))}
-      {!wochenende && tage.length < 7 && (
-        <p>
-          <button type="button" className="link-knopf" onClick={onWochenende}>
-            Am Samstag oder Sonntag gearbeitet? Wochenende anzeigen
-          </button>
-        </p>
-      )}
+      {!wochenende && tage.length < 7 && <p className="leise klein">Arbeitest du auch am Wochenende, kann dein Ausbilder Samstag und Sonntag in deinem Profil freischalten.</p>}
     </>
   );
 }
@@ -491,8 +485,6 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const [kommentar, setKommentar] = useState('');
   // Teile, die der Azubi von Hand aufgeklappt hat (leere Teile sind sonst nur eine Zeile)
   const [auf, setAuf] = useState<Set<string>>(new Set());
-  // Tagesform: Samstag und Sonntag zeigen, auch wenn dort noch nichts steht
-  const [wochenende, setWochenende] = useState(false);
   useUngespeichert(geaendert);
   const sollDrucken = useRef(new URLSearchParams(window.location.search).has('drucken'));
   useEffect(() => {
@@ -597,7 +589,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const tagSoll = Math.round((b.soll / 5) * 20) / 20;
   const inSchule = b.plan.some((p) => p.art === 'schule');
   // die Abwesenheit steht hinter den Teilen (Wochenform: 3) bzw. hinter den Tagen
-  const tage = inhalt.form === 'tag' ? tageDerWoche(b.montag, inhalt, wochenende) : [];
+  const tage = inhalt.form === 'tag' ? tageDerWoche(b.montag, inhalt, b.wochenende) : [];
   const abwNr = inhalt.form === 'tag' ? tage.length + 1 : 4;
   const stand = ist <= 0 ? 'leer' : Math.abs(ist - b.soll) <= 0.01 ? 'genau' : ist > b.soll ? 'mehr' : 'weniger';
   const standText =
@@ -687,7 +679,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
                 ))}
               </p>
             )}
-            {inhalt.form === 'tag' && <TagesEingabe montag={b.montag} inhalt={inhalt} tagSoll={tagSoll} wochenende={wochenende} onWochenende={() => setWochenende(true)} onAendern={aendere} anhaenge={(tag, name) => <Anhaenge pfad={pfad} liste={b.anhaenge} tag={tag} schreibbar wo={name} vorher={vorAnhang} onGeaendert={setzeAnhaenge} />} />}
+            {inhalt.form === 'tag' && <TagesEingabe montag={b.montag} inhalt={inhalt} tagSoll={tagSoll} wochenende={b.wochenende} onAendern={aendere} anhaenge={(tag, name) => <Anhaenge pfad={pfad} liste={b.anhaenge} tag={tag} schreibbar wo={name} vorher={vorAnhang} onGeaendert={setzeAnhaenge} />} />}
             {inhalt.form !== 'tag' && ABSCHNITTE.map((a, i) =>
               a.schluessel === 'betrieb' || inhalt[a.schluessel].length > 0 || auf.has(a.schluessel) || (a.schluessel === 'schule' && inSchule) ? (
                 <EintragListe key={a.schluessel} nr={i + 1} art={a.schluessel} titel={a.titel} hilfe={a.hilfe} beispiel={a.beispiel} liste={inhalt[a.schluessel]} onAendern={(l) => aendere({ [a.schluessel]: l })} />

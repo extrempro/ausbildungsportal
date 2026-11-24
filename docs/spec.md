@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.80.3 · 24.11.2026
+Stand: Version 0.81.0 · 24.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -48,7 +48,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ### Berichtsheft
 
-- Ein Bericht je Woche (Wochen- oder Tagesform, vom Betrieb festgelegt): betriebliche Tätigkeiten, Unterweisungen, Berufsschule, je mit Stunden; Abwesenheit mit Urlaub, Feiertag oder „Abwesend“ (ohne Grund). Feiertage und genehmigter Urlaub sind vorbelegt.
+- Ein Bericht je Woche (Wochen- oder Tagesform, vom Betrieb festgelegt, je Azubi abweichend). In der Tagesform Montag bis Freitag; Samstag und Sonntag schaltet der Ausbilder je Azubi im Profil frei (ohne Freischaltung lehnt der Server neue Einträge am Wochenende ab, schon gespeicherte bleiben; Soll je Tag weiter Wochenstunden ÷ 5): betriebliche Tätigkeiten, Unterweisungen, Berufsschule, je mit Stunden; Abwesenheit mit Urlaub, Feiertag oder „Abwesend“ (ohne Grund). Feiertage und genehmigter Urlaub sind vorbelegt.
 - Fotos und Dateien anhängen (Bilder, PDF, Office ohne Makros; 5 MB je Datei, 12 je Bericht; Typ am Dateianfang geprüft).
 - Ablauf: Entwurf (nur Azubi) → eingereicht (mit Unterschrift) → abgezeichnet (mit Unterschrift) oder zurückgegeben mit Kommentar; Abzeichnung kann ein Ausbilder mit Begründung aufheben. Jeder Schritt steht im Verlauf des Berichts.
 - Ausgabe als PDF (einzeln oder alle) und als Druckansicht.
@@ -95,7 +95,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 44 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 038). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 44 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 039). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -139,7 +139,7 @@ erDiagram
 
 | Tabelle | Inhalt | Schlüssel und Bezüge |
 | --- | --- | --- |
-| `azubi_profil` | Beruf, Berufsschule, Klasse, zuständiger Ausbilder, Beginn, Vertragsende, Verkürzung, vorzeitige Zulassung, Wochenstunden, Prüfungen (JSON), Urlaubstage, Berichtsform, Planer frei | `benutzer_id` → `beruf`, `berufsschule`, `klasse`, `benutzer` |
+| `azubi_profil` | Beruf, Berufsschule, Klasse, zuständiger Ausbilder, Beginn, Vertragsende, Verkürzung, vorzeitige Zulassung, Wochenstunden, Prüfungen (JSON), Urlaubstage, Berichtsform, Planer frei, Wochenende im Berichtsheft (Tagesform) | `benutzer_id` → `beruf`, `berufsschule`, `klasse`, `benutzer` |
 | `beruf` | Bezeichnung, Fachrichtung, Regeldauer, Lernpaket | `id` |
 | `berufsschule` | Name, Ort, Bundesland, Form (Block oder Teilzeit) | `id` |
 | `klasse` | Klasse an der Berufsschule: Name (je Schule einmalig), Beruf (freiwillig) | `id` → `berufsschule`, `beruf` |

@@ -57,6 +57,7 @@ export function ProfilUebersicht({ p }: { p: ProfilAntwort }) {
       <dd>
         {BERICHT_FORM[p.berichtFormGilt]}
         {p.profil.berichtForm === null ? ' (wie im Betrieb eingestellt)' : ''}
+        {p.berichtFormGilt === 'tag' ? (p.profil.wochenende ? ' · Samstag und Sonntag freigeschaltet' : ' · Montag bis Freitag') : ''}
       </dd>
       <dt>Planer für die Prüfung</dt>
       <dd>{p.profil.planerFrei ? (p.planerTitel ? `„${p.planerTitel}“ freigeschaltet` : 'freigeschaltet – im Inhaltspaket des Berufs fehlt aber der Planer') : 'nicht freigeschaltet'}</dd>
@@ -171,6 +172,17 @@ function ProfilFormular({ p, stammdaten, ich, onGespeichert }: { p: ProfilAntwor
             <option value="tag">{BERICHT_FORM.tag}</option>
           </select>
         </label>
+        <div className="ganz">
+          <label className="haken">
+            <input type="checkbox" checked={wert.wochenende} disabled={!wert.wochenende && (wert.berichtForm ?? stammdaten.betrieb.berichtForm) !== 'tag'} onChange={(e) => setze('wochenende', e.target.checked)} />
+            Samstag und Sonntag im Berichtsheft freischalten
+          </label>
+          <p className="leise klein">
+            {(wert.berichtForm ?? stammdaten.betrieb.berichtForm) === 'tag'
+              ? 'Für Azubis, die auch am Wochenende arbeiten. Ohne Freischaltung gibt es im Bericht nur Montag bis Freitag.'
+              : 'Gesperrt: Das gilt nur für Berichte mit Einträgen je Tag – stell dafür die Form des Berichtshefts auf „Einträge je Tag“.'}
+          </p>
+        </div>
         <label>
           Ausbildungsbeginn
           <input type="date" value={wert.ausbildungsbeginn} onChange={(e) => setze('ausbildungsbeginn', e.target.value)} />

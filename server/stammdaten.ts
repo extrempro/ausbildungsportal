@@ -66,6 +66,7 @@ interface ProfilZeile {
   urlaubstage: number | null;
   bericht_form: 'woche' | 'tag' | null;
   planer_frei: number;
+  wochenende: number;
 }
 
 export interface Pruefung {
@@ -93,6 +94,8 @@ export interface Profil {
   berichtForm: 'woche' | 'tag' | null;
   /** Planer für das Prüfungsvorhaben freigeschaltet (durch den Ausbilder) */
   planerFrei: boolean;
+  /** Samstag und Sonntag im Berichtsheft (Tagesform) freigeschaltet (durch den Ausbilder) */
+  wochenende: boolean;
 }
 
 const STANDARD_REGELDAUER = 36;
@@ -112,6 +115,7 @@ const LEERES_PROFIL: Profil = {
   urlaubstage: null,
   berichtForm: null,
   planerFrei: false,
+  wochenende: false,
 };
 
 // ---------- Lesen ----------
@@ -159,6 +163,7 @@ export function leseProfil(db: DB, azubiId: number): Profil {
     pruefungen,
     berichtForm: z.bericht_form === 'tag' || z.bericht_form === 'woche' ? z.bericht_form : null,
     planerFrei: z.planer_frei === 1,
+    wochenende: z.wochenende === 1,
   };
 }
 
@@ -536,6 +541,8 @@ export const STAMMDATEN_ROUTEN: Route[] = [
       const planer = planerDesPakets(c.k, beruf?.lernpaket ?? null);
       const planerFrei = body.planerFrei === undefined ? vorher.planerFrei : body.planerFrei === true;
       if (planerFrei && !vorher.planerFrei && !planer) throw new Fehler(400, 'Für den Beruf dieses Azubis gibt es keinen Planer. Er gehört ins Inhaltspaket des Berufs (Datei planer.md).');
+      // Samstag und Sonntag im Berichtsheft: fehlt die Angabe (ältere Oberfläche), bleibt es, wie es war
+      const wochenende = body.wochenende === undefined ? vorher.wochenende : body.wochenende === true;
 
       const roh = body.pruefungen ?? [];
       if (!Array.isArray(roh) || roh.length > 8) throw new Fehler(400, 'Höchstens acht Prüfungstermine');
@@ -552,16 +559,16 @@ export const STAMMDATEN_ROUTEN: Route[] = [
 
       db.prepare(
         `INSERT INTO azubi_profil (benutzer_id, beruf_id, berufsschule_id, ausbilder_id, ausbildungsbeginn, vertragsende, verkuerzung_monate,
-                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form, planer_frei, klasse_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                   verkuerzung_art, verkuerzung_grund, vorzeitige_zulassung, wochenstunden, pruefungen, geaendert, geaendert_von, urlaubstage, bericht_form, planer_frei, klasse_id, wochenende)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(benutzer_id) DO UPDATE SET
            beruf_id = excluded.beruf_id, berufsschule_id = excluded.berufsschule_id, ausbilder_id = excluded.ausbilder_id, klasse_id = excluded.klasse_id,
            ausbildungsbeginn = excluded.ausbildungsbeginn, vertragsende = excluded.vertragsende,
            verkuerzung_monate = excluded.verkuerzung_monate, verkuerzung_art = excluded.verkuerzung_art,
            verkuerzung_grund = excluded.verkuerzung_grund, vorzeitige_zulassung = excluded.vorzeitige_zulassung,
            wochenstunden = excluded.wochenstunden, pruefungen = excluded.pruefungen, geaendert = excluded.geaendert, geaendert_von = excluded.geaendert_von,
-           urlaubstage = excluded.urlaubstage, bericht_form = excluded.bericht_form, planer_frei = excluded.planer_frei`,
-      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm, planerFrei ? 1 : 0, klasseId);
+           urlaubstage = excluded.urlaubstage, bericht_form = excluded.bericht_form, planer_frei = excluded.planer_frei, wochenende = excluded.wochenende`,
+      ).run(id, berufId, schuleId, ausbilderId, beginn, ende, verkuerzung, art, grund, body.vorzeitigeZulassung === true ? 1 : 0, Math.round(stunden * 100) / 100, JSON.stringify(pruefungen), c.k.jetzt().toISOString(), c.b.id, urlaubstage, berichtForm, planerFrei ? 1 : 0, klasseId, wochenende ? 1 : 0);
       // andere Klasse: Schulblöcke im Plan auf den Stand der neuen Klasse bringen
       if (klasseId !== vorher.klasseId) gleicheSchulbloeckeAb(db, c.k.jetzt(), c.b, id);
       protokolliere(db, c.k.jetzt(), 'fach', 'profil_geaendert', c.b, azubi, planerFrei !== vorher.planerFrei ? (planerFrei ? 'Planer freigeschaltet' : 'Planer gesperrt') : undefined);

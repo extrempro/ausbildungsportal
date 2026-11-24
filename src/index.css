@@ -555,7 +555,8 @@ label.haken input {
   flex: none;
 }
 
-form.reihe .ganz {
+form.reihe .ganz,
+.raster > .ganz {
   grid-column: 1 / -1;
 }
 
