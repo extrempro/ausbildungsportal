@@ -129,6 +129,15 @@ test('Schulplan als Tabelle: je Block eine Spalte, darunter Zeilen mit Klassen â
   assert.equal(zusammenfuehren(r, modell, text).length, 10);
 });
 
+test('Schulplan: Datum ohne Jahr nach dem Schuljahr des Plans, Termine innerhalb eines Blocks sind kein eigener Block', () => {
+  const text = 'Blockplan Schuljahr 2027/28\nFI 25a   06.09. - 24.09.2027   28.02. - 03.03.   20.03. - 31.03.2028\nFI 25a   Praktische ZP: 20.03. - 24.03.28';
+  assert.deepEqual(sortiert(erkenneBloecke(text, KLASSEN, '2026-11-10')), [
+    ['FI-25a', '2027-09-06', '2027-09-24'],
+    ['FI-25a', '2028-02-28', '2028-03-03'],
+    ['FI-25a', '2028-03-20', '2028-03-31'],
+  ]);
+});
+
 test('Schulplan: Antwort des Sprachmodells nur in der festen Form', () => {
   assert.deepEqual(ausModell({ bloecke: [{ klasse: ' FI 25a ', von: '2026-08-31', bis: '2026-09-18', titel: '' }, { klasse: 'x', von: '31.08.2026', bis: '2026-09-18' }, null] }), [
     { klasse: 'FI 25a', von: '2026-08-31', bis: '2026-09-18', titel: 'Berufsschule', unsicher: false },

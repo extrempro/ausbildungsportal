@@ -1,5 +1,12 @@
 # Änderungen
 
+## [0.81.1] – 2026-11-24
+
+### Behoben
+
+- **Plan der Schule einlesen – Datum ohne Jahr:** Steht bei einem Zeitraum kein Jahr (z. B. „28.02. - 03.03.“), nimmt das Portal jetzt das Jahr, mit dem er ins Schuljahr des Plans fällt – bisher das erste Jahr im Plan, also im zweiten Halbjahr ein Jahr zu früh.
+- **Plan der Schule einlesen – Termine im Block:** Ein Zeitraum, der ganz in einem Block derselben Klasse liegt (z. B. eine praktische Zwischenprüfung), wird nicht mehr als eigener Schulblock vorgeschlagen.
+
 ## [0.81.0] – 2026-11-24
 
 ### Neu
