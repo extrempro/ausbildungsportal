@@ -31,6 +31,8 @@ import { BRANDING_ROUTEN } from './branding';
 import { leseChangelog } from './changelog';
 import { MELDUNG_ROUTEN } from './meldungen';
 import { PLAN_ROUTEN } from './plan';
+import { WUNSCH_ROUTEN } from './wunsch';
+import { ERINNERUNG_ROUTEN } from './erinnerung';
 import { BEGLEITER_ROUTEN } from './begleiter';
 import { PLANER_ROUTEN, planerFuer } from './planer';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
@@ -733,6 +735,8 @@ export const ROUTEN: Route[] = [
   ...ANHANG_ROUTEN,
   ...FIRMENTERMIN_ROUTEN,
   ...PLANER_ROUTEN,
+  ...WUNSCH_ROUTEN,
+  ...ERINNERUNG_ROUTEN,
   ...BEGLEITER_ROUTEN,
 ];
 

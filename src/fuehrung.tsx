@@ -96,6 +96,9 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     ziel: ['main h1'],
   },
   { titel: 'Wer ist wann wo?', text: 'Der Jahreskalender zeigt das ganze Jahr: je Azubi eine Zeile mit Schule, Einsätzen und Urlaub. Ein Klick auf den Namen zeigt das Jahr dieses Azubis Tag für Tag.', pfad: '/jahreskalender', ziel: ['.jk-rahmen', 'main h1'] },
+  ...(rolle === 'beauftragter'
+    ? [{ titel: 'Erinnerungen', text: 'Hier merkst du dir, was du für einen Azubi vorbereiten willst – zum Beispiel eine Woche, bevor er in deine Abteilung kommt. Nur du siehst deine Erinnerungen; fällige stehen in der Glocke.', pfad: '/erinnerungen', ziel: ['main form', 'main h1'] }]
+    : []),
   { titel: 'Deine Unterschrift', text: 'Ohne hinterlegte Unterschrift lässt sich nichts abzeichnen. Unterschreibe hier einmal.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
   GLOCKE('Die Glocke zeigt, wenn ein Bericht eingereicht wurde, ein Urlaubsantrag wartet oder ein Azubi etwas in seinen Plan eingetragen hat. Ein Klick führt direkt dorthin.'),
   {
@@ -114,7 +117,7 @@ const betreuung = (rolle: 'ausbilder' | 'beauftragter'): Schritt[] => [
     ? [
         {
           titel: 'Planung',
-          text: 'Was mehrere Azubis betrifft: Schulblöcke trägst du einmal an der Klasse ein – sie stehen dann bei allen Azubis der Klasse im Plan. Die Sammelplanung ist für anderes, Planbausteine fügst du in einen Plan ab der passenden Woche ein.',
+          text: 'Einsatzwünsche der Azubis entscheiden, eigene Erinnerungen – die Zahl am Knopf zeigt, was wartet. Dazu Schulblöcke (einmal je Klasse), Sammelplanung und Planbausteine für mehrere Azubis.',
           pfad: '/',
           ziel: ['button[aria-controls="menue-planung"]', '.tabs button'],
         },

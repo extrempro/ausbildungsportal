@@ -10,6 +10,7 @@ import { erzeugeKontext, REDIRECT_PFAD } from './start';
 import { lernpakete } from './lernen';
 import { verschickeFaellige } from './benachrichtigung';
 import { bereiteImportOrdner } from './import-dienst';
+import { meldeFaelligeErinnerungen } from './erinnerung';
 
 const cfg = loadConfig();
 wechsleZumBesitzer(cfg.dataDir);
@@ -34,6 +35,7 @@ if (cfg.devAnmeldung) console.warn('WARNUNG: DEV_ANMELDUNG ist an – Anmeldung 
  * - abgelaufene Sitzungen und Anmeldevorgänge entfernen,
  * - Protokolleinträge nach 90 Tagen löschen,
  * - erledigte Rückmeldungen 30 Tage nach „erledigt“ löschen,
+ * - fällige Erinnerungen von Beauftragten und Ausbildern in die Glocke stellen,
  * - einmal am Tag eine Sicherung anlegen (die letzten sieben bleiben, siehe KEEP in db.ts).
  */
 const pflege = () => {
@@ -43,6 +45,8 @@ const pflege = () => {
   if (geloescht > 0) console.log(`Protokoll: ${geloescht} Einträge älter als ${PROTOKOLL_TAGE} Tage gelöscht`);
   const meldungen = loescheErledigteMeldungen(db, jetzt);
   if (meldungen > 0) console.log(`Rückmeldungen: ${meldungen} seit mehr als ${MELDUNG_TAGE} Tagen erledigte gelöscht`);
+  const erinnert = meldeFaelligeErinnerungen(db, jetzt);
+  if (erinnert > 0) console.log(`Erinnerungen: ${erinnert} fällig gemeldet`);
   dailyBackup(db, cfg.dataDir).then(
     (datei) => datei && console.log(`Tägliche Sicherung angelegt: ${datei}`),
     (e: unknown) => console.error(`FEHLER: Tägliche Sicherung fehlgeschlagen: ${e instanceof Error ? e.message : String(e)}`),

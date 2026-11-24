@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.82.0 · 24.11.2026
+Stand: Version 0.83.0 · 24.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -44,6 +44,9 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - **Planbausteine:** Vorlagen je Beruf. **Sammelplanung:** ein Eintrag oder Baustein für mehrere Azubis auf einmal.
 - **Klassen und Schulblöcke:** Ein Azubi gehört zu einer Klasse seiner Berufsschule (die ganze Ausbildung). Schulblöcke pflegen Ausbilder einmal an der Klasse; sie stehen im Plan jedes Azubis der Klasse und ändern sich mit. Im Plan einzeln geändert oder gelöscht, folgt ein Block dort der Klasse nicht mehr. Neue und geänderte Blöcke stehen in der Glocke.
 - **Plan der Schule einlesen:** PDF hochladen (liest der Dienst „import“: Text, Texterkennung bei Scans, Vorschlag eines lokalen Sprachmodells) oder Text einfügen (das Portal sucht selbst nach Zeiträumen). Nur angelegte Klassen der Schule (auch dem Sprachmodell vorgegeben); Aufbau „Klasse zuerst“, „Block zuerst, darunter die Klassen“ oder Tabelle (Spalte je Block, Klassenzeilen darunter; Zuordnung über die Spalte im Text von `pdftotext -layout`, Titel aus der Kopfzeile und dem Thema unter der Klasse). Vorschau mit Prüfung (schon vorhanden, Überschneidung mit einem Block der Klasse – wahlweise ersetzen –, eigene Einträge „Berufsschule“ ohne Klasse bei Azubis der Klasse – wahlweise entfernen –, Ferien, genehmigter Urlaub); übernommen wird nur Angehaktes. Aufträge liegen in `data/import/<id>/` und werden nach dem Übernehmen, spätestens nach 24 Stunden gelöscht.
+- **Einsatzwünsche:** Der Azubi wünscht sich einen Einsatz in einer Abteilung aus den Stammdaten (ganze Wochen, höchstens 26, freiwilliger Grund). Entscheiden kann nur, wer den Azubi verwaltet (Ausbilder): genehmigen – auch mit angepasstem Zeitraum – legt einen Einsatz mit Abteilung im Plan an (ohne den Grund), ablehnen nur mit Begründung. Hinweise bei Überschneidung mit Schulblock, Einsatz oder Urlaub. Ausbildungsbeauftragte sehen Wünsche nicht, auch nicht in der Glocke.
+- **Erinnerungen:** Beauftragte und Ausbilder setzen sich private Erinnerungen zu Azubis, die sie sehen – vor einem Einsatz (Tage vorher; wandert mit, wenn der Einsatz verschoben wird) oder an einem festen Tag. Fällige stehen in der eigenen Glocke (einmal je Tag), per Teams und E-Mail ohne Inhalt. Erledigte werden nach 90 Tagen gelöscht.
+- **Zeitleiste (nur Ausbilder):** Reiter je Azubi mit der ganzen Ausbildung als Wasserfall (Einsätze, Schulblöcke, genehmigter Urlaub, Prüfungen), Linie für heute, Zoom bis auf ein Quartal; ein Klick öffnet die Woche im Plan (`…/plan#kw-<Montag>`). Nur Ansicht aus vorhandenen Daten.
 - **Jahreskalender:** ein Jahr auf einer Seite (Azubi: Tag für Tag; Betreuende: Azubis als Zeilen), nur zum Lesen; mit Lesemodus.
 
 ### Berichtsheft
@@ -75,7 +78,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ### Glocke, Benachrichtigungen, Kalender
 
-- **Glocke:** neue Einträge, geänderte Schulblöcke, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Freischaltung des Planers, aktualisierte Lerninhalte, Rückfragen zu eigenen Rückmeldungen; Löschung nach 60 Tagen.
+- **Glocke:** neue Einträge, geänderte Schulblöcke, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Einsatzwünsche (nicht für Beauftragte), fällige eigene Erinnerungen, Freischaltung des Planers, aktualisierte Lerninhalte, Rückfragen zu eigenen Rückmeldungen; Löschung nach 60 Tagen.
 - **Benachrichtigungen** per Teams und E-Mail, je Bereich (Berichtsheft, Urlaub, Ausbildungsplan, Rückmeldungen) selbst einschaltbar; ohne fremde Namen, ohne Inhalte. Teams über die Teams-App „Ausbildungsportal“ (Aktivitätsfeed über Microsoft Graph, Anwendungsberechtigung `TeamsActivity.Send`, Empfänger ist die Entra-Objekt-ID); ein Klick zeigt im Bereich „Aktivität“ einen Hinweis mit „In der App öffnen“. **In der App läuft das Portal**, angemeldet über Teams (Single Sign-on: Token von Teams, geprüft in `server/teams-sso.ts`; eigene Sitzung mit Cookie `ap_teams`, SameSite=None, partitioniert).
 - **Kalender-Abo:** ein geheimer Link (iCal) mit Schule, Einsätzen, Prüfungen, genehmigtem Urlaub, privaten Terminen.
 
@@ -95,7 +98,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 44 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 039). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 46 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 040). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -148,6 +151,8 @@ erDiagram
 | `abteilung`, `abteilung_person` | Abteilungen mit Beauftragten und Stellvertretung | `abteilung_id`, `benutzer_id` |
 | `zuweisung` | Azubi ↔ Beauftragte oder Vertretung mit Zeitraum; aus einem Einsatz oder von Hand | `id` → `benutzer`, `plan_eintrag` |
 | `plan_eintrag` | Art (Schule, Einsatz, Aufgabe, Notiz, privater Termin), Zeitraum, Titel, Text, Zuständige, erledigt, Unteraufgaben (JSON), Abteilung, Sammelplanung, Schulblock der Klasse | `id` → `benutzer`, `abteilung`, `sammelplanung`, `schulblock` |
+| `planungswunsch` | Einsatzwunsch des Azubis: Abteilung (mit Namen beim Wünschen), Zeitraum (Wochen), Grund, Status (offen, genehmigt, abgelehnt, zurückgezogen), Entscheidung mit Name und Begründung, angelegter Einsatz | `id` → `benutzer`, `abteilung`, `plan_eintrag` |
+| `erinnerung` | private Erinnerung von Beauftragten oder Ausbildern: Azubi, Text, Tag (fest oder Einsatz minus Tage vorher), erledigt, zuletzt gemeldet | `id` → `benutzer` (Person und Azubi), `plan_eintrag` |
 | `planvorlage` | Planbaustein je Beruf, Einträge als JSON | `id` → `beruf` |
 | `sammelplanung` | eine Sammelplanung: Azubis und Einträge (JSON) | `id` |
 | `firmentermin` | Termin für alle, Zeitraum, Hinweis | `id` |
@@ -219,6 +224,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/berichtsheft/druck` | Druckansicht | alle Berichte zum Drucken |
 | `/berichtsheft/einlesen` | Alte Berichte einlesen | PDF oder Text, Vorschau, als Entwurf übernehmen, gesammelt einreichen |
 | `/urlaub` | Urlaub | Anträge, Urlaubskonto |
+| `/einsatzwuensche` | Einsatz wünschen | Wunsch stellen, eigene Wünsche mit Stand, zurückziehen (aus dem Plan erreichbar) |
 | `/jahreskalender` | Jahreskalender | eigenes Jahr |
 | `/lernen`, `/lernen/<Themenfeld>`, `/lernen/kompendium` | Lernen | Themenfelder, Lernstand, Abzeichen |
 | `/lernen/ueben`, `…/karten/<Feld>`, `…/quiz/<Unterthema>` | Üben | Karteikarten, Quiz |
@@ -236,12 +242,15 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/abzeichnen` | Abzeichnen | wartende Berichte |
 | `/urlaub` | Urlaub | Anträge zum Bestätigen oder Genehmigen |
 | `/jahreskalender`, `/jahreskalender/<id>` | Jahreskalender | alle betreuten Azubis bzw. einer |
+| `/erinnerungen` | Erinnerungen | eigene, private Erinnerungen zu Azubis (Beauftragte im Hauptmenü, Ausbilder unter „Planung“) |
 | `/lerninhalte`, `/lerninhalte/<Paket>[/…]` | Lerninhalte | Lehrmaterial lesen (ohne Lernstand); Ausbilder reichen neue Pakete ein |
 
 ### Nur Ausbilder
 
 | Pfad | Seite | Inhalt |
 | --- | --- | --- |
+| `/azubis/<id>/zeitleiste` | Zeitleiste | Reiter je Azubi: ganze Ausbildung als Wasserfall, Zoom |
+| `/planung/einsatzwuensche` | Einsatzwünsche | offene Wünsche genehmigen oder ablehnen, Entscheidungen der letzten 90 Tage |
 | `/planung/sammelplanung` | Sammelplanung | Eintrag oder Baustein für mehrere Azubis |
 | `/planung/schulbloecke` | Schulblöcke | Schulblöcke je Klasse; stehen im Plan aller Azubis der Klasse |
 | `/planung/schulbloecke/einlesen` | Plan der Schule einlesen | PDF oder Text, Vorschau, übernehmen |
@@ -262,7 +271,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 175 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 185 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |
@@ -270,6 +279,7 @@ Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen
 | eigenes Konto | `/api/ich/…` |
 | Azubi-bezogen | `/api/azubis/:id/…` |
 | Urlaub | `/api/urlaub/…` |
+| Einsatzwünsche, Erinnerungen | `/api/azubis/:id/wuensche`, `/api/wuensche/…`, `/api/erinnerungen/…` |
 | Lernmodul, Planer, Begleiter | `/api/lernen/…`, `/api/planer/…`, `/api/begleiter/…`, `/api/anleitungen/…` |
 | Verwaltung | `/api/konten/…`, `/api/stammdaten/…`, `/api/abteilungen/…`, `/api/planvorlagen/…`, `/api/protokoll`, `/api/branding/…`, `/api/teams/…`, `/api/schulbloecke/…`, `/api/lernpakete/…`, `/api/lerninhalte/…` |
 | Rückmeldungen | `/api/fehlermeldungen/…`, `/api/rueckmeldungen/…`, `/api/meine-meldungen/…` |

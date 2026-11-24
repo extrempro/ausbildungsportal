@@ -151,7 +151,7 @@ function terminAus(roh: Record<string, unknown>): Eingabe {
   return { art: 'termin', von: montag, bis: montag, titel: text(roh.titel, 120, 'Titel'), text: freitext(roh.text, 2000, 'Ort oder Anmerkung'), zustaendig: null, abteilung: null, erledigt: false, unteraufgaben: [], tag: roh.tag, zeitVon, zeitBis };
 }
 
-function eingabeAus(db: DB, roh: Record<string, unknown>): Eingabe {
+export function eingabeAus(db: DB, roh: Record<string, unknown>): Eingabe {
   const art = artAus(roh.art);
   if (art === 'termin') return terminAus(roh);
   if (!gueltigesDatum(roh.von)) throw new Fehler(400, 'Beginn fehlt oder ist kein gültiges Datum');
@@ -310,7 +310,7 @@ function letzteLaeufe(db: DB, wer: BenutzerZeile) {
   return zeilen.map((z) => ({ ...z }));
 }
 
-function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boolean, lauf: Lauf | null = null): { id: number; zugewiesen: boolean } {
+export function legeEintragAn(c: Ctx, azubi: BenutzerZeile, e: Eingabe, zuweisen: boolean, lauf: Lauf | null = null): { id: number; zugewiesen: boolean } {
   const { db } = c.k;
   if (!darfPlanBearbeiten(db, c.b, azubi.id, e.art, heute(c.k.jetzt()))) throw new Fehler(403, 'Diese Art von Eintrag darfst du hier nicht anlegen', 'rolle');
   // private Termine zählen für sich – sie sollen weder den Plan der Ausbilder füllen noch sich dort bemerkbar machen

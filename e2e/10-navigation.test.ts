@@ -103,9 +103,10 @@ test(
       const s = await p.seite(PETRA, groesse);
       await oeffne(s, p.url, `/azubis/${anna}/plan`);
       const reiter = s.locator('nav.reiter a');
-      assert.deepEqual(await reiter.allTextContents(), ['Profil', 'Ausbildungsplan', 'Berichtsheft', 'Urlaub']);
+      // die Zeitleiste gibt es nur für Ausbilder
+      assert.deepEqual(await reiter.allTextContents(), ['Profil', 'Ausbildungsplan', 'Berichtsheft', 'Urlaub', 'Zeitleiste']);
       assert.equal(await s.locator('nav.reiter a[aria-current="page"]').textContent(), 'Ausbildungsplan');
-      for (const [text, pfad] of [['Berichtsheft', `/azubis/${anna}/berichtsheft`], ['Urlaub', `/azubis/${anna}/urlaub`], ['Profil', `/azubis/${anna}`]] as const) {
+      for (const [text, pfad] of [['Berichtsheft', `/azubis/${anna}/berichtsheft`], ['Urlaub', `/azubis/${anna}/urlaub`], ['Zeitleiste', `/azubis/${anna}/zeitleiste`], ['Profil', `/azubis/${anna}`]] as const) {
         await s.click(`nav.reiter a:has-text("${text}")`);
         await s.waitForURL(p.url + pfad);
         await s.locator('main h1').waitFor();
