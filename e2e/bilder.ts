@@ -175,6 +175,15 @@ async function fuelle(url: string, api: () => Api, g: { petra: number; bea: numb
   const benFrei = woche(5);
   await ben.ruf('POST', `/api/azubis/${g.ben}/urlaub`, { von: benFrei, bis: plus(benFrei, 2) });
 
+  // Einsatzwünsche und Erinnerungen
+  const kundendienst = (await petra.ruf('POST', '/api/abteilungen', { name: 'Kundendienst', beauftragte: [g.bea] })).abteilung.id as number;
+  const versand = (await petra.ruf('POST', '/api/abteilungen', { name: 'Versand' })).abteilung.id as number;
+  await anna.ruf('POST', `/api/azubis/${g.anna}/wuensche`, { abteilungId: versand, von: woche(16), bis: woche(18), grund: 'Ich möchte sehen, wie Pakete für den Versand vorbereitet werden.' });
+  await ben.ruf('POST', `/api/azubis/${g.ben}/wuensche`, { abteilungId: kundendienst, von: woche(12), bis: woche(13), grund: '' });
+  await bea.ruf('POST', '/api/erinnerungen', { azubiId: g.anna, text: 'Zugang zum Ticketsystem beantragen', datum: inTagen(0) });
+  await bea.ruf('POST', '/api/erinnerungen', { azubiId: g.anna, text: 'Arbeitsplatz im Kundendienst vorbereiten', datum: plus(woche(7), -7) });
+  await petra.ruf('POST', '/api/erinnerungen', { azubiId: g.ben, text: 'Zwischengespräch vorbereiten', datum: inTagen(14) });
+
   // Lernen, Planer, Begleiter – alles privat für Anna
   for (const [id, status, luecke] of [['grundlagen.begriffe', 'gruen', ''], ['grundlagen.ablauf', 'gruen', ''], ['grundlagen.pruefen', 'gelb', 'Übergabe noch einmal üben'], ['praxis.werkzeug', 'gruen', ''], ['praxis.lager', 'gelb', 'Lagerarten wiederholen'], ['sicherheit.schutz', 'gruen', ''], ['sicherheit.brand', 'gruen', '']] as const) {
     await anna.ruf('PATCH', `/api/lernen/unterthema/${id}`, { status, ...(luecke ? { luecke } : {}) });
@@ -307,6 +316,7 @@ async function main() {
     });
     await s.keyboard.press('Escape');
     await foto(s, '/meine-meldungen', 'azubi-19-meine-meldungen', 'Meine Meldungen', 'Eigene Fehlermeldungen und Ideen mit dem Gespräch dazu: Fragt jemand nach, sagt die Glocke Bescheid, und hier steht die Antwort. Erledigte Meldungen werden 30 Tage danach gelöscht.', { ganz: true });
+    await foto(s, '/einsatzwuensche', 'azubi-20-einsatzwunsch', 'Einsatz wünschen', 'Azubis wünschen sich einen Einsatz in einer Abteilung aus den Stammdaten. Den Wunsch und den Grund sieht nur der Ausbilder.', { ganz: true });
     await foto(s, '/handbuch', 'azubi-13-handbuch', 'Handbuch', 'Jede Rolle hat ihr eigenes Handbuch mit Inhaltsverzeichnis und Suche.');
     await foto(s, '/berichtsheft', 'azubi-17-abmelde-warnung', 'Warnung vor dem Abmelden', 'Fünf Minuten bevor das Portal nach langer Pause abmeldet, erscheint dieses Fenster mit der verbleibenden Zeit. „Angemeldet bleiben“ verlängert.', {
       vorher: async () => {
@@ -349,6 +359,9 @@ async function main() {
     await foto(s, '/lerninhalte/muster/grundlagen', 'ausbilder-08-lerninhalte', 'Lerninhalte ansehen', 'Ausbilder und Beauftragte sehen die Lerninhalte nur zum Lesen – ohne Ampel, Notizen und Abzeichen der Azubis.');
     await foto(s, '/lerninhalte', 'ausbilder-11-lerninhalte-verwalten', 'Lerninhalte verwalten', 'Je Lernmodul eine Karte mit Stand und Berufen. Ausbilder reichen neue Fassungen ein; eine andere Ausbilderin prüft sie, bevor sie ins Portal kommen.', { ganz: true });
     await foto(s, '/rueckmeldungen', 'ausbilder-12-rueckmeldungen', 'Rückmeldungen', 'Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle im Lernmodul – und die Ideen fürs Portal; bei Ideen kann die Ausbilderin nachfragen.', { ganz: true });
+    await foto(s, '/planung/einsatzwuensche', 'ausbilder-13-einsatzwuensche', 'Einsatzwünsche', 'Wünsche der Azubis genehmigen – dann steht der Einsatz im Plan – oder mit Begründung ablehnen. Hinweise zeigen Überschneidungen mit Berufsschule, Einsätzen oder Urlaub.', { ganz: true });
+    await foto(s, `/azubis/${g.anna}/zeitleiste`, 'ausbilder-14-zeitleiste', 'Zeitleiste eines Azubis', 'Die ganze Ausbildung als Wasserfall: Einsätze, Schulblöcke, Urlaub und Prüfungen mit einer Linie für heute. Nur für Ausbilder.');
+    await foto(s, '/erinnerungen', 'ausbilder-15-erinnerungen', 'Erinnerungen', 'Private Erinnerungen zu den eigenen Azubis – vor einem Einsatz oder an einem Tag. Nur die Person selbst sieht sie.', { ganz: true });
     await foto(s, '/verwaltung/stammdaten', 'ausbilder-09-stammdaten', 'Stammdaten', 'Betrieb, Berufe, Berufsschulen, Abteilungen und Firmentermine.');
     await foto(s, '/verwaltung/konten', 'ausbilder-10-konten', 'Konten', 'Ausbilder legen Konten für Azubis und Beauftragte an.');
     await s.context().close();
@@ -359,6 +372,7 @@ async function main() {
     await gesehen(s);
     await foto(s, '/', 'beauftragte-01-start', 'Startseite', 'Ausbildungsbeauftragte sehen nur die Azubis, die ihnen zugewiesen sind.');
     await foto(s, '/urlaub', 'beauftragte-02-urlaub', 'Urlaub bestätigen', 'Beauftragte bestätigen einen Antrag; genehmigen kann nur die Ausbilderin.', { ganz: true });
+    await foto(s, '/erinnerungen', 'beauftragte-03-erinnerungen', 'Erinnerungen', 'Zum Beispiel eine Woche, bevor ein Azubi in die Abteilung kommt. Fällige stehen in der Glocke; nur die Beauftragte selbst sieht sie.', { ganz: true });
     await s.context().close();
 
     // ---------- Super-Admin ----------

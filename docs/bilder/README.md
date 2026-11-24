@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.76.0 (erzeugt am 22.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.83.1 (erzeugt am 24.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
@@ -124,6 +124,12 @@ Eigene Fehlermeldungen und Ideen mit dem Gespräch dazu: Fragt jemand nach, sagt
 
 ![Meine Meldungen](azubi-19-meine-meldungen.png)
 
+### Einsatz wünschen
+
+Azubis wünschen sich einen Einsatz in einer Abteilung aus den Stammdaten. Den Wunsch und den Grund sieht nur der Ausbilder.
+
+![Einsatz wünschen](azubi-20-einsatzwunsch.png)
+
 ## Ausbilderin
 
 ### Startseite
@@ -198,6 +204,24 @@ Wünsche der Azubis zu den Lerninhalten – ohne Namen, mit Sprung an die Stelle
 
 ![Rückmeldungen](ausbilder-12-rueckmeldungen.png)
 
+### Einsatzwünsche
+
+Wünsche der Azubis genehmigen – dann steht der Einsatz im Plan – oder mit Begründung ablehnen. Hinweise zeigen Überschneidungen mit Berufsschule, Einsätzen oder Urlaub.
+
+![Einsatzwünsche](ausbilder-13-einsatzwuensche.png)
+
+### Zeitleiste eines Azubis
+
+Die ganze Ausbildung als Wasserfall: Einsätze, Schulblöcke, Urlaub und Prüfungen mit einer Linie für heute. Nur für Ausbilder.
+
+![Zeitleiste eines Azubis](ausbilder-14-zeitleiste.png)
+
+### Erinnerungen
+
+Private Erinnerungen zu den eigenen Azubis – vor einem Einsatz oder an einem Tag. Nur die Person selbst sieht sie.
+
+![Erinnerungen](ausbilder-15-erinnerungen.png)
+
 ## Ausbildungsbeauftragte
 
 ### Startseite
@@ -211,6 +235,12 @@ Ausbildungsbeauftragte sehen nur die Azubis, die ihnen zugewiesen sind.
 Beauftragte bestätigen einen Antrag; genehmigen kann nur die Ausbilderin.
 
 ![Urlaub bestätigen](beauftragte-02-urlaub.png)
+
+### Erinnerungen
+
+Zum Beispiel eine Woche, bevor ein Azubi in die Abteilung kommt. Fällige stehen in der Glocke; nur die Beauftragte selbst sieht sie.
+
+![Erinnerungen](beauftragte-03-erinnerungen.png)
 
 ## Super-Admin
 
