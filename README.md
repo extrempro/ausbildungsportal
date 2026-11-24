@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.80.1.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.80.2.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -34,7 +34,7 @@ docker compose up -d
 docker compose logs app   # beim ersten Start steht hier das Startpasswort des Super-Admins
 ```
 
-- Das **Abbild** `ghcr.io/extrempro/ausbildungsportal` wird nach jedem Merge auf `main` gebaut (Tags `latest` und die Version, z. B. `0.80.1`). Eine bestimmte Version: in der `.env` `PORTAL_VERSION=0.80.1`. **Selbst bauen** aus dem Quelltext (Entwicklung, eigene Änderungen): `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
+- Das **Abbild** `ghcr.io/extrempro/ausbildungsportal` wird nach jedem Merge auf `main` gebaut (Tags `latest` und die Version, z. B. `0.80.2`). Eine bestimmte Version: in der `.env` `PORTAL_VERSION=0.80.2`. **Selbst bauen** aus dem Quelltext (Entwicklung, eigene Änderungen): `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build`.
 
 - Die App lauscht danach auf `127.0.0.1:3000` – nur auf dem Server selbst. Davor gehört ein **Reverse Proxy mit HTTPS**; `APP_URL` in der `.env` ist die Adresse dieses Proxys, und `TRUST_PROXY=true` gehört dazu.
 - **Andere Adresse oder anderer Port:** in der `.env` `BIND_ADRESSE` und `BIND_PORT` eintragen, z. B. `BIND_ADRESSE=100.64.0.10` und `BIND_PORT=8989`. Ohne Angabe gilt `127.0.0.1:3000`. Übernommen wird das mit `docker compose up -d` (nicht mit `restart`). Kontrolle: `docker compose config` zeigt, was gilt, `docker compose ps` den tatsächlich offenen Port – im Log der App steht immer Port 3000, das ist der Port im Container. `BIND_ADRESSE=0.0.0.0` öffnet die App in allen Netzen des Servers; das ist nur sinnvoll, wenn ein Reverse Proxy auf einem anderen Rechner oder eine Firewall davorsteht.
