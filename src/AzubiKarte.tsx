@@ -3,6 +3,7 @@ import type { AzubiKurz } from './api';
 import { Avatar } from './avatar';
 import { Icon } from './icons';
 import { Link } from './router';
+import { zeigtZeitleiste } from './azubiReiter';
 
 
 /** Anteil der Ausbildungszeit, der vorbei ist (0–100). */
@@ -15,7 +16,7 @@ function fortschritt(a: AzubiKurz): number | null {
 
 /**
  * Ein Azubi als Karte – auf der Startseite und in der Azubi-Liste gleich aufgebaut:
- * oben wer, in der Mitte der Stand von Ausbildung und Berichten, unten immer dieselben drei Wege.
+ * oben wer, in der Mitte der Stand von Ausbildung und Berichten, unten die Wege zu den Seiten des Azubis (wie die Reiter; Zeitleiste nur für Ausbilder).
  */
 export function AzubiKarte({ a }: { a: AzubiKurz }) {
   const anteil = fortschritt(a);
@@ -66,7 +67,7 @@ export function AzubiKarte({ a }: { a: AzubiKurz }) {
         </dd>
       </dl>
 
-      <nav className="azubi-wege" aria-label={`Bereiche von ${a.anzeigename}`}>
+      <nav className={`azubi-wege${zeigtZeitleiste() ? ' fuenf' : ''}`} aria-label={`Bereiche von ${a.anzeigename}`}>
         <Link zu={`/azubis/${a.id}`}>
           <Icon name="konto" groesse={18} />
           Profil
@@ -84,6 +85,12 @@ export function AzubiKarte({ a }: { a: AzubiKurz }) {
           <Icon name="urlaub" groesse={18} />
           Urlaub
         </Link>
+        {zeigtZeitleiste() && (
+          <Link zu={`/azubis/${a.id}/zeitleiste`}>
+            <Icon name="zeitleiste" groesse={18} />
+            Zeitleiste
+          </Link>
+        )}
       </nav>
     </li>
   );

@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.83.1] – 2026-11-24
+
+### Geändert
+
+- **Zeitleiste von der Azubi-Karte aus:** Auf den Karten der Azubis (Startseite und „Azubis“) steht für Ausbilder jetzt auch „Zeitleiste“ – neben Profil, Plan, Berichtsheft und Urlaub.
+
 ## [0.83.0] – 2026-11-24
 
 ### Neu

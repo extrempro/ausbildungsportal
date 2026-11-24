@@ -2183,6 +2183,17 @@ td.aktion {
   border-top: 1px solid var(--c-border);
 }
 
+.azubi-wege.fuenf {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+}
+
+/* fünf Wege (Ausbilder mit Zeitleiste): etwas enger, damit „Berichtsheft“ höchstens einmal trennt */
+.azubi-wege.fuenf a {
+  padding: 6px 1px;
+  font-size: 12px;
+}
+
 .azubi-wege a {
   hyphens: auto;
   display: flex;
