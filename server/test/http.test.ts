@@ -93,6 +93,13 @@ test('nur JSON, begrenzte Größe, keine Formulare', async () => {
   assert.equal((await fetch(`${basis}/anmelden`, { method: 'POST' })).status, 405);
 });
 
+test('PDF zum Einlesen kommt als Datei an – Plan der Schule und alte Berichte, sonst nur JSON', async () => {
+  const pdf = (pfad: string) => fetch(`${basis}${pfad}`, { method: 'POST', headers: { origin: APP, 'content-type': 'application/pdf' }, body: '%PDF-1.7 erfunden' });
+  // ohne Anmeldung 401 – aber nicht 400 „kein JSON“: der Körper wurde als Datei gelesen
+  for (const pfad of ['/api/schulbloecke/einlesen', '/api/azubis/12/einlesen']) assert.equal((await pdf(pfad)).status, 401, pfad);
+  for (const pfad of ['/api/azubis/12/einlesen/uebernehmen', '/api/auth/lokal', '/api/azubis/x/einlesen']) assert.equal((await pdf(pfad)).status, 400, pfad);
+});
+
 test('Client-IP: X-Forwarded-For nur mit TRUST_PROXY, und dann der letzte Eintrag', async () => {
   // ohne TRUST_PROXY darf ein erfundener Header die Begrenzung je IP nicht aushebeln
   const u = await umgebung();

@@ -13,7 +13,7 @@ import { wochenText } from './wunsch';
  * - Privat: Jede Erinnerung sieht nur die Person, die sie angelegt hat. Fremde Erinnerungen gibt es für niemanden (404).
  * - Anlegen lässt sie sich nur zu Azubis, die man gerade sieht (rechte.ts: sichtbareAzubis).
  * - Bezug auf einen Einsatz: Der Tag ist Beginn des Einsatzes minus `tage_vorher` und wandert mit, wenn der Einsatz verschoben wird.
- *   Wird der Einsatz gelöscht, bleibt der zuletzt errechnete Tag stehen.
+ *   Wird der Einsatz gelöscht oder sieht die Person den Azubi nicht mehr, bleibt der zuletzt errechnete Tag stehen.
  * - Fällig (Tag erreicht, nicht erledigt): einmal je Tag ein persönlicher Eintrag in der Glocke – Teams und E-Mail ohne Inhalt.
  */
 interface ErinnerungZeile {
@@ -36,6 +36,21 @@ const MAX_TAGE_VORHER = 90;
 /** erledigte Erinnerungen bleiben so lange in der Liste, dann werden sie gelöscht */
 const ERLEDIGT_TAGE = 90;
 
+/**
+ * Sieht die Person den Azubi nicht mehr (Zuweisung beendet, Zuständigkeit gewechselt), löst sich die Erinnerung vom Einsatz:
+ * Sie behält ihren letzten Tag, zeigt aber weder Titel noch Zeitraum des Einsatzes und wandert nicht mehr mit –
+ * sonst könnte man über die eigene Erinnerung den Plan eines Azubis weiter verfolgen, den man nicht mehr sehen darf.
+ */
+function loeseVerlorene(db: DB, tag: string): void {
+  const besitzer = db.prepare('SELECT DISTINCT benutzer_id FROM erinnerung WHERE einsatz_id IS NOT NULL').all() as unknown as { benutzer_id: number }[];
+  for (const { benutzer_id } of besitzer) {
+    const b = holeBenutzer(db, benutzer_id);
+    const sichtbar = b && b.status === 'aktiv' ? sichtbareAzubis(db, b, tag) : [];
+    const zeilen = db.prepare('SELECT id, azubi_id FROM erinnerung WHERE benutzer_id = ? AND einsatz_id IS NOT NULL').all(benutzer_id) as unknown as { id: number; azubi_id: number }[];
+    for (const z of zeilen) if (!sichtbar.includes(z.azubi_id)) db.prepare('UPDATE erinnerung SET einsatz_id = NULL WHERE id = ?').run(z.id);
+  }
+}
+
 /** Tage der Erinnerungen mit Einsatz auf den Stand der Einsätze bringen (Einsatz verschoben → Erinnerung wandert mit). */
 function gleicheTageAb(db: DB): void {
   db.exec(`UPDATE erinnerung SET datum = (SELECT date(p.von, '-' || erinnerung.tage_vorher || ' days') FROM plan_eintrag p WHERE p.id = erinnerung.einsatz_id)
@@ -48,8 +63,9 @@ function gleicheTageAb(db: DB): void {
  * Läuft bei der stündlichen Pflege und bei jedem Aufruf der Liste. Gibt die Zahl der neu gemeldeten zurück.
  */
 export function meldeFaelligeErinnerungen(db: DB, jetzt: Date): number {
-  gleicheTageAb(db);
   const tag = heute(jetzt);
+  loeseVerlorene(db, tag);
+  gleicheTageAb(db);
   db.prepare('DELETE FROM erinnerung WHERE erledigt IS NOT NULL AND erledigt < ?').run(new Date(jetzt.getTime() - ERLEDIGT_TAGE * 86_400_000).toISOString());
   const faellig = db
     .prepare(

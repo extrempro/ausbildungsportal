@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -264,4 +264,30 @@ test('Alte Berichte: ein leerer Entwurf wird ersetzt, ein Entwurf mit Inhalt ble
   assert.equal(b.summe.gesamt, 31.5);
   assert.deepEqual(b.verlauf.map((v: { aktion: string }) => v.aktion), ['eingelesen']);
   assert.equal(koerper(await ruf(w.u, 'GET', `/api/azubis/${w.anna.id}/berichte/2026-09-14`, { cookies: c })).inhalt.betrieb[0].text, 'Schon geschrieben');
+});
+
+test('Alte Berichte: Verweise (Symlinks) vom Dienst werden nicht gelesen – weder Text noch Seiten noch fremde Auftragsordner', async () => {
+  const w = await welt();
+  const c = sitzung(w.u, w.anna);
+  const pfad = `/api/azubis/${w.anna.id}/einlesen`;
+  mkdirSync(w.ordner, { recursive: true });
+  writeFileSync(join(w.ordner, '.bereit'), '');
+  utimesSync(join(w.ordner, '.bereit'), w.u.uhr.jetzt, w.u.uhr.jetzt);
+  const id = koerper(await ruf(w.u, 'POST', pfad, { cookies: c, body: Buffer.from('%PDF-1.7 erfundene Berichte') })).id as string;
+  // ein übernommener Dienst legt Verweise auf Dateien außerhalb des Auftrags ab
+  const draussen = mkdtempSync(join(tmpdir(), 'ap-draussen-'));
+  writeFileSync(join(draussen, 'geheim.txt'), FORMULAR);
+  writeFileSync(join(draussen, 'geheim.pdf'), '%PDF-1.7 fremde Datei');
+  symlinkSync(join(draussen, 'geheim.txt'), join(w.ordner, id, 'text.txt'));
+  symlinkSync(join(draussen, 'geheim.pdf'), join(w.ordner, id, 'seite-1.pdf'));
+  writeFileSync(join(w.ordner, id, 'fertig'), 'modell=nein\nquelle=pdf\n');
+  const s = koerper(await ruf(w.u, 'GET', `${pfad}/${id}`, { cookies: c }));
+  assert.deepEqual([s.status, s.wochen.length], ['fertig', 0], 'der Text hinter dem Verweis kommt nicht in die Vorschau');
+  // auch ein ganzer Auftragsordner als Verweis zählt nicht
+  const fremd = 'f'.repeat(32);
+  mkdirSync(join(draussen, 'auftrag'));
+  writeFileSync(join(draussen, 'auftrag', 'wer'), String(w.anna.id));
+  writeFileSync(join(draussen, 'auftrag', 'art'), 'berichtsheft');
+  symlinkSync(join(draussen, 'auftrag'), join(w.ordner, fremd));
+  assert.equal((await ruf(w.u, 'GET', `${pfad}/${fremd}`, { cookies: c })).status, 404);
 });

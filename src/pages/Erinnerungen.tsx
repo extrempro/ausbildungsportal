@@ -37,7 +37,7 @@ const wannText = (e: Erinnerung, heute: string) => {
 };
 
 const bezugText = (e: Erinnerung) =>
-  e.einsatz ? `${e.tageVorher === 0 ? 'am ersten Tag' : `${e.tageVorher} ${e.tageVorher === 1 ? 'Tag' : 'Tage'} vor`} dem Einsatz „${e.einsatz.titel}“ (${e.einsatz.zeitraum})` : e.tageVorher !== null ? 'vor einem Einsatz, der nicht mehr im Plan steht' : 'an einem festen Tag';
+  e.einsatz ? `${e.tageVorher === 0 ? 'am ersten Tag' : `${e.tageVorher} ${e.tageVorher === 1 ? 'Tag' : 'Tage'} vor`} dem Einsatz „${e.einsatz.titel}“ (${e.einsatz.zeitraum})` : e.tageVorher !== null ? 'vor einem Einsatz, der gelöscht ist oder den du nicht mehr siehst' : 'an einem festen Tag';
 
 export function Erinnerungen({ rolle, onGeaendert }: { rolle: Rolle; onGeaendert: (faellig: number) => void }) {
   const [d, setD] = useState<Daten | null>(null);

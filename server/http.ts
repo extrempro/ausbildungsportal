@@ -17,9 +17,9 @@ const MAX_UPLOAD = 16 * 1024 * 1024;
 /** … und hier: ein Foto oder eine Datei als Anhang an einem Bericht (die API erlaubt 5 MB) */
 const ANHANG_PFAD = /^\/api\/azubis\/\d{1,12}\/berichte\/\d{4}-\d{2}-\d{2}\/anhaenge$/;
 const MAX_ANHANG_UPLOAD = 8 * 1024 * 1024;
-/** … und hier: der Plan einer Berufsschule als PDF zum Einlesen (die API erlaubt 10 MB) */
-const SCHULPLAN_PFAD = '/api/schulbloecke/einlesen';
-const MAX_SCHULPLAN = 11 * 1024 * 1024;
+/** … und hier: eine PDF zum Einlesen – der Plan einer Berufsschule oder alte Berichte eines Azubis (die API erlaubt 10 MB) */
+const PDF_PFAD = /^\/api\/(schulbloecke\/einlesen|azubis\/\d{1,12}\/einlesen)$/;
+const MAX_PDF_UPLOAD = 11 * 1024 * 1024;
 
 const TYPEN: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -76,9 +76,9 @@ async function leseBody(req: IncomingMessage, pfad: string): Promise<unknown> {
   if (req.method === 'GET' || req.method === 'HEAD') return undefined;
   const typ = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
   const anhang = req.method === 'POST' && ANHANG_PFAD.test(pfad) && typ === 'application/octet-stream';
-  const schulplan = req.method === 'POST' && pfad === SCHULPLAN_PFAD && typ === 'application/pdf';
-  const upload = anhang || schulplan || (req.method === 'POST' && pfad === UPLOAD_PFAD && typ === 'application/zip');
-  const grenze = anhang ? MAX_ANHANG_UPLOAD : schulplan ? MAX_SCHULPLAN : upload ? MAX_UPLOAD : MAX_BODY;
+  const pdf = req.method === 'POST' && PDF_PFAD.test(pfad) && typ === 'application/pdf';
+  const upload = anhang || pdf || (req.method === 'POST' && pfad === UPLOAD_PFAD && typ === 'application/zip');
+  const grenze = anhang ? MAX_ANHANG_UPLOAD : pdf ? MAX_PDF_UPLOAD : upload ? MAX_UPLOAD : MAX_BODY;
   const teile: Buffer[] = [];
   let groesse = 0;
   for await (const stueck of req) {

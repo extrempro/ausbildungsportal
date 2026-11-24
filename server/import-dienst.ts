@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { accessSync, constants, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { accessSync, closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fehler } from './api-basis';
 import type { Kontext } from './api-basis';
@@ -46,11 +46,35 @@ export function dienstBereit(k: Kontext): boolean {
   }
 }
 
-export function lies(pfad: string): string | null {
+/**
+ * Liest eine Datei, die der Dienst „import“ geschrieben hat – nur eine echte Datei, keinen Verweis (Symlink) und nur bis `max` Bytes.
+ * Der Dienst verarbeitet fremde PDFs; wäre er übernommen, könnte er sonst über einen Verweis Dateien der App
+ * (z. B. die Datenbank) in eine Vorschau schleusen. Sonst null.
+ */
+export function liesRoh(pfad: string, max = 8 * 1024 * 1024): Buffer | null {
+  let fd: number | null = null;
   try {
-    return readFileSync(pfad, 'utf8');
+    fd = openSync(pfad, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const s = fstatSync(fd);
+    if (!s.isFile() || s.size > max) return null;
+    return readFileSync(fd);
   } catch {
     return null;
+  } finally {
+    if (fd !== null) closeSync(fd);
+  }
+}
+
+export function lies(pfad: string): string | null {
+  return liesRoh(pfad)?.toString('utf8') ?? null;
+}
+
+/** Ordner eines Auftrags – nur ein echter Ordner, kein Verweis darauf */
+function istOrdner(pfad: string): boolean {
+  try {
+    return lstatSync(pfad).isDirectory();
+  } catch {
+    return false;
   }
 }
 
@@ -79,7 +103,7 @@ export function eigeneAuftraege(k: Kontext, wer: number, art: ImportArt): Auftra
   const ordner = importOrdner(k);
   if (!existsSync(ordner)) return [];
   return readdirSync(ordner)
-    .filter((n) => AUFTRAG_ID.test(n))
+    .filter((n) => AUFTRAG_ID.test(n) && istOrdner(join(ordner, n)))
     .map((id) => ({ id, ordner: join(ordner, id), wer: Number(lies(join(ordner, id, 'wer'))), art: (lies(join(ordner, id, 'art')) ?? '').trim() }))
     .filter((a) => a.wer === wer && a.art === art)
     .map(({ id, ordner: o, wer: w }) => ({ id, ordner: o, wer: w }));
