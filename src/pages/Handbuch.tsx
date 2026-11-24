@@ -793,6 +793,39 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'einsatzwunsch',
+    titel: 'Einen Einsatz wünschen',
+    gruppe: 'Ausbildungsplan',
+    inhalt: (
+      <>
+        <p>
+          Du möchtest eine Abteilung kennenlernen? Unter <Link zu="/einsatzwuensche">Einsatz wünschen</Link> wünschst du dir einen Einsatz dort. Du kommst aus dem Ausbildungsplan über „Einsatz wünschen“ dorthin.
+        </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Wähl die Abteilung. Zur Auswahl stehen die Abteilungen, die dein Ausbilder im Portal angelegt hat.</li>
+          <li>Trag ein, ab welcher Woche und bis zu welcher Woche. Ein Tag in der Woche genügt – gewünscht wird immer in ganzen Wochen. Ohne Ende ist es eine Woche.</li>
+          <li>Wenn du magst, schreib dazu, warum. Das hilft deinem Ausbilder beim Entscheiden.</li>
+          <li>Tipp auf „Wunsch absenden“.</li>
+        </ol>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Wartet auf Entscheidung">Dein Ausbilder hat noch nicht entschieden. So lange kannst du den Wunsch zurückziehen.</Begriff>
+          <Begriff wort="Genehmigt">Der Einsatz steht in deinem Ausbildungsplan. Dein Ausbilder kann den Zeitraum dabei etwas angepasst haben – maßgeblich ist, was im Plan steht.</Begriff>
+          <Begriff wort="Abgelehnt">Der Grund steht am Wunsch. Du kannst dir einen anderen Zeitraum wünschen.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Deinen Wunsch sieht nur dein Ausbilder</strong> – die Ausbildungsbeauftragten nicht. Wird er genehmigt, sehen sie den Einsatz im Plan, aber nicht deinen Grund.
+          </li>
+          <li>Was aus deinem Wunsch wird, steht auch in der Glocke.</li>
+          <li>Ein Wunsch ist keine Zusage. Ob es klappt, hängt von der Abteilung, der Berufsschule und deinem Ausbildungsplan ab.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'jahreskalender',
     titel: 'Den Jahreskalender lesen',
     gruppe: 'Ausbildungsplan',
@@ -1300,6 +1333,112 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </li>
           <li>Die Bemerkung des Azubis ist freiwillig. Bitte keine Gründe verlangen – erst recht keine zur Gesundheit.</li>
           <li>Krankmeldungen laufen nicht über das Portal.</li>
+        </ul>
+      </>
+    ),
+  },
+  ...(rolle === 'ausbilder'
+    ? ([
+        {
+          id: 'einsatzwuensche',
+          titel: 'Einsatzwünsche entscheiden',
+          gruppe: 'Ausbildungsplan',
+          inhalt: (
+            <>
+              <p>
+                Azubis können sich einen Einsatz in einer Abteilung wünschen. Unter <Link zu="/planung/einsatzwuensche">Planung → Einsatzwünsche</Link> (am Handy unter „Mehr“) stehen die offenen Wünsche deiner Azubis. Die Zahl am Menüpunkt zeigt, wie viele auf dich warten.
+              </p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>Lies Abteilung, Zeitraum und – falls angegeben – den Grund.</li>
+                <li>Achte auf die Hinweise: Das Portal warnt, wenn sich der Wunsch mit einem Schulblock, einem anderen Einsatz oder Urlaub überschneidet.</li>
+                <li>Pass bei Bedarf den Zeitraum an.</li>
+                <li>„Einsatz genehmigen“ – oder „Wunsch ablehnen“ mit einer Begründung.</li>
+              </ol>
+              <h3>Begriffe</h3>
+              <dl className="begriffe">
+                <Begriff wort="Einsatz genehmigen">Legt einen Einsatz in der Abteilung im Ausbildungsplan an. Die Beauftragten der Abteilung sind dann wie bei jedem Einsatz für diese Zeit zugewiesen.</Begriff>
+                <Begriff wort="Wunsch ablehnen">Geht nur mit Begründung. Der Azubi liest sie.</Begriff>
+              </dl>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>
+                  <strong>Entscheiden kann nur, wer den Azubi betreut</strong> – als zuständiger Ausbilder, bei Azubis ohne Ausbilder oder mit Gesamtsicht. Ausbildungsbeauftragte sehen Wünsche nicht, auch nicht in der Glocke.
+                </li>
+                <li>Der Grund des Azubis bleibt beim Wunsch. Im Plan steht nur der Einsatz.</li>
+                <li>Den genehmigten Einsatz änderst oder löschst du wie jeden anderen im Ausbildungsplan.</li>
+                <li>Entscheidungen der letzten 90 Tage stehen unten zum Aufklappen.</li>
+              </ul>
+            </>
+          ),
+        },
+        {
+          id: 'zeitleiste',
+          titel: 'Die Zeitleiste eines Azubis',
+          gruppe: 'Azubis betreuen',
+          inhalt: (
+            <>
+              <p>
+                Die Zeitleiste zeigt die ganze Ausbildung eines Azubis als Wasserfall: je Zeile ein Einsatz, ein Schulblock, ein Urlaub oder eine Prüfung, der Reihe nach. Du findest sie bei jedem Azubi als Reiter „Zeitleiste“ neben Profil, Ausbildungsplan, Berichtsheft und Urlaub.
+              </p>
+              <h3>So geht's</h3>
+              <ol className="schritte">
+                <li>Öffne unter „Azubis“ einen Azubi und wähle den Reiter „Zeitleiste“.</li>
+                <li>Mit „Zeigen“ blendest du Einsätze, Schulblöcke oder Urlaub aus und ein.</li>
+                <li>Mit „Zoom“ siehst du einen kürzeren Zeitraum genauer: ganze Ausbildung, ein Jahr, ein Halbjahr oder ein Quartal. Danach steht „heute“ in der Mitte; seitlich schiebst du weiter.</li>
+                <li>Ein Klick auf eine Zeile öffnet die Woche im Ausbildungsplan.</li>
+              </ol>
+              <h3>Begriffe</h3>
+              <dl className="begriffe">
+                <Begriff wort="Grün">Einsatz.</Begriff>
+                <Begriff wort="Violett">Schulblock.</Begriff>
+                <Begriff wort="Gelb">Genehmigter Urlaub.</Begriff>
+                <Begriff wort="Rote Raute">Prüfung aus dem Profil.</Begriff>
+                <Begriff wort="Rote Linie">Heute.</Begriff>
+              </dl>
+              <h3>Gut zu wissen</h3>
+              <ul className="punkte">
+                <li>Die Zeitleiste ist nur zum Lesen und nur für Ausbilder. Geplant wird im Ausbildungsplan.</li>
+                <li>Einsatzwünsche stehen hier nicht. Ein genehmigter Wunsch ist ein Einsatz wie jeder andere.</li>
+                <li>Gestrichelte Linien trennen die Ausbildungsjahre. Die Namen links bleiben stehen, wenn du seitlich schiebst.</li>
+              </ul>
+            </>
+          ),
+        },
+      ] satisfies Kapitel[])
+    : []),
+  {
+    id: 'erinnerungen',
+    titel: 'Erinnerungen an Azubis setzen',
+    gruppe: 'Azubis betreuen',
+    inhalt: (
+      <>
+        <p>
+          Mit Erinnerungen merkst du dir, was du für einen Azubi vorbereiten willst – zum Beispiel Arbeitsplatz und Zugang eine Woche, bevor er {rolle === 'beauftragter' ? 'in deine Abteilung kommt' : 'in eine Abteilung wechselt'}. Du findest sie unter <Link zu="/erinnerungen">Erinnerungen</Link> ({rolle === 'beauftragter' ? 'am Handy unter „Mehr“' : 'unter „Planung“, am Handy unter „Mehr“'}).
+        </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Wähl den Azubi.</li>
+          <li>
+            Wähl „Vor einem Einsatz“ und dann den Einsatz und wie viele Tage vorher – oder „An einem Tag“ und ein Datum.
+          </li>
+          <li>Schreib dazu, woran du erinnert werden willst, und tippe auf „Erinnerung anlegen“.</li>
+          <li>Ist die Erinnerung fällig, steht sie oben unter „Fällig“ und in der Glocke. Hak sie ab, wenn du fertig bist.</li>
+        </ol>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Vor einem Einsatz">Die Erinnerung hängt am Beginn des Einsatzes. Wird der Einsatz verschoben, wandert sie mit.</Begriff>
+          <Begriff wort="Fällig">Der Tag ist erreicht und die Erinnerung noch nicht abgehakt. Die Zahl am Menüpunkt zeigt, wie viele fällig sind.</Begriff>
+          <Begriff wort="Erledigt">Abgehakt. Ein zweiter Haken öffnet sie wieder. Nach 90 Tagen löscht das Portal erledigte Erinnerungen.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Nur du siehst deine Erinnerungen</strong> – weder der Azubi noch {rolle === 'beauftragter' ? 'die Ausbilder' : 'andere Ausbilder oder Beauftragte'} noch der Super-Admin.
+          </li>
+          <li>Wählen kannst du die Azubis, die du gerade siehst{rolle === 'beauftragter' ? ' – also die dir zugewiesen sind' : ''}.</li>
+          <li>Hast du Benachrichtigungen für den Ausbildungsplan per Teams oder E-Mail gewählt, kommt dort nur „Eine deiner Erinnerungen ist fällig“ – ohne Namen und ohne Text.</li>
+          <li>Wird der Einsatz gelöscht, bleibt die Erinnerung mit dem zuletzt errechneten Tag stehen.</li>
         </ul>
       </>
     ),

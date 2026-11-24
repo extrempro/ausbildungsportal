@@ -32,7 +32,13 @@ type Art =
   | 'anleitungen_aktualisiert'
   // Rückfrage zur eigenen Rückmeldung bzw. Rückmeldung erledigt – nur für die meldende Person, ohne Namen und Inhalt
   | 'meldung_rueckfrage'
-  | 'meldung_erledigt';
+  | 'meldung_erledigt'
+  // Einsatzwunsch eines Azubis: gestellt (Ausbilder) bzw. entschieden (Azubi) – nicht für Beauftragte
+  | 'wunsch_neu'
+  | 'wunsch_genehmigt'
+  | 'wunsch_abgelehnt'
+  // eigene Erinnerung fällig – nur für die Person, die sie angelegt hat
+  | 'erinnerung_faellig';
 
 interface Gruppe {
   id: number;
@@ -151,6 +157,14 @@ function beschreibe(g: Gruppe, konto: Konto): Zeile {
       return { icon: 'ruf', farbe: 'gelb', kopf: n === 1 ? 'Rückfrage zu deiner Rückmeldung' : `${n} Rückfragen zu deinen Rückmeldungen`, mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/meine-meldungen' };
     case 'meldung_erledigt':
       return { icon: 'haken', farbe: 'gruen', kopf: 'Deine Rückmeldung ist erledigt – danke!', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/meine-meldungen' };
+    case 'wunsch_neu':
+      return { icon: 'plan', farbe: azubi ? 'grau' : 'gelb', kopf: azubi ? 'Einsatzwunsch abgeschickt' : n === 1 ? 'Einsatzwunsch wartet auf deine Entscheidung' : `${n} Einsatzwünsche warten auf deine Entscheidung`, mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: azubi ? '/einsatzwuensche' : '/planung/einsatzwuensche' };
+    case 'wunsch_genehmigt':
+      return { icon: 'plan', farbe: 'gruen', kopf: azubi ? 'Dein Einsatzwunsch ist genehmigt – er steht im Plan' : 'Einsatzwunsch genehmigt', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: azubi ? '/einsatzwuensche' : `/azubis/${g.azubiId}/plan` };
+    case 'wunsch_abgelehnt':
+      return { icon: 'plan', farbe: 'rot', kopf: azubi ? 'Dein Einsatzwunsch wurde abgelehnt' : 'Einsatzwunsch abgelehnt', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: azubi ? '/einsatzwuensche' : '/planung/einsatzwuensche' };
+    case 'erinnerung_faellig':
+      return { icon: 'glocke', farbe: 'gelb', kopf: n === 1 ? 'Erinnerung fällig' : `${n} Erinnerungen fällig`, mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/erinnerungen' };
     case 'urlaub_storniert':
       return { icon: 'urlaub', farbe: 'rot', kopf: 'Genehmigter Urlaub storniert', mitte: aufzaehlung(g.titel, Math.max(0, n - g.titel.length)), zu: '/urlaub' };
     default:

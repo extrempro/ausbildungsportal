@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.83.0] – 2026-11-24
+
+### Neu
+
+- **Einsatz wünschen:** Azubis wünschen sich einen Einsatz in einer Abteilung für einige Wochen – im Ausbildungsplan über „Einsatz wünschen“. Zur Auswahl stehen die Abteilungen aus den Stammdaten. Den Wunsch und den Grund sieht nur der Ausbilder, nicht die Ausbildungsbeauftragten.
+- **Einsatzwünsche entscheiden:** Ausbilder finden die offenen Wünsche unter „Planung → Einsatzwünsche“, mit einer Zahl am Menüpunkt und Hinweisen bei Überschneidung mit Berufsschule, anderen Einsätzen oder Urlaub. Genehmigt steht der Einsatz im Ausbildungsplan, die Beauftragten der Abteilung sind dann zugewiesen; der Zeitraum lässt sich vorher anpassen. Abgelehnt wird mit Begründung, die der Azubi liest. Beides steht in der Glocke.
+- **Erinnerungen:** Ausbildungsbeauftragte (Menüpunkt „Erinnerungen“) und Ausbilder (unter „Planung“) setzen sich Erinnerungen zu ihren Azubis – vor einem Einsatz (wandert mit, wenn der Einsatz verschoben wird) oder an einem festen Tag. Nur die Person selbst sieht sie. Fällige Erinnerungen stehen in der Glocke und mit einer Zahl am Menüpunkt; per Teams oder E-Mail kommt nur der Hinweis, dass etwas fällig ist.
+- **Zeitleiste eines Azubis:** Ausbilder sehen bei jedem Azubi den neuen Reiter „Zeitleiste“: die ganze Ausbildung als Wasserfall mit Einsätzen, Schulblöcken, Urlaub und Prüfungen, mit Linie für heute und Zoom bis auf ein Quartal. Ein Klick auf eine Zeile öffnet die Woche im Ausbildungsplan.
+
 ## [0.82.0] – 2026-11-24
 
 ### Neu

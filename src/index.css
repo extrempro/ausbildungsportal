@@ -9875,3 +9875,335 @@ button.lern-navi-feld[aria-current='location'] {
   display: block;
   margin-top: 2px;
 }
+
+/* ---------- Zeitleiste eines Azubis (Ausbilder) ----------
+   Wasserfall über die ganze Ausbildung: links die Namen (bleiben beim seitlichen Schieben stehen), rechts die Spur.
+   Farben wie im Jahreskalender. Lage und Breite der Balken kommen als Anteil aus src/pages/Zeitleiste.tsx. */
+.zl-steuerung {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 14px;
+}
+
+.zl-zeigen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.zl-titel {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.zl-schalter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.zl-schalter input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.zl-farbe {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.zl-farbe.einsatz,
+.zl-balken.einsatz {
+  background: var(--c-gruen-bg);
+  color: var(--c-gruen-fg);
+  border: 1px solid var(--c-gruen-fg);
+}
+
+.zl-farbe.schule,
+.zl-balken.schule {
+  background: var(--c-schule-soft);
+  color: var(--c-schule);
+  border: 1px solid var(--c-schule);
+}
+
+.zl-farbe.urlaub,
+.zl-balken.urlaub {
+  background: var(--c-warn-bg);
+  color: var(--c-warn-fg);
+  border: 1px solid var(--c-warn-fg);
+}
+
+.zl-farbe.pruefung,
+.zl-balken.pruefung {
+  background: var(--c-rot-fg);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.zl-farbe.pruefung {
+  width: 11px;
+  height: 11px;
+  margin: 0 2px;
+}
+
+.zl-farbe.heute {
+  width: 3px;
+  height: 18px;
+  border-radius: 0;
+  background: var(--c-rot-fg);
+}
+
+.zl-zoom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.zl-zoom .umschalter {
+  flex-wrap: wrap;
+}
+
+.zl-zoom .umschalter button {
+  min-height: 40px;
+}
+
+.zl-fuss {
+  margin: 10px 0 0;
+}
+
+.zl-rahmen {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+}
+
+.zl-rahmen:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.zl-innen {
+  --zl-name: 210px;
+  position: relative;
+  min-width: 760px;
+}
+
+.zl-achse,
+.zl-zeile {
+  display: flex;
+}
+
+.zl-achse {
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-chip);
+}
+
+.zl-name {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  width: var(--zl-name);
+  box-sizing: border-box;
+  padding: 6px 12px;
+  border-right: 1px solid var(--c-border);
+  background: var(--c-card);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.zl-achse .zl-name {
+  background: var(--c-chip);
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.zl-spur {
+  position: relative;
+  flex: 1;
+  min-height: 44px;
+}
+
+.zl-achse .zl-spur {
+  height: 56px;
+}
+
+.zl-jahr,
+.zl-monat {
+  position: absolute;
+  padding-left: 5px;
+  white-space: nowrap;
+}
+
+.zl-jahr {
+  top: 6px;
+  height: 22px;
+  border-left: 2px solid var(--c-rand-feld);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.zl-monat {
+  top: 32px;
+  height: 20px;
+  border-left: 1px solid var(--c-border);
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.zl-zeilen {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zl-zeile + .zl-zeile {
+  border-top: 1px solid var(--c-border);
+}
+
+/* Trennlinien der Ausbildungsjahre und „heute“ – über alle Zeilen, ohne die Namen */
+.zl-linie,
+.zl-heute {
+  position: absolute;
+  top: 56px;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.zl-linie {
+  border-left: 1px dashed var(--c-rand-feld);
+}
+
+.zl-heute {
+  top: 0;
+  z-index: 2;
+  border-left: 2px solid var(--c-rot-fg);
+}
+
+/* die ganze Spur einer Zeile ist der Link zur Woche im Ausbildungsplan */
+.zl-ziel {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 6px;
+}
+
+.zl-ziel:hover {
+  background: var(--c-accent-soft);
+}
+
+.zl-ziel:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: -3px;
+}
+
+.zl-balken {
+  position: absolute;
+  top: 9px;
+  height: 26px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.zl-balken.pruefung {
+  top: 15px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  padding: 0;
+}
+
+@media (max-width: 699px) {
+  .zl-innen {
+    --zl-name: 140px;
+  }
+
+  .zl-name {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}
+
+@media print {
+  .zl-rahmen {
+    overflow: visible;
+  }
+}
+
+/* ---------- Einsatzwünsche ---------- */
+.wunsch-wer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Erinnerungen (Beauftragte und Ausbilder, privat) ---------- */
+.erinnerung-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.erinnerung {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.erinnerung:first-child {
+  border-top: 0;
+}
+
+.erinnerung-text {
+  display: flex;
+  flex: 1 1 240px;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.erinnerung-text input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+}
+
+.erinnerung-wann {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.erinnerung.erledigt .erinnerung-text strong {
+  text-decoration: line-through;
+  color: var(--c-muted);
+}

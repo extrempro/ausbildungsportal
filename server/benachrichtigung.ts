@@ -1,4 +1,4 @@
-import { PERSOENLICH } from './aktivitaet';
+import { NICHT_FUER_BEAUFTRAGTE, PERSOENLICH } from './aktivitaet';
 import type { AktivitaetArt } from './aktivitaet';
 import { Fehler, koerper } from './api-basis';
 import type { Kontext, Route } from './api-basis';
@@ -27,7 +27,7 @@ export type Bereich = (typeof BEREICHE)[number];
 /** So lange wird gesammelt, bevor eine Nachricht hinausgeht. */
 export const SAMMEL_MS = 3 * 60_000;
 
-const bereichVon = (art: AktivitaetArt): Bereich => (art.startsWith('meldung_') ? 'rueckmeldungen' : art === 'plan_neu' || art === 'schule_geaendert' || art.startsWith('planer_') ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
+const bereichVon = (art: AktivitaetArt): Bereich => (art.startsWith('meldung_') ? 'rueckmeldungen' : art === 'plan_neu' || art === 'schule_geaendert' || art.startsWith('planer_') || art.startsWith('wunsch_') || art === 'erinnerung_faellig' ? 'plan' : art.startsWith('urlaub_') ? 'urlaub' : 'berichtsheft');
 
 /**
  * Stellt eine Aktivität für alle ein, die sie in der Glocke sehen und für den Bereich eine Benachrichtigung gewählt haben.
@@ -43,6 +43,7 @@ export function stelleEin(db: DB, jetzt: Date, aktivitaetId: number, art: Aktivi
   const tag = heute(jetzt);
   for (const w of waehler) {
     if (w.id === akteurId) continue;
+    if (w.rolle === 'beauftragter' && NICHT_FUER_BEAUFTRAGTE.includes(art)) continue;
     // persönliche Einträge gehen nur an die Person selbst; alle anderen an alle, die den Azubi sehen
     if (PERSOENLICH.includes(art) ? w.id !== azubiId : !sichtbareAzubis(db, w, tag).includes(azubiId)) continue;
     db.prepare('INSERT INTO benachrichtigung_warte (benutzer_id, aktivitaet_id, teams, mail, zeit) VALUES (?, ?, ?, ?, ?)').run(w.id, aktivitaetId, w.w_teams, w.w_mail, jetzt.toISOString());
@@ -84,6 +85,11 @@ const TEXT: Record<AktivitaetArt, [string, string, string, string]> = {
   anleitungen_aktualisiert: ['Die Anleitungen für alle Berufe wurden aktualisiert.', 'Die Anleitungen für alle Berufe wurden aktualisiert.', '', ''],
   meldung_rueckfrage: ['Zu deiner Rückmeldung gibt es eine Rückfrage. Du findest sie im Portal unter „Meine Meldungen“.', 'Zu deinen Rückmeldungen gibt es {n} Rückfragen. Du findest sie im Portal unter „Meine Meldungen“.', '', ''],
   meldung_erledigt: ['Deine Rückmeldung wurde als erledigt markiert. Danke!', '{n} deiner Rückmeldungen wurden als erledigt markiert. Danke!', '', ''],
+  wunsch_neu: ['Dein Einsatzwunsch ist eingegangen.', '{n} Einsatzwünsche von dir sind eingegangen.', 'Ein Azubi wünscht sich einen Einsatz in einer Abteilung. Bitte entscheide im Portal.', '{n} Einsatzwünsche warten auf deine Entscheidung.'],
+  wunsch_genehmigt: ['Dein Einsatzwunsch wurde genehmigt – er steht jetzt in deinem Ausbildungsplan.', '{n} deiner Einsatzwünsche wurden genehmigt.', 'Ein Einsatzwunsch wurde genehmigt.', '{n} Einsatzwünsche wurden genehmigt.'],
+  wunsch_abgelehnt: ['Dein Einsatzwunsch wurde abgelehnt. Den Grund findest du im Portal.', '{n} deiner Einsatzwünsche wurden abgelehnt.', 'Ein Einsatzwunsch wurde abgelehnt.', '{n} Einsatzwünsche wurden abgelehnt.'],
+  // persönlich: ohne Inhalt und ohne Namen – was fällig ist, steht im Portal
+  erinnerung_faellig: ['Eine deiner Erinnerungen ist fällig. Du findest sie im Portal unter „Erinnerungen“.', '{n} deiner Erinnerungen sind fällig. Du findest sie im Portal unter „Erinnerungen“.', '', ''],
   urlaub_storniert: ['Dein genehmigter Urlaub wurde storniert.', '{n} deiner genehmigten Urlaube wurden storniert.', 'Ein genehmigter Urlaub wurde storniert.', '{n} genehmigte Urlaube wurden storniert.'],
 };
 
@@ -92,7 +98,10 @@ export type Ton = 'gut' | 'wartet' | 'achtung' | 'neutral';
 
 function tonVon(art: AktivitaetArt, eigenes: boolean): Ton {
   if (art === 'bericht_abgezeichnet' || art === 'urlaub_genehmigt' || art === 'urlaub_bestaetigt' || art === 'meldung_erledigt') return 'gut';
-  if (art === 'meldung_rueckfrage') return 'wartet';
+  if (art === 'meldung_rueckfrage' || art === 'erinnerung_faellig') return 'wartet';
+  if (art === 'wunsch_genehmigt') return 'gut';
+  if (art === 'wunsch_abgelehnt') return 'achtung';
+  if (!eigenes && art === 'wunsch_neu') return 'wartet';
   if (art === 'bericht_zurueck' || art === 'urlaub_abgelehnt' || art === 'urlaub_storniert' || art === 'bericht_geoeffnet') return 'achtung';
   if (!eigenes && (art === 'bericht_eingereicht' || art === 'urlaub_beantragt')) return 'wartet';
   return 'neutral';

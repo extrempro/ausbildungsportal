@@ -31,6 +31,10 @@ import { Protokoll } from './pages/Protokoll';
 import { Stammdaten } from './pages/Stammdaten';
 import { Start } from './pages/Start';
 import { UrlaubAzubi, UrlaubListe } from './pages/Urlaub';
+import { merkeRolle } from './azubiReiter';
+import { WuenscheAzubi, WuenscheListe } from './pages/Einsatzwuensche';
+import { Erinnerungen } from './pages/Erinnerungen';
+import { Zeitleiste } from './pages/Zeitleiste';
 import { Erscheinungsbild } from './pages/Erscheinungsbild';
 import { Handbuch } from './pages/Handbuch';
 import { Fuehrung } from './fuehrung';
@@ -137,6 +141,9 @@ export function App() {
   const ladeUrlaubZuTun = useCallback(() => {
     api<{ zuTun: number }>('GET', '/api/urlaub').then((r) => setUrlaubZuTun(r.zuTun), () => {});
   }, []);
+  // Ausbilder: offene Einsatzwünsche; Ausbilder und Beauftragte: fällige eigene Erinnerungen
+  const [offeneEinsatzwuensche, setOffeneEinsatzwuensche] = useState(0);
+  const [faelligeErinnerungen, setFaelligeErinnerungen] = useState(0);
   // Knopf „Nach oben“ erscheint erst, wenn man ein Stück gescrollt hat
   const [weitUnten, setWeitUnten] = useState(false);
   useEffect(() => {
@@ -226,6 +233,8 @@ export function App() {
   useEffect(() => {
     if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') ladeUrlaubZuTun();
     if (konto?.rolle === 'ausbilder') api<{ offen: number }>('GET', '/api/rueckmeldungen').then((r) => setOffeneWuensche(r.offen), () => {});
+    if (konto?.rolle === 'ausbilder') api<{ offen: number }>('GET', '/api/wuensche').then((r) => setOffeneEinsatzwuensche(r.offen), () => {});
+    if (konto?.rolle === 'ausbilder' || konto?.rolle === 'beauftragter') api<{ faellig: number }>('GET', '/api/erinnerungen').then((r) => setFaelligeErinnerungen(r.faellig), () => {});
   }, [konto?.rolle, pfad, ladeUrlaubZuTun]);
 
   // neue Version gleich bemerken, wenn man in die App zurückkehrt – am Handy liegt sie oft lange im Hintergrund
@@ -376,6 +385,9 @@ export function App() {
 
   const jahrAzubi = /^\/jahreskalender\/(\d{1,12})$/.exec(pfad)?.[1];
   const urlaubAzubi = /^\/azubis\/(\d{1,12})\/urlaub$/.exec(pfad)?.[1];
+  const zeitleisteAzubi = /^\/azubis\/(\d{1,12})\/zeitleiste$/.exec(pfad)?.[1];
+  // die Reiter eines Azubis zeigen die Zeitleiste nur Ausbildern
+  merkeRolle(konto.rolle);
   // Leseansicht der Lerninhalte für Ausbilder und Beauftragte: /lerninhalte/<paket>[/kompendium|/<themenfeld>]
   const lesePfad = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})(?:\/([a-z0-9-]{1,40}))?$/.exec(pfad);
   const anleitung = /^\/anleitungen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
@@ -396,6 +408,10 @@ export function App() {
   else if (pfad === '/urlaub' && konto.rolle === 'azubi') seite = <UrlaubAzubi key={konto.id} azubiId={konto.id} />;
   else if (pfad === '/urlaub' && betreut) seite = <UrlaubListe konto={konto} onGeaendert={ladeUrlaubZuTun} />;
   else if (urlaubAzubi && betreut) seite = <UrlaubAzubi key={urlaubAzubi} azubiId={Number(urlaubAzubi)} />;
+  else if (zeitleisteAzubi && konto.rolle === 'ausbilder') seite = <Zeitleiste key={zeitleisteAzubi} azubiId={Number(zeitleisteAzubi)} />;
+  else if (pfad === '/einsatzwuensche' && konto.rolle === 'azubi') seite = <WuenscheAzubi key={konto.id} azubiId={konto.id} />;
+  else if (pfad === '/planung/einsatzwuensche' && konto.rolle === 'ausbilder') seite = <WuenscheListe onGeaendert={setOffeneEinsatzwuensche} />;
+  else if (pfad === '/erinnerungen' && betreut) seite = <Erinnerungen rolle={konto.rolle} onGeaendert={setFaelligeErinnerungen} />;
   else if (pfad === '/planung/sammelplanung' && konto.rolle === 'ausbilder') seite = <Sammelplanung />;
   else if (pfad === '/planung/schulbloecke' && konto.rolle === 'ausbilder') seite = <Schulbloecke />;
   else if (pfad === '/planung/schulbloecke/einlesen' && konto.rolle === 'ausbilder') seite = <SchulplanEinlesen />;
@@ -453,7 +469,7 @@ export function App() {
       : konto.rolle === 'azubi'
         ? [
             // die Startseite des Azubis ist sein Ausbildungsplan
-            { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan' },
+            { zu: '/', text: 'Ausbildungsplan', kurz: 'Plan', icon: 'plan', auch: '/einsatzwuensche' },
             { zu: '/berichtsheft', text: 'Berichtsheft', icon: 'heft', aktivAb: '/berichtsheft' },
             // ohne eigenes Lernmodul führt „Lernen“ zu den Anleitungen für alle Berufe
             ...(lernen ? [{ zu: '/lernen', text: 'Lernen', icon: 'lernen', aktivAb: '/lernen', auch: '/anleitungen' } as Punkt] : anleitungen ? [{ zu: '/anleitungen', text: 'Lernen', icon: 'lernen', aktivAb: '/anleitungen' } as Punkt] : []),
@@ -466,6 +482,8 @@ export function App() {
             { zu: '/abzeichnen', text: 'Abzeichnen', icon: 'abzeichnen' },
             { zu: '/jahreskalender', text: 'Jahreskalender', kurz: 'Jahr', icon: 'uebersicht', aktivAb: '/jahreskalender' },
             { zu: '/urlaub', text: 'Urlaub', icon: 'urlaub', mehr: true, zahl: urlaubZuTun },
+            // Ausbilder finden die Erinnerungen unter „Planung“
+            ...(konto.rolle === 'beauftragter' ? [{ zu: '/erinnerungen', text: 'Erinnerungen', icon: 'glocke', mehr: true, zahl: faelligeErinnerungen } as Punkt] : []),
             // Ausbilder finden die Lerninhalte unter „Planung“ – ihre Hauptleiste ist sonst zu voll
             ...(konto.rolle === 'beauftragter' ? [{ zu: '/lerninhalte', text: 'Lerninhalte', icon: 'lernen', aktivAb: '/lerninhalte', mehr: true } as Punkt] : []),
           ];
@@ -488,6 +506,8 @@ export function App() {
   const planung: Punkt[] =
     konto.rolle === 'ausbilder'
       ? [
+          { zu: '/planung/einsatzwuensche', text: 'Einsatzwünsche', icon: 'plan', zahl: offeneEinsatzwuensche },
+          { zu: '/erinnerungen', text: 'Erinnerungen', icon: 'glocke', zahl: faelligeErinnerungen },
           { zu: '/planung/sammelplanung', text: 'Sammelplanung', icon: 'sammel' },
           { zu: '/planung/schulbloecke', text: 'Schulblöcke', icon: 'schule', aktivAb: '/planung/schulbloecke' },
           { zu: '/planung/bausteine', text: 'Planbausteine', icon: 'baustein' },

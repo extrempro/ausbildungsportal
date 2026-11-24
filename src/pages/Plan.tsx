@@ -686,6 +686,15 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
     api<BerichtListe>('GET', `/api/azubis/${azubiId}/berichte`).then(setBerichte, () => {});
   }, [lade, azubiId]);
   const schliesse = useCallback(() => setEntwurf(null), []);
+  // Sprung zu einer Woche über die Adresse (…/plan#kw-2027-01-04), z. B. aus der Zeitleiste – einmal nach dem Laden
+  const zeigeRef = useRef<((montag: string) => void) | null>(null);
+  const gesprungen = useRef(false);
+  useEffect(() => {
+    if (!d || gesprungen.current) return;
+    gesprungen.current = true;
+    const m = /^#kw-(\d{4}-\d{2}-\d{2})$/.exec(window.location.hash);
+    if (m) zeigeRef.current?.(m[1]);
+  }, [d]);
 
   const wochen = useMemo(() => {
     let nr = 0;
@@ -825,6 +834,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
       }),
     );
   };
+  zeigeRef.current = zeige;
   const hake = async (e: PlanEintrag, body: { erledigt: boolean; unteraufgabe?: number }) => {
     const ersetze = (x: PlanEintrag) => setD((alt) => (alt ? { ...alt, eintraege: alt.eintraege.map((y) => (y.id === e.id ? x : y)) } : alt));
     // sofort anzeigen, dann mit der Antwort des Servers abgleichen
@@ -880,6 +890,11 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
         <Link zu={d.eigenes ? '/urlaub' : `/azubis/${azubiId}/urlaub`} className="knopf schlicht">
           {d.eigenes ? 'Urlaub beantragen' : 'Urlaub ansehen'}
         </Link>
+        {d.eigenes && (
+          <Link zu="/einsatzwuensche" className="knopf schlicht">
+            Einsatz wünschen
+          </Link>
+        )}
       </p>
 
       {d.beginnFehlt && (

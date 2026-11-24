@@ -33,14 +33,23 @@ export type AktivitaetArt =
   | 'anleitungen_aktualisiert'
   // Rückfrage zu einer eigenen Fehlermeldung oder Idee bzw. sie ist erledigt – nur für die meldende Person (jede Rolle)
   | 'meldung_rueckfrage'
-  | 'meldung_erledigt';
+  | 'meldung_erledigt'
+  // Einsatzwunsch eines Azubis: gestellt (für den Ausbilder), genehmigt bzw. abgelehnt (für den Azubi) – nicht für Beauftragte
+  | 'wunsch_neu'
+  | 'wunsch_genehmigt'
+  | 'wunsch_abgelehnt'
+  // eigene Erinnerung (Beauftragte oder Ausbilder) ist fällig – nur für diese Person
+  | 'erinnerung_faellig';
 
 /**
  * Persönliche Einträge: In `azubi_id` steht hier die Person, für die der Eintrag ist – sie allein sieht ihn,
  * egal welche Rolle sie hat. Alle anderen Einträge sieht, wer den Azubi sehen darf.
  */
-export const PERSOENLICH: AktivitaetArt[] = ['lernen_aktualisiert', 'anleitungen_aktualisiert', 'meldung_rueckfrage', 'meldung_erledigt'];
+export const PERSOENLICH: AktivitaetArt[] = ['lernen_aktualisiert', 'anleitungen_aktualisiert', 'meldung_rueckfrage', 'meldung_erledigt', 'erinnerung_faellig'];
 const PERSOENLICH_SQL = PERSOENLICH.map((a) => `'${a}'`).join(', ');
+/** Einsatzwünsche entscheidet der Ausbilder – Beauftragte sehen sie nicht (auch nicht per Teams oder E-Mail) */
+export const NICHT_FUER_BEAUFTRAGTE: AktivitaetArt[] = ['wunsch_neu', 'wunsch_genehmigt', 'wunsch_abgelehnt'];
+const NICHT_FUER_BEAUFTRAGTE_SQL = NICHT_FUER_BEAUFTRAGTE.map((a) => `'${a}'`).join(', ');
 
 const AUFBEWAHRUNG_TAGE = 60;
 /** so viele Aktivitäten werden höchstens gelesen und zusammengefasst */
@@ -58,6 +67,16 @@ export function merkeLernAktualisierung(db: DB, jetzt: Date, art: 'lernen_aktual
   db.prepare('DELETE FROM aktivitaet WHERE zeit < ?').run(grenze);
   const neu = db.prepare("INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl) VALUES (?, ?, NULL, '', ?, NULL, ?, ?)");
   for (const id of azubiIds) neu.run(jetzt.toISOString(), id, art, titel.slice(0, 200), anzahl);
+}
+
+/**
+ * Eine eigene Erinnerung ist fällig: persönlicher Eintrag für die Person, die sie angelegt hat (in `azubi_id`),
+ * ohne handelnde Person. Der Titel nennt Azubi und Text – die Glocke sieht nur diese Person;
+ * Teams und E-Mail nennen keinen Inhalt (benachrichtigung.ts).
+ */
+export function merkeErinnerung(db: DB, jetzt: Date, benutzerId: number, titel: string): void {
+  const r = db.prepare("INSERT INTO aktivitaet (zeit, azubi_id, akteur_id, akteur_name, art, montag, titel, anzahl) VALUES (?, ?, NULL, '', 'erinnerung_faellig', NULL, ?, 1)").run(jetzt.toISOString(), benutzerId, titel.slice(0, 200));
+  stelleEin(db, jetzt, Number(r.lastInsertRowid), 'erinnerung_faellig', benutzerId, null);
 }
 
 export function merkeAktivitaet(
@@ -124,7 +143,8 @@ export interface AktivitaetGruppe {
 function sichtbar(db: DB, wer: BenutzerZeile, tag: string): Zeile[] {
   const ids = sichtbareAzubis(db, wer, tag);
   // Einträge zu den sichtbaren Azubis – außer den persönlichen; dazu die persönlichen Einträge für einen selbst
-  const zuAzubis = ids.length ? `(a.azubi_id IN (${ids.map(() => '?').join(',')}) AND a.art NOT IN (${PERSOENLICH_SQL})) OR ` : '';
+  const ohne = wer.rolle === 'beauftragter' ? `, ${NICHT_FUER_BEAUFTRAGTE_SQL}` : '';
+  const zuAzubis = ids.length ? `(a.azubi_id IN (${ids.map(() => '?').join(',')}) AND a.art NOT IN (${PERSOENLICH_SQL}${ohne})) OR ` : '';
   return db
     .prepare(
       `SELECT a.*, b.anzeigename AS azubi_name FROM aktivitaet a JOIN benutzer b ON b.id = a.azubi_id
