@@ -1,6 +1,6 @@
 # Sicherheitsprüfung nach OWASP ASVS
 
-Stand: 21.11.2026 · Nachprüfung an Version 0.74.2, Korrekturen in 0.74.3
+Stand: 24.11.2026 · Nachprüfung an Version 0.83.1, Korrekturen in 0.83.2 (vorher: 21.11.2026 an 0.74.2)
 
 **Grundlage: OWASP ASVS 5.0.0, Level 2** (vorher 4.0.3) – der [Application Security Verification Standard](https://owasp.org/www-project-application-security-verification-standard/), Level 2 ist der übliche Maßstab für Anwendungen mit personenbezogenen Daten. Die Übersicht nach den OWASP Top 10 steht in [sicherheit-owasp.md](sicherheit-owasp.md), die Hinweise für den Betrieb in [SECURITY.md](../SECURITY.md).
 
@@ -66,6 +66,31 @@ Vollständige Prüfung über alle Kapitel von 5.0 an Version 0.74.2, dazu die al
 - **Geschäftslogik:** Azubis legen keine Schul- oder Einsatz-Einträge an und genehmigen keinen Urlaub; abgezeichnete Berichte gesperrt; Stunden begrenzt.
 - **Abhängigkeiten:** `npm audit` in der CI grün; Dependabot hält Pakete, Docker-Abbild und Actions aktuell.
 
+## Nachprüfung 24.11.2026 (Version 0.83.1)
+
+Gezielt geprüft, was seit 0.74.3 dazugekommen ist: Anmeldung in der Teams-App (`POST /api/auth/teams`, `/teams/app`), angemeldete Geräte (`/api/ich/sitzungen`), Klassen und Schulblöcke, Einlesen von Schulplänen und alten Berichten über den Dienst „import“, Wochenende im Berichtsheft, Einsatzwünsche, Erinnerungen und Zeitleiste (35 neue Routen, jetzt 185). Gleicher Aufbau wie zuvor: Produktions-Build mit eigener Datenbank, zwei Azubis, zwei Ausbilder, zwei Beauftragte (eine zugewiesen, einer nicht), Super-Admin; Teams-App und Entra mit erfundenen Kennungen eingeschaltet (ohne Verbindung zu Microsoft). Der Dienst „import“ lief nicht; seine Antworten wurden im Austauschordner nachgestellt – auch so, als wäre er übernommen.
+
+| # | Fund | Schwere | Stand |
+| --- | --- | --- | --- |
+| E10 | **Verweise (Symlinks) aus dem Dienst „import“ wurden gelesen.** Der Dienst verarbeitet fremde PDFs in einem abgeschotteten Container und schreibt nach `data/import`. Wäre er über eine Lücke in den Lesewerkzeugen übernommen, hätte er statt `text.txt` oder `seite-1.pdf` einen Verweis auf eine Datei der App ablegen können; die App folgte ihm. Nachgestellt: Eine Textdatei außerhalb des Auftrags erschien in der Vorschau des Azubis. Ausnutzbar nur mit einer zweiten Lücke; Seiten müssen ohnehin mit `%PDF-` beginnen, Text erscheint nur, soweit er wie ein Bericht aussieht. | niedrig | **behoben** in 0.83.2: Dateien des Dienstes nur als echte Datei (`O_NOFOLLOW`, Prüfung auf reguläre Datei, Größengrenze), Auftragsordner nur als echter Ordner (`liesRoh` in `server/import-dienst.ts`). Test in `server/test/berichtsheft-import.test.ts`, Angriff wiederholt. |
+| E11 | **Erinnerungen zeigten den Plan weiter, nachdem der Zugriff endete.** Eine Beauftragte, deren Zuweisung endete, sah über ihre Erinnerung „vor einem Einsatz“ weiter Titel und neue Tage des Einsatzes, wenn er umbenannt oder verschoben wurde. | niedrig | **behoben** in 0.83.2: Sieht die Person den Azubi (oder den Einsatz) nicht mehr, löst sich die Erinnerung vom Einsatz und behält ihren letzten Tag. Test in `server/test/erinnerung.test.ts`. |
+| E12 | **PDF alter Berichte kam nicht an** (kein Sicherheitsfund): `POST /api/azubis/:id/einlesen` mit `application/pdf` lief in „Anfrage muss gültiges JSON sein“ – der Webserver ließ PDFs nur beim Schulplan durch. | Info | **behoben** in 0.83.2: beide Pfade, Grenze 11 MB vor der Prüfung in der API (10 MB). Test in `server/test/http.test.ts`. |
+
+**Unabhängiger Prüfer:** ein neuer Agent ohne Vorwissen (nur Adresse, Zugänge je Rolle, Pfad zum Code) hat die Instanz mit 0.83.1 und den Korrekturen für E10 und E12 angegriffen – **kein Fund**. Er hat den nachgestellten Symlink-Angriff selbst wiederholt (auch über „übernehmen“ mit Originalseite): kein fremder Text, kein fremder Anhang. Hinweise:
+
+| # | Hinweis | Schwere | Stand |
+| --- | --- | --- | --- |
+| P6 | Die SVG-Bereinigung der Lerninhalte ist eine Sperrliste. | Info | wie P3 – kein Durchbruch gefunden, die CSP trägt. |
+| P7 | Die Testinstanz lief als `root`. | Info | **nur in der Prüfumgebung:** Im Container startet das Skript als root, richtet den Datenordner ein und wechselt dann zum Benutzer `node` (V13); der Dienst „import“ läuft als eigener Benutzer ohne Rechte. |
+
+**Ohne Fund geprüft:**
+
+- **Einsatzwünsche:** fremder Azubi und nicht zuständiger Ausbilder → 404, Beauftragte und Super-Admin → 403, auch nicht in der Glocke; Status, Einsatz und Entscheidung lassen sich beim Anlegen nicht mitschicken; Zeiträume begrenzt; Grund nicht im Plan.
+- **Erinnerungen:** fremde Erinnerung lesen, abhaken, löschen → 404; nur Azubis, die man sieht (bzw. künftige Zuweisung, siehe Entscheidungen); fremde Einsätze → 400; Steuerzeichen abgelehnt; Glocke nur für die Person selbst.
+- **Teams-Anmeldung:** Token mit `alg: none`, `HS256`, fremdem oder fehlendem Schlüssel, falscher Form → 401 (im Protokoll); ohne `Origin` → 403. `/teams/app`: Ziel nur als eigener Pfad (`javascript:`, `//…`, `/\…`, eingeschleustes HTML → Startseite), eigene CSP ohne Skripte von außen.
+- **Angemeldete Geräte:** fremde Sitzung über ihre Kennung beenden → 404; Gerät nur als Browser und System.
+- **Einlesen:** Aufträge anderer Personen und anderer Art → 404; andere Rollen → 403; Kennung nur 32 Hex-Zeichen.
+
 ## Stand je ASVS-Kapitel (5.0)
 
 | Kapitel | Stand | Umsetzung und Belege |
@@ -108,6 +133,8 @@ Vollständige Prüfung über alle Kapitel von 5.0 an Version 0.74.2, dazu die al
 - **Einbetten (ab 0.77.0):** Mit Teams-App darf das Portal in Teams und Microsoft 365 eingebettet werden. Klickjacking ist damit nur aus diesen Seiten von Microsoft möglich; ohne `TEAMS_APP_ID` bleibt `frame-ancestors 'none'`.
 - **Dienst „import“ (ab 0.79.0):** eigener Container ohne Netz, schreibgeschützt, ohne Linux-Rechte, mit Grenzen für CPU, Speicher und Prozesse; Austausch nur über `data/import`. Uploads nur als PDF (Dateianfang `%PDF-`, höchstens 10 MB, höchstens 40 Seiten, Texterkennung höchstens 20 Seiten) und nur für Ausbilder; Aufträge gehören der Person, die sie angelegt hat (fremde Kennung → 404, Kennung nur 32 Hex-Zeichen). Datei und Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden. Die Antwort des Sprachmodells wird wie eine Eingabe von außen geprüft (feste Form, gültige Daten, Klasse muss existieren) und erst nach Bestätigung gespeichert.
 - **Alte Berichte einlesen (ab 0.80.0):** dieselben Grenzen; Upload nur durch den Azubi für sich selbst (`eigenerAzubi`, fremde Kennung → 404, andere Rollen → 403). Aufträge sind je Art getrennt (`art` in der Auftragsdatei) – ein Auftrag für alte Berichte ist über die Routen des Schulplans nicht erreichbar und umgekehrt. Übernommenes läuft durch dieselbe Prüfung wie ein gespeicherter Bericht (`pruefeInhalt`) und wird nur für Wochen ohne Bericht, innerhalb der Ausbildungszeit und nicht in der Zukunft angelegt. Originalseiten: nur Dateien `seite-<Zahl>.pdf` aus dem eigenen Auftrag, Dateianfang `%PDF-`, höchstens 5 MB, höchstens 4 je Bericht. Entwürfe bleiben privat, bis der Azubi sie einreicht.
+- **Erinnerungen (ab 0.83.0):** privat für die Person, die sie anlegt; fällige in ihrer Glocke, per Teams und E-Mail ohne Namen und Text. Beauftragte dürfen sie schon vor einer künftigen Zuweisung anlegen (Entscheidung des Betreibers, 24.11.2026) – dann sehen sie dort Namen und die Einsätze in ihrer Abteilung, sonst nichts aus dem Plan. Endet der Zugriff, löst sich die Erinnerung vom Einsatz (E11).
+- **Einsatzwünsche (ab 0.83.0):** sichtbar für den Azubi und Ausbilder, die ihn sehen; entscheiden kann nur, wer ihn verwaltet. Nicht für Beauftragte, auch nicht in der Glocke.
 - **Interne Verbindung:** Reverse Proxy und Container auf demselben Host, Verbindung über `127.0.0.1` ohne TLS.
 
 ## Offene Punkte
