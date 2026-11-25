@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ersterStart } from './api';
-import { erzeugeGraph } from './teams';
+import { erzeugeGraph, uebernimmTeamsAusEnv } from './teams';
 import { microsoftSchluessel } from './teams-sso';
 import type { Kontext } from './api';
 import type { Config } from './config';
@@ -69,5 +69,7 @@ export async function erzeugeKontext(
       }),
   };
   await ersterStart(k);
+  // TEAMS_APP_ID aus der .env gilt weiter: übernehmen und einschalten
+  uebernimmTeamsAusEnv(k);
   return k;
 }

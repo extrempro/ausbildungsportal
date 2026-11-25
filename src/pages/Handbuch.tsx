@@ -2408,7 +2408,7 @@ const ADMIN: Kapitel[] = [
           <li>Ebenfalls in Entra wird unter „API verfügbar machen“ der Bereich „access_as_user“ für Teams angelegt. Die Anwendungs-ID-URI steht unter „Teams-App“.</li>
           <li>Öffne <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link> und klicke unter „Teams-App“ auf „App-Paket herunterladen“.</li>
           <li>Das Paket wird im Teams Admin Center unter „Apps verwalten“ hochgeladen und per Setup-Richtlinie für alle installiert, die das Portal nutzen.</li>
-          <li>Die App-ID, die unter „Teams-App“ steht, kommt als TEAMS_APP_ID in die Einstellungen des Portals (.env); danach wird das Portal neu gestartet.</li>
+          <li>Unter „Teams-App“ auf „Teams-App einschalten“ klicken. Erst dann gehen Nachrichten hinaus. Ist in Teams schon eine App mit anderer ID hochgeladen (etwa nach dem Neuaufsetzen des Portals), trägst du deren ID vorher unter „App-ID ändern“ ein.</li>
           <li>Unter „Konto“ schickt sich jemand mit Microsoft-Konto eine Testnachricht per Teams.</li>
         </ol>
         <h3>Begriffe</h3>

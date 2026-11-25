@@ -1,6 +1,6 @@
 # Anmeldung über Microsoft Entra ID einrichten
 
-Stand: 23.11.2026 · passt zu Version 0.83.2
+Stand: 23.11.2026 · passt zu Version 0.84.0
 
 Diese Anleitung beschreibt, wie das Ausbildungsportal im eigenen Entra-Mandanten als Anwendung angelegt wird, damit sich Azubis, Ausbildungsbeauftragte und Ausbilder mit ihrem Microsoft-Konto anmelden können. Der Super-Admin meldet sich weiterhin lokal an und braucht nichts davon.
 
@@ -84,7 +84,7 @@ Mit der App „Ausbildungsportal“ läuft das Portal direkt in Teams – angeme
    - **Clientanwendung hinzufügen** und den Bereich `access_as_user` anhaken – je einmal für `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (Teams am PC und Handy) und `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams im Browser). Soll die App auch in Outlook und Microsoft 365 laufen, zusätzlich deren Client-IDs (Liste in `server/teams-sso.ts`).
 4. Im Portal als Super-Admin unter **Erscheinungsbild** → **Teams-App** das **App-Paket herunterladen**.
 5. Im **Teams Admin Center** unter **Teams-Apps → Apps verwalten → Hochladen** das Paket hochladen. Unter **Setup-Richtlinien** die App für alle installieren, die das Portal nutzen (z. B. für die Ausbildungsgruppe). Ohne installierte App kommt bei der Person nichts an. Bis eine Richtlinie greift, kann es einige Stunden dauern.
-6. Die **App-ID** (steht unter „Teams-App“) in der `.env` als `TEAMS_APP_ID` eintragen und `docker compose up -d`. Erst dann gehen Nachrichten hinaus. Die ID bleibt so auch bei einer neuen Datenbank gleich – sonst meldet Teams „App nicht gefunden“ und die App müsste neu verteilt werden.
+6. Im Portal unter **Erscheinungsbild** → **Teams-App** auf **Teams-App einschalten** klicken. Erst dann gehen Nachrichten hinaus und meldet die App an. Die App-ID steht in der Datenbank und ist in jeder Sicherung. Wird das Portal mit einer neuen Datenbank aufgesetzt, während in Teams die App schon hochgeladen ist, die bisherige ID unter **App-ID ändern** eintragen – sonst meldet Teams „App nicht gefunden“ und die App müsste neu verteilt werden. (Früher stand die ID als `TEAMS_APP_ID` in der `.env`. Das geht weiter: Das Portal übernimmt sie beim Start und schaltet ein; solange sie dort steht, lässt sich in der Oberfläche nichts ändern.)
 7. Unter **Konto → Benachrichtigungen** „Testnachricht per Teams senden“ und in Teams am PC, im Browser und am Handy unter „Aktivität“ nachsehen. Die App links in Teams öffnen: Das Portal muss ohne Anmeldeseite erscheinen.
 
 Gut zu wissen:
@@ -92,7 +92,7 @@ Gut zu wissen:
 - Der Server braucht ausgehend `login.microsoftonline.com` und `graph.microsoft.com`.
 - Ändern sich `APP_URL` oder der Name des Betriebs, bekommt das nächste Paket von selbst eine höhere Version. Im Teams Admin Center als Aktualisierung hochladen.
 - Ein Klick auf die Meldung zeigt im Bereich „Aktivität“ einen Hinweis mit „In der App öffnen“ und „Im Browser öffnen“ – das ganze Portal öffnet sich dann in der App.
-- Mit `TEAMS_APP_ID` darf das Portal in Teams und Microsoft 365 eingebettet werden (`frame-ancestors` nur für deren Adressen); ohne bleibt jede Einbettung verboten.
+- Mit eingeschalteter Teams-App darf das Portal in Teams und Microsoft 365 eingebettet werden (`frame-ancestors` nur für deren Adressen); ausgeschaltet bleibt jede Einbettung verboten.
 - In Teams gilt eine eigene Sitzung mit einem eigenen Cookie (SameSite=None, partitioniert): Der Browser schickt es nur, wenn das Portal in Teams läuft. Unter „Konto“ → „Angemeldete Geräte“ steht sie als „Teams“.
 - Die Anmeldung prüft das Token von Teams selbst (Signatur mit den Schlüsseln des Mandanten, Aussteller, Empfänger, Gültigkeit, Bereich `access_as_user`, anfordernde App). Bedingter Zugriff (z. B. MFA) gilt auch hier.
 - Fehlt dem Portal die Bibliothek für Teams, zeigt die App nur „Im Browser öffnen“ (Stand unter „Erscheinungsbild“).
@@ -155,7 +155,7 @@ Danach die App neu starten (`docker compose up -d` bzw. `npm start`). Fehlen die
 | „Die App ist für die Adresse … eingerichtet, aufgerufen wurde sie über …“ | `APP_URL` stimmt nicht mit der Adresse im Browser überein (z. B. eigener Port über `BIND_PORT` in der `.env`) | `APP_URL` auf die Adresse im Browser setzen, App neu starten |
 | Testnachricht per Teams: „Microsoft lehnt ab … TeamsActivity.Send“ | Anwendungsberechtigung fehlt oder Zustimmung nicht erteilt | Abschnitt „Freiwillig: Teams-App“, Punkte 1–2 |
 | In der App: „Teams konnte dich nicht anmelden“ | „API verfügbar machen“ fehlt oder passt nicht (Anwendungs-ID-URI, Bereich, Clientanwendungen); der genaue Grund steht im Log der App („Teams-Anmeldung abgelehnt: …“) | Abschnitt „Freiwillig: Teams-App“, Punkt 3 |
-| Testnachricht per Teams: „Ist die Teams-App für diese Person installiert?“ | App nicht hochgeladen, Setup-Richtlinie greift noch nicht, oder `TEAMS_APP_ID` passt nicht zum hochgeladenen Paket | Teams Admin Center prüfen; App-ID unter „Erscheinungsbild“ mit dem Paket vergleichen |
+| Testnachricht per Teams: „Ist die Teams-App für diese Person installiert?“ | App nicht hochgeladen, Setup-Richtlinie greift noch nicht, oder die App-ID passt nicht zum hochgeladenen Paket | Teams Admin Center prüfen; App-ID unter „Erscheinungsbild“ mit dem Paket vergleichen |
 | App meldet „Die Anmeldung über Microsoft ist fehlgeschlagen“ | Entra hat abgelehnt oder das Token war ungültig; der genaue Grund (z. B. `AADSTS…`) steht im Log der App | `docker compose logs app` bzw. die Ausgabe von `npm start` ansehen |
 
 ## Schlüssel erneuern (alle 24 Monate oder früher)

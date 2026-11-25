@@ -19,7 +19,7 @@ import { betreuung, darfAzubiSehen, darfAzubiVerwalten, darfKontoLoeschen, darfK
 import { beendeAlleSitzungen, beendeEigeneSitzung, beendeSitzung, beginneSitzung, eigeneSitzungen, geraetAus, HOECHST_MS, pruefeSitzung, raeumeAuf, sitzungsEnde } from './sitzung';
 import { AKTIVITAET_ROUTEN } from './aktivitaet';
 import { BENACHRICHTIGUNG_ROUTEN } from './benachrichtigung';
-import { TEAMS_ROUTEN } from './teams';
+import { TEAMS_ROUTEN, teamsAktiv } from './teams';
 import { KLASSEN_ROUTEN } from './klassen';
 import { SCHULPLAN_ROUTEN } from './schulplan';
 import { BERICHTSHEFT_IMPORT_ROUTEN } from './berichtsheft-import';
@@ -303,7 +303,7 @@ export const ROUTEN: Route[] = [
     h: async (c) => {
       const { db, cfg } = c.k;
       const jetzt = c.k.jetzt();
-      if (!cfg.entra || !cfg.teamsAppId) throw new Fehler(404, 'Die Teams-App ist in diesem Portal nicht eingerichtet');
+      if (!cfg.entra || !teamsAktiv(c.k)) throw new Fehler(404, 'Die Teams-App ist in diesem Portal nicht eingerichtet');
       const kopf = String(c.a.headers.authorization ?? '');
       const token = kopf.startsWith('Bearer ') ? kopf.slice(7).trim() : '';
       if (!token) throw new Fehler(400, 'Kein Token von Teams erhalten');

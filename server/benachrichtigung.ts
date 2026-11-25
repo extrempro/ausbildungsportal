@@ -9,7 +9,7 @@ import { gestalteMail } from './mail-gestalt';
 import type { MailFarbe } from './mail-gestalt';
 import { istMailAdresse, MailFehler } from './smtp';
 import type { Mail } from './smtp';
-import { sendeTeams, teamsFehlertext } from './teams';
+import { sendeTeams, teamsAktiv, teamsFehlertext } from './teams';
 import type { BenutzerZeile } from './typen';
 
 /**
@@ -176,7 +176,7 @@ export function mailAus(k: Kontext, b: Empfaenger, zeilen: Zeile[]): Pick<Mail, 
 /** Warum ein Weg gerade nicht geht – oder null. */
 function hindernis(k: Kontext, weg: 'teams' | 'mail', b: Pick<BenutzerZeile, 'anmeldename' | 'entra_oid'>): string | null {
   if (weg === 'teams') {
-    if (!k.cfg.teamsAppId) return 'Nachrichten per Teams sind in diesem Portal nicht eingerichtet. Das macht der Betreiber des Portals.';
+    if (!teamsAktiv(k)) return 'Nachrichten per Teams sind in diesem Portal nicht eingerichtet. Das macht der Betreiber des Portals.';
     return b.entra_oid ? null : 'Dein Konto ist noch nicht mit Microsoft verknüpft. Melde dich einmal mit Microsoft an, dann geht es.';
   }
   if (!k.cfg.smtp) return 'Der Mailversand ist in diesem Portal nicht eingerichtet. Das macht der Betreiber des Portals.';

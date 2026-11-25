@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.84.0] – 2026-11-25
+
+### Geändert
+
+- **Teams-App im Portal einschalten:** Der Super-Admin schaltet die Teams-App unter „Erscheinungsbild“ → „Teams-App“ ein und aus, ohne `.env` und ohne Neustart. Dort lässt sich auch die App-ID ändern, etwa nach dem Neuaufsetzen des Portals, wenn in Teams schon eine App hochgeladen ist. `TEAMS_APP_ID` in der `.env` geht weiter: Das Portal übernimmt die ID beim Start und schaltet ein. Nach dem Entfernen bleibt alles, wie es ist.
+
 ## [0.83.2] – 2026-11-24
 
 ### Geändert

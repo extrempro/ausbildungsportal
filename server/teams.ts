@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { Fehler, koerper } from './api-basis';
 import type { Kontext, Route } from './api-basis';
 import { leseBetrieb } from './stammdaten';
 import { protokolliere } from './protokoll';
@@ -15,8 +16,11 @@ import { baueZip } from './zip';
  *   mit der App-Registrierung, die auch die Anmeldung nutzt. Empfänger ist die Entra-Objekt-ID der Person.
  * - Ankommen kann nur etwas, wenn die App bei der Person installiert ist (Teams Admin Center, Setup-Richtlinie).
  * - Das App-Paket (manifest.json, zwei Symbole) lädt der Super-Admin unter „Erscheinungsbild“ herunter.
- * - Die App-ID steht fest in TEAMS_APP_ID; erst damit gehen Nachrichten hinaus. Vorher zeigt das Portal eine
- *   vorgeschlagene ID, die mit dem Paket heruntergeladen und dann in die .env übernommen wird.
+ * - Die App-ID entsteht beim ersten Aufruf und steht in der Datenbank (Einstellung `teams_app_id`); der Super-Admin kann sie
+ *   ändern (z. B. nach einem Neuaufsetzen, wenn in Teams schon eine App mit anderer ID hochgeladen ist).
+ * - Eingeschaltet wird die App unter „Erscheinungsbild“ → „Teams-App“ (Einstellung `teams_aktiv`); erst dann gehen Nachrichten
+ *   hinaus, meldet der Reiter an und darf das Portal in Teams eingebettet werden. TEAMS_APP_ID in der .env geht weiterhin:
+ *   Sie wird bei jedem Start übernommen und schaltet ein – dann lässt sich in der Oberfläche nichts ändern.
  * - Ein Klick auf die Meldung öffnet den Reiter der App (/teams/app) mit dem Ziel im Portal.
  */
 
@@ -89,15 +93,37 @@ const lies = (k: Kontext, schluessel: string) => (k.db.prepare('SELECT wert FROM
 const schreibe = (k: Kontext, schluessel: string, wert: string) =>
   k.db.prepare('INSERT INTO einstellungen (schluessel, wert) VALUES (?, ?) ON CONFLICT(schluessel) DO UPDATE SET wert = excluded.wert').run(schluessel, wert);
 
-/** App-ID: aus der .env – sonst eine vorgeschlagene, die beim ersten Mal entsteht und bleibt */
-export function teamsAppId(k: Kontext): { id: string; ausEnv: boolean } {
-  if (k.cfg.teamsAppId) return { id: k.cfg.teamsAppId, ausEnv: true };
+/** App-ID: entsteht beim ersten Mal und bleibt (aus der .env übernommen, wenn TEAMS_APP_ID gesetzt ist) */
+export function teamsAppId(k: Kontext): string {
   let id = lies(k, 'teams_app_id');
   if (!id || !GUID.test(id)) {
     id = randomUUID();
     schreibe(k, 'teams_app_id', id);
   }
-  return { id, ausEnv: false };
+  return id;
+}
+
+// Ob die App eingeschaltet ist, fragt jede Antwort (Header zum Einbetten) – deshalb gemerkt, bis sich die Einstellung ändert
+const aktivGemerkt = new WeakMap<Kontext, string | null>();
+
+/** ID der eingeschalteten Teams-App – oder null (aus, oder ohne Anmeldung mit Microsoft). */
+export function teamsAktiv(k: Kontext): string | null {
+  if (!k.cfg.entra) return null;
+  if (aktivGemerkt.has(k)) return aktivGemerkt.get(k)!;
+  const id = lies(k, 'teams_aktiv') === '1' ? lies(k, 'teams_app_id') : null;
+  const wert = id && GUID.test(id) ? id : null;
+  aktivGemerkt.set(k, wert);
+  return wert;
+}
+
+/** TEAMS_APP_ID aus der .env übernehmen (beim Start): ID setzen und einschalten. */
+export function uebernimmTeamsAusEnv(k: Kontext): void {
+  if (!k.cfg.teamsAppId || !k.cfg.entra) return;
+  if (lies(k, 'teams_app_id') !== k.cfg.teamsAppId || lies(k, 'teams_aktiv') !== '1') {
+    schreibe(k, 'teams_app_id', k.cfg.teamsAppId);
+    schreibe(k, 'teams_aktiv', '1');
+    aktivGemerkt.delete(k);
+  }
 }
 
 /** Nur eigene Pfade als Ziel – kein offener Weiterleiter */
@@ -127,8 +153,9 @@ export function aktivitaet(appId: string, texte: string[], pfad: string) {
 
 /** Schickt eine Meldung an eine Person (Entra-Objekt-ID). Wirft bei einem Fehler. */
 export async function sendeTeams(k: Kontext, oid: string, texte: string[], pfad: string): Promise<void> {
-  if (!k.cfg.teamsAppId) throw new Error('Die Teams-App ist nicht eingerichtet');
-  await k.graph(`/users/${encodeURIComponent(oid)}/teamwork/sendActivityNotification`, aktivitaet(k.cfg.teamsAppId, texte, pfad));
+  const appId = teamsAktiv(k);
+  if (!appId) throw new Error('Die Teams-App ist nicht eingerichtet');
+  await k.graph(`/users/${encodeURIComponent(oid)}/teamwork/sendActivityNotification`, aktivitaet(appId, texte, pfad));
 }
 
 /** Das farbige Symbol: das App-Symbol des Portals (192 × 192) */
@@ -171,7 +198,7 @@ export function manifest(k: Kontext, appId: string, version: string): Record<str
  * Teams nimmt ein neues Paket nur mit höherer Version an.
  */
 export function teamsPaket(k: Kontext): { name: string; inhalt: Buffer; version: string } {
-  const { id } = teamsAppId(k);
+  const id = teamsAppId(k);
   const farbig = farbSymbol();
   const umriss = umrissSymbol(32);
   const fingerabdruck = createHash('sha256').update(JSON.stringify(manifest(k, id, '0'))).update(farbig).update(umriss).digest('hex');
@@ -190,13 +217,13 @@ export function teamsPaket(k: Kontext): { name: string; inhalt: Buffer; version:
 /** Was „Erscheinungsbild“ → „Teams-App“ zeigt */
 function stand(k: Kontext) {
   const entra = k.cfg.entra !== null;
-  const app = entra ? teamsAppId(k) : null;
   const paket = JSON.parse(lies(k, 'teams_paket') ?? 'null') as { stand: number } | null;
   return {
     entra,
-    appId: app?.id ?? null,
-    ausEnv: app?.ausEnv ?? false,
-    aktiv: Boolean(k.cfg.teamsAppId),
+    appId: entra ? teamsAppId(k) : null,
+    // steht TEAMS_APP_ID in der .env, gilt sie – dann ist in der Oberfläche nichts zu ändern
+    ausEnv: entra && Boolean(k.cfg.teamsAppId),
+    aktiv: teamsAktiv(k) !== null,
     version: paket ? `1.0.${paket.stand}` : null,
     clientId: k.cfg.entra?.clientId ?? null,
     // Anmeldung über Teams: Anwendungs-ID-URI für „API verfügbar machen“; möglich nur mit mitgebauter Bibliothek von Microsoft
@@ -209,6 +236,34 @@ const ADMIN: Route['wer'] = ['admin'];
 
 export const TEAMS_ROUTEN: Route[] = [
   { m: 'GET', p: '/api/teams', wer: ADMIN, h: (c) => ({ status: 200, body: stand(c.k) }) },
+  {
+    // einschalten, ausschalten, App-ID ändern – nur ohne TEAMS_APP_ID in der .env
+    m: 'PUT',
+    p: '/api/teams',
+    wer: ADMIN,
+    h: (c) => {
+      const { k } = c;
+      if (!k.cfg.entra) throw new Fehler(409, 'Für die Teams-App muss die Anmeldung mit Microsoft eingerichtet sein (ENTRA_TENANT_ID, ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET).');
+      if (k.cfg.teamsAppId) throw new Fehler(409, 'Die Teams-App ist über TEAMS_APP_ID in der .env eingerichtet. Ändern lässt sie sich dort – oder den Eintrag entfernen, dann hier.');
+      const body = koerper(c);
+      if (body.appId !== undefined) {
+        const id = String(body.appId).trim().toLowerCase();
+        if (!GUID.test(id)) throw new Fehler(400, 'Die App-ID muss eine GUID sein, z. B. 12345678-abcd-4ef0-9876-0123456789ab.');
+        if (id !== teamsAppId(k)) {
+          schreibe(k, 'teams_app_id', id);
+          protokolliere(k.db, k.jetzt(), 'konto', 'teams_app', c.b, null, `App-ID ${id}`);
+        }
+      }
+      if (body.aktiv !== undefined) {
+        if (typeof body.aktiv !== 'boolean') throw new Fehler(400, 'aktiv muss true oder false sein');
+        teamsAppId(k);
+        schreibe(k, 'teams_aktiv', body.aktiv ? '1' : '0');
+        protokolliere(k.db, k.jetzt(), 'konto', 'teams_app', c.b, null, body.aktiv ? 'eingeschaltet' : 'ausgeschaltet');
+      }
+      aktivGemerkt.delete(k);
+      return { status: 200, body: stand(k) };
+    },
+  },
   {
     m: 'GET',
     p: '/api/teams/paket',

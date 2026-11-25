@@ -3,7 +3,7 @@ import { existsSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after, before, test } from 'node:test';
-import { HANDY, mitFoto, startePortal, text, ueberlauf } from './hilfe';
+import { ADMIN, HANDY, PC, mitFoto, oeffne, startePortal, text, ueberlauf } from './hilfe';
 import type { Portal } from './hilfe';
 import type { Page } from 'playwright';
 
@@ -85,5 +85,20 @@ test(
     await s.goto(`${p.url}/teams/app?ziel=/urlaub`);
     await s.waitForURL(`${p.url}/urlaub`, { timeout: 10_000 });
     await s.close();
+  }),
+);
+
+test(
+  'Teams-App: mit TEAMS_APP_ID in der .env eingeschaltet – im Erscheinungsbild gesperrt und erklärt',
+  mitFoto(() => p, 'teams-erscheinungsbild', async () => {
+    // setzt das Passwort des Super-Admins, damit er ohne Passwortwechsel hineinkommt
+    await p.grunddaten();
+    const s = await p.seite(ADMIN.name, PC);
+    await oeffne(s, p.url, '/verwaltung/erscheinungsbild');
+    await s.locator('#teams-app dd', { hasText: 'Eingeschaltet' }).waitFor();
+    assert.match(await text(s, '#teams-app'), /aus der \.env, TEAMS_APP_ID/);
+    assert.ok(await s.locator('#teams-app button', { hasText: 'Teams-App ausschalten' }).isDisabled(), 'Schalter gesperrt');
+    assert.match(await text(s, '#teams-app [role="note"]'), /TEAMS_APP_ID in der \.env/);
+    assert.equal(await s.locator('#teams-app summary', { hasText: 'App-ID ändern' }).count(), 0);
   }),
 );
