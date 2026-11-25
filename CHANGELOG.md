@@ -1,5 +1,17 @@
 # Änderungen
 
+## [0.85.0] – 2026-11-25
+
+### Neu
+
+- **Bericht speichert von selbst:** Zwei Sekunden nach dem Tippen, vor dem Wechsel in eine andere Woche, vor dem Einreichen und beim Verlassen der Seite. Am Bericht steht, ob alles gespeichert ist. Fehlt die Verbindung, versucht es das Portal weiter; mit „Erneut speichern“ sofort. Der Knopf „Als Entwurf speichern“ fällt weg.
+- **Im Bericht zwischen Wochen blättern:** Knöpfe zur vorherigen und nächsten Kalenderwoche, mit dem Stand der Woche. Schreiben geht bis eine Woche im Voraus, einreichen erst ab dem Montag der Woche.
+- **Zwischen Azubis wechseln:** Ausbilder und Ausbildungsbeauftragte wechseln auf Profil, Plan, Berichtsheft, Bericht, Urlaub und Zeitleiste zum vorherigen oder nächsten Azubi – die Seite bleibt dieselbe.
+
+### Behoben
+
+- **Navigation in der Teams-App zu hoch:** Am Handy hielt das Portal unten zusätzlich Platz für die Gestensteuerung frei, obwohl Teams das schon tut.
+
 ## [0.84.0] – 2026-11-25
 
 ### Geändert

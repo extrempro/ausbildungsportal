@@ -81,7 +81,7 @@ test('Eingaben des Berichts werden geprüft', async () => {
   const w = await welt();
   const status = async (inhalt: unknown, montag = WOCHE) => (await schreibe(w, w.azubi, montag, inhalt)).status;
   assert.equal(await status(INHALT, '2026-11-03'), 404, 'kein Montag');
-  assert.equal(await status(INHALT, '2026-11-16'), 400, 'kommende Woche');
+  assert.equal(await status(INHALT, '2026-11-23'), 400, 'mehr als eine Woche voraus');
   assert.equal(await status(INHALT, '2025-07-21'), 400, 'vor der Ausbildung');
   assert.equal(await status({ betrieb: [{ text: 'Erster Tag', stunden: 8 }] }, '2025-07-28'), 200, 'Woche des Ausbildungsbeginns');
   assert.equal(await status(null), 400);
@@ -598,4 +598,26 @@ test('Tagesform: Samstag und Sonntag nur mit Freischaltung im Profil – schon E
   const { wochenende: _w, ...ohneAngabe } = alt;
   await ruf(w.u, 'PUT', profilPfad, { cookies: als(w, w.ausbilder), body: { ...ohneAngabe, berichtForm: 'tag' } });
   assert.equal(koerper(await ruf(w.u, 'GET', profilPfad, { cookies: als(w, w.ausbilder) })).profil.wochenende, true);
+});
+
+test('Blättern und vorschreiben: Nachbarwochen mit Stand, eine Woche im Voraus schreiben, einreichen erst ab Montag', async () => {
+  const w = await welt();
+  // heute ist Dienstag, der 10.11.2026 – die laufende Woche beginnt am 09.11., die nächste am 16.11.
+  const ohneUrlaub = { ...INHALT, abwesenheit: [] };
+  assert.equal((await schreibe(w, w.azubi, '2026-11-16', ohneUrlaub)).status, 200, 'eine Woche im Voraus');
+  assert.equal((await schreibe(w, w.azubi, '2026-11-23', ohneUrlaub)).status, 400, 'zwei Wochen voraus nicht');
+  const r = await reicheEin(w, w.azubi, '2026-11-16');
+  assert.equal(r.status, 409);
+  assert.match(koerper(r).fehler, /erst ab dem Montag/);
+  const naechste = await lies(w, w.azubi, w.azubi, '2026-11-16');
+  assert.deepEqual([naechste.kommend, naechste.rechte.schreiben, naechste.rechte.einreichen, naechste.nachbarn.nachher], [true, true, false, null]);
+  assert.deepEqual([naechste.nachbarn.vorher.montag, naechste.nachbarn.vorher.kw, naechste.nachbarn.vorher.status], ['2026-11-09', 46, 'fehlt']);
+  // die laufende Woche: zurück und vor; der Stand der nächsten (Entwurf) nur für den Azubi selbst
+  await schreibe(w, w.azubi, WOCHE);
+  const jetzt = await lies(w, w.azubi, w.azubi, '2026-11-09');
+  assert.deepEqual([jetzt.kommend, jetzt.nachbarn.vorher.status, jetzt.nachbarn.nachher.status], [false, 'entwurf', 'entwurf']);
+  const sicht = await lies(w, w.ausbilder, w.azubi, '2026-11-09');
+  assert.deepEqual([sicht.nachbarn.vorher.status, sicht.nachbarn.nachher.status], ['fehlt', 'fehlt'], 'Entwürfe sieht der Ausbilder nicht');
+  // am Beginn der Ausbildung gibt es keine Woche davor
+  assert.equal((await lies(w, w.azubi, w.azubi, '2025-07-28')).nachbarn.vorher, null);
 });

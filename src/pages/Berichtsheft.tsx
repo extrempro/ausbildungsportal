@@ -86,7 +86,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      {!daten.eigenes && <ZurueckZuAzubis />}
+      {!daten.eigenes && <ZurueckZuAzubis id={azubiId} />}
       <h1>Berichtsheft{daten.eigenes ? '' : ` von ${daten.azubi.anzeigename}`}</h1>
       {!daten.eigenes && <AzubiReiter id={azubiId} name={daten.azubi.anzeigename} />}
       <p className="leise">
@@ -121,7 +121,7 @@ export function Berichtsheft({ azubiId }: { azubiId: number }) {
                   Wähle unten bei der Woche „Schreiben“. Trag ein, was du gemacht hast, und die Stunden dazu.
                 </Schritt>
                 <Schritt nr={2} titel="Speichern oder einreichen">
-                  Noch nicht fertig? „Als Entwurf speichern“ – du schreibst später weiter. Fertig? „Einreichen“ – damit gibst du den Bericht ab.
+                  Noch nicht fertig? Gespeichert wird von selbst – du schreibst später weiter. Fertig? „Einreichen“ – damit gibst du den Bericht ab.
                 </Schritt>
                 <Schritt nr={3} titel="Dein Ausbilder zeichnet ab">
                   Er liest den Bericht und unterschreibt. Möchte er eine Änderung, bekommst du den Bericht zurück – dann steht hier „zurückgegeben“.

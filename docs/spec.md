@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.84.0 · 24.11.2026
+Stand: Version 0.85.0 · 25.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -52,9 +52,12 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 ### Berichtsheft
 
 - Ein Bericht je Woche (Wochen- oder Tagesform, vom Betrieb festgelegt, je Azubi abweichend). In der Tagesform Montag bis Freitag; Samstag und Sonntag schaltet der Ausbilder je Azubi im Profil frei (ohne Freischaltung lehnt der Server neue Einträge am Wochenende ab, schon gespeicherte bleiben; Soll je Tag weiter Wochenstunden ÷ 5): betriebliche Tätigkeiten, Unterweisungen, Berufsschule, je mit Stunden; Abwesenheit mit Urlaub, Feiertag oder „Abwesend“ (ohne Grund). Feiertage und genehmigter Urlaub sind vorbelegt.
+- **Speichern von selbst:** Der Bericht speichert 2 s nach der letzten Eingabe, vor einem Wochenwechsel, vor dem Einreichen und beim Verlassen der Seite (`keepalive`); ein leerer neuer Bericht wird nicht angelegt. Bei Verbindungsfehlern neuer Versuch nach 15 s; erst dann fragt das Portal beim Verlassen nach. Kein eigener Speichern-Knopf.
+- **Zwischen Wochen blättern:** vorherige und nächste Woche mit Stand (`nachbarn` in der Antwort), begrenzt auf die Ausbildungszeit. Schreiben geht bis eine Woche im Voraus (`VORAUS_WOCHEN`, sonst 400), einreichen erst ab dem Montag der Woche (`kommend`, sonst 409).
 - Fotos und Dateien anhängen (Bilder, PDF, Office ohne Makros; 5 MB je Datei, 12 je Bericht; Typ am Dateianfang geprüft).
 - Ablauf: Entwurf (nur Azubi) → eingereicht (mit Unterschrift) → abgezeichnet (mit Unterschrift) oder zurückgegeben mit Kommentar; Abzeichnung kann ein Ausbilder mit Begründung aufheben. Jeder Schritt steht im Verlauf des Berichts.
 - Ausgabe als PDF (einzeln oder alle) und als Druckansicht.
+- **Azubi wechseln:** Auf den Seiten eines Azubis (Profil, Plan, Berichtsheft, Bericht, Urlaub, Zeitleiste) wechseln Ausbilder und Beauftragte zum vorherigen oder nächsten Azubi ihrer Liste oder wählen einen aus; die Seite bleibt dieselbe.
 - **Abzeichnen:** Liste aller Berichte, die auf die eigene Unterschrift warten; eingelesene Berichte sind markiert.
 - **Alte Berichte einlesen** (nur der Azubi): PDF hochladen (Dienst „import“: Text, Texterkennung bei Scans, einzelne Seiten, Vorschlag des Sprachmodells) oder Text einfügen. Das Portal erkennt Wochen (Zeitraum, „Woche vom …“, KW mit Jahr), die drei Teile, Tage und Stunden selbst; das Sprachmodell ergänzt nur. Übernommen werden angehakte Wochen ohne Bericht (oder mit leerem Entwurf, der ersetzt wird) als Entwurf, mit Vermerk `eingelesen` im Verlauf und – bei einer PDF – der Originalseite als Anhang. Zeilen zu Krankheit fallen weg. Eingelesene Entwürfe lassen sich gesammelt einreichen (mit Unterschrift). Aufträge wie beim Plan der Schule in `data/import/<id>/`, nur für den Azubi selbst.
 
@@ -79,7 +82,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 ### Glocke, Benachrichtigungen, Kalender
 
 - **Glocke:** neue Einträge, geänderte Schulblöcke, eingereichte, abgezeichnete und zurückgegebene Berichte, Urlaubsschritte, Einsatzwünsche (nicht für Beauftragte), fällige eigene Erinnerungen, Freischaltung des Planers, aktualisierte Lerninhalte, Rückfragen zu eigenen Rückmeldungen; Löschung nach 60 Tagen.
-- **Benachrichtigungen** per Teams und E-Mail, je Bereich (Berichtsheft, Urlaub, Ausbildungsplan, Rückmeldungen) selbst einschaltbar; ohne fremde Namen, ohne Inhalte. Teams über die Teams-App „Ausbildungsportal“ (Aktivitätsfeed über Microsoft Graph, Anwendungsberechtigung `TeamsActivity.Send`, Empfänger ist die Entra-Objekt-ID); ein Klick zeigt im Bereich „Aktivität“ einen Hinweis mit „In der App öffnen“. **In der App läuft das Portal**, angemeldet über Teams (Single Sign-on: Token von Teams, geprüft in `server/teams-sso.ts`; eigene Sitzung mit Cookie `ap_teams`, SameSite=None, partitioniert).
+- **Benachrichtigungen** per Teams und E-Mail, je Bereich (Berichtsheft, Urlaub, Ausbildungsplan, Rückmeldungen) selbst einschaltbar; ohne fremde Namen, ohne Inhalte. Teams über die Teams-App „Ausbildungsportal“ (Aktivitätsfeed über Microsoft Graph, Anwendungsberechtigung `TeamsActivity.Send`, Empfänger ist die Entra-Objekt-ID); ein Klick zeigt im Bereich „Aktivität“ einen Hinweis mit „In der App öffnen“. **In der App läuft das Portal**, angemeldet über Teams (Single Sign-on: Token von Teams, geprüft in `server/teams-sso.ts`; eigene Sitzung mit Cookie `ap_teams`, SameSite=None, partitioniert). In Teams entfällt der zusätzliche Rand für die Gestensteuerung unten (Klasse `in-teams`), weil Teams ihn selbst freihält.
 - **Kalender-Abo:** ein geheimer Link (iCal) mit Schule, Einsätzen, Prüfungen, genehmigtem Urlaub, privaten Terminen.
 
 ### Rückmeldung geben

@@ -31,7 +31,20 @@ const offen = new Set<symbol>();
 const ALT = Symbol('alt');
 /** Gibt es gerade ungespeicherte Eingaben? (z. B. bevor die abgelaufene Anmeldung die Seite ersetzt) */
 export function hatUngespeichertes(): boolean {
-  return offen.size > 0;
+  return offen.size > 0 || bewahren.size > 0;
+}
+/**
+ * Eingaben, die gleich von selbst gespeichert werden (Bericht): kein Nachfragen beim Seitenwechsel,
+ * aber läuft die Anmeldung ab, bleibt die Seite stehen, damit nichts verloren geht.
+ */
+const bewahren = new Set<symbol>();
+export function useBewahren(aktiv: boolean): void {
+  useEffect(() => {
+    if (!aktiv) return;
+    const marke = Symbol('bewahren');
+    bewahren.add(marke);
+    return () => void bewahren.delete(marke);
+  }, [aktiv]);
 }
 /** für Stellen, die den Zustand selbst führen (Bericht) */
 export function setzeUngespeichert(aktiv: boolean): void {

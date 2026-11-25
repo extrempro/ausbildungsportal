@@ -61,12 +61,15 @@ test(
 
     // gespeichert wird die Zahl
     for (const feldText of await s.locator('.bericht-text textarea').all()) await feldText.fill('Netzwerkkabel verlegt');
-    await s.locator('button[aria-label="Als Entwurf speichern"]:visible').first().click();
-    await s.waitForSelector('text=Alles gespeichert');
+    // gespeichert wird von selbst, kurz nach der letzten Eingabe
     const api = p.api();
     await api.als(ANNA);
-    const b = (await api.ruf('GET', `/api/azubis/${g.anna}/berichte/${montag}`)) as { inhalt: { betrieb: { stunden: number; tag: string }[] } };
-    const stunden = b.inhalt.betrieb.map((e) => e.stunden).sort();
+    let stunden: number[] = [];
+    for (let i = 0; i < 40 && !(stunden.includes(2.25) && stunden.includes(7.8)); i++) {
+      await s.waitForTimeout(250);
+      const b = (await api.ruf('GET', `/api/azubis/${g.anna}/berichte/${montag}`)) as { inhalt: { betrieb: { stunden: number; tag: string }[] } };
+      stunden = b.inhalt.betrieb.map((e) => e.stunden).sort();
+    }
     assert.ok(stunden.includes(2.25) && stunden.includes(7.8), JSON.stringify(stunden));
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),

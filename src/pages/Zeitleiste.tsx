@@ -139,7 +139,7 @@ export function Zeitleiste({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      <ZurueckZuAzubis />
+      <ZurueckZuAzubis id={azubiId} />
       <h1>Zeitleiste von {plan.azubi.anzeigename}</h1>
       <AzubiReiter id={azubiId} name={plan.azubi.anzeigename} />
       <p className="leise">

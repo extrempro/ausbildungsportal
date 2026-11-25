@@ -446,7 +446,7 @@ export function AzubiDetail({ id, ich }: { id: number; ich: Konto }) {
 
   return (
     <>
-      <ZurueckZuAzubis />
+      <ZurueckZuAzubis id={p.azubi.id} />
       <h1>{p.azubi.anzeigename}</h1>
       <AzubiReiter id={p.azubi.id} name={p.azubi.anzeigename} />
       <p className="leise">
