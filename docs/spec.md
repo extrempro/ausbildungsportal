@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.83.2 · 24.11.2026
+Stand: Version 0.84.0 · 24.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -90,7 +90,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 ### Verwaltung und Betrieb
 
 - **Stammdaten** (Ausbilder): Betrieb, Bundesland, Berichtsform, Berufe, Berufsschulen, Abteilungen mit Personen, Firmentermine, Mail an die Personalstelle, Lernmodul je Beruf, Paket für alle Berufe.
-- **Erscheinungsbild** (Super-Admin): Logo hell und dunkel, Begleiter-Schalter, Teams-App (Stand, App-ID, App-Paket zum Herunterladen; die Version steigt von selbst, wenn sich der Inhalt ändert).
+- **Erscheinungsbild** (Super-Admin): Logo hell und dunkel, Begleiter-Schalter, Teams-App (Stand, App-ID ändern, App-Paket zum Herunterladen – die Version steigt von selbst, wenn sich der Inhalt ändert –, ein- und ausschalten; mit `TEAMS_APP_ID` in der `.env` übernommen und gesperrt).
 - **Protokoll** (Super-Admin): Anmeldungen und Änderungen an Konten, Zuweisungen, Stammdaten, Profilen; Löschung nach 90 Tagen.
 - **Sicherung:** täglich (sieben bleiben), vor jeder Migration und auf Befehl (je zehn bleiben).
 - **Ansicht:** „Volle Breite“ in der Kopfzeile auf jeder Seite (ab 1300 px, im Browser gemerkt); Lesemodus im Lernthema, im Handbuch und im Jahreskalender (dort ohne schmalere Seite); Seitenleiste „Inhalt“ einklappbar.
@@ -196,7 +196,7 @@ Dazu, nicht privat: `lern_paket_stand` (Prüfsumme je Unterthema, für „Lernin
 | `protokoll` | Zeit, Bereich, Aktion, wer, betroffen, Angabe; Löschung nach 90 Tagen |
 | `fehlermeldung` | Rückmeldungen aller drei Arten (`art`); bei Wünschen zu Lerninhalten ohne Person. Löschung 30 Tage nach „erledigt“ (`erledigt_am`), samt Gespräch und Bild. `antwort_neu`: die Person hat zuletzt geschrieben; `person_gesehen`: bis zu welcher Nachricht sie gelesen hat |
 | `fehlermeldung_nachricht` | Gespräch zu einem Fehler oder einer Idee: Zeit, wer (Konto, Name, Rolle), Text; wird mit der Meldung gelöscht |
-| `einstellungen` | Schlüssel/Wert: Betrieb, Bundesland, Berichtsform, Logos, Personalstelle, Schalter, vorgeschlagene App-ID und Stand des Pakets der Teams-App (`teams_app_id`, `teams_paket`) |
+| `einstellungen` | Schlüssel/Wert: Betrieb, Bundesland, Berichtsform, Logos, Personalstelle, Schalter, App-ID, Schalter und Stand des Pakets der Teams-App (`teams_app_id`, `teams_aktiv`, `teams_paket`) |
 | `schema_version` | Stand der Migrationen |
 
 ## 4. Screens
@@ -271,7 +271,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 185 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 186 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |
@@ -285,7 +285,7 @@ Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen
 | Rückmeldungen | `/api/fehlermeldungen/…`, `/api/rueckmeldungen/…`, `/api/meine-meldungen/…` |
 | Sonstiges | `/api/aktivitaeten/…` (Glocke), `/api/jahreskalender`, `/api/abo/…` (Kalender), `/api/health` |
 
-Außerhalb von `/api/` liefert der Server neben der Oberfläche nur `/teams/app`: den Einstieg der Teams-App – ohne Daten; meldet über Teams an (`POST /api/auth/teams`) und öffnet dann das Ziel. Mit `TEAMS_APP_ID` darf das Portal in Teams und Microsoft 365 eingebettet werden, ohne `TEAMS_APP_ID` nirgends.
+Außerhalb von `/api/` liefert der Server neben der Oberfläche nur `/teams/app`: den Einstieg der Teams-App – ohne Daten; meldet über Teams an (`POST /api/auth/teams`) und öffnet dann das Ziel. Mit eingeschalteter Teams-App darf das Portal in Teams und Microsoft 365 eingebettet werden, sonst nirgends.
 
 ## 6. Grundsätze
 

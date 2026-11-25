@@ -7,6 +7,7 @@ import { loescheErledigteMeldungen, MELDUNG_TAGE } from './meldungen';
 import { loescheAltesProtokoll, PROTOKOLL_TAGE } from './protokoll';
 import { raeumeAuf } from './sitzung';
 import { erzeugeKontext, REDIRECT_PFAD } from './start';
+import { teamsAktiv } from './teams';
 import { lernpakete } from './lernen';
 import { verschickeFaellige } from './benachrichtigung';
 import { bereiteImportOrdner } from './import-dienst';
@@ -27,7 +28,7 @@ console.log(
     : 'Microsoft-Anmeldung nicht eingerichtet (ENTRA_* fehlen) – nur der Super-Admin kann sich anmelden.',
 );
 if (cfg.teamsWebhookAlt) console.warn('HINWEIS: TEAMS_CHAT_WEBHOOK_URL wird nicht mehr genutzt – Benachrichtigungen per Teams kommen jetzt über die Teams-App (README, „Teams-App“). Den Eintrag aus der .env löschen und den Workflow abschalten.');
-console.log(cfg.teamsAppId ? 'Teams-App eingerichtet: Benachrichtigungen per Teams sind möglich.' : 'Teams-App nicht eingerichtet (TEAMS_APP_ID fehlt) – keine Benachrichtigungen per Teams.');
+console.log(teamsAktiv(k) ? `Teams-App eingeschaltet${cfg.teamsAppId ? ' (TEAMS_APP_ID aus der .env)' : ''}: Benachrichtigungen per Teams sind möglich.` : 'Teams-App nicht eingeschaltet (Erscheinungsbild → Teams-App) – keine Benachrichtigungen per Teams.');
 if (cfg.devAnmeldung) console.warn('WARNUNG: DEV_ANMELDUNG ist an – Anmeldung als Testkonto ohne Passwort möglich.');
 
 /**

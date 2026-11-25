@@ -198,3 +198,34 @@ test('Teams-App: Graph als App – Token wird wiederverwendet, Fehler nennen wed
     globalThis.fetch = echt;
   }
 });
+
+test('Teams-App: in der Oberfläche einschalten, ausschalten und die App-ID ändern – ohne .env', async () => {
+  const { u, cookies } = await alsAdmin(ENTRA);
+  const setze = (body: unknown, c = cookies) => ruf(u, 'PUT', '/api/teams', { cookies: c, body });
+  const id = koerper(await ruf(u, 'GET', '/api/teams', { cookies })).appId;
+  // aus: keine Anmeldung über Teams, kein Versand
+  assert.equal((await ruf(u, 'POST', '/api/auth/teams', { headers: { authorization: 'Bearer x' } })).status, 404);
+  const an = koerper(await setze({ aktiv: true }));
+  assert.deepEqual([an.aktiv, an.appId, an.ausEnv], [true, id, false]);
+  assert.equal((await ruf(u, 'POST', '/api/auth/teams', { headers: { authorization: 'Bearer x' } })).status, 401, 'jetzt wird das Token geprüft');
+  // App-ID ändern: nur als GUID, klein geschrieben
+  assert.equal((await setze({ appId: 'meine-app' })).status, 400);
+  assert.equal((await setze({ aktiv: 'ja' })).status, 400);
+  assert.equal(koerper(await setze({ appId: APP_ID.toUpperCase() })).appId, APP_ID);
+  const aus = koerper(await setze({ aktiv: false }));
+  assert.equal(aus.aktiv, false);
+  assert.equal((await ruf(u, 'POST', '/api/auth/teams', { headers: { authorization: 'Bearer x' } })).status, 404);
+  assert.equal(u.db.prepare("SELECT COUNT(*) AS n FROM protokoll WHERE aktion = 'teams_app'").get()!.n, 3);
+  // nur der Super-Admin
+  const petra = konto(u.db, 'ausbilder', 'Petra Lang');
+  assert.equal((await setze({ aktiv: true }, sitzung(u, petra))).status, 403);
+  // ohne Microsoft-Anmeldung nicht
+  const ohne = await alsAdmin({});
+  assert.equal((await ruf(ohne.u, 'PUT', '/api/teams', { cookies: ohne.cookies, body: { aktiv: true } })).status, 409);
+});
+
+test('Teams-App: TEAMS_APP_ID aus der .env wird übernommen, schaltet ein und lässt sich in der Oberfläche nicht ändern', async () => {
+  const mit = await alsAdmin({ ...ENTRA, TEAMS_APP_ID: APP_ID });
+  assert.equal((await ruf(mit.u, 'PUT', '/api/teams', { cookies: mit.cookies, body: { aktiv: false } })).status, 409);
+  assert.equal(mit.u.db.prepare("SELECT wert FROM einstellungen WHERE schluessel = 'teams_aktiv'").get()!.wert, '1');
+});

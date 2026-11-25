@@ -2,7 +2,7 @@
 
 Ausbildungsplan, Berichtsheft, Urlaub und Lernmodul für einen Ausbildungsbetrieb – mit Anmeldung und Rollen. Azubis, Ausbildungsbeauftragte und Ausbilder melden sich mit ihrem Microsoft-Konto (Entra ID) an; ein lokaler Super-Admin verwaltet die Konten.
 
-**Stand: Version 0.83.2.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
+**Stand: Version 0.84.0.** Fertig sind Anmeldung, Konten, Rechte und Protokoll, Stammdaten und Azubi-Profile, der Ausbildungsplan, das Berichtsheft mit Abzeichnen, Urlaub, das Lernmodul mit Planer für die Prüfung, Benachrichtigungen, ein Handbuch je Rolle und das Docker-Setup.
 
 **So sieht es aus:** [Bildschirmfotos aller Bereiche](docs/bilder/README.md) – je Rolle, am PC und am Handy, mit erfundenen Beispieldaten.
 
@@ -97,7 +97,7 @@ Alle Einstellungen kommen aus Umgebungsvariablen (`.env`, Vorlage `.env.example`
 | `TRUST_PROXY` | `true` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
 | `FEHLER_WEBHOOK_URL` | freiwillig: Adresse eines Teams-Workflows, der bei jeder neuen Fehlermeldung, jeder neuen Idee fürs Portal und jeder Antwort auf eine Rückfrage benachrichtigt wird (siehe „Benachrichtigung in Teams“) |
 | `FEHLER_WEBHOOK_MIT_TEXT` | `true` schickt auch den Text der Meldung bzw. der Antwort nach Teams; Standard `false` |
-| `TEAMS_APP_ID` | freiwillig: ID der Teams-App (steht im Portal unter „Erscheinungsbild“ → „Teams-App“); erst damit gehen Benachrichtigungen per Teams hinaus. Braucht die Anmeldung mit Microsoft (siehe „Benachrichtigungen per Teams und E-Mail“) |
+| `TEAMS_APP_ID` | nicht mehr nötig: Die Teams-App wird im Portal unter „Erscheinungsbild“ → „Teams-App“ eingeschaltet. Steht der Wert noch in der `.env`, übernimmt das Portal ihn beim Start und schaltet die App ein; dann lässt sie sich in der Oberfläche nicht ändern. Nach dem Entfernen bleibt die App mit derselben ID eingeschaltet |
 | `SMTP_HOST`, `SMTP_ABSENDER` | freiwillig: Mailserver und Absender-Adresse für die Mail an die Personalstelle und für Benachrichtigungen per E-Mail (siehe „Mail an die Personalstelle“) |
 | `SMTP_PORT`, `SMTP_SICHERHEIT` | Port und `starttls` (Vorgabe, Port 587), `tls` (Port 465) oder `keine` (Port 25, nur internes Relay ohne Anmeldung) |
 | `SMTP_BENUTZER`, `SMTP_PASSWORT` | Anmeldung am Mailserver, falls er eine verlangt |
@@ -133,7 +133,7 @@ Freiwillig: Azubis, Ausbildungsbeauftragte und Ausbilder können sich zusätzlic
 1. In Entra der App-Registrierung die Anwendungsberechtigung **TeamsActivity.Send** geben, die Administratorzustimmung erteilen und unter **API verfügbar machen** den Bereich `access_as_user` für Teams anlegen.
 2. Im Portal als Super-Admin unter **Erscheinungsbild → Teams-App** das **App-Paket herunterladen**.
 3. Im **Teams Admin Center** hochladen und per **Setup-Richtlinie** für alle installieren, die das Portal nutzen.
-4. Die angezeigte **App-ID** in der `.env` als `TEAMS_APP_ID` eintragen, dann `docker compose up -d`.
+4. Im Portal unter **Erscheinungsbild → Teams-App** auf **Teams-App einschalten** klicken. Ein Neustart ist nicht nötig.
 5. Im Portal unter **Konto → Benachrichtigungen** auf „Testnachricht per Teams senden“ klicken.
 
 Ausführlich mit Fehlersuche: [docs/entra-einrichtung.md](docs/entra-einrichtung.md), Abschnitt „Freiwillig: Teams-App“.
