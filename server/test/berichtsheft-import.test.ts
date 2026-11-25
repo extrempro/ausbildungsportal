@@ -87,6 +87,221 @@ test('Muster: Tagesform – Wochentage, Überschrift nur für eine Zeile, jeder 
   assert.deepEqual(w.schule, [{ text: 'Datenbanken', stunden: 8, tag: '2026-09-16' }]);
 });
 
+// Export eines digitalen Berichtshefts (Tagesform): Deckblatt, Inhaltsverzeichnis, je Woche eine Seite mit Tagen als Kästen –
+// so liefert ihn pdftotext -layout. Ort und Stunden stehen im Kopf des Tages, darunter die Punkte und noch einmal die Stunden.
+const EXPORT_KAESTEN = `Ausbildungsnachweis
+
+Name, Vorname      Muster, Anna
+Ausbildungsberuf   Musterberuf
+Ausbildungsbeginn 01.09.2025
+Exportzeitraum     07.09.2026 bis 27.09.2026
+                                                         Datum des Exports: 10.11.2026
+                                                                               Seite 1
+\fInhaltsverzeichnis
+
+Ausbildungswoche 07.09.2026 bis 27.09.2026
+                                         Anwesend     Abwesend
+   Berichtheftswoche        Seitenzahl                             Status    Ort
+                                         (in Tagen)   (in Tagen)
+07.09.2026 bis 13.09.2026       3            0            5          ✓      Urlaub
+14.09.2026 bis 20.09.2026       4            4            1          ✓      Schule
+21.09.2026 bis 27.09.2026       5            5            0          ✓      Betrieb
+    Summe Fehltage
+                                                          1
+ (sonstige Abwesenheit)
+                                                                             Seite 2
+\fAusbildungsnachweis auf Tagesbasis
+
+Auszubildende/r
+Muster, Anna
+Ausbilder Ben Beispiel    Status
+Freigegeben von Ben Beispiel
+15.09.2026 freigegeben. ✓
+
+ Ausbildungswoche     07.09.2026 bis 13.09.2026
+
+ Mo | 07.09.2026 | Urlaub | abwesend                              ◷ 00:00
+ Di | 08.09.2026 | Urlaub | abwesend                              ◷ 00:00
+ Do | 10.09.2026 | Feiertag | abwesend                            ◷ 00:00
+
+                                                  Dauer gesamt:   ◷ 00:00
+                                                                     Seite 3
+\fAusbildungsnachweis auf Tagesbasis
+
+Auszubildende/r
+Muster, Anna
+Ausbilder Ben Beispiel    Status
+Freigegeben von Ben Beispiel
+22.09.2026 freigegeben. ✓
+
+ Ausbildungswoche     14.09.2026 bis 20.09.2026
+
+ Mo | 14.09.2026 | Schule | anwesend                                 ◷ 08:00
+    • Subnetting und IPv4-Adressen                                       08:00
+    • Wirtschaft und Gesellschaft
+
+ Di | 15.09.2026 | Schule | anwesend                                 ◷ 08:00
+    • Datenbanken                                                        08:00
+
+ Mi | 16.09.2026 | Sonstige Abwesenheit | abwesend                   ◷ 00:00
+
+ Fr | 18.09.2026 | Schule | anwesend                                 ◷ 04:30
+    • Englisch: Fachtexte                                                04:30
+
+                                                     Dauer gesamt:   ◷ 20:30
+                                                                        Seite 4
+\fAusbildungsnachweis auf Tagesbasis
+
+Auszubildende/r
+Muster, Anna
+Ausbilder Ben Beispiel    Status
+Freigegeben von Ben Beispiel
+29.09.2026 freigegeben. ✓
+
+ Ausbildungswoche      21.09.2026 bis 27.09.2026
+
+ Mo | 21.09.2026 | Betrieb | anwesend                ◷ 08:00
+    • Arbeitsplätze für neue Kollegen eingerichtet     08:00
+    • Drucker im Netz eingebunden
+    • Tickets bearbeitet
+
+ Di | 22.09.2026 | Betrieb | anwesend                ◷ 08:00
+    • Server-Updates eingespielt                       08:00
+
+ So | 27.09.2026 | Betrieb | anwesend                ◷ 06:00
+    • Wartungsfenster betreut                          06:00
+                                                       Seite 5
+\fAusbildungsnachweis auf Tagesbasis
+
+    • Backups nach der Wartung geprüft
+
+                                     Dauer gesamt:   ◷ 22:00
+                                                        Seite 6
+`;
+
+// Export eines anderen Programms: Kopf mit Woche auf jeder Seite, der Ort in der Zeile unter dem Tag, Uhrzeiten im Text,
+// Stunden je Abschnitt in eckigen Klammern, Abschnitte getrennt durch „—“; ein Tag läuft über die Seite weiter.
+const EXPORT_ABSCHNITTE = `                                          AUSBILDUNGSNACHWEIS
+                                 Zeitraum: 21.09.2026 - 27.09.2026
+                                                        Name Anna Muster
+                                      Ausbildungsberuf Musterberuf
+                                            Ausbildungsdaten 01.09.2025 - 31.08.2028
+                                                 Start des Berichtshefts 01.09.2025
+Statistik
+Hinweis: Für einen Tag können im Berichtsheft mehrere Kategorien ausgewählt werden (z. B. Schule und Krank).
+Betrieb an 3 Tagen • Schule an 0 Tagen • Anderes an 0 Tagen
+Krank an 0 Tagen • Urlaub an 0 Tagen • Frei an 4 Tagen
+\fName Anna Muster
+Ausbildungsberuf Musterberuf                                   Ausbildungsnachweis #3
+Ausbildungsbetrieb                                         21.09.2026 - 27.09.2026 (KW 39-2026)
+  DATUM                                              TÄTIGKEITEN                                          STATUS
+
+   MO 21.09.2026
+   Frei
+
+   DI 22.09.2026
+   Betrieb               Abt. IT                                                                         8:00
+
+                         08:00 - 12:00 Uhr
+
+                         Notebooks für neue Kollegen vorbereitet
+                         Software verteilt
+
+                         12:30 - 16:30 Uhr
+
+                         Tickets im Helpdesk bearbeitet
+
+   MI 23.09.2026
+   Betrieb               Abt. IT                                                                         6:30
+
+                         08:00 - 11:00 Uhr
+
+                         Server-Updates:
+                         - Updates eingespielt
+                         - Dienste geprüft [3:00]
+                         —
+
+                         11:30 - 13:00 Uhr
+
+                         Backups geprüft
+
+Durch die nachfolgenden Unterschriften wird die Richtigkeit und Vollständigkeit der obigen Angaben bestätigt.
+
+DATUM, UNTERSCHRIFT AUSZUBILDENDE/R                      DATUM, UNTERSCHRIFT AUSBILDER/IN
+\fName Anna Muster
+Ausbildungsberuf Musterberuf                                   Ausbildungsnachweis #3
+Ausbildungsbetrieb                                         21.09.2026 - 27.09.2026 (KW 39-2026)
+                         Wiederherstellung getestet [1:30]
+                         —
+
+                         13:30 - 15:30 Uhr
+
+                         Netzwerkschrank beschriftet [2:00]
+
+   DO 24.09.2026
+   Krank
+
+   FR 25.09.2026
+   Betrieb               Abt. IT                                                                         2:00
+
+                         12:30 - 14:30 Uhr
+
+                         Übergabe an den Spätdienst
+
+Durch die nachfolgenden Unterschriften wird die Richtigkeit und Vollständigkeit der obigen Angaben bestätigt.
+`;
+
+test('Muster: Export mit Tagen als Kästen – Tag, Ort und Stunden aus dem Kopf, ein Eintrag je Tag, Deckblatt und Verzeichnis fallen weg', () => {
+  const w = erkenneWochen(EXPORT_KAESTEN, '2026-11-10');
+  assert.deepEqual(w.map((x) => [x.montag, x.form, x.seiten]), [
+    ['2026-09-07', 'tag', [3]],
+    ['2026-09-14', 'tag', [4]],
+    ['2026-09-21', 'tag', [5, 6]],
+  ]);
+  assert.deepEqual([...w[0].betrieb, ...w[0].unterweisung, ...w[0].schule], [], 'Urlaub und Feiertag: nichts einzutragen');
+  assert.deepEqual(w[0].hinweise, []);
+  assert.deepEqual(w[1].schule, [
+    { text: 'Subnetting und IPv4-Adressen\nWirtschaft und Gesellschaft', stunden: 8, tag: '2026-09-14' },
+    { text: 'Datenbanken', stunden: 8, tag: '2026-09-15' },
+    { text: 'Englisch: Fachtexte', stunden: 4.5, tag: '2026-09-18' },
+  ]);
+  assert.deepEqual(w[1].betrieb, []);
+  assert.match(w[1].hinweise.join(' '), /abwesend/, 'sonstige Abwesenheit: als Hinweis, nicht im Text');
+  assert.deepEqual(w[2].betrieb, [
+    { text: 'Arbeitsplätze für neue Kollegen eingerichtet\nDrucker im Netz eingebunden\nTickets bearbeitet', stunden: 8, tag: '2026-09-21' },
+    { text: 'Server-Updates eingespielt', stunden: 8, tag: '2026-09-22' },
+    { text: 'Wartungsfenster betreut\nBackups nach der Wartung geprüft', stunden: 6, tag: '2026-09-27' },
+  ]);
+  const alles = JSON.stringify(w);
+  for (const weg of ['Anna', 'Ben', 'Seite', 'gesamt', '08:00', 'anwesend', 'Fehltage', 'freigegeben']) assert.ok(!alles.includes(weg), `„${weg}“ gehört nicht in den Bericht`);
+});
+
+test('Muster: Export mit Abschnitten – Stunden je Abschnitt, Uhrzeiten bleiben im Text, Kopfzeilen der Folgeseite fallen weg', () => {
+  const w = erkenneWochen(EXPORT_ABSCHNITTE, '2026-11-10');
+  assert.equal(w.length, 1);
+  assert.equal(w[0].form, 'tag');
+  assert.deepEqual(w[0].seiten, [2, 3]);
+  assert.deepEqual(w[0].betrieb, [
+    { text: 'Abt. IT\n08:00 - 12:00 Uhr\nNotebooks für neue Kollegen vorbereitet\nSoftware verteilt\n12:30 - 16:30 Uhr\nTickets im Helpdesk bearbeitet', stunden: 8, tag: '2026-09-22' },
+    { text: 'Abt. IT\n08:00 - 11:00 Uhr\nServer-Updates:\n- Updates eingespielt\n- Dienste geprüft', stunden: 3, tag: '2026-09-23' },
+    { text: '11:30 - 13:00 Uhr\nBackups geprüft\nWiederherstellung getestet', stunden: 1.5, tag: '2026-09-23' },
+    { text: '13:30 - 15:30 Uhr\nNetzwerkschrank beschriftet', stunden: 2, tag: '2026-09-23' },
+    { text: 'Abt. IT\n12:30 - 14:30 Uhr\nÜbergabe an den Spätdienst', stunden: 2, tag: '2026-09-25' },
+  ]);
+  // „Krank“ am Donnerstag: nur ein Hinweis; die Statistik auf dem Deckblatt („Krank an 0 Tagen“) zählt nicht doppelt
+  assert.equal(w[0].hinweise.length, 1);
+  const alles = JSON.stringify(w);
+  for (const weg of ['Anna', 'Krank', 'Unterschrift', 'Musterberuf', 'Statistik', '[3:00]', '—']) assert.ok(!alles.includes(weg), `„${weg}“ gehört nicht in den Bericht`);
+});
+
+test('Muster: „So …“ am Satzanfang ist kein Sonntag; Sonntag ausgeschrieben schon', () => {
+  const [w] = erkenneWochen('Woche vom 14.09.2026\nMontag\nSo haben wir das Netz geprüft 4\nSonntag\nWartung 3\n', '2026-11-10');
+  assert.deepEqual(w.betrieb, [
+    { text: 'So haben wir das Netz geprüft', stunden: 4, tag: '2026-09-14' },
+    { text: 'Wartung', stunden: 3, tag: '2026-09-20' },
+  ]);
+});
+
 test('Sprachmodell ergänzt nur: leere Woche gefüllt, erfundene Woche und erfundene Einträge fallen weg', () => {
   const text = `Woche vom 05.10.2026 bis 09.10.2026\nNetzwerk dokumentiert, Schränke beschriftet\n\fWoche vom 12.10.2026 bis 16.10.2026\nlauter Kram`;
   const muster = erkenneWochen(text, '2026-11-10');

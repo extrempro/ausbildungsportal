@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.85.0 · 25.11.2026
+Stand: Version 0.85.1 · 25.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -59,7 +59,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Ausgabe als PDF (einzeln oder alle) und als Druckansicht.
 - **Azubi wechseln:** Auf den Seiten eines Azubis (Profil, Plan, Berichtsheft, Bericht, Urlaub, Zeitleiste) wechseln Ausbilder und Beauftragte zum vorherigen oder nächsten Azubi ihrer Liste oder wählen einen aus; die Seite bleibt dieselbe.
 - **Abzeichnen:** Liste aller Berichte, die auf die eigene Unterschrift warten; eingelesene Berichte sind markiert.
-- **Alte Berichte einlesen** (nur der Azubi): PDF hochladen (Dienst „import“: Text, Texterkennung bei Scans, einzelne Seiten, Vorschlag des Sprachmodells) oder Text einfügen. Das Portal erkennt Wochen (Zeitraum, „Woche vom …“, KW mit Jahr), die drei Teile, Tage und Stunden selbst; das Sprachmodell ergänzt nur. Übernommen werden angehakte Wochen ohne Bericht (oder mit leerem Entwurf, der ersetzt wird) als Entwurf, mit Vermerk `eingelesen` im Verlauf und – bei einer PDF – der Originalseite als Anhang. Zeilen zu Krankheit fallen weg. Eingelesene Entwürfe lassen sich gesammelt einreichen (mit Unterschrift). Aufträge wie beim Plan der Schule in `data/import/<id>/`, nur für den Azubi selbst.
+- **Alte Berichte einlesen** (nur der Azubi): PDF hochladen (Dienst „import“: Text, Texterkennung bei Scans, einzelne Seiten, Vorschlag des Sprachmodells) oder Text einfügen. Das Portal erkennt Wochen (Zeitraum, „Woche vom …“, KW mit Jahr), die drei Teile, Tage und Stunden selbst – auch Exporte digitaler Berichtshefte mit einem Kasten je Tag (Kopf „Mo | 05.01.2026 | Ort | anwesend  08:00“ oder „MO 05.01.2026“ mit dem Ort in der nächsten Zeile): ein Eintrag je Tag mit den Stunden des Tages, bei Stunden je Abschnitt („[2:30]“, Trenner „—“) ein Eintrag je Abschnitt; in Tagesform zählt nur, was unter einem Tag steht; das Sprachmodell ergänzt nur. Übernommen werden angehakte Wochen ohne Bericht (oder mit leerem Entwurf, der ersetzt wird) als Entwurf, mit Vermerk `eingelesen` im Verlauf und – bei einer PDF – der Originalseite als Anhang. Zeilen zu Krankheit fallen weg. Eingelesene Entwürfe lassen sich gesammelt einreichen (mit Unterschrift). Aufträge wie beim Plan der Schule in `data/import/<id>/`, nur für den Azubi selbst.
 
 ### Urlaub
 

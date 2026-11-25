@@ -54,8 +54,7 @@ const DATUM = String.raw`(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4}|\d{2})?(?!\d)`;
 const ZEITRAUM = new RegExp(`${DATUM}\\s*(?:-|–|—|bis)\\s*${DATUM}`);
 const WOCHE_VOM = new RegExp(`woche\\W{1,3}vom\\s*:?\\s*${DATUM}`, 'i');
 const KW = /\b(?:KW|Kalenderwoche)\s*:?\s*(\d{1,2})(?:\s*(?:\/|,|\s)\s*(?:Jahr\s*:?\s*)?(\d{4}))?/i;
-const TAGE = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag'];
-const WOCHENTAG = /^(montag|dienstag|mittwoch|donnerstag|freitag|samstag)\b[,:.]?\s*(?:den\s+)?(?:\d{1,2}\.\s?\d{1,2}\.(?:\s?\d{2,4})?)?\s*[:-]?\s*(.*)$/i;
+const TAGE = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
 /** Überschriften der drei Teile – „Unterweisung“ vor „Betrieb“, weil „Betriebliche Unterweisung“ beides enthält */
 const KOPF: [Teil, RegExp][] = [
   ['unterweisung', /^(?:betriebliche\s+)?(?:unterweisung(?:en)?|schulung(?:en)?|lehrg(?:ä|ae)ng(?:e)?|betrieblicher\s+unterricht)\b[^:]{0,70}?(?::\s*(.*))?$/i],
@@ -63,14 +62,74 @@ const KOPF: [Teil, RegExp][] = [
   ['betrieb', /^(?:betriebliche\s+|ausgef(?:ü|ue)hrte\s+)?(?:t(?:ä|ae)tigkeit(?:en)?|arbeiten)(?:\s+im\s+betrieb)?\b[^:]{0,30}?(?::\s*(.*))?$/i],
 ];
 const KOPF_REST_ERLAUBT = /^[\s,()/&-]*(?:betrieblicher unterricht|sonstige schulungen|unterrichtsthemen|stunden|std\.?|dauer|[\s,()/&-])*$/i;
-const RAHMEN = /^(?:ausbildungsnachweis|nachweis\s*nr|name\b|vorname|ausbildungsjahr|ausbildungsabteilung|abteilung|datum\b|unterschrift|auszubildende|ausbilde(?:r|nde|rin)|gesetzliche|gesamt|summe|stunden\s*(?:gesamt|insgesamt|summe)|wochenstunden|seite\s*\d|für die richtigkeit|kalenderwoche|kw\b|woche\s+vom|zeitraum|von\b.*\bbis\b|ausbildungsbetrieb|beruf\b|fachrichtung)/i;
+const RAHMEN = /^(?:ausbildungsnachweis|nachweis\s*nr|name\b|vorname|ausbildungsjahr|ausbildungsabteilung|abteilung|datum\b|unterschrift|auszubildende|ausbilde(?:r|nde|rin)|gesetzliche|gesamt|summe|stunden\s*(?:gesamt|insgesamt|summe)|wochenstunden|seite\s*\d|für die richtigkeit|kalenderwoche|kw\b|woche\s+vom|zeitraum|von\b.*\bbis\b|ausbildungsbetrieb|ausbildungsberuf|ausbildungsbeginn|ausbildungsende|ausbildungsdaten|ausbildungswoche|beruf\b|fachrichtung|durch die nachfolgenden|status\b|seitenzahl|exportzeitraum|datum des exports|powered by|start des berichtshefts|modus des berichtshefts)/i;
 const GESUNDHEIT = /\b(?:krank\w*|arbeitsunf(?:ä|ae)hig\w*|arzt|(?:ä|ae)rztin|arzttermin|au-bescheinigung)\b/i;
 const STUNDEN_ENDE = /^(.*?\S)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:h|std\.?|stunden)?\s*$/i;
 const NUR_STUNDEN = /^(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:h|std\.?|stunden)?$/i;
 const PUNKT = /^\s*(?:[-–•*·▪►]|\d{1,2}[.)])\s+/;
+/** Aufzählungszeichen in einem Tag als Block – Bindestriche bleiben, sie gliedern dort oft Unterpunkte */
+const AUFZAEHLUNG = /^\s*[•*·▪►]\s*/;
+/** Stunden als Dauer („8:00“, „08:30“) */
+const ZEIT = String.raw`(\d{1,2}:[0-5]\d)`;
+/** Zeitspalte am Zeilenende („…      08:00“) – nur mit deutlichem Abstand, damit „14:00 - 16:00“ im Text bleibt */
+const ZEITSPALTE = new RegExp(String.raw`^(.*?\S)\s{3,}(?:◷\s*)?${ZEIT}\s*$`);
+const ZEIT_AM_ENDE = new RegExp(String.raw`^(.*?)\s*(?:◷\s*)?${ZEIT}\s*$`);
+const NUR_ZEIT = new RegExp(String.raw`^(?:◷\s*)?${ZEIT}$`);
+/** Stunden eines Abschnitts am Zeilenende: „Pult bedienen [2:00]“ */
+const ABSCHNITT_STUNDEN = new RegExp(String.raw`^(.*?)\s*\[${ZEIT}\]\s*$`);
+/** Summe der Woche („Dauer gesamt: 40:00“, „Gesamt 40“) */
+const SUMME = /^(?:dauer|stunden|summe)?\s*(?:gesamt|insgesamt)\b|^dauer\s+gesamt\b/i;
+const ORT_ZEILE = /^(betrieb|berufsschule|schule|unterweisung|schulung|frei|urlaub|krank|feiertag|anderes|sonstiges|sonstige abwesenheit|abwesend)\b(?:\s+(.*))?$/i;
+const KURZ_TAGE = ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'];
+const TAG_KOPF = /^(mo|di|mi|do|fr|sa|so|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\b\.?\s*(?:[|,:]\s*)?(?:den\s+)?(\d{1,2}\.\s?\d{1,2}\.(?:\s?\d{2,4})?)?\s*(.*)$/i;
+const ABWESEND = 'Eine Zeile zu einer Abwesenheit ist weggelassen – trag den Tag im Bericht als „abwesend“ ein.';
 
 const sauber = (s: string) => s.replace(PUNKT, '').replace(/\s{2,}/g, ' ').trim();
 const zahl = (s: string) => Math.round(Number(s.replace(',', '.')) * 20) / 20;
+const zeit = (s: string) => {
+  const [h, m] = s.split(':').map(Number);
+  return Math.round((h + m / 60) * 20) / 20;
+};
+
+type Ort = Teil | 'frei' | 'abwesend';
+/** Ort eines Tages in digitalen Berichtsheften: Betrieb, Schule … – frei (Urlaub, Feiertag, Frei) oder abwesend */
+function ortVon(o: string): Ort | null {
+  const x = o.trim().toLowerCase();
+  if (x === 'betrieb') return 'betrieb';
+  if (x === 'schule' || x === 'berufsschule') return 'schule';
+  if (x === 'unterweisung' || x === 'schulung') return 'unterweisung';
+  if (x === 'frei' || x === 'urlaub' || x === 'feiertag') return 'frei';
+  if (x === 'krank' || x.includes('abwesen')) return 'abwesend';
+  return null;
+}
+
+/**
+ * Kopf eines Tages: „Montag“, „Montag, 14.09.2026: …“, „Mo | 05.01.2026 | Schule | anwesend   08:00“, „MO 12.01.2026“.
+ * Kurzformen (Mo, Di …) nur mit Datum – „So haben wir …“ ist kein Sonntag. Ein Datum in dieser Woche bestimmt den Tag.
+ */
+function tagesKopf(zeile: string, montag: string, kontextJahr: number): { tag: string; rest: string; mitDatum: boolean; ort?: string; abwesend?: boolean; stunden?: number } | null {
+  const m = TAG_KOPF.exec(zeile);
+  if (!m) return null;
+  const name = m[1].toLowerCase();
+  const kurz = KURZ_TAGE.indexOf(name);
+  if (kurz >= 0 && !m[2]) return null;
+  let index = kurz >= 0 ? kurz : TAGE.indexOf(name);
+  if (m[2]) {
+    const d = /(\d{1,2})\.\s?(\d{1,2})\.(?:\s?(\d{2,4}))?/.exec(m[2]);
+    const iso = d ? gueltig(d[1], d[2], d[3], kontextJahr) : null;
+    if (iso && iso >= montag && iso <= plusTage(montag, 6)) index = Math.round((Date.parse(iso) - Date.parse(montag)) / 86_400_000);
+  }
+  const tag = plusTage(montag, index);
+  const rest = m[3].trim();
+  if (m[2] && rest.startsWith('|')) {
+    const z = ZEIT_AM_ENDE.exec(rest);
+    const teile = (z ? z[1] : rest).split('|').map((x) => x.trim()).filter(Boolean);
+    const abwesend = teile.some((x) => /^abwesend$/i.test(x));
+    const ort = teile.find((x) => !/^(?:an|ab)wesend$/i.test(x)) ?? '';
+    return { tag, rest: '', mitDatum: true, ort, abwesend, stunden: z ? zeit(z[2]) : undefined };
+  }
+  return { tag, rest, mitDatum: !!m[2] };
+}
 
 function gueltig(t: string, m: string, j: string | undefined, kontextJahr: number): string | null {
   const jahr = j ? Number(zweistellig(j)) : kontextJahr;
@@ -118,98 +177,267 @@ function kopfVon(zeile: string): { teil: Teil; rest: string } | null {
 /**
  * Sucht im Text alter Berichte nach Wochen und ihren Einträgen. Seiten sind durch einen Seitenvorschub (\f) getrennt.
  * Vor der ersten erkannten Woche steht meist nur das Deckblatt – das zählt nicht.
+ *
+ * Zwei Arten von Tagen:
+ * - einfach („Montag, 14.09.“ und darunter Zeilen mit Stunden am Ende): jede Zeile mit Stunden ist ein Eintrag;
+ * - als Block, wie ihn Programme für digitale Berichtshefte ausgeben („Mo | 05.01.2026 | Schule | anwesend   08:00“ oder
+ *   „MO 12.01.2026“ und darunter „Betrieb   Abt. …   8:00“): Der Tag ist ein Eintrag mit den Stunden des Tages – außer
+ *   im Text stehen Stunden je Abschnitt („… [2:30]“, Abschnitte getrennt durch „—“). Tag, Ort und Stunden stehen dann
+ *   nicht mehr im Text.
+ * Steht die Woche in Tagen, zählt nur, was unter einem Tag steht – Deckblatt, Übersicht und Kopfzeilen fallen weg.
  */
 export function erkenneWochen(text: string, heuteIso: string): RohWoche[] {
-  const wochen = new Map<string, RohWoche & { offen: string[]; teil: Teil; tag: string | null; tage: boolean; offenTag: string | null }>();
-  let aktuell: (RohWoche & { offen: string[]; teil: Teil; tag: string | null; tage: boolean; offenTag: string | null }) | null = null;
+  type Block = { zeilen: string[]; stunden: number; tag: string; teil: Teil; ortOffen: boolean };
+  type Arbeit = RohWoche & {
+    offen: string[];
+    teil: Teil;
+    tag: string | null;
+    tage: boolean;
+    offenTag: string | null;
+    block: Block | null;
+    /** Seiten mit Inhalt unter einem Tag / ohne Tag; die Seite mit der Wochenangabe zählt erst mit Inhalt */
+    seitenTag: number[];
+    seitenOhne: number[];
+    kopfSeite: number | null;
+    /** Hinweise aus Zeilen, die nicht unter einem Tag stehen (z. B. Statistik auf dem Deckblatt) */
+    hinweiseOhne: string[];
+  };
+  const wochen = new Map<string, Arbeit>();
+  let aktuell: Arbeit | null = null;
   let kontextJahr = Number(heuteIso.slice(0, 4));
 
-  const schliesse = (stunden = 0) => {
-    if (!aktuell || aktuell.offen.length === 0) return;
-    const text = aktuell.offen.join('\n').slice(0, 2000);
-    aktuell[aktuell.teil].push({ text, stunden, ...(aktuell.offenTag ? { tag: aktuell.offenTag } : {}) });
-    aktuell.offen = [];
+  const hinweis = (w: Arbeit, h: string) => {
+    const liste = w.tag ? w.hinweise : w.hinweiseOhne;
+    if (!liste.includes(h)) liste.push(h);
+  };
+  const merkeSeite = (w: Arbeit, seite: number) => {
+    const liste = w.tag ? w.seitenTag : w.seitenOhne;
+    for (const s of [w.kopfSeite, seite]) if (s !== null && !liste.includes(s)) liste.push(s);
+    w.kopfSeite = null;
+  };
+
+  const schliesse = () => {
+    const w = aktuell;
+    if (!w || w.offen.length === 0) return;
+    w[w.teil].push({ text: w.offen.join('\n').slice(0, 2000), stunden: 0, ...(w.offenTag ? { tag: w.offenTag } : {}) });
+    w.offen = [];
+  };
+  const schliesseMit = (stunden: number) => {
+    const w = aktuell;
+    if (!w || w.offen.length === 0) return;
+    w[w.teil].push({ text: w.offen.join('\n').slice(0, 2000), stunden, ...(w.offenTag ? { tag: w.offenTag } : {}) });
+    w.offen = [];
+  };
+  /** Ein Tag als Block: Abschnitte mit eigenen Stunden („[2:30]“) werden Einträge, sonst der ganze Tag mit seinen Stunden. */
+  const schliesseBlock = () => {
+    const w = aktuell;
+    if (!w?.block) return;
+    const b = w.block;
+    w.block = null;
+    const teile: { zeilen: string[]; stunden: number | null }[] = [];
+    let jetzt: string[] = [];
+    for (const z of b.zeilen) {
+      if (/^[—–-]{1,3}$/.test(z)) {
+        if (jetzt.length) teile.push({ zeilen: jetzt, stunden: null });
+        jetzt = [];
+        continue;
+      }
+      const m = ABSCHNITT_STUNDEN.exec(z);
+      if (m) {
+        if (m[1].trim()) jetzt.push(m[1].trim());
+        if (jetzt.length) teile.push({ zeilen: jetzt, stunden: zeit(m[2]) });
+        jetzt = [];
+        continue;
+      }
+      jetzt.push(z);
+    }
+    if (jetzt.length) teile.push({ zeilen: jetzt, stunden: null });
+    if (teile.length === 0) return;
+    const eintraege = teile.some((x) => x.stunden !== null) ? teile : [{ zeilen: teile.flatMap((x) => x.zeilen), stunden: null }];
+    // ohne Stunden je Abschnitt: was vom Tag übrig ist (beim ganzen Tag also die Stunden des Tages)
+    let rest = Math.max(0, b.stunden - eintraege.reduce((n, x) => n + (x.stunden ?? 0), 0));
+    for (const x of eintraege) {
+      let st = x.stunden;
+      if (st === null) {
+        st = rest;
+        rest = 0;
+      }
+      w[b.teil].push({ text: x.zeilen.join('\n').slice(0, 2000), stunden: Math.round(st * 20) / 20, tag: b.tag });
+    }
+  };
+
+  const verarbeite = (roh: string, s: number) => {
+    const zeile = roh.trim();
+    if (!zeile) return;
+    const jahr = /\b(20\d{2})\b/.exec(zeile);
+    if (jahr) kontextJahr = Number(jahr[1]);
+    const montag = wocheAus(zeile, kontextJahr);
+    if (montag && (!aktuell || aktuell.montag !== montag)) {
+      schliesseBlock();
+      schliesse();
+      const neu: Arbeit = wochen.get(montag) ?? {
+        montag, form: 'woche', betrieb: [], unterweisung: [], schule: [], seiten: [], hinweise: [], offen: [], teil: 'betrieb', tag: null, tage: false,
+        offenTag: null, block: null, seitenTag: [], seitenOhne: [], kopfSeite: null, hinweiseOhne: [],
+      };
+      // eine Woche, die wiederkommt (z. B. erst im Inhaltsverzeichnis, dann mit ihren Tagen): neu ansetzen
+      neu.tag = null;
+      neu.teil = 'betrieb';
+      wochen.set(montag, neu);
+      aktuell = neu;
+    }
+    if (!aktuell) return;
+    const w: Arbeit = aktuell;
+    if (montag) {
+      if (!w.seitenTag.includes(s + 1) && !w.seitenOhne.includes(s + 1)) w.kopfSeite = s + 1;
+      return;
+    }
+    // Summe der Woche: Danach gehört nichts mehr zum letzten Tag
+    if (SUMME.test(zeile)) {
+      schliesseBlock();
+      schliesse();
+      w.tag = null;
+      return;
+    }
+    if (RAHMEN.test(zeile)) return;
+
+    let inhalt = roh;
+    const kopf = tagesKopf(zeile, w.montag, kontextJahr);
+    if (kopf) {
+      schliesseBlock();
+      schliesse();
+      w.tage = true;
+      w.tag = kopf.tag;
+      w.teil = 'betrieb';
+      merkeSeite(w, s + 1);
+      if (kopf.ort !== undefined) {
+        // „| Schule | anwesend   08:00“: Ort und Stunden des Tages, der Text steht darunter
+        const art = ortVon(kopf.ort);
+        if (art === 'abwesend' || (kopf.abwesend && art !== 'frei')) hinweis(w, ABWESEND);
+        else if (art !== 'frei') w.block = { zeilen: [], stunden: kopf.stunden ?? 0, tag: kopf.tag, teil: art ?? 'betrieb', ortOffen: false };
+        return;
+      }
+      // „MO 12.01.2026“ allein: Den Ort nennt die nächste Zeile
+      if (kopf.mitDatum && !kopf.rest) {
+        w.block = { zeilen: [], stunden: 0, tag: kopf.tag, teil: 'betrieb', ortOffen: true };
+        return;
+      }
+      if (!kopf.rest) return;
+      inhalt = kopf.rest;
+    }
+
+    if (w.block?.ortOffen) {
+      // „Betrieb      Abt. …      8:00“, „Frei“, „Krank“, „Anderes …“
+      w.block.ortOffen = false;
+      const o = ORT_ZEILE.exec(inhalt.trim());
+      if (o) {
+        const art = ortVon(o[1]);
+        if (art === 'abwesend') hinweis(w, ABWESEND);
+        if (art === 'frei' || art === 'abwesend') {
+          w.block = null;
+          return;
+        }
+        w.block.teil = art ?? 'betrieb';
+        inhalt = o[2] ?? '';
+      } else w.block = null; // kein Ort: ein einfacher Tag („Montag, 14.09.2026“ und darunter Zeilen mit Stunden)
+    }
+    if (w.block) {
+      const b = w.block;
+      if (GESUNDHEIT.test(inhalt)) {
+        hinweis(w, ABWESEND);
+        return;
+      }
+      const spalte = ZEITSPALTE.exec(inhalt);
+      if (spalte) {
+        if (b.stunden === 0) b.stunden = zeit(spalte[2]);
+        inhalt = spalte[1];
+      }
+      const nurZeit = NUR_ZEIT.exec(inhalt.trim());
+      if (nurZeit) {
+        if (b.stunden === 0) b.stunden = zeit(nurZeit[1]);
+        return;
+      }
+      const t = inhalt.replace(AUFZAEHLUNG, '').replace(/\s{2,}/g, ' ').trim();
+      // Rest einer umbrochenen Kopfzeile wie „(KW 3-“ / „2026)“
+      if (/^\(?(?:19|20)\d{2}\)?$/.test(t)) return;
+      if (t) {
+        b.zeilen.push(t);
+        merkeSeite(w, s + 1);
+      }
+      return;
+    }
+
+    if (GESUNDHEIT.test(inhalt)) {
+      hinweis(w, ABWESEND);
+      return;
+    }
+    inhalt = inhalt.trim();
+    const kopfTeil = kopfVon(inhalt);
+    let zurueck: Teil | null = null;
+    if (kopfTeil) {
+      schliesse();
+      // Überschrift allein: ab hier gilt dieser Teil. Mit Text dahinter („Unterweisung: Arbeitsschutz 2“): nur diese Zeile.
+      if (kopfTeil.rest) zurueck = w.teil;
+      w.teil = kopfTeil.teil;
+      inhalt = kopfTeil.rest;
+      if (!inhalt) return;
+    }
+    const nur = NUR_STUNDEN.exec(inhalt);
+    if (nur) {
+      // Stunden in einer eigenen Zeile: gehören zum Eintrag davor
+      if (w.offen.length) schliesseMit(zahl(nur[1]));
+      else {
+        const letzter = w[w.teil][w[w.teil].length - 1];
+        if (letzter && letzter.stunden === 0) letzter.stunden = zahl(nur[1]);
+      }
+      return;
+    }
+    merkeSeite(w, s + 1);
+    if (PUNKT.test(inhalt) && w.offen.length) schliesse();
+    w.offenTag = w.tag;
+    const st = STUNDEN_ENDE.exec(inhalt);
+    if (st && zahl(st[2]) > 0 && zahl(st[2]) <= 12) {
+      w.offen.push(sauber(st[1]));
+      schliesseMit(zahl(st[2]));
+    } else {
+      const t = sauber(inhalt);
+      if (t) w.offen.push(t);
+    }
+    if (zurueck) {
+      schliesse();
+      w.teil = zurueck;
+    }
   };
 
   const seiten = text.replace(/\r/g, '').split('\f');
   seiten.forEach((seite, s) => {
-    for (const roh of seite.split('\n')) {
-      const zeile = roh.trim();
-      if (!zeile) continue;
-      const jahr = /\b(20\d{2})\b/.exec(zeile);
-      if (jahr) kontextJahr = Number(jahr[1]);
-      const montag = wocheAus(zeile, kontextJahr);
-      if (montag && (!aktuell || aktuell.montag !== montag)) {
-        schliesse();
-        const vorhanden = wochen.get(montag);
-        aktuell = vorhanden ?? { montag, form: 'woche', betrieb: [], unterweisung: [], schule: [], seiten: [], hinweise: [], offen: [], teil: 'betrieb', tag: null, tage: false, offenTag: null };
-        wochen.set(montag, aktuell);
-      }
-      if (!aktuell) continue;
-      const w = aktuell;
-      const merkeSeite = () => {
-        if (!w.seiten.includes(s + 1)) w.seiten.push(s + 1);
-      };
-      if (montag) merkeSeite();
-      if (montag || RAHMEN.test(zeile)) continue;
-      merkeSeite();
-      if (GESUNDHEIT.test(zeile)) {
-        if (!w.hinweise.includes('Eine Zeile zu einer Abwesenheit ist weggelassen – trag den Tag im Bericht als „abwesend“ ein.')) w.hinweise.push('Eine Zeile zu einer Abwesenheit ist weggelassen – trag den Tag im Bericht als „abwesend“ ein.');
-        continue;
-      }
-      let inhalt = zeile;
-      const tag = WOCHENTAG.exec(inhalt);
-      if (tag) {
-        schliesse();
-        w.tage = true;
-        w.tag = plusTage(w.montag, TAGE.indexOf(tag[1].toLowerCase()));
-        // ein neuer Tag beginnt wieder mit dem Betrieb
-        w.teil = 'betrieb';
-        inhalt = tag[2].trim();
-        if (!inhalt) continue;
-      }
-      const kopf = kopfVon(inhalt);
-      let zurueck: Teil | null = null;
-      if (kopf) {
-        schliesse();
-        // Überschrift allein: ab hier gilt dieser Teil. Mit Text dahinter („Unterweisung: Arbeitsschutz 2“): nur diese Zeile.
-        if (kopf.rest) zurueck = w.teil;
-        w.teil = kopf.teil;
-        inhalt = kopf.rest;
-        if (!inhalt) continue;
-      }
-      const nur = NUR_STUNDEN.exec(inhalt);
-      if (nur) {
-        // Stunden in einer eigenen Zeile: gehören zum Eintrag davor
-        if (w.offen.length) schliesse(zahl(nur[1]));
-        else {
-          const letzter = w[w.teil][w[w.teil].length - 1];
-          if (letzter && letzter.stunden === 0) letzter.stunden = zahl(nur[1]);
+    const zeilen = seite.split('\n');
+    // Kopfzeilen einer Folgeseite (Name, Beruf …) stehen vor der wiederholten Wochenangabe – sie zählen nicht
+    let ab = 0;
+    const vorher = aktuell?.montag;
+    if (vorher) {
+      let gesehen = 0;
+      for (let i = 0; i < zeilen.length && gesehen < 12; i++) {
+        const z = zeilen[i].trim();
+        if (!z) continue;
+        gesehen++;
+        if (wocheAus(z, kontextJahr) === vorher) {
+          ab = i;
+          break;
         }
-        continue;
-      }
-      if (PUNKT.test(inhalt) && w.offen.length) schliesse();
-      w.offenTag = w.tag;
-      const st = STUNDEN_ENDE.exec(inhalt);
-      if (st && zahl(st[2]) > 0 && zahl(st[2]) <= 12) {
-        w.offen.push(sauber(st[1]));
-        schliesse(zahl(st[2]));
-      } else {
-        const t = sauber(inhalt);
-        if (t) w.offen.push(t);
-      }
-      if (zurueck) {
-        schliesse();
-        w.teil = zurueck;
       }
     }
+    for (const z of zeilen.slice(ab)) verarbeite(z, s);
   });
+  schliesseBlock();
   schliesse();
   return [...wochen.values()]
-    .map(({ offen: _o, teil: _t, tag: _g, offenTag: _ot, tage, ...w }): RohWoche => {
+    .map(({ offen: _o, teil: _t, tag: _g, offenTag: _ot, block: _b, seitenTag, seitenOhne, kopfSeite: _k, hinweiseOhne, tage, ...w }): RohWoche => {
       const form: BerichtForm = tage ? 'tag' : 'woche';
-      const mitTag = (l: Eintrag[]) => (form === 'tag' ? l.map((e) => ({ ...e, tag: e.tag ?? w.montag })) : l.map(({ tag: _x, ...e }) => e));
-      return { ...w, form, betrieb: mitTag(w.betrieb), unterweisung: mitTag(w.unterweisung), schule: mitTag(w.schule) };
+      // in Tagesform zählt nur, was unter einem Tag steht
+      const mitTag = (l: Eintrag[]) => (form === 'tag' ? l.filter((e) => e.tag) : l.map(({ tag: _x, ...e }) => e));
+      const seiten = (tage ? seitenTag : [...seitenTag, ...seitenOhne]).sort((a, b) => a - b);
+      const hinweise = tage ? w.hinweise : [...hinweiseOhne, ...w.hinweise];
+      return { ...w, form, seiten, hinweise, betrieb: mitTag(w.betrieb), unterweisung: mitTag(w.unterweisung), schule: mitTag(w.schule) };
     })
     .sort((a, b) => a.montag.localeCompare(b.montag));
 }
