@@ -241,6 +241,10 @@ function unterzeichne(db: DB, jetzt: Date, azubiId: number, montag: string, art:
   );
 }
 
+/** Berichte lassen sich bis zu einer Woche im Voraus schreiben (als Entwurf). */
+export const VORAUS_WOCHEN = 1;
+const letzteSchreibwoche = (tag: string) => plusTage(montagVon(tag), 7 * VORAUS_WOCHEN);
+
 function wocheText(montag: string): string {
   const { kw, jahr } = kalenderwoche(montag);
   return `KW ${kw}/${jahr}`;
@@ -260,6 +264,11 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
   const zeichnet = darfAbzeichnen(db, c.b, azubi.id, montag);
   const { beruf } = standAus(db, profil, tag);
   const ausbilder = profil.ausbilderId ? holeBenutzer(db, profil.ausbilderId) : undefined;
+  // vorherige und nächste Woche zum Blättern: innerhalb der Ausbildung, höchstens eine Woche im Voraus
+  const nachbar = (m: string) => {
+    if (!dauer || m < montagVon(dauer.beginn) || m > dauer.ende || m > letzteSchreibwoche(tag)) return null;
+    return { montag: m, ...kalenderwoche(m), status: sichtbar(holeBericht(db, azubi.id, m), eigener)?.status ?? 'fehlt' };
+  };
   return {
     montag,
     sonntag: plusTage(montag, 6),
@@ -280,6 +289,9 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
     abgezeichnetAm: z?.abgezeichnet_am ?? null,
     signaturen: z ? db.prepare('SELECT art, name, rolle, pfad, zeit FROM bericht_signatur WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag) : [],
     verlauf: z || eigener ? db.prepare('SELECT zeit, aktion, name, rolle, kommentar FROM bericht_verlauf WHERE azubi_id = ? AND montag = ? ORDER BY id').all(azubi.id, montag) : [],
+    nachbarn: { vorher: nachbar(plusTage(montag, -7)), nachher: nachbar(plusTage(montag, 7)) },
+    // eine kommende Woche: schreiben ja, einreichen erst ab ihrem Montag
+    kommend: montag > montagVon(tag),
     kopf: {
       azubi: azubi.anzeigename,
       beruf: beruf ? [beruf.bezeichnung, beruf.fachrichtung].filter(Boolean).join(' – ') : '',
@@ -287,8 +299,8 @@ function berichtAnsicht(c: Ctx, azubi: BenutzerZeile, montag: string) {
       ausbilder: ausbilder?.anzeigename ?? '',
     },
     rechte: {
-      schreiben: eigener && !!dauer && (status === null || status === 'entwurf' || status === 'zurueck'),
-      einreichen: eigener && (status === 'entwurf' || status === 'zurueck'),
+      schreiben: eigener && !!dauer && montag <= letzteSchreibwoche(tag) && (status === null || status === 'entwurf' || status === 'zurueck'),
+      einreichen: eigener && montag <= montagVon(tag) && (status === 'entwurf' || status === 'zurueck'),
       zurueckziehen: eigener && status === 'eingereicht',
       loeschen: eigener && status === 'entwurf',
       abzeichnen: zeichnet && status === 'eingereicht',
@@ -321,6 +333,8 @@ export function reicheEin(db: DB, jetzt: Date, azubi: BenutzerZeile, montage: st
   for (const montag of montage) {
     const z = holeBericht(db, azubi.id, montag);
     if (!z) throw new Fehler(404, 'Nicht gefunden');
+    // vorschreiben geht eine Woche im Voraus – einreichen erst, wenn die Woche begonnen hat
+    if (montag > montagVon(heute(jetzt))) throw new Fehler(409, montage.length > 1 ? `Der Bericht ${wocheText(montag)} lässt sich erst ab dem Montag dieser Woche einreichen` : 'Einreichen geht erst ab dem Montag dieser Woche');
     if (z.status !== 'entwurf' && z.status !== 'zurueck') throw new Fehler(409, montage.length > 1 ? `Der Bericht ${wocheText(montag)} ist schon eingereicht` : 'Der Bericht ist schon eingereicht');
     if (summe(inhaltAus(z)).gesamt <= 0) throw new Fehler(400, montage.length > 1 ? `Der Bericht ${wocheText(montag)} enthält noch keine Stunden` : 'Der Bericht enthält noch keine Stunden');
   }
@@ -478,7 +492,7 @@ export const BERICHT_ROUTEN: Route[] = [
       const dauer = dauerVon(db, leseProfil(db, azubi.id));
       if (!dauer) throw new Fehler(409, 'Für dich ist noch kein Ausbildungsbeginn eingetragen – bitte an den Ausbilder wenden');
       if (montag < montagVon(dauer.beginn) || montag > dauer.ende) throw new Fehler(400, 'Die Woche liegt außerhalb deiner Ausbildungszeit');
-      if (montag > montagVon(heute(c.k.jetzt()))) throw new Fehler(400, 'Berichte lassen sich nicht für kommende Wochen schreiben');
+      if (montag > letzteSchreibwoche(heute(c.k.jetzt()))) throw new Fehler(400, 'Berichte lassen sich höchstens eine Woche im Voraus schreiben');
       const z = holeBericht(db, azubi.id, montag);
       if (z && z.status !== 'entwurf' && z.status !== 'zurueck') {
         throw new Fehler(409, z.status === 'abgezeichnet' ? 'Der Bericht ist abgezeichnet und gesperrt' : 'Der Bericht ist eingereicht – zum Ändern zuerst zurückziehen');

@@ -429,7 +429,7 @@ export function UrlaubAzubi({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      {!d.eigenes && <ZurueckZuAzubis />}
+      {!d.eigenes && <ZurueckZuAzubis id={azubiId} />}
       <h1>{d.eigenes ? 'Urlaub' : `Urlaub von ${d.azubi.anzeigename}`}</h1>
       {!d.eigenes && <AzubiReiter id={azubiId} name={d.azubi.anzeigename} />}
       <p className="leise">

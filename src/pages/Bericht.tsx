@@ -5,11 +5,12 @@ import { melde, rueckfrage } from '../dialoge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, ApiFehler, ladeDatei, ART_TEXT, berichtsheftPfad, datum, GRUND_TEXT, h, ROLLE_TEXT, STATUS_FARBE, STATUS_TEXT, wocheText, zeit } from '../api';
-import type { Bericht, BerichtAbwesenheit, BerichtAnhang, BerichtEintrag, BerichtInhalt, Grund, Logos } from '../api';
+import type { Bericht, BerichtAbwesenheit, BerichtAnhang, BerichtEintrag, BerichtInhalt, BerichtNachbar, Grund, Logos } from '../api';
+import { AzubiWechsel } from '../azubiReiter';
 import { Anhaenge } from '../berichtAnhaenge';
 import { HandbuchLink } from '../handbuchLink';
 import { Icon } from '../icons';
-import { geheZu, Link, useUngespeichert } from '../router';
+import { geheZu, Link, useBewahren, useUngespeichert } from '../router';
 import { UnterschriftBild } from '../unterschrift';
 
 const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
@@ -82,6 +83,21 @@ function plusTage(iso: string, n: number): string {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+/** Steht schon etwas drin? Ein neuer Bericht wird erst dann als Entwurf gespeichert. */
+function hatInhalt(i: BerichtInhalt): boolean {
+  return summeVon(i) > 0 || i.abwesenheit.length > 0 || [...i.betrieb, ...i.unterweisung, ...i.schule].some((e) => e.text.trim() !== '');
+}
+
+/** Stand des automatischen Speicherns */
+type Speicher = 'gespeichert' | 'offen' | 'speichert' | 'fehler';
+/** so lange nach der letzten Eingabe wird gespeichert */
+const AUTOSAVE_MS = 2000;
+/** so lange nach einem Fehler ohne Verbindung wird es erneut versucht */
+const NOCHMAL_MS = 15000;
+
+/** Pfad eines Berichts – eigener oder der eines Azubis */
+const berichtPfad = (azubiId: number, eigenes: boolean, montag: string) => `${berichtsheftPfad(azubiId, eigenes)}/${montag}`;
 
 function summeVon(i: BerichtInhalt): number {
   const s = (l: { stunden: number }[]) => l.reduce((n, x) => n + (Number(x.stunden) || 0), 0);
@@ -475,6 +491,37 @@ function AbwesenheitListe({ nr, montag, tagSoll, liste, onAendern }: { nr: numbe
   );
 }
 
+/** Vorherige und nächste Woche – mit dem Stand der Zielwoche. Vor dem Wechsel speichert die Seite (onWechsel). */
+function WochenBlaettern({ nachbarn, onWechsel }: { nachbarn: Bericht['nachbarn']; onWechsel: (montag: string) => void }) {
+  if (!nachbarn.vorher && !nachbarn.nachher) return null;
+  const knopf = (n: BerichtNachbar | null, richtung: 'vorher' | 'nachher') =>
+    n ? (
+      <button type="button" className="knopf schlicht" aria-label={`${richtung === 'vorher' ? 'Vorherige' : 'Nächste'} Woche: KW ${n.kw}/${n.jahr}, ${STATUS_TEXT[n.status]}`} onClick={() => onWechsel(n.montag)}>
+        {richtung === 'vorher' && <span aria-hidden="true">←</span>}
+        <span>
+          KW {n.kw}
+          <span className="woche-stand">{STATUS_TEXT[n.status]}</span>
+        </span>
+        {richtung === 'nachher' && <span aria-hidden="true">→</span>}
+      </button>
+    ) : (
+      <span />
+    );
+  return (
+    <nav className="wochen-blaettern nicht-drucken" aria-label="Andere Woche">
+      {knopf(nachbarn.vorher, 'vorher')}
+      {knopf(nachbarn.nachher, 'nachher')}
+    </nav>
+  );
+}
+
+const SPEICHER_TEXT: Record<Speicher, string> = {
+  gespeichert: 'Alles gespeichert',
+  offen: 'Wird gleich gespeichert',
+  speichert: 'Speichert …',
+  fehler: 'Nicht gespeichert',
+};
+
 export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; montag: string; eigenes: boolean }) {
   const [b, setB] = useState<Bericht | null>(null);
   const [inhalt, setInhalt] = useState<BerichtInhalt | null>(null);
@@ -485,7 +532,20 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const [kommentar, setKommentar] = useState('');
   // Teile, die der Azubi von Hand aufgeklappt hat (leere Teile sind sonst nur eine Zeile)
   const [auf, setAuf] = useState<Set<string>>(new Set());
-  useUngespeichert(geaendert);
+  // automatisches Speichern: kurz nach der letzten Eingabe, vor dem Wechsel der Woche, vor dem Einreichen, beim Verlassen der Seite
+  const [speicher, setSpeicher] = useState<Speicher>('gespeichert');
+  const [zuletzt, setZuletzt] = useState<Date | null>(null);
+  const inhaltRef = useRef<BerichtInhalt | null>(null);
+  const bRef = useRef<Bericht | null>(null);
+  // Zähler der Änderungen – gespeichert ist, was beim letzten erfolgreichen Speichern der Stand war
+  const aenderung = useRef(0);
+  const gespeichertBei = useRef(0);
+  const uhr = useRef<number | undefined>(undefined);
+  const laeuft = useRef<Promise<boolean> | null>(null);
+  const speichereRef = useRef<() => Promise<boolean>>(async () => true);
+  // nachfragen beim Verlassen nur, wenn Speichern gerade nicht klappt – sonst speichert die Seite selbst
+  useUngespeichert(geaendert && speicher === 'fehler');
+  useBewahren(geaendert);
   const sollDrucken = useRef(new URLSearchParams(window.location.search).has('drucken'));
   useEffect(() => {
     if (!b || !sollDrucken.current) return;
@@ -501,13 +561,85 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
 
   const uebernimm = useCallback((neu: Bericht) => {
     setB(neu);
+    bRef.current = neu;
+    gespeichertBei.current = aenderung.current;
+    window.clearTimeout(uhr.current);
+    setSpeicher('gespeichert');
     // ein neuer Bericht beginnt mit einer leeren Zeile – so ist sofort klar, wo man schreibt
     // (in der Tagesform am ersten Tag der Woche, an dem der Azubi nicht abwesend ist)
     const ersterTag = [0, 1, 2, 3, 4].map((t) => plusTage(neu.montag, t)).find((tag) => !neu.inhalt.abwesenheit.some((a) => a.tag === tag)) ?? neu.montag;
     const leer: BerichtEintrag = neu.inhalt.form === 'tag' ? { text: '', stunden: 0, tag: ersterTag } : { text: '', stunden: 0 };
-    setInhalt(neu.status === 'fehlt' && neu.rechte.schreiben && neu.inhalt.betrieb.length === 0 ? { ...neu.inhalt, betrieb: [leer] } : neu.inhalt);
+    const start = neu.status === 'fehlt' && neu.rechte.schreiben && neu.inhalt.betrieb.length === 0 ? { ...neu.inhalt, betrieb: [leer] } : neu.inhalt;
+    setInhalt(start);
+    inhaltRef.current = start;
     setGeaendert(false);
   }, []);
+
+  /** Speichert, was gerade im Formular steht – wartet auf ein laufendes Speichern. true, wenn danach alles gespeichert ist. */
+  const speichere = useCallback(async (): Promise<boolean> => {
+    window.clearTimeout(uhr.current);
+    if (laeuft.current) await laeuft.current;
+    const i = inhaltRef.current;
+    const alt = bRef.current;
+    if (!i || !alt || !alt.rechte.schreiben || aenderung.current === gespeichertBei.current) return true;
+    // ein neuer, noch leerer Bericht wird nicht gespeichert
+    if (alt.status === 'fehlt' && !hatInhalt(i)) {
+      gespeichertBei.current = aenderung.current;
+      setGeaendert(false);
+      setSpeicher('gespeichert');
+      return true;
+    }
+    const stand = aenderung.current;
+    setSpeicher('speichert');
+    const lauf = (async () => {
+      try {
+        const neu = await api<Bericht>('PUT', pfad, { inhalt: i });
+        // was im Formular steht, bleibt – wer weitertippt, verliert nichts
+        setB(neu);
+        bRef.current = neu;
+        gespeichertBei.current = stand;
+        setZuletzt(new Date());
+        setMeldung((m) => (m?.fehler ? null : m));
+        if (aenderung.current === stand) {
+          setGeaendert(false);
+          setSpeicher('gespeichert');
+        } else {
+          setSpeicher('offen');
+          uhr.current = window.setTimeout(() => void speichereRef.current(), AUTOSAVE_MS);
+        }
+        return true;
+      } catch (e) {
+        setSpeicher('fehler');
+        setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true });
+        // ohne Verbindung, abgemeldet oder bei einer Störung von selbst noch einmal; eine abgelehnte Eingabe muss der Azubi ändern
+        if (e instanceof ApiFehler && (e.status === 0 || e.status === 401 || e.status >= 500)) uhr.current = window.setTimeout(() => void speichereRef.current(), NOCHMAL_MS);
+        return false;
+      } finally {
+        laeuft.current = null;
+      }
+    })();
+    laeuft.current = lauf;
+    return lauf;
+  }, [pfad]);
+  speichereRef.current = speichere;
+
+  // beim Verlassen der Seite (anderer Menüpunkt, Tab schließen): was noch offen ist, im Hintergrund speichern
+  useEffect(() => {
+    const raus = () => {
+      const i = inhaltRef.current;
+      const alt = bRef.current;
+      if (!i || !alt || !alt.rechte.schreiben || aenderung.current === gespeichertBei.current) return;
+      if (alt.status === 'fehlt' && !hatInhalt(i)) return;
+      gespeichertBei.current = aenderung.current;
+      void fetch(pfad, { method: 'PUT', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inhalt: i }) }).catch(() => {});
+    };
+    window.addEventListener('pagehide', raus);
+    return () => {
+      window.removeEventListener('pagehide', raus);
+      window.clearTimeout(uhr.current);
+      raus();
+    };
+  }, [pfad]);
 
   useEffect(() => {
     api<Bericht>('GET', pfad).then(uebernimm, () => setNichtGefunden(true));
@@ -528,24 +660,45 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   const fehler = (e: unknown) =>
     setMeldung({ text: e instanceof Error ? e.message : 'Fehler', fehler: true, unterschrift: e instanceof ApiFehler && e.code === 'unterschrift' });
   const aendere = (teil: Partial<BerichtInhalt>) => {
-    setInhalt({ ...inhalt, ...teil });
+    const neu = { ...inhalt, ...teil };
+    setInhalt(neu);
+    inhaltRef.current = neu;
+    aenderung.current += 1;
     setGeaendert(true);
+    setSpeicher('offen');
     setMeldung(null);
+    window.clearTimeout(uhr.current);
+    uhr.current = window.setTimeout(() => void speichereRef.current(), AUTOSAVE_MS);
   };
-
-  const speichere = async (): Promise<boolean> => {
+  // in eine andere Woche: erst speichern; klappt das nicht, nachfragen
+  const wechsleWoche = async (montag: string) => {
+    if (!(await speichere()) && !(await rueckfrage('Deine letzten Änderungen sind noch nicht gespeichert.\n\nWenn du jetzt die Woche wechselst, gehen sie verloren.', { ja: 'Trotzdem wechseln', gefahr: true }))) return;
+    // schon gespeichert oder bewusst verworfen – die Seite speichert beim Verlassen nicht noch einmal
+    gespeichertBei.current = aenderung.current;
+    geheZu(berichtPfad(azubiId, eigenes, montag));
+  };
+  // Anhänge hängen am gespeicherten Bericht: vor dem ersten Hochladen wird deshalb gespeichert, was gerade im Formular steht
+  const vorAnhang = async (): Promise<boolean> => {
+    if (b.status !== 'fehlt') return speichere();
+    // ein Anhang braucht einen gespeicherten Bericht – auch wenn noch nichts drinsteht
+    window.clearTimeout(uhr.current);
     try {
-      uebernimm(await api<Bericht>('PUT', pfad, { inhalt }));
-      setMeldung(null);
-      melde('Gespeichert.');
+      const stand = aenderung.current;
+      const neu = await api<Bericht>('PUT', pfad, { inhalt: inhaltRef.current ?? inhalt });
+      setB(neu);
+      bRef.current = neu;
+      gespeichertBei.current = stand;
+      setZuletzt(new Date());
+      if (aenderung.current === stand) {
+        setGeaendert(false);
+        setSpeicher('gespeichert');
+      }
       return true;
     } catch (e) {
       fehler(e);
       return false;
     }
   };
-  // Anhänge hängen am gespeicherten Bericht: vor dem ersten Hochladen wird deshalb gespeichert, was gerade im Formular steht
-  const vorAnhang = async (): Promise<boolean> => (geaendert || b.status === 'fehlt' ? speichere() : true);
   // nur die Liste der Anhänge erneuern – was im Formular steht, bleibt unberührt
   const setzeAnhaenge = (anhaenge: BerichtAnhang[]) => setB((alt) => alt && { ...alt, anhaenge });
   const tue = async (aktion: string, body?: unknown, erfolg?: string, anlass?: Anlass) => {
@@ -562,7 +715,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
   };
   const reicheEin = async () => {
     // erst speichern, dann einreichen – so geht nichts verloren
-    if ((geaendert || b.status === 'fehlt') && !(await speichere())) return;
+    if (!(await speichere())) return;
     await tue('einreichen', undefined, 'Eingereicht. Der Bericht liegt jetzt zum Abzeichnen vor.', 'bericht_eingereicht');
   };
   const zeichneAb = async () => {
@@ -601,16 +754,23 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           ? `${h(ist - b.soll)} Stunden mehr als deine Wochenstunden.`
           : `Es fehlen noch ${h(b.soll - ist)} Stunden.`;
   // dieselben Knöpfe in der Randspalte (PC) und in der Leiste unten (Handy, Tablet – dort mit kurzer Beschriftung)
-  const speicherText = b.status === 'fehlt' || b.status === 'entwurf' ? 'Als Entwurf speichern' : 'Bericht speichern';
+  // Stand des Speicherns – statt eines Knopfs „Speichern“
+  const sicherText =
+    speicher === 'gespeichert'
+      ? b.status === 'fehlt'
+        ? 'Noch nichts eingetragen'
+        : `Alles gespeichert${zuletzt ? ` · ${String(zuletzt.getHours()).padStart(2, '0')}:${String(zuletzt.getMinutes()).padStart(2, '0')} Uhr` : ''}`
+      : speicher === 'fehler'
+        ? 'Nicht gespeichert – das Portal versucht es weiter.'
+        : SPEICHER_TEXT[speicher];
+  const sicherKlasse = speicher === 'gespeichert' ? 'leise' : speicher === 'offen' ? 'offen' : speicher;
+  const pdfGesperrt = geaendert ? 'Speichert gerade – gleich zeigt das PDF den neuen Stand.' : undefined;
   const aktionen = (kurz: boolean) => (
     <div className="aktionen links">
-      <button type="button" className={`knopf${kurz ? ' klein' : ''}`} onClick={() => void reicheEin()}>
+      <button type="button" className={`knopf${kurz ? ' klein' : ''}`} onClick={() => void reicheEin()} disabled={b.kommend}>
         Einreichen
       </button>
-      <button type="button" className={`knopf schlicht${kurz ? ' klein' : ''}`} aria-label={speicherText} onClick={() => void speichere()} disabled={!geaendert && b.status !== 'fehlt'}>
-        {kurz ? 'Speichern' : speicherText}
-      </button>
-      {!kurz && b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" gesperrt={geaendert ? 'Erst speichern – das PDF zeigt den gespeicherten Stand.' : undefined} />}
+      {!kurz && b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" gesperrt={pdfGesperrt} />}
       {!kurz && ist > 0 && (
         <button type="button" className="knopf schlicht" onClick={() => window.print()}>
           Bericht drucken
@@ -626,9 +786,14 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
 
   return (
     <>
-      <p className="klein nicht-drucken">
-        <Link zu={zurListe}>← Berichtsheft{eigenes ? '' : ` von ${b.kopf.azubi}`}</Link>
-      </p>
+      <div className="azubi-kopfzeile nicht-drucken">
+        <p className="klein">
+          <Link zu={zurListe}>← Berichtsheft{eigenes ? '' : ` von ${b.kopf.azubi}`}</Link>
+        </p>
+        {/* Ausbilder und Beauftragte: derselbe Bericht beim nächsten Azubi */}
+        {!eigenes && <AzubiWechsel id={azubiId} />}
+      </div>
+      <WochenBlaettern nachbarn={b.nachbarn} onWechsel={(m) => void wechsleWoche(m)} />
       <h1 className="nicht-drucken">
         Woche {b.kw}/{b.jahr} <span className={`pille ${STATUS_FARBE[b.status]}`}>{STATUS_TEXT[b.status]}</span>
       </h1>
@@ -757,9 +922,15 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
                 </dl>
               </>
             )}
-            <p className={`bericht-sicher klein ${geaendert ? 'offen' : 'leise'}`} role="status">
-              {geaendert ? 'Noch nicht gespeichert' : b.status === 'fehlt' ? 'Noch nichts gespeichert' : 'Alles gespeichert'}
+            <p className={`bericht-sicher klein ${sicherKlasse}`} role="status">
+              {sicherText}
             </p>
+            {speicher === 'fehler' && (
+              <button type="button" className="knopf schlicht klein" onClick={() => void speichere()}>
+                Erneut speichern
+              </button>
+            )}
+            {b.kommend && <p className="leise klein">Einreichen geht ab Montag, {datum(b.montag)}.</p>}
             {aktionen(false)}
             <p className="hilfe-zeile klein">
               <HandbuchLink kapitel="bericht">Entwurf oder einreichen?</HandbuchLink>
@@ -767,7 +938,7 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
           </aside>
 
           <p className="bericht-ende">
-            {b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" gesperrt={geaendert ? 'Erst speichern – das PDF zeigt den gespeicherten Stand.' : undefined} />}
+            {b.status !== 'fehlt' && <PdfKnopf pfad={pdfPfad} text="Als PDF herunterladen" gesperrt={pdfGesperrt} />}
             {ist > 0 && (
               <button type="button" className="knopf schlicht" onClick={() => window.print()}>
                 Bericht drucken
@@ -784,6 +955,9 @@ export function BerichtSeite({ azubiId, montag, eigenes }: { azubiId: number; mo
             <span className="bericht-leiste-summe">
               <span>
                 <strong>{h(ist)}</strong> von {h(b.soll)} Std.
+              </span>
+              <span className={`bericht-leiste-stand bericht-sicher ${sicherKlasse}`} role="status">
+                {SPEICHER_TEXT[speicher]}
               </span>
               <span className={`bericht-balken ${stand}`} aria-hidden="true">
                 <i style={{ width: `${Math.min(100, b.soll > 0 ? (ist / b.soll) * 100 : 0)}%` }} />

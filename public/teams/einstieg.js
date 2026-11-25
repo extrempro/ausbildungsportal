@@ -39,7 +39,15 @@
         return fetch('/api/auth/teams', { method: 'POST', credentials: 'include', headers: { Authorization: 'Bearer ' + token } });
       })
       .then(function (r) {
-        if (r.ok) return location.replace(ziel);
+        if (r.ok) {
+          // das Portal läuft jetzt in Teams: Teams hat unten eine eigene Leiste – kein Abstand für den Rand des Handys
+          try {
+            sessionStorage.setItem('ap_in_teams', '1');
+          } catch (e) {
+            /* ohne Speicher bleibt der Abstand */
+          }
+          return location.replace(ziel);
+        }
         return r.json().then(
           function (j) {
             fehler(j.fehler || 'Die Anmeldung hat nicht geklappt.');

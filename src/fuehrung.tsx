@@ -42,7 +42,7 @@ const AZUBI: Schritt[] = [
   { titel: 'Auf einen Blick', text: 'Wie lange noch bis zur Prüfung? Fehlen Berichte? Sind Aufgaben offen? Das steht hier.', pfad: '/', ziel: ['.kennzahlen'], nurMitZiel: true },
   { titel: 'Alle Wochen', text: 'Darunter steht jede Woche deiner Ausbildung. Mit dem „+“ trägst du eigene Aufgaben, Notizen und Termine ein – zum Beispiel eine JAV-Sitzung. Erledigte Aufgaben hakst du ab.', pfad: '/', ziel: ['li.kw.heute', '.plan-jahr'], nurMitZiel: true },
   { titel: 'Das Berichtsheft', text: 'Für jede Woche schreibst du einen Bericht: Was hast du gemacht, und wie viele Stunden? Hier geht es dorthin.', pfad: '/', ziel: ['.haupt-nav a[href="/berichtsheft"]', '.tabs a[href="/berichtsheft"]'] },
-  { titel: 'Einen Bericht schreiben', text: 'Bei jeder Woche steht ein Knopf. „Schreiben“ öffnet die Woche. Dort trägst du ein, speicherst als Entwurf oder reichst ein.', pfad: '/berichtsheft', ziel: ['table.stapel tbody tr td.aktion a', 'main h1'] },
+  { titel: 'Einen Bericht schreiben', text: 'Bei jeder Woche steht ein Knopf. „Schreiben“ öffnet die Woche. Dort trägst du ein – gespeichert wird von selbst – und reichst ein.', pfad: '/berichtsheft', ziel: ['table.stapel tbody tr td.aktion a', 'main h1'] },
   { titel: 'Deine Unterschrift', text: 'Unterschreibe hier einmal mit Finger, Stift oder Maus. Die Unterschrift kommt unter jeden Bericht, den du einreichst.', pfad: '/konto', ziel: ['.unterschrift-feld', '.signatur-feld.gross', 'main h1'] },
   { titel: 'Urlaub beantragen', text: 'Hier beantragst du deinen Urlaub und siehst, wie viele Tage noch frei sind. Erst bestätigen deine Ausbildungsbeauftragten, dann genehmigt dein Ausbilder.', pfad: '/urlaub', ziel: ['.urlaub-neu', 'main h1'] },
   {

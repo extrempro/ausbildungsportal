@@ -869,7 +869,7 @@ export function PlanSeite({ azubiId }: { azubiId: number }) {
 
   return (
     <>
-      {!d.eigenes && <ZurueckZuAzubis />}
+      {!d.eigenes && <ZurueckZuAzubis id={azubiId} />}
       <h1>Ausbildungsplan{d.eigenes ? '' : ` von ${d.azubi.anzeigename}`}</h1>
       {!d.eigenes && <AzubiReiter id={azubiId} name={d.azubi.anzeigename} />}
       <p className="leise">

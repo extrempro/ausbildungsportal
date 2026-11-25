@@ -4,6 +4,14 @@ import { App } from './App';
 import { merkeBrowserFehler } from './fehler';
 import './index.css';
 
+// In der Teams-App (Einstieg über /teams/app, oder Teams am Handy) liegt unter dem Portal die Leiste von Teams –
+// der Abstand für den unteren Rand des Handys (safe-area) fällt dort weg, sonst ist die Navigation doppelt so hoch
+try {
+  if (sessionStorage.getItem('ap_in_teams') === '1' || /\bTeams(Mobile)?[/-]/.test(navigator.userAgent)) document.documentElement.classList.add('in-teams');
+} catch {
+  // kein Zugriff auf den Speicher – dann bleibt der Abstand
+}
+
 // Farbschema des letzten Besuchs sofort setzen; das Konto bestätigt oder korrigiert es gleich danach
 try {
   const theme = localStorage.getItem('theme');

@@ -439,7 +439,18 @@ export interface Bericht {
   signaturen: { art: 'azubi' | 'abzeichnung'; name: string; rolle: Rolle; pfad: string; zeit: string }[];
   verlauf: { zeit: string; aktion: string; name: string; rolle: Rolle; kommentar: string }[];
   kopf: { azubi: string; beruf: string; betrieb: string; ausbilder: string };
+  /** eine kommende Woche: schon schreiben, einreichen erst ab ihrem Montag */
+  kommend: boolean;
+  /** vorherige und nächste Woche zum Blättern (innerhalb der Ausbildung, höchstens eine Woche im Voraus) */
+  nachbarn: { vorher: BerichtNachbar | null; nachher: BerichtNachbar | null };
   rechte: { schreiben: boolean; einreichen: boolean; zurueckziehen: boolean; loeschen: boolean; abzeichnen: boolean; oeffnen: boolean };
+}
+
+export interface BerichtNachbar {
+  montag: string;
+  kw: number;
+  jahr: number;
+  status: BerichtStatus;
 }
 
 export interface WocheKurz {

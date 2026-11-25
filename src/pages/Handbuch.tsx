@@ -665,7 +665,7 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Unter „Deine Woche“ (am Handy in der Leiste unten) siehst du beim Schreiben, wie viele Stunden schon drinstehen und wie viele noch fehlen. Die Summe sollte ungefähr zu deinen Wochenstunden passen.</li>
           <li>
-            Noch nicht fertig? <strong>„Als Entwurf speichern“</strong>. Du schreibst später weiter; den Entwurf siehst nur du.
+            Noch nicht fertig? Kein Problem: <strong>Das Portal speichert von selbst</strong>, kurz nachdem du aufhörst zu tippen, und bevor du in eine andere Woche wechselst. Unter „Deine Woche“ steht „Alles gespeichert“ mit der Uhrzeit. Du schreibst später weiter; den Entwurf siehst nur du.
           </li>
           <li>
             Fertig? <strong>„Einreichen“</strong>. Damit unterschreibst du den Bericht und gibst ihn an deinen Ausbilder. Bis er unterschrieben hat, kannst du den Bericht noch zurückholen.
@@ -691,6 +691,17 @@ const AZUBI: Kapitel[] = [
           </li>
           <li>Anhänge sehen dieselben Personen wie den Bericht – bei einem Entwurf also nur du. Nach dem Einreichen kannst du sie nicht mehr ändern, außer du ziehst den Bericht zurück.</li>
           <li>Im Ausdruck und im PDF des Berichtshefts stehen Anhänge nicht.</li>
+        </ul>
+        <h3>Speichern und andere Wochen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Du musst nicht speichern.</strong> Das Portal speichert zwei Sekunden, nachdem du aufhörst zu tippen – und bevor du in eine andere Woche wechselst oder einreichst. Unter „Deine Woche“ (am Handy in der Leiste unten) steht, ob alles gespeichert ist.
+          </li>
+          <li>Steht dort „Nicht gespeichert“, hat das Portal gerade keine Verbindung. Es versucht es von selbst weiter; mit „Erneut speichern“ geht es sofort. Schließ die Seite so lange nicht.</li>
+          <li>
+            Mit den Knöpfen über der Woche (<strong>← KW</strong> und <strong>KW →</strong>) blätterst du zur vorherigen oder nächsten Woche. Darunter steht, wie weit die Woche ist.
+          </li>
+          <li>Du kannst bis eine Woche im Voraus schreiben, zum Beispiel vor dem Urlaub. Einreichen geht erst ab dem Montag dieser Woche.</li>
         </ul>
         <h3>Wenn dein Betrieb Einträge je Tag möchte</h3>
         <p>Dein Betrieb legt fest, ob du die Woche im Ganzen beschreibst oder Tag für Tag – das kann für jeden Azubi anders sein. Was für dich gilt, steht unter „Konto“ bei „Meine Ausbildung“. Bei „je Tag“ sieht die Seite etwas anders aus:</p>
@@ -1245,6 +1256,9 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
           </li>
           <li>
             <strong>Zurückgeben</strong> braucht einen Kommentar. Schreib konkret, was fehlt – der Azubi sieht den Text oben im Bericht und reicht danach erneut ein.
+          </li>
+          <li>
+            Mit <strong>← KW</strong> und <strong>KW →</strong> über dem Bericht blätterst du zur Woche davor oder danach. Oben wechselst du zu einem anderen Azubi – du landest in derselben Woche.
           </li>
         </ol>
         <p>Ein abgezeichneter Bericht ist gesperrt. {rolle === 'ausbilder' ? 'Du kannst die Abzeichnung mit Begründung aufheben; der Bericht geht dann zurück an den Azubi.' : 'Aufheben kann die Abzeichnung nur ein Ausbilder.'}</p>
@@ -1839,6 +1853,7 @@ const BETREUUNG = (rolle: 'ausbilder' | 'beauftragter'): Kapitel[] => [
               <p>
                 Über <Link zu="/azubis">Azubis</Link> → „Profil“. Aus diesen Angaben berechnet das Portal Ausbildungsjahr, Wochen und Ende der Ausbildung.
               </p>
+              <p>Oben wechselst du zum vorherigen oder nächsten Azubi oder wählst einen aus der Liste – auf Profil, Plan, Berichtsheft, Urlaub und Zeitleiste. Du bleibst dabei auf derselben Seite.</p>
               <h3>Begriffe</h3>
               <dl className="begriffe">
                 <Begriff wort="Ausbildungsberuf, Berufsschule">Aus den Stammdaten. Der Beruf bestimmt die Regeldauer, die Berufsschule das Bundesland für die Schulferien.</Begriff>

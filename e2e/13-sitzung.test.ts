@@ -57,9 +57,8 @@ test(
     await oeffne(s, p.url, `/berichtsheft/${montag}`);
     const feld = s.locator('main textarea').first();
     await feld.fill('Regale im Lager neu beschriftet');
-    // die Anmeldung läuft ab (hier: Cookie weg), dann wird gespeichert
+    // die Anmeldung läuft ab (hier: Cookie weg) – das automatische Speichern merkt es
     await s.context().clearCookies();
-    await s.click('main button.knopf:has-text("Als Entwurf speichern")');
     await s.locator('#abgemeldet-kopf').waitFor();
     assert.equal(await feld.inputValue(), 'Regale im Lager neu beschriftet', 'die Eingabe ist noch da');
     // noch nicht angemeldet
@@ -75,7 +74,8 @@ test(
     await tab.close();
     await s.click('button:has-text("Ich bin wieder angemeldet")');
     await s.locator('#abgemeldet-kopf').waitFor({ state: 'detached' });
-    await s.click('main button.knopf:has-text("Als Entwurf speichern")');
+    await s.click('main button:visible:has-text("Erneut speichern")');
+    await s.locator('.bericht-rand .bericht-sicher', { hasText: 'Alles gespeichert ·' }).waitFor();
     await oeffne(s, p.url, `/berichtsheft/${montag}`);
     assert.equal(await s.locator('main textarea').first().inputValue(), 'Regale im Lager neu beschriftet', 'gespeichert');
   }),
