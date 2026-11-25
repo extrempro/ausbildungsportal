@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.85.1] – 2026-11-25
+
+### Behoben
+
+- **Alte Berichte einlesen – Exporte aus anderen digitalen Berichtsheften:** Das Portal erkennt jetzt Tage als Kasten („Mo | 05.01.2026 | Betrieb | anwesend“ oder „MO 05.01.2026“), auch Samstag und Sonntag, und übernimmt die Stunden des Tages („08:00“). Jeder Tag wird ein Eintrag – oder, wenn im Text Stunden je Abschnitt stehen („[2:30]“), jeder Abschnitt. Tag, Ort und Stunden stehen nicht mehr doppelt im Text. Deckblatt, Übersicht, Inhaltsverzeichnis und Kopfzeilen landen nicht mehr im Bericht. Urlaub, Feiertag und freie Tage bleiben leer; bei sonstiger Abwesenheit steht ein Hinweis dabei.
+
 ## [0.85.0] – 2026-11-25
 
 ### Neu

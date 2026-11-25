@@ -757,6 +757,9 @@ const AZUBI: Kapitel[] = [
             <strong>Bis zum Einreichen siehst nur du die Entwürfe.</strong> Die hochgeladene Datei und der gelesene Text werden nach dem Übernehmen gelöscht, spätestens nach 24 Stunden.
           </li>
           <li>Das Portal braucht bei jedem Bericht einen Zeitraum („Woche vom 07.09.2026 bis 11.09.2026“) oder die Kalenderwoche mit Jahr („KW 38/2026“). Daran erkennt es die Wochen.</li>
+          <li>
+            <strong>Exporte aus einem anderen digitalen Berichtsheft</strong> mit einem Kasten je Tag („Mo | 05.01.2026 | Betrieb“ oder „MO 05.01.2026“ und darunter „Betrieb“): Jeder Tag wird ein Eintrag mit den Stunden des Tages. Stehen im Text Stunden je Abschnitt in eckigen Klammern („[2:30]“), wird jeder Abschnitt ein eigener Eintrag. Tag, Ort und Stunden stehen dann nicht mehr im Text – Uhrzeiten wie „14:00 - 16:00 Uhr“ bleiben. Deckblatt, Übersicht und Inhaltsverzeichnis lässt das Portal weg.
+          </li>
           <li>Wochen, für die es schon einen Bericht gibt, bleiben, wie sie sind. Nur einen leeren Entwurf – gespeichert, aber noch ohne Einträge und ohne Anhänge – ersetzt das Einlesen; dann steht „Ersetzt deinen leeren Entwurf“ dabei. Wochen vor deiner Ausbildung oder in der Zukunft lassen sich nicht übernehmen.</li>
           <li>Handschrift liest die Texterkennung oft nur teilweise. Dann hilft die Originalseite am Bericht: Du verbesserst den Text im Entwurf.</li>
           <li>Zeilen über Krankheit übernimmt das Portal nicht. Trag den Tag im Bericht unter „Abwesenheit“ als „abwesend“ ein.</li>
