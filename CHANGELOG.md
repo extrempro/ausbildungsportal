@@ -1,5 +1,14 @@
 # Änderungen
 
+## [0.86.0] – 2026-11-27
+
+### Neu
+
+- **Game Vault mit Pflanzenregal** (Reiter unter „Lernen“, freiwillig): Azubis pflegen ein Regal mit Pflanzen. Gießen kostet Tropfen – die gibt es für eingereichte Berichte (egal wann), Lernstand, bestandene Quiz und wiederholte Karteikarten. Funken aus Zusatzwissen und Abzeichen kaufen in der Gärtnerei Booster. Bei jedem Meilenstein der Ausbildung (Probezeit, jedes Jahr, Halbzeit, Abschluss) gibt es ein Samenpaket zur Auswahl. Für jedes Ausbildungsjahr wächst ein Berichtsheft-Gewächs mit jedem Bericht. Pflanzen trocknen nur an Arbeitstagen im Betrieb aus und können höchstens welken.
+- **Nur für den Azubi:** Niemand sonst sieht Regal, Tropfen oder Pflanzen; keine Rangliste. Das Guthaben wird jedes Mal ausgerechnet, nichts wird mit Zeitpunkt mitgeschrieben.
+- **Schalter für den Super-Admin** unter „Erscheinungsbild“ – anfangs ausgeschaltet.
+- **Begleiter:** Mit dem Pflanzenkalender erinnert er einmal in der Woche an durstige Pflanzen (abschaltbar).
+
 ## [0.85.1] – 2026-11-25
 
 ### Behoben

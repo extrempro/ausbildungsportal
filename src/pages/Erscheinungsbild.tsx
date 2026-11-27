@@ -1,4 +1,5 @@
 import { BegleiterSchalter } from '../begleiter';
+import { VaultSchalter } from './GameVault';
 import { melde, rueckfrage } from '../dialoge';
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
@@ -92,6 +93,7 @@ export function Erscheinungsbild({ logos, onGeaendert }: { logos: Logos; onGeaen
       <LogoFeld schema="hell" logo={logos.logo} ersatz={null} onGeaendert={onGeaendert} />
       <LogoFeld schema="dunkel" logo={logos.logoDunkel} ersatz={logos.logo} onGeaendert={onGeaendert} />
       <BegleiterSchalter />
+      <VaultSchalter />
       <TeamsApp />
     </>
   );

@@ -34,6 +34,7 @@ import { PLAN_ROUTEN } from './plan';
 import { WUNSCH_ROUTEN } from './wunsch';
 import { ERINNERUNG_ROUTEN } from './erinnerung';
 import { BEGLEITER_ROUTEN } from './begleiter';
+import { REGAL_ROUTEN, vaultErlaubt } from './regal';
 import { PLANER_ROUTEN, planerFuer } from './planer';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, kontoFuer, ROLLEN } from './typen';
@@ -352,7 +353,7 @@ export const ROUTEN: Route[] = [
     },
   },
 
-  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: { ...alsKonto(c.b), versionshinweis: c.b.versionshinweis === 1 }, version: c.k.version, lernen: paketVon(c.k, c.b) !== null, anleitungen: c.b.rolle === 'azubi' ? (allgemeinesPaket(c.k)?.titel ?? null) : null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
+  { m: 'GET', p: '/api/ich', wer: 'alle', trotzWechsel: true, h: (c) => ({ status: 200, body: { konto: { ...alsKonto(c.b), versionshinweis: c.b.versionshinweis === 1 }, version: c.k.version, lernen: paketVon(c.k, c.b) !== null, vault: c.b.rolle === 'azubi' && paketVon(c.k, c.b) !== null && vaultErlaubt(c.k.db), anleitungen: c.b.rolle === 'azubi' ? (allgemeinesPaket(c.k)?.titel ?? null) : null, planer: c.b.rolle === 'azubi' ? (planerFuer(c.k, c.b.id)?.planer.titel ?? null) : null, profilbild: c.k.cfg.entraProfilbild } }) },
 
   {
     m: 'PUT',
@@ -738,6 +739,7 @@ export const ROUTEN: Route[] = [
   ...WUNSCH_ROUTEN,
   ...ERINNERUNG_ROUTEN,
   ...BEGLEITER_ROUTEN,
+  ...REGAL_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

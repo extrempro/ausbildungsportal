@@ -681,7 +681,10 @@ export const LERN_ROUTEN: Route[] = [
       const body = c.a.body && typeof c.a.body === 'object' ? (c.a.body as Record<string, unknown>) : {};
       if (typeof body.id !== 'string' || !kartenVon(p.inhalte).some((k) => k.id === body.id)) throw new Fehler(404, 'Diese Karte gibt es nicht');
       if (typeof body.gewusst !== 'boolean') throw new Fehler(400, 'gewusst muss wahr oder falsch sein');
-      const alt = (c.k.db.prepare('SELECT fach FROM lern_karte WHERE azubi_id = ? AND paket = ? AND karte_id = ?').get(c.b.id, p.id, body.id) as { fach: number } | undefined)?.fach ?? 0;
+      const vorher = c.k.db.prepare('SELECT fach, faellig FROM lern_karte WHERE azubi_id = ? AND paket = ? AND karte_id = ?').get(c.b.id, p.id, body.id) as { fach: number; faellig: string } | undefined;
+      const alt = vorher?.fach ?? 0;
+      // eine fällige Karte wiederholt: zählt fürs Pflanzenregal (nur die Zahl, ohne Datum)
+      if (!vorher || vorher.faellig <= c.k.jetzt().toISOString().slice(0, 10)) c.k.db.prepare('UPDATE regal SET karten = karten + 1 WHERE azubi_id = ? AND an = 1').run(c.b.id);
       const neu = naechstesFach(alt, body.gewusst);
       const jetzt = c.k.jetzt();
       const faellig = new Date(jetzt.getTime() + neu.tage * 86_400_000).toISOString().slice(0, 10);

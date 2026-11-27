@@ -14,7 +14,7 @@ export interface LernBasis {
   /** Leseansicht: keine Ampel, keine Notizen, keine Abzeichen */
   lesen: boolean;
   /** Azubi: welche Bereiche es unter „Lernen“ für ihn gibt – das eigene Lernmodul und/oder das Paket für alle Berufe (sein Titel) */
-  azubi?: { lernen: boolean; allgemein: string | null };
+  azubi?: { lernen: boolean; allgemein: string | null; vault?: boolean };
   /** die Seite zeigt das Paket für alle Berufe (Anleitungen): nur zum Lesen, für den Azubi selbst */
   anleitungen?: boolean;
 }
@@ -23,8 +23,8 @@ const Kontext = createContext<LernBasis>(AZUBI);
 export const useLern = (): LernBasis => useContext(Kontext);
 
 /** Für Azubis: sagt den Lernseiten, welche Reiter es gibt. */
-export function LernAzubi({ lernen, allgemein, children }: { lernen: boolean; allgemein: string | null; children: ReactNode }) {
-  return <Kontext.Provider value={{ ...AZUBI, azubi: { lernen, allgemein } }}>{children}</Kontext.Provider>;
+export function LernAzubi({ lernen, allgemein, vault = false, children }: { lernen: boolean; allgemein: string | null; vault?: boolean; children: ReactNode }) {
+  return <Kontext.Provider value={{ ...AZUBI, azubi: { lernen, allgemein, vault } }}>{children}</Kontext.Provider>;
 }
 
 /** Stellt die Lernseiten darunter auf das Paket für alle Berufe um – der Azubi liest es, ohne Ampel und Abzeichen. */

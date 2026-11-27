@@ -48,6 +48,11 @@ export function LernReiter() {
             <Link zu="/lernen/ueben" aktivAb="/lernen/ueben">
               Üben
             </Link>
+            {azubi.vault && (
+              <Link zu="/lernen/vault" aktivAb="/lernen/vault">
+                Game Vault
+              </Link>
+            )}
           </>
         )}
         {azubi.allgemein && (

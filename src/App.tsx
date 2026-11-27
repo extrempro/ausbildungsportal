@@ -18,6 +18,7 @@ import { Versionen } from './pages/Versionen';
 import { Vorlagen } from './pages/Vorlagen';
 import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Jahreskalender } from './pages/Jahreskalender';
+import { Gaertnerei, GameVault, PflanzenRegal, VaultTropfen } from './pages/GameVault';
 import { Lernen } from './pages/Lernen';
 import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
 import { LernEinreichungen } from './pages/LernEinreichungen';
@@ -114,6 +115,8 @@ export function App() {
   const [konto, setKonto] = useState<Konto | null | undefined>(undefined); // undefined = lädt
   // Lernmodul: nur für Azubis, deren Ausbildungsberuf ein Inhaltspaket hat
   const [lernen, setLernen] = useState(false);
+  // Game Vault (Pflanzenregal): nur Azubis mit Lernmodul, wenn der Super-Admin ihn eingeschaltet hat
+  const [vault, setVault] = useState(false);
   // Titel des Lernpakets für alle Berufe (Anleitungen) – null, wenn es keins gibt; nur Azubis
   const [anleitungen, setAnleitungen] = useState<string | null>(null);
   // Titel des Planers für das Prüfungsvorhaben (z. B. „Abschlussprojekt“) – null, solange er für den Azubi nicht freigeschaltet ist
@@ -174,10 +177,11 @@ export function App() {
   const [abgemeldet, setAbgemeldet] = useState(false);
   const hole = useCallback(async (still: boolean) => {
     try {
-      const r = await api<{ konto: Konto; version: string; lernen?: boolean; anleitungen?: string | null; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
+      const r = await api<{ konto: Konto; version: string; lernen?: boolean; vault?: boolean; anleitungen?: string | null; planer?: string | null; profilbild?: boolean }>('GET', '/api/ich');
       setKonto(r.konto);
       setProfilbild(r.profilbild === true);
       setLernen(r.lernen === true);
+      setVault(r.vault === true);
       setAnleitungen(r.anleitungen ?? null);
       setPlaner(r.planer ?? null);
       setVersion(r.version);
@@ -391,7 +395,7 @@ export function App() {
   // Leseansicht der Lerninhalte für Ausbilder und Beauftragte: /lerninhalte/<paket>[/kompendium|/<themenfeld>]
   const lesePfad = /^\/lerninhalte\/([a-z0-9][a-z0-9-]{0,30})(?:\/([a-z0-9-]{1,40}))?$/.exec(pfad);
   const anleitung = /^\/anleitungen\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
-  const lernThema = /^\/lernen\/(?!ueben$)([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
+  const lernThema = /^\/lernen\/(?!ueben$|vault$)([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernKarten = /^\/lernen\/ueben\/karten\/([a-z0-9-]{1,40})$/.exec(pfad)?.[1];
   const lernQuiz = /^\/lernen\/ueben\/quiz\/([a-z0-9-]{1,40}\.[a-z0-9-]{1,60})$/.exec(pfad)?.[1];
 
@@ -448,6 +452,10 @@ export function App() {
   else if (pfad === '/lernen' && lernen) seite = <Lernen />;
   else if (pfad === '/lernen/kompendium' && lernen) seite = <LernKompendium />;
   else if (pfad === '/lernen/ueben' && lernen) seite = <LernUeben />;
+  else if (pfad === '/lernen/vault' && lernen && vault) seite = <GameVault />;
+  else if (pfad === '/lernen/vault/regal' && lernen && vault) seite = <PflanzenRegal />;
+  else if (pfad === '/lernen/vault/gaertnerei' && lernen && vault) seite = <Gaertnerei />;
+  else if (pfad === '/lernen/vault/tropfen' && lernen && vault) seite = <VaultTropfen />;
   else if (lernKarten && lernen) seite = <LernKarten key={lernKarten} feld={lernKarten} />;
   else if (lernQuiz && lernen) seite = <LernQuiz key={lernQuiz} id={lernQuiz} />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;
@@ -718,7 +726,7 @@ export function App() {
         )}
         {begleiter.angebot}
         {konto.rolle === 'azubi' ? (
-          <LernAzubi lernen={lernen} allgemein={anleitungen}>
+          <LernAzubi lernen={lernen} allgemein={anleitungen} vault={vault}>
             {seite}
           </LernAzubi>
         ) : (

@@ -16,11 +16,15 @@ before(async () => {
   const anna = await p.api().als(ANNA);
   const von = montagVon(inTagen(60));
   await anna.ruf('POST', `/api/azubis/${g.anna}/urlaub`, { von, bis: von, bemerkung: 'Umzug' });
+  // Game Vault mit Regal und einer Pflanze
+  await (await p.api().alsAdmin()).ruf('PUT', '/api/regal/einstellung', { an: true });
+  await anna.ruf('POST', '/api/regal', {});
+  await anna.ruf('POST', '/api/regal/paket', { sorte: 'bluete' });
 });
 after(() => p.stop());
 
 const seiten: Record<string, (g: Grunddaten) => string[]> = {
-  [ANNA]: () => ['/', '/berichtsheft', '/berichtsheft/einlesen', `/berichtsheft/${montagVon(inTagen(-7))}`, '/urlaub', '/einsatzwuensche', '/jahreskalender', '/lernen', '/lernen/grundlagen', '/lernen/kompendium', '/lernen/ueben', '/planer', '/konto', '/meine-meldungen', '/handbuch', '/versionen'],
+  [ANNA]: () => ['/', '/berichtsheft', '/berichtsheft/einlesen', `/berichtsheft/${montagVon(inTagen(-7))}`, '/urlaub', '/einsatzwuensche', '/jahreskalender', '/lernen', '/lernen/grundlagen', '/lernen/kompendium', '/lernen/ueben', '/lernen/vault', '/lernen/vault/regal', '/lernen/vault/gaertnerei', '/lernen/vault/tropfen', '/planer', '/konto', '/meine-meldungen', '/handbuch', '/versionen'],
   [PETRA]: (x) => ['/', '/azubis', `/azubis/${x.anna}`, `/azubis/${x.anna}/plan`, `/azubis/${x.anna}/zeitleiste`, '/abzeichnen', '/urlaub', '/jahreskalender', '/planung/einsatzwuensche', '/erinnerungen', '/planung/sammelplanung', '/planung/schulbloecke', '/planung/schulbloecke/einlesen', '/planung/bausteine', '/lerninhalte', '/lerninhalte/muster/grundlagen', '/rueckmeldungen', '/verwaltung/stammdaten', '/verwaltung/konten', '/konto', '/handbuch'],
   [BEA]: (x) => ['/', '/azubis', `/azubis/${x.anna}`, '/abzeichnen', '/urlaub', '/jahreskalender', '/erinnerungen', '/lerninhalte', '/konto', '/handbuch'],
   [ADMIN.name]: () => ['/verwaltung/konten', '/verwaltung/protokoll', '/verwaltung/meldungen', '/verwaltung/lerninhalte', '/verwaltung/erscheinungsbild', '/konto', '/handbuch'],

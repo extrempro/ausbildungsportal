@@ -26,6 +26,8 @@ const AKTION: Record<string, string> = {
   teams_paket: 'Paket der Teams-App heruntergeladen',
   logo_entfernt: 'Logo entfernt',
   begleiter_eingeschaltet: 'Begleiter für Azubis eingeschaltet',
+  vault_eingeschaltet: 'Game Vault für Azubis eingeschaltet',
+  vault_ausgeschaltet: 'Game Vault für Azubis ausgeschaltet',
   begleiter_ausgeschaltet: 'Begleiter für Azubis ausgeschaltet',
   kalender_link_erstellt: 'Kalender-Link erstellt',
   kalender_link_erneuert: 'Kalender-Link erneuert',
