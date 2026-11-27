@@ -671,7 +671,7 @@ export function VaultTropfen() {
         <h2 className="vault-name">
           <Tropfen /> Tropfen – für die Pflege
         </h2>
-        <table>
+        <table className="stapel">
           <thead>
             <tr>
               <th>Wofür</th>
@@ -681,29 +681,29 @@ export function VaultTropfen() {
           </thead>
           <tbody>
             <tr>
-              <td>Bericht eingereicht – egal wann</td>
-              <td>+{t?.bericht ?? 5}</td>
-              <td>je Woche einmal, dazu ein Blatt am Berichtsheft-Gewächs</td>
+              <td data-label="Wofür">Bericht eingereicht – egal wann</td>
+              <td data-label="Tropfen">+{t?.bericht ?? 5}</td>
+              <td data-label="Wie oft">je Woche einmal, dazu ein Blatt am Berichtsheft-Gewächs</td>
             </tr>
             <tr>
-              <td>Unterthema im Lernstand auf Gelb</td>
-              <td>+{t?.gelb ?? 2}</td>
-              <td>je Unterthema einmal</td>
+              <td data-label="Wofür">Unterthema im Lernstand auf Gelb</td>
+              <td data-label="Tropfen">+{t?.gelb ?? 2}</td>
+              <td data-label="Wie oft">je Unterthema einmal</td>
             </tr>
             <tr>
-              <td>Unterthema im Lernstand auf Grün</td>
-              <td>+{t?.gruen ?? 5}</td>
-              <td>je Unterthema einmal</td>
+              <td data-label="Wofür">Unterthema im Lernstand auf Grün</td>
+              <td data-label="Tropfen">+{t?.gruen ?? 5}</td>
+              <td data-label="Wie oft">je Unterthema einmal</td>
             </tr>
             <tr>
-              <td>Quiz bestanden</td>
-              <td>+{t?.quiz ?? 3}</td>
-              <td>je Unterthema einmal – Fehlversuche kosten nichts</td>
+              <td data-label="Wofür">Quiz bestanden</td>
+              <td data-label="Tropfen">+{t?.quiz ?? 3}</td>
+              <td data-label="Wie oft">je Unterthema einmal – Fehlversuche kosten nichts</td>
             </tr>
             <tr>
-              <td>Fällige Karteikarte wiederholt</td>
-              <td>+{t?.karte ?? 1}</td>
-              <td>jedes Mal, wenn sie dran ist</td>
+              <td data-label="Wofür">Fällige Karteikarte wiederholt</td>
+              <td data-label="Tropfen">+{t?.karte ?? 1}</td>
+              <td data-label="Wie oft">jedes Mal, wenn sie dran ist</td>
             </tr>
           </tbody>
         </table>
