@@ -105,6 +105,8 @@ test('die Rechtetabelle der Routen entspricht dem Kontext-Dokument', () => {
     'DELETE /api/regal/pflanzen/:id': 'azubi',
     'POST /api/regal/kaufen': 'azubi',
     'POST /api/regal/paket': 'azubi',
+    'GET /api/lernen/spiele/:id': 'azubi',
+    'POST /api/lernen/spiele/:id': 'azubi',
     'GET /api/regal/einstellung': 'admin',
     'PUT /api/regal/einstellung': 'admin',
     'GET /api/lernpakete/einreichungen': 'ausbilder,admin',

@@ -395,6 +395,12 @@ function allgemeines(c: Ctx): Paket {
   return p;
 }
 
+/** Hat der Azubi ein Pflanzenregal im Game Vault (angelegt, an, im Portal eingeschaltet)? Dann sagt Üben, was es an Tropfen bringt.
+ * (Eigene Abfrage statt Import aus regal.ts – sonst entsteht ein Kreis über urlaub → planer → lernen.) */
+function regalAn(db: DB, azubi: number): boolean {
+  return !!db.prepare("SELECT 1 FROM regal WHERE azubi_id = ? AND an = 1 AND EXISTS (SELECT 1 FROM einstellungen WHERE schluessel = 'vault_an' AND wert = '1')").get(azubi);
+}
+
 function meinPaket(c: Ctx): Paket {
   const p = paketVon(c.k, c.b);
   if (!p) throw new Fehler(404, 'Für deinen Ausbildungsberuf ist kein Lernmodul eingeschaltet');
@@ -684,14 +690,14 @@ export const LERN_ROUTEN: Route[] = [
       const vorher = c.k.db.prepare('SELECT fach, faellig FROM lern_karte WHERE azubi_id = ? AND paket = ? AND karte_id = ?').get(c.b.id, p.id, body.id) as { fach: number; faellig: string } | undefined;
       const alt = vorher?.fach ?? 0;
       // eine fällige Karte wiederholt: zählt fürs Pflanzenregal (nur die Zahl, ohne Datum)
-      if (!vorher || vorher.faellig <= c.k.jetzt().toISOString().slice(0, 10)) c.k.db.prepare('UPDATE regal SET karten = karten + 1 WHERE azubi_id = ? AND an = 1').run(c.b.id);
+      const zaehlt = (!vorher || vorher.faellig <= c.k.jetzt().toISOString().slice(0, 10)) && Number(c.k.db.prepare('UPDATE regal SET karten = karten + 1 WHERE azubi_id = ? AND an = 1').run(c.b.id).changes) > 0;
       const neu = naechstesFach(alt, body.gewusst);
       const jetzt = c.k.jetzt();
       const faellig = new Date(jetzt.getTime() + neu.tage * 86_400_000).toISOString().slice(0, 10);
       c.k.db
         .prepare('INSERT INTO lern_karte (azubi_id, paket, karte_id, fach, faellig, zuletzt) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(azubi_id, paket, karte_id) DO UPDATE SET fach = excluded.fach, faellig = excluded.faellig, zuletzt = excluded.zuletzt')
         .run(c.b.id, p.id, body.id, neu.fach, faellig, jetzt.toISOString().slice(0, 10));
-      return { status: 200, body: { id: body.id, fach: neu.fach, faellig } };
+      return { status: 200, body: { id: body.id, fach: neu.fach, faellig, regalTropfen: zaehlt && regalAn(c.k.db, c.b.id) ? 1 : 0 } };
     },
   },
   {
@@ -751,7 +757,7 @@ export const LERN_ROUTEN: Route[] = [
         )
         .run(c.b.id, p.id, c.p.id, richtig, gesamt, heute, bestandenAm, meisterAm);
       const neu = c.k.db.prepare('SELECT * FROM lern_quiz WHERE azubi_id = ? AND paket = ? AND unterthema_id = ?').get(c.b.id, p.id, c.p.id) as unknown as QuizZeile;
-      return { status: 200, body: { richtig, gesamt, bestanden, falsch, neuBestanden: bestanden && !alt?.bestanden_am, neuMeister: !!meisterAm && !alt?.meister_am, ...quizAnsicht(c.p.id, q.titel, gesamt, neu, heute), ...nachSpeichern(c, p, rangVorher) } };
+      return { status: 200, body: { richtig, gesamt, bestanden, falsch, regalTropfen: bestanden && !alt?.bestanden_am && regalAn(c.k.db, c.b.id) ? 3 : 0, neuBestanden: bestanden && !alt?.bestanden_am, neuMeister: !!meisterAm && !alt?.meister_am, ...quizAnsicht(c.p.id, q.titel, gesamt, neu, heute), ...nachSpeichern(c, p, rangVorher) } };
     },
   },
 

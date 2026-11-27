@@ -972,6 +972,7 @@ const AZUBI: Kapitel[] = [
         </dl>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
+          <li>Hast du im Game Vault ein Pflanzenregal, steht nach der Runde, wie viele Tropfen sie gebracht hat: +1 für jede fällige Karteikarte, +3 für ein Quiz, das du zum ersten Mal bestehst.</li>
           <li>Unter jedem Schild steht, was bis zur nächsten Stufe fehlt.</li>
           <li>Gezählt werden nur Unterthemen, für die es ein Quiz gibt. Hat ein Themenfeld gar kein Quiz, ist dort Bronze die höchste Stufe.</li>
           <li>Ein neues Abzeichen zeigt dir das Portal einmal groß an.</li>
@@ -1003,7 +1004,7 @@ const AZUBI: Kapitel[] = [
         </ol>
         <h3>Begriffe</h3>
         <dl className="begriffe">
-          <Begriff wort="Tropfen">Zum Gießen. Es gibt sie für jeden eingereichten Bericht (+5, egal wann), für Unterthemen auf Gelb (+2) und Grün (+5), für ein bestandenes Quiz (+3) und für jede fällige Karteikarte, die du wiederholst (+1).</Begriff>
+          <Begriff wort="Tropfen">Zum Gießen. Es gibt sie für jeden eingereichten Bericht (+5, egal wann), für Unterthemen auf Gelb (+2) und Grün (+5), für ein bestandenes Quiz (+3), für jede fällige Karteikarte, die du wiederholst (+1), und einmal je Lernspiel und Themenfeld (+2).</Begriff>
           <Begriff wort="Funken">Für Booster. Es gibt sie für gelesenes Zusatzwissen (+1) und für jede Abzeichen-Stufe (+3).</Begriff>
           <Begriff wort="Berichtsheft-Gewächs">Eins je Ausbildungsjahr. Es bekommt ein Blatt für jeden eingereichten Bericht. Lücken sind vergangene Wochen ohne Bericht – holst du sie nach, wächst das Blatt nach. Es braucht kein Wasser.</Begriff>
           <Begriff wort="Meilenstein">Ein Abschnitt deiner Ausbildungszeit: Probezeit (nach 4 Monaten), jedes Ausbildungsjahr, Halbzeit, Abschluss. Bei jedem gibt es ein Samenpaket. Leistung spielt keine Rolle.</Begriff>
@@ -1022,6 +1023,32 @@ const AZUBI: Kapitel[] = [
           <li>Eine durstige Pflanze lässt die Blätter hängen, eingehen kann sie nicht. Nach dem Gießen erholt sie sich.</li>
           <li>Ist das Regal voll, gibst du unter „Pflanze weggeben“ eine Pflanze ab. Unten im Regal kannst du es ausblenden (bleibt gespeichert) oder ganz löschen.</li>
           <li>Den Game Vault gibt es, wenn dein Beruf ein Lernmodul hat und der Super-Admin ihn eingeschaltet hat.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: 'lernspiele',
+    titel: 'Lernspiele: Begriffe-Memory und Zeit-Sprint',
+    gruppe: 'Lernen und Prüfung',
+    inhalt: (
+      <>
+        <p>Im <Link zu="/lernen/vault">Game Vault</Link> übst du die Begriffe aus deinem Lernpaket auf eine zweite Art: als Memory oder im Sprint gegen die Uhr. Karteikarten und Quiz unter „Üben“ bleiben, wie sie sind.</p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Öffne „Game Vault“ und wähl „Memory spielen“ oder „Sprint starten“.</li>
+          <li>Such dir oben ein Themenfeld aus – oder „Heute dran“ für die Karteikarten, die heute fällig sind.</li>
+          <li>Memory: Dreh zwei Karten um. Passen Begriff und Erklärung zusammen, bleiben sie offen.</li>
+          <li>Zeit-Sprint: Tipp in 60 Sekunden zu jeder Erklärung den passenden Begriff. Am Ende steht, was du dir noch einmal ansehen solltest.</li>
+        </ol>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Nichts wird gespeichert:</strong> kein Ergebnis, keine Zeit. Die Spiele zählen nicht für Lernstand, Quiz oder Abzeichen.
+          </li>
+          <li>Deine beste Sprint-Runde merkt sich nur dein Browser – auf einem anderen Gerät fängst du bei null an.</li>
+          <li>Hast du ein Pflanzenregal, bringt die erste geschaffte Runde je Spiel und Themenfeld einmal 2 Tropfen. Dafür merkt sich das Regal nur, welche Kombination schon gezählt hat.</li>
+          <li>Hat ein Themenfeld zu wenige Begriffe, wähl ein anderes oder „Alle Themenfelder“.</li>
         </ul>
       </>
     ),

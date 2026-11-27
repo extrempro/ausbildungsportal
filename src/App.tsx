@@ -20,6 +20,7 @@ import { KontoSeite, PasswortFormular } from './pages/Konto';
 import { Jahreskalender } from './pages/Jahreskalender';
 import { Gaertnerei, GameVault, PflanzenRegal, VaultTropfen } from './pages/GameVault';
 import { Lernen } from './pages/Lernen';
+import { BegriffeMemory, ZeitSprint } from './pages/Lernspiele';
 import { LerninhalteListe, LerninhalteUebersicht } from './pages/Lerninhalte';
 import { LernEinreichungen } from './pages/LernEinreichungen';
 import { useBegleiter } from './begleiter';
@@ -456,6 +457,8 @@ export function App() {
   else if (pfad === '/lernen/vault/regal' && lernen && vault) seite = <PflanzenRegal />;
   else if (pfad === '/lernen/vault/gaertnerei' && lernen && vault) seite = <Gaertnerei />;
   else if (pfad === '/lernen/vault/tropfen' && lernen && vault) seite = <VaultTropfen />;
+  else if (pfad === '/lernen/vault/memory' && lernen && vault) seite = <BegriffeMemory />;
+  else if (pfad === '/lernen/vault/sprint' && lernen && vault) seite = <ZeitSprint />;
   else if (lernKarten && lernen) seite = <LernKarten key={lernKarten} feld={lernKarten} />;
   else if (lernQuiz && lernen) seite = <LernQuiz key={lernQuiz} id={lernQuiz} />;
   else if (lernThema && lernen) seite = <LernThema id={lernThema} />;

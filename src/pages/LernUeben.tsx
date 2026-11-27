@@ -125,6 +125,8 @@ export function LernKarten({ feld }: { feld: string }) {
   const [nr, setNr] = useState(0);
   const [offen, setOffen] = useState(false);
   const [gewusst, setGewusst] = useState(0);
+  // Tropfen fürs Pflanzenregal in dieser Runde (fällige Karten, nur mit Regal)
+  const [tropfen, setTropfen] = useState(0);
   const [laeuft, setLaeuft] = useState(false);
   const [alle, setAlle] = useState(false);
   const lade = useCallback(
@@ -132,6 +134,7 @@ export function LernKarten({ feld }: { feld: string }) {
       setD(null);
       setNr(0);
       setGewusst(0);
+      setTropfen(0);
       setOffen(false);
       setAlle(auchNichtFaellige);
       api<{ feldTitel: string; gesamt: number; faellig: number; karten: Karte[] }>('GET', `/api/lernen/karten?${feld === 'alle' ? '' : `feld=${encodeURIComponent(feld)}&`}${auchNichtFaellige ? 'alle=1' : ''}`).then(setD, (e: Error) => setFehler(e.message));
@@ -147,8 +150,9 @@ export function LernKarten({ feld }: { feld: string }) {
     setLaeuft(true);
     setFehler('');
     try {
-      await api('PATCH', '/api/lernen/karte', { id: k.id, gewusst: wusste });
+      const r = await api<{ regalTropfen?: number }>('PATCH', '/api/lernen/karte', { id: k.id, gewusst: wusste });
       if (wusste) setGewusst((n) => n + 1);
+      if (r.regalTropfen) setTropfen((n) => n + (r.regalTropfen ?? 0));
       setOffen(false);
       setNr((n) => n + 1);
     } catch (e) {
@@ -187,6 +191,7 @@ export function LernKarten({ feld }: { feld: string }) {
             </strong>{' '}
             Gewusste Karten kommen später wieder, die anderen sind sofort wieder dran.
           </p>
+          {tropfen > 0 && <RegalTropfen n={tropfen} />}
           <p className="aktionen links">
             <button type="button" className="knopf" onClick={() => lade(alle)}>
               Nächste Runde
@@ -273,6 +278,8 @@ interface Ergebnis extends Erfolg {
   neuMeister: boolean;
   stand: QuizStand['stand'];
   meisterAb: string | null;
+  /** Tropfen fürs Pflanzenregal im Game Vault – nur, wenn der Azubi eins hat */
+  regalTropfen?: number;
 }
 
 /** Quiz zu einem Unterthema: Frage für Frage, mit Rückmeldung nach jeder Antwort; am Ende wertet der Server. */
@@ -344,6 +351,7 @@ export function LernQuiz({ id }: { id: string }) {
                   ? `Für „Meister“ wiederholst du es ab dem ${datum(ergebnis.meisterAb)} fehlerfrei.`
                   : `Zum Bestehen brauchst du ${q.bestehenAb}. Sieh dir das Cheatsheet noch einmal an und versuch es wieder.`}
           </p>
+          {(ergebnis.regalTropfen ?? 0) > 0 && <RegalTropfen n={ergebnis.regalTropfen ?? 0} />}
           <p className="aktionen links">
             <button type="button" className={`knopf${ergebnis.bestanden ? ' schlicht' : ''}`} onClick={lade}>
               Quiz wiederholen
@@ -394,5 +402,14 @@ export function LernQuiz({ id }: { id: string }) {
       )}
       {erfolg && <AbzeichenFeier erfolg={erfolg} onZu={schliesse} />}
     </>
+  );
+}
+
+/** Hinweis nach einer Runde: Das hat Tropfen fürs Pflanzenregal gebracht (nur mit Regal im Game Vault). */
+function RegalTropfen({ n }: { n: number }) {
+  return (
+    <p className="hinweis gut" role="status">
+      +{n} Tropfen fürs Pflanzenregal. <Link zu="/lernen/vault/regal">Zum Regal</Link>
+    </p>
   );
 }

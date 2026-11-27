@@ -1,5 +1,15 @@
 # Änderungen
 
+## [0.87.0] – 2026-11-27
+
+### Neu
+
+- **Lernspiele im Game Vault:** Begriffe-Memory (Begriff und Erklärung als Paar finden) und Zeit-Sprint (60 Sekunden, so viele Begriffe wie möglich) mit den Begriffen aus dem Lernpaket – je Themenfeld oder mit den Karteikarten, die heute dran sind. Nichts wird gespeichert, nichts zählt für Lernstand oder Abzeichen. Mit Pflanzenregal bringt die erste geschaffte Runde je Spiel und Themenfeld einmal 2 Tropfen.
+
+### Geändert
+
+- **Üben und Pflanzenregal verbunden:** Wer im Game Vault ein Regal hat, sieht nach einer Runde Karteikarten oder einem bestandenen Quiz, wie viele Tropfen es gebracht hat – mit Link zum Regal. Fehlen im Regal Tropfen, führt ein Link zu Karteikarten, Quiz und Berichtsheft.
+
 ## [0.86.0] – 2026-11-27
 
 ### Neu

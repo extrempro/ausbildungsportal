@@ -24,7 +24,7 @@ before(async () => {
 after(() => p.stop());
 
 const seiten: Record<string, (g: Grunddaten) => string[]> = {
-  [ANNA]: () => ['/', '/berichtsheft', '/berichtsheft/einlesen', `/berichtsheft/${montagVon(inTagen(-7))}`, '/urlaub', '/einsatzwuensche', '/jahreskalender', '/lernen', '/lernen/grundlagen', '/lernen/kompendium', '/lernen/ueben', '/lernen/vault', '/lernen/vault/regal', '/lernen/vault/gaertnerei', '/lernen/vault/tropfen', '/planer', '/konto', '/meine-meldungen', '/handbuch', '/versionen'],
+  [ANNA]: () => ['/', '/berichtsheft', '/berichtsheft/einlesen', `/berichtsheft/${montagVon(inTagen(-7))}`, '/urlaub', '/einsatzwuensche', '/jahreskalender', '/lernen', '/lernen/grundlagen', '/lernen/kompendium', '/lernen/ueben', '/lernen/vault', '/lernen/vault/regal', '/lernen/vault/gaertnerei', '/lernen/vault/tropfen', '/lernen/vault/memory', '/lernen/vault/sprint', '/planer', '/konto', '/meine-meldungen', '/handbuch', '/versionen'],
   [PETRA]: (x) => ['/', '/azubis', `/azubis/${x.anna}`, `/azubis/${x.anna}/plan`, `/azubis/${x.anna}/zeitleiste`, '/abzeichnen', '/urlaub', '/jahreskalender', '/planung/einsatzwuensche', '/erinnerungen', '/planung/sammelplanung', '/planung/schulbloecke', '/planung/schulbloecke/einlesen', '/planung/bausteine', '/lerninhalte', '/lerninhalte/muster/grundlagen', '/rueckmeldungen', '/verwaltung/stammdaten', '/verwaltung/konten', '/konto', '/handbuch'],
   [BEA]: (x) => ['/', '/azubis', `/azubis/${x.anna}`, '/abzeichnen', '/urlaub', '/jahreskalender', '/erinnerungen', '/lerninhalte', '/konto', '/handbuch'],
   [ADMIN.name]: () => ['/verwaltung/konten', '/verwaltung/protokoll', '/verwaltung/meldungen', '/verwaltung/lerninhalte', '/verwaltung/erscheinungsbild', '/konto', '/handbuch'],
