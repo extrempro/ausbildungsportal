@@ -656,12 +656,12 @@ test('Üben: Karteikarten wandern durch die Fächer und kommen später wieder', 
   const karte = runde.karten.find((k: { vorne: string }) => k.vorne === 'Switch');
   const merke = async (gewusst: unknown, id = karte.id) => ruf(w.u, 'PATCH', '/api/lernen/karte', { cookies: c, body: { id, gewusst } });
   // gewusst: Fach 1 und morgen wieder dran; noch einmal: Fach 2 in drei Tagen
-  assert.deepEqual(koerper(await merke(true)), { id: karte.id, fach: 1, faellig: '2026-11-11' });
-  assert.deepEqual(koerper(await merke(true)), { id: karte.id, fach: 2, faellig: '2026-11-13' });
+  assert.deepEqual(koerper(await merke(true)), { id: karte.id, fach: 1, faellig: '2026-11-11', regalTropfen: 0 });
+  assert.deepEqual(koerper(await merke(true)), { id: karte.id, fach: 2, faellig: '2026-11-13', regalTropfen: 0 });
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/karten?feld=netz', { cookies: c })).faellig, 9, 'die gewusste Karte ist heute nicht mehr dran');
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/karten?feld=netz&alle=1', { cookies: c })).karten.length, 10);
   // nicht gewusst: zurück in Fach 1, sofort wieder dran
-  assert.deepEqual(koerper(await merke(false)), { id: karte.id, fach: 1, faellig: '2026-11-10' });
+  assert.deepEqual(koerper(await merke(false)), { id: karte.id, fach: 1, faellig: '2026-11-10', regalTropfen: 0 });
   w.u.uhr.jetzt = new Date('2026-11-14T09:00:00Z');
   c = als(w, w.anna); // die alte Sitzung ist inzwischen abgelaufen
   assert.equal(koerper(await ruf(w.u, 'GET', '/api/lernen/karten', { cookies: c })).feldTitel, 'Alle Themenfelder');
