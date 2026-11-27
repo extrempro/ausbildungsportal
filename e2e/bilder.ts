@@ -206,6 +206,14 @@ async function fuelle(url: string, api: () => Api, g: { petra: number; bea: numb
   await chef.ruf('POST', `/api/fehlermeldungen/${fehler}/nachricht`, { text: 'Danke! Passiert das bei jedem Antrag oder nur bei langen Listen?' });
   const begleiter = await anna.ruf('PUT', '/api/begleiter', { an: true, figur: 'fuchs', name: 'Fiete' });
   await anna.ruf('POST', '/api/begleiter/gefeiert', { stufe: begleiter.stufe });
+  // Game Vault: eingeschaltet, Lernstand und Zusatzwissen bringen Tropfen und einen Funken, drei Samenpakete geöffnet, Dünger gegeben
+  await chef.ruf('PUT', '/api/regal/einstellung', { an: true });
+  for (const id of ['grundlagen.begriffe', 'grundlagen.ablauf', 'praxis.werkzeug']) await anna.ruf('PATCH', `/api/lernen/unterthema/${id}`, { status: 'gruen' }).catch(() => undefined);
+  await anna.ruf('PATCH', '/api/lernen/zusatz/grundlagen.planen', { gelesen: true }).catch(() => undefined);
+  await anna.ruf('POST', '/api/regal', {});
+  for (const sorte of ['bluete', 'gruen', 'haenge']) await anna.ruf('POST', '/api/regal/paket', { sorte }).catch(() => undefined);
+  const regal = (await anna.ruf('POST', '/api/regal/kaufen', { was: 'duenger' }).catch(() => null)) as { pflanzen: { id: number }[] } | null;
+  if (regal?.pflanzen[0]) await anna.ruf('POST', `/api/regal/pflanzen/${regal.pflanzen[0].id}/booster`, { art: 'duenger' }).catch(() => undefined);
   return { cem, url };
 }
 
@@ -280,7 +288,7 @@ async function main() {
     await s.keyboard.press('Escape');
     await foto(s, '/', 'azubi-01-ausbildungsplan', 'Ausbildungsplan', 'Die Startseite der Azubis: was diese Woche ansteht, Kennzahlen zur Ausbildung und darunter jede Woche. Unten rechts sitzt der Begleiter.');
     await foto(s, '/berichtsheft', 'azubi-02-berichtsheft', 'Berichtsheft', 'Alle Wochen mit ihrem Stand: fehlt, Entwurf, eingereicht, zurückgegeben, abgezeichnet.');
-    await foto(s, `/berichtsheft/${woche(0)}`, 'azubi-03-bericht-schreiben', 'Einen Bericht schreiben', 'Je Tätigkeit eine Zeile mit Stunden. Speichern als Entwurf oder einreichen.');
+    await foto(s, `/berichtsheft/${woche(0)}`, 'azubi-03-bericht-schreiben', 'Einen Bericht schreiben', 'Je Tätigkeit eine Zeile mit Stunden. Das Portal speichert von selbst; mit den Knöpfen oben geht es zur Woche davor oder danach.');
     await foto(s, `/berichtsheft/${woche(-3)}`, 'azubi-04-bericht-abgezeichnet', 'Abgezeichneter Bericht', 'Der fertige Ausbildungsnachweis mit beiden Unterschriften.', { ganz: true });
     await foto(s, '/urlaub', 'azubi-05-urlaub', 'Urlaub', 'Urlaubskonto, Antrag und der Stand der eigenen Anträge.', { ganz: true });
     await foto(s, '/jahreskalender', 'azubi-06-jahreskalender', 'Jahreskalender', 'Das eigene Jahr Tag für Tag: Berufsschule, Einsätze, Urlaub, Prüfungen.');
@@ -317,6 +325,8 @@ async function main() {
     await s.keyboard.press('Escape');
     await foto(s, '/meine-meldungen', 'azubi-19-meine-meldungen', 'Meine Meldungen', 'Eigene Fehlermeldungen und Ideen mit dem Gespräch dazu: Fragt jemand nach, sagt die Glocke Bescheid, und hier steht die Antwort. Erledigte Meldungen werden 30 Tage danach gelöscht.', { ganz: true });
     await foto(s, '/einsatzwuensche', 'azubi-20-einsatzwunsch', 'Einsatz wünschen', 'Azubis wünschen sich einen Einsatz in einer Abteilung aus den Stammdaten. Den Wunsch und den Grund sieht nur der Ausbilder.', { ganz: true });
+    await foto(s, '/lernen/vault/regal', 'azubi-21-pflanzenregal', 'Game Vault: Pflanzenregal', 'Freiwillig und nur für den Azubi: Pflanzen mit Tropfen aus Berichten und Lernen gießen, oben das Berichtsheft-Gewächs mit einem Blatt je Bericht. Der Super-Admin schaltet den Game Vault ein.', { ganz: true });
+    await foto(s, '/lernen/vault/gaertnerei', 'azubi-22-gaertnerei', 'Game Vault: Gärtnerei', 'Booster für Funken aus Zusatzwissen und Abzeichen; Gadgets kommen mit den Meilensteinen der Ausbildungszeit.', { ganz: true });
     await foto(s, '/handbuch', 'azubi-13-handbuch', 'Handbuch', 'Jede Rolle hat ihr eigenes Handbuch mit Inhaltsverzeichnis und Suche.');
     await foto(s, '/berichtsheft', 'azubi-17-abmelde-warnung', 'Warnung vor dem Abmelden', 'Fünf Minuten bevor das Portal nach langer Pause abmeldet, erscheint dieses Fenster mit der verbleibenden Zeit. „Angemeldet bleiben“ verlängert.', {
       vorher: async () => {
@@ -381,7 +391,7 @@ async function main() {
     await foto(s, '/verwaltung/konten', 'admin-01-konten', 'Konten', 'Der Super-Admin verwaltet Konten. Berichte, Pläne und Urlaub sieht er nicht.');
     await foto(s, '/verwaltung/protokoll', 'admin-02-protokoll', 'Protokoll', 'Anmeldungen und Änderungen – ohne Inhalte von Berichten und Plänen.');
     await foto(s, '/verwaltung/meldungen', 'admin-04-meldungen', 'Rückmeldungen', 'Fehlermeldungen und Ideen fürs Portal, mit Rückfrage an die Person und ihrer Antwort. Wünsche zu den Lerninhalten sieht der Super-Admin nicht – die gehen nur an die Ausbilder.', { ganz: true });
-    await foto(s, '/verwaltung/erscheinungsbild', 'admin-03-erscheinungsbild', 'Erscheinungsbild', 'Logo des Betriebs und der Schalter für den Begleiter der Azubis.', { ganz: true });
+    await foto(s, '/verwaltung/erscheinungsbild', 'admin-03-erscheinungsbild', 'Erscheinungsbild', 'Logo des Betriebs, die Schalter für den Begleiter und den Game Vault der Azubis und die Teams-App.', { ganz: true });
     await s.context().close();
 
     // ---------- Handy und dunkel ----------
