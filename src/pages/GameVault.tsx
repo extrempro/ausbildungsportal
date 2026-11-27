@@ -31,7 +31,7 @@ interface Regal {
   an: boolean;
   tropfen?: number;
   funken?: number;
-  herkunft?: { berichte: number; lernen: number; karten: number; funken: number };
+  herkunft?: { berichte: number; lernen: number; karten: number; spiele: number; funken: number };
   plaetze?: number;
   pflanzen?: PflanzeDaten[];
   gewaechse?: { jahr: number; blaetter: number; luecken: number }[];
@@ -172,8 +172,40 @@ export function GameVault() {
               )}
             </div>
           </section>
+          <section className="karte vault-kachel">
+            <svg className="vault-spiel-bild" viewBox="0 0 64 64" width="72" height="72" aria-hidden="true">
+              <rect x="6" y="12" width="22" height="28" rx="4" className="vault-karte-zu" />
+              <rect x="34" y="12" width="22" height="28" rx="4" className="vault-karte-auf" />
+              <rect x="20" y="30" width="22" height="26" rx="4" className="vault-karte-paar" />
+            </svg>
+            <div>
+              <h2>Begriffe-Memory</h2>
+              <p className="leise">Begriff und Erklärung als Paar finden – je Themenfeld oder mit den Karteikarten, die heute dran sind.</p>
+              <p className="aktionen links">
+                <Link zu="/lernen/vault/memory" className="knopf schlicht">
+                  Memory spielen
+                </Link>
+              </p>
+            </div>
+          </section>
+          <section className="karte vault-kachel">
+            <svg className="vault-spiel-bild" viewBox="0 0 64 64" width="72" height="72" aria-hidden="true">
+              <circle cx="32" cy="35" r="20" className="vault-uhr" />
+              <path d="M32 35V22M26 8h12M32 8v7" className="vault-uhr" />
+            </svg>
+            <div>
+              <h2>Zeit-Sprint</h2>
+              <p className="leise">60 Sekunden, so viele Begriffe wie möglich. Nur gegen dich selbst.</p>
+              <p className="aktionen links">
+                <Link zu="/lernen/vault/sprint" className="knopf schlicht">
+                  Sprint starten
+                </Link>
+              </p>
+            </div>
+          </section>
         </div>
       )}
+      {regal.erlaubt && <p className="leise klein">Die Lernspiele nehmen die Begriffe aus deinem Lernpaket. Nichts davon wird gespeichert, und nichts zählt für Lernstand oder Abzeichen.</p>}
     </>
   );
 }
@@ -705,6 +737,11 @@ export function VaultTropfen() {
               <td data-label="Wie oft">je Unterthema einmal – Fehlversuche kosten nichts</td>
             </tr>
             <tr>
+              <td data-label="Wofür">Lernspiel geschafft (Memory, Zeit-Sprint)</td>
+              <td data-label="Tropfen">+{t?.spiel ?? 2}</td>
+              <td data-label="Wie oft">je Spiel und Themenfeld einmal</td>
+            </tr>
+            <tr>
               <td data-label="Wofür">Fällige Karteikarte wiederholt</td>
               <td data-label="Tropfen">+{t?.karte ?? 1}</td>
               <td data-label="Wie oft">jedes Mal, wenn sie dran ist</td>
@@ -713,7 +750,7 @@ export function VaultTropfen() {
         </table>
         {r && (
           <p className="leise klein">
-            Bei dir bisher: {r.herkunft.berichte} aus Berichten, {r.herkunft.lernen} aus Lernstand und Quiz, {r.herkunft.karten} aus Karteikarten.
+            Bei dir bisher: {r.herkunft.berichte} aus Berichten, {r.herkunft.lernen} aus Lernstand und Quiz, {r.herkunft.karten} aus Karteikarten, {r.herkunft.spiele} aus Lernspielen.
           </p>
         )}
       </section>

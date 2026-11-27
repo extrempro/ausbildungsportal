@@ -35,6 +35,7 @@ import { WUNSCH_ROUTEN } from './wunsch';
 import { ERINNERUNG_ROUTEN } from './erinnerung';
 import { BEGLEITER_ROUTEN } from './begleiter';
 import { REGAL_ROUTEN, vaultErlaubt } from './regal';
+import { LERNSPIEL_ROUTEN } from './lernspiele';
 import { PLANER_ROUTEN, planerFuer } from './planer';
 import { azubiUebersicht, STAMMDATEN_ROUTEN } from './stammdaten';
 import { alsKonto, kontoFuer, ROLLEN } from './typen';
@@ -740,6 +741,7 @@ export const ROUTEN: Route[] = [
   ...ERINNERUNG_ROUTEN,
   ...BEGLEITER_ROUTEN,
   ...REGAL_ROUTEN,
+  ...LERNSPIEL_ROUTEN,
 ];
 
 // ---------- Verteiler ----------

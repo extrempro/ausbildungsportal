@@ -10386,7 +10386,7 @@ html.dark .vault-regal {
 
 .vault-kacheln {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -10541,3 +10541,77 @@ html.dark .vault-regal {
 }
 /* unter der festen Leiste oben bleibt etwas Luft, wenn die Pflanze ins Bild rollt */
 .vault-detail { scroll-margin-top: 72px; }
+
+/* ---------- Game Vault: Lernspiele (src/pages/Lernspiele.tsx) ---------- */
+.vault-spiel-bild { flex: 0 0 auto; }
+.vault-karte-zu { fill: var(--c-accent); }
+.vault-karte-auf { fill: var(--c-card); stroke: var(--c-accent); stroke-width: 2; }
+.vault-karte-paar { fill: var(--c-gruen-bg); stroke: var(--c-gruen-fg); stroke-width: 2; }
+.vault-uhr { fill: none; stroke: var(--c-ferien); stroke-width: 3; stroke-linecap: round; }
+.spiel-feld { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--c-muted); }
+.spiel-feld select { min-width: 220px; }
+.spiel-fertig { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.memory-feld {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.memory-karte {
+  min-height: 120px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 2px solid var(--c-border);
+  background: var(--c-accent);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.35;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+.memory-karte.auf { background: var(--c-card); border-color: var(--c-accent); }
+.memory-karte.weg { background: var(--c-gruen-bg); border-color: var(--c-gruen-fg); color: var(--c-gruen-fg); cursor: default; }
+.memory-art { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--c-muted); }
+.memory-karte.weg .memory-art { color: var(--c-gruen-fg); }
+.memory-begriff { font-weight: 700; }
+.memory-ruecken {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--c-on-accent);
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .memory-karte { transition: background 0.2s ease, border-color 0.2s ease; }
+}
+.sprint { max-width: 640px; }
+.sprint-stand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.sprint-uhr { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 20px; }
+.sprint-uhr.knapp { color: var(--c-rot-fg); }
+.sprint-frage {
+  margin: 16px 0;
+  padding: 16px;
+  min-height: 72px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.sprint-optionen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sprint-optionen .knopf { min-height: 52px; white-space: normal; }
+.sprint-rueck { min-height: 20px; color: var(--c-gruen-fg); }
+.sprint-rueck.falsch { color: var(--c-rot-fg); }
+.sprint-ergebnis { font-size: 18px; }
+.sprint-ergebnis strong { font-size: 40px; color: var(--c-accent); margin-right: 6px; }
+@media (max-width: 699px) {
+  .sprint-optionen { grid-template-columns: minmax(0, 1fr); }
+  .memory-feld { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .memory-karte { min-height: 100px; font-size: 14px; }
+  .spiel-feld, .spiel-feld select { width: 100%; min-width: 0; }
+}

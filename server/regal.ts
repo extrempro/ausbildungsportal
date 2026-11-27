@@ -26,7 +26,7 @@ import { arbeitstage, genehmigteTage } from './urlaub';
 
 // ---------- Regeln (in Zahlen) ----------
 
-export const TROPFEN = { bericht: 5, gelb: 2, gruen: 5, quiz: 3, karte: 1 } as const;
+export const TROPFEN = { bericht: 5, gelb: 2, gruen: 5, quiz: 3, karte: 1, spiel: 2 } as const;
 export const FUNKEN = { zusatz: 1, abzeichen: 3 } as const;
 export const PREIS = { giessen: 2, seltenesPaket: 150, extraPaket: 300, gadget: 200 } as const;
 /** Gießen geht erst, wenn die Erde unter diesen Wert getrocknet ist – etwa einmal in der Woche. */
@@ -91,6 +91,7 @@ interface RegalZeile {
   pakete: number;
   gadgets: string;
   vorrat: string;
+  spiele: string;
 }
 interface PflanzenZeile {
   id: number;
@@ -103,7 +104,7 @@ interface PflanzenZeile {
   booster_bis: string | null;
 }
 
-const holeRegal = (db: DB, azubi: number) => db.prepare('SELECT an, tropfen_aus, funken_aus, karten, lern_max, funken_max, pakete, gadgets, vorrat FROM regal WHERE azubi_id = ?').get(azubi) as RegalZeile | undefined;
+const holeRegal = (db: DB, azubi: number) => db.prepare('SELECT an, tropfen_aus, funken_aus, karten, lern_max, funken_max, pakete, gadgets, vorrat, spiele FROM regal WHERE azubi_id = ?').get(azubi) as RegalZeile | undefined;
 const pflanzenVon = (db: DB, azubi: number) => db.prepare('SELECT id, platz, art, stufe, wuchs, gegossen, booster, booster_bis FROM regal_pflanze WHERE azubi_id = ? ORDER BY platz').all(azubi) as unknown as PflanzenZeile[];
 
 function vorratVon(z: RegalZeile): Record<Booster, number> {
@@ -178,10 +179,12 @@ function guthaben(db: DB, azubi: number, r: RegalZeile) {
   if (ausAmpel > r.lern_max || ausZusatz > r.funken_max) db.prepare('UPDATE regal SET lern_max = ?, funken_max = ? WHERE azubi_id = ?').run(ausAmpel, ausZusatz, azubi);
   const ausBerichten = berichte * TROPFEN.bericht;
   const ausKarten = r.karten * TROPFEN.karte;
+  // Lernspiele: einmal je Spiel und Themenfeld
+  const ausSpielen = r.spiele.split(',').filter(Boolean).length * TROPFEN.spiel;
   return {
-    tropfen: Math.max(0, ausBerichten + lern + ausKarten - r.tropfen_aus),
+    tropfen: Math.max(0, ausBerichten + lern + ausKarten + ausSpielen - r.tropfen_aus),
     funken: Math.max(0, funken - r.funken_aus),
-    herkunft: { berichte: ausBerichten, lernen: lern, karten: ausKarten, funken },
+    herkunft: { berichte: ausBerichten, lernen: lern, karten: ausKarten, spiele: ausSpielen, funken },
   };
 }
 

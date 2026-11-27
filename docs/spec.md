@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.86.1 · 27.11.2026
+Stand: Version 0.87.0 · 27.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -84,6 +84,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 - Reiter „Game Vault“ unter Lernen (nur Azubis mit Lernmodul; Schalter für das ganze Portal beim Super-Admin, anfangs aus). Erstes Spiel: **Pflanzenregal**.
 - **Tropfen** zum Gießen: je eingereichtem Bericht 5 (egal wann), je Unterthema Gelb 2 und Grün 5, je bestandenem Quiz 3, je wiederholter fälliger Karteikarte 1 (Üben zeigt nach der Runde, was es gebracht hat; das Regal verweist bei fehlenden Tropfen auf Üben und Berichtsheft). **Funken** für Booster: je gelesenem Zusatzwissen 1, je Abzeichen-Stufe 3. Das Guthaben wird bei jedem Aufruf aus Berichtsheft und Lernstand errechnet (minus Ausgaben); gespeichert werden nur Ausgaben, ein Zähler für Karteikarten und Höchststände – ohne Datum. Keine Fristen.
 - **Pflanzen** (9 Plätze, mit Gadget 12) wachsen in 4 Stufen; Gießen (2 Tropfen) geht ab 70 % Feuchte und bringt Wachstum. Die Erde trocknet nur an Arbeitstagen im Betrieb (nicht in Urlaub, Berufsschule, Abwesenheit laut Bericht); Pflanzen welken höchstens, eingehen können sie nicht.
+- **Lernspiele:** Begriffe-Memory und Zeit-Sprint mit den Kernbegriffen des Lernpakets (je Themenfeld, alle oder „heute dran“). Kein Ergebnis wird gespeichert, kein Einfluss auf Lernstand oder Abzeichen; Bestmarke im Sprint nur im Browser. Mit Regal: einmal je Spiel und Themenfeld 2 Tropfen (gespeichert nur die Kombination, ohne Datum).
 - **Berichtsheft-Gewächs** je Ausbildungsjahr: ein Blatt je eingereichtem Bericht, errechnet, nicht gespeichert.
 - **Meilensteine** aus der Ausbildungszeit (Start, Probezeit nach 4 Monaten, jedes Ausbildungsjahr, Halbzeit, Abschluss): je ein Samenpaket, Sorte frei wählbar; ein seltenes Paket gegen 150 Tropfen, ein Paket ohne Meilenstein gegen 300. **Gärtnerei:** Booster (Pflanzenlampe, Luftbefeuchter, Dünger) für Funken; Gadgets (Bewässerungsdocht, Pflanzenkalender – der Begleiter erinnert an durstige Pflanzen –, viertes Regalbrett) mit Meilensteinen oder für 200 Tropfen.
 
@@ -109,7 +110,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 47 Tabellen (dazu `schema_version`), Migrationen fortlaufend in `server/migrations/` (Stand: 041). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 47 Tabellen (dazu `schema_version`), Migrationen fortlaufend in `server/migrations/` (Stand: 042). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -196,7 +197,7 @@ erDiagram
 | `lern_zusatz` | gelesenes Zusatzwissen | `azubi_id`, `paket`, `zusatz_id` |
 | `planer` | Vorhaben, Termine, Haken, Phasen, Antworten, Notizen (JSON) | `azubi_id`, `paket` |
 | `begleiter` | Figur, Name, an/aus, gezeigte Stufe, abgeschaltete Erinnerungen | `azubi_id` |
-| `regal` | Game Vault: an/aus, ausgegebene Tropfen und Funken, Zähler wiederholter Karteikarten, Höchststände, eingelöste Samenpakete, gekaufte Gadgets, Vorrat an Boostern | `azubi_id` |
+| `regal` | Game Vault: an/aus, ausgegebene Tropfen und Funken, Zähler wiederholter Karteikarten, Höchststände, eingelöste Samenpakete, gekaufte Gadgets, Vorrat an Boostern, Lernspiele, die schon Tropfen gebracht haben (Spiel und Themenfeld) | `azubi_id` |
 | `regal_pflanze` | Pflanze: Platz, Art, Stufe, Wuchs, Tag des letzten Gießens, Booster bis | `id` (`azubi_id`, `platz`) |
 
 Dazu, nicht privat: `lern_paket_stand` (Prüfsumme je Unterthema, für „Lerninhalte aktualisiert“), `lern_inhalt_version` (Prüfsummen der Bausteine je Inhaltsstand eines Unterthemas – damit der Azubi sieht, was seit seinem letzten Blick neu ist oder sich geändert hat; aufgehoben, solange der Stand aktuell ist oder ein Lernstand auf ihn verweist) und `lern_einreichung` (eingereichte ZIP-Dateien mit Prüfergebnis und Entscheidung).
@@ -241,7 +242,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/jahreskalender` | Jahreskalender | eigenes Jahr |
 | `/lernen`, `/lernen/<Themenfeld>`, `/lernen/kompendium` | Lernen | Themenfelder, Lernstand, Abzeichen |
 | `/lernen/ueben`, `…/karten/<Feld>`, `…/quiz/<Unterthema>` | Üben | Karteikarten, Quiz |
-| `/lernen/vault`, `…/regal`, `…/gaertnerei`, `…/tropfen` | Game Vault | Pflanzenregal, Samenpakete, Gärtnerei, Regeln für Tropfen und Funken (wenn eingeschaltet) |
+| `/lernen/vault`, `…/regal`, `…/gaertnerei`, `…/tropfen`, `…/memory`, `…/sprint` | Game Vault | Pflanzenregal, Samenpakete, Gärtnerei, Regeln für Tropfen und Funken, Lernspiele (wenn eingeschaltet) |
 | `/planer` | Planer | Planer für die Prüfung (wenn freigeschaltet) |
 | `/anleitungen`, `/anleitungen/<Thema>` | Anleitungen | Paket für alle Berufe, nur lesen |
 
@@ -285,7 +286,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 197 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 199 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |

@@ -56,6 +56,33 @@ test(
     assert.equal(r.regalTropfen, 1, 'fällige Karte: +1 Tropfen fürs Regal');
     const nochmal = await anna.ruf('PATCH', '/api/lernen/karte', { id: karten.karten[0].id, gewusst: true });
     assert.equal(nochmal.regalTropfen, 0, 'nicht fällig: nichts');
+
+    // Lernspiel Memory: alle Paare finden – die erste Runde je Themenfeld bringt 2 Tropfen
+    await oeffne(s, p.url, '/lernen/vault/memory');
+    await s.locator('h1:has-text("Begriffe-Memory")').waitFor();
+    const memory = await anna.ruf('GET', '/api/lernen/spiele/memory?feld=alle');
+    const feld = s.locator('.memory-karte');
+    const n = await feld.count();
+    assert.equal(n, memory.paare.length * 2);
+    // wie beim echten Spielen: je zwei Karten aufdecken und merken, was wo liegt – dann die Paare nehmen
+    const lage = new Map<string, number>();
+    const beschriftung = async (i: number) => ((await feld.nth(i).getAttribute('aria-label')) ?? '').replace(/^(Begriff|Erklärung): /, '');
+    for (let i = 0; i < n; i += 2) {
+      await feld.nth(i).click();
+      lage.set(await beschriftung(i), i);
+      await feld.nth(i + 1).click();
+      lage.set(await beschriftung(i + 1), i + 1);
+      await s.waitForFunction((k) => !document.querySelectorAll('.memory-karte')[k].classList.contains('auf') || document.querySelectorAll('.memory-karte')[k].classList.contains('weg'), i + 1);
+    }
+    for (const paar of memory.paare as { begriff: string; erklaerung: string }[]) {
+      const [a, b] = [lage.get(paar.begriff)!, lage.get(paar.erklaerung)!];
+      if (await feld.nth(a).evaluate((e) => e.classList.contains('weg'))) continue;
+      await feld.nth(a).click();
+      await feld.nth(b).click();
+    }
+    await s.locator('.spiel-fertig:has-text("Alle Paare gefunden")').waitFor();
+    await s.locator('.hinweis.gut:has-text("+2 Tropfen")').waitFor();
+    assert.equal((await anna.ruf('POST', '/api/lernen/spiele/memory', { feld: 'alle' })).regalTropfen, 0, 'zweite Runde: nichts mehr');
     assert.equal(await ueberlauf(s), 0);
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),
