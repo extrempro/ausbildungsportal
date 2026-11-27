@@ -1,6 +1,6 @@
 # So sieht das Ausbildungsportal aus
 
-Bildschirmfotos des Portals, Stand Version 0.83.1 (erzeugt am 24.11.2026).
+Bildschirmfotos des Portals, Stand Version 0.86.0 (erzeugt am 27.11.2026).
 
 **Alle Namen und Inhalte sind erfunden.** Die Bilder entstehen automatisch aus einem frisch gestarteten Portal mit Beispieldaten (`npm run bilder`) – echte Daten eines Betriebs können nicht darin vorkommen.
 
@@ -24,7 +24,7 @@ Alle Wochen mit ihrem Stand: fehlt, Entwurf, eingereicht, zurückgegeben, abgeze
 
 ### Einen Bericht schreiben
 
-Je Tätigkeit eine Zeile mit Stunden. Speichern als Entwurf oder einreichen.
+Je Tätigkeit eine Zeile mit Stunden. Das Portal speichert von selbst; mit den Knöpfen oben geht es zur Woche davor oder danach.
 
 ![Einen Bericht schreiben](azubi-03-bericht-schreiben.png)
 
@@ -129,6 +129,18 @@ Eigene Fehlermeldungen und Ideen mit dem Gespräch dazu: Fragt jemand nach, sagt
 Azubis wünschen sich einen Einsatz in einer Abteilung aus den Stammdaten. Den Wunsch und den Grund sieht nur der Ausbilder.
 
 ![Einsatz wünschen](azubi-20-einsatzwunsch.png)
+
+### Game Vault: Pflanzenregal
+
+Freiwillig und nur für den Azubi: Pflanzen mit Tropfen aus Berichten und Lernen gießen, oben das Berichtsheft-Gewächs mit einem Blatt je Bericht. Der Super-Admin schaltet den Game Vault ein.
+
+![Game Vault: Pflanzenregal](azubi-21-pflanzenregal.png)
+
+### Game Vault: Gärtnerei
+
+Booster für Funken aus Zusatzwissen und Abzeichen; Gadgets kommen mit den Meilensteinen der Ausbildungszeit.
+
+![Game Vault: Gärtnerei](azubi-22-gaertnerei.png)
 
 ## Ausbilderin
 
@@ -258,7 +270,7 @@ Anmeldungen und Änderungen – ohne Inhalte von Berichten und Plänen.
 
 ### Erscheinungsbild
 
-Logo des Betriebs und der Schalter für den Begleiter der Azubis.
+Logo des Betriebs, die Schalter für den Begleiter und den Game Vault der Azubis und die Teams-App.
 
 ![Erscheinungsbild](admin-03-erscheinungsbild.png)
 
