@@ -972,6 +972,7 @@ const AZUBI: Kapitel[] = [
         </dl>
         <h3>Gut zu wissen</h3>
         <ul className="punkte">
+          <li>Hast du im Game Vault ein Pflanzenregal, steht nach der Runde, wie viele Tropfen sie gebracht hat: +1 für jede fällige Karteikarte, +3 für ein Quiz, das du zum ersten Mal bestehst.</li>
           <li>Unter jedem Schild steht, was bis zur nächsten Stufe fehlt.</li>
           <li>Gezählt werden nur Unterthemen, für die es ein Quiz gibt. Hat ein Themenfeld gar kein Quiz, ist dort Bronze die höchste Stufe.</li>
           <li>Ein neues Abzeichen zeigt dir das Portal einmal groß an.</li>

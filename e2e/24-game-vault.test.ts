@@ -50,6 +50,12 @@ test(
     await s.click('button:has-text("Dünger (1)")');
     await s.locator('.vault-seite .hinweis.gut').waitFor();
     assert.match(await text(s, '.vault-seite'), /20 %/);
+    // Üben bringt Tropfen – die Antwort sagt es, die Oberfläche zeigt es nach der Runde
+    const karten = await anna.ruf('GET', '/api/lernen/karten');
+    const r = await anna.ruf('PATCH', '/api/lernen/karte', { id: karten.karten[0].id, gewusst: true });
+    assert.equal(r.regalTropfen, 1, 'fällige Karte: +1 Tropfen fürs Regal');
+    const nochmal = await anna.ruf('PATCH', '/api/lernen/karte', { id: karten.karten[0].id, gewusst: true });
+    assert.equal(nochmal.regalTropfen, 0, 'nicht fällig: nichts');
     assert.equal(await ueberlauf(s), 0);
     assert.deepEqual(p.probleme, [], 'keine Fehler in der Konsole');
   }),

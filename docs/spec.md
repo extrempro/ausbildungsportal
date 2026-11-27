@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.86.0 · 27.11.2026
+Stand: Version 0.86.1 · 27.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -82,7 +82,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 ### Game Vault (freiwillig, privat)
 
 - Reiter „Game Vault“ unter Lernen (nur Azubis mit Lernmodul; Schalter für das ganze Portal beim Super-Admin, anfangs aus). Erstes Spiel: **Pflanzenregal**.
-- **Tropfen** zum Gießen: je eingereichtem Bericht 5 (egal wann), je Unterthema Gelb 2 und Grün 5, je bestandenem Quiz 3, je wiederholter fälliger Karteikarte 1. **Funken** für Booster: je gelesenem Zusatzwissen 1, je Abzeichen-Stufe 3. Das Guthaben wird bei jedem Aufruf aus Berichtsheft und Lernstand errechnet (minus Ausgaben); gespeichert werden nur Ausgaben, ein Zähler für Karteikarten und Höchststände – ohne Datum. Keine Fristen.
+- **Tropfen** zum Gießen: je eingereichtem Bericht 5 (egal wann), je Unterthema Gelb 2 und Grün 5, je bestandenem Quiz 3, je wiederholter fälliger Karteikarte 1 (Üben zeigt nach der Runde, was es gebracht hat; das Regal verweist bei fehlenden Tropfen auf Üben und Berichtsheft). **Funken** für Booster: je gelesenem Zusatzwissen 1, je Abzeichen-Stufe 3. Das Guthaben wird bei jedem Aufruf aus Berichtsheft und Lernstand errechnet (minus Ausgaben); gespeichert werden nur Ausgaben, ein Zähler für Karteikarten und Höchststände – ohne Datum. Keine Fristen.
 - **Pflanzen** (9 Plätze, mit Gadget 12) wachsen in 4 Stufen; Gießen (2 Tropfen) geht ab 70 % Feuchte und bringt Wachstum. Die Erde trocknet nur an Arbeitstagen im Betrieb (nicht in Urlaub, Berufsschule, Abwesenheit laut Bericht); Pflanzen welken höchstens, eingehen können sie nicht.
 - **Berichtsheft-Gewächs** je Ausbildungsjahr: ein Blatt je eingereichtem Bericht, errechnet, nicht gespeichert.
 - **Meilensteine** aus der Ausbildungszeit (Start, Probezeit nach 4 Monaten, jedes Ausbildungsjahr, Halbzeit, Abschluss): je ein Samenpaket, Sorte frei wählbar; ein seltenes Paket gegen 150 Tropfen, ein Paket ohne Meilenstein gegen 300. **Gärtnerei:** Booster (Pflanzenlampe, Luftbefeuchter, Dünger) für Funken; Gadgets (Bewässerungsdocht, Pflanzenkalender – der Begleiter erinnert an durstige Pflanzen –, viertes Regalbrett) mit Meilensteinen oder für 200 Tropfen.

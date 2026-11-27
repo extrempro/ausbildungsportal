@@ -357,7 +357,7 @@ export function PflanzenRegal() {
         <div>
           <h1>Dein Pflanzenregal</h1>
           <p className="leise">
-            Gieß deine Pflanzen mit Tropfen, wenn die Erde trocken ist – etwa einmal in der Woche. Nur du siehst dein Regal. <HandbuchLink kapitel="game-vault">Pflanzenregal</HandbuchLink>
+            Gieß deine Pflanzen mit Tropfen, wenn die Erde trocken ist – etwa einmal in der Woche. Tropfen gibt es für Berichte und fürs <Link zu="/lernen/ueben">Üben</Link>. Nur du siehst dein Regal. <HandbuchLink kapitel="game-vault">Pflanzenregal</HandbuchLink>
           </p>
         </div>
         <div className="vault-kopf-rechts">
@@ -454,7 +454,11 @@ export function PflanzenRegal() {
                 </button>
               </p>
               {!p.giessbar && <p className="leise klein">Die Erde ist noch feucht genug. Gießen geht ab {r.regeln.giessenAb} %.</p>}
-              {p.giessbar && r.tropfen < r.regeln.preis.giessen && <p className="leise klein">Dir fehlen Tropfen. Reich einen Bericht ein oder lern etwas – dann gibt es neue.</p>}
+              {p.giessbar && r.tropfen < r.regeln.preis.giessen && (
+                <p className="hinweis klein" role="status">
+                  Dir fehlen Tropfen. Neue gibt es für jeden Bericht und fürs Üben: <Link zu="/lernen/ueben">Karteikarten und Quiz</Link> · <Link zu="/berichtsheft">Berichtsheft</Link>
+                </p>
+              )}
               {vorrat.length > 0 && (
                 <details className="klapp">
                   <summary>Booster geben</summary>

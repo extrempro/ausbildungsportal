@@ -1,5 +1,11 @@
 # Änderungen
 
+## [0.86.1] – 2026-11-27
+
+### Geändert
+
+- **Üben und Pflanzenregal verbunden:** Wer im Game Vault ein Regal hat, sieht nach einer Runde Karteikarten oder einem bestandenen Quiz, wie viele Tropfen es gebracht hat – mit Link zum Regal. Fehlen im Regal Tropfen, führt ein Link zu Karteikarten, Quiz und Berichtsheft.
+
 ## [0.86.0] – 2026-11-27
 
 ### Neu
