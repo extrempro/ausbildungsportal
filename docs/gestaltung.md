@@ -38,6 +38,8 @@ Regeln dazu:
 - **Hell und dunkel:** Die Klasse `dark` an `<html>` schaltet um (Einstellung des Nutzers oder des Geräts). Jede Änderung wird in beiden Darstellungen angesehen.
 - **Grafiken (SVG):** Farben über die Klassen `sv-…` in `src/index.css`, damit auch sie umschalten.
 
+**Ausnahme Pflanzenregal:** Die Pflanzen im Game Vault (`src/vault/pflanzen.tsx`) haben eigene Farben `--pf-…` (Blätter, Blüten, Topf je Seltenheit), das Regal `--vault-…` (Wand, Holz, hell und dunkel), Tropfen und Funken feste Farben. Sie gelten nur dort.
+
 **Ausnahme Begleiter:** Die fünf Figuren des Begleiters (`src/begleiter/figuren.tsx`) haben eigene Farben `--bf-…` (Fell, Bauch, Schnabel, Zubehör …), festgelegt an `.bf` und für dunkel an `html.dark .bf`. Sie gelten nur innerhalb der Figur. Neue Figuren oder Teile werden selbst gezeichnet (SVG, Strichstärke wie die vorhandenen) und nehmen diese Variablen.
 
 ## Schrift und Abstände

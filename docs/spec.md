@@ -1,6 +1,6 @@
 # Spezifikation Ausbildungsportal
 
-Stand: Version 0.85.1 · 25.11.2026
+Stand: Version 0.86.0 · 27.11.2026
 
 Diese Datei beschreibt in einem Dokument, **was** das Portal kann (Funktionen), **womit** es arbeitet (Datenmodell) und **wo** man es bedient (Screens). Einzelheiten stehen an anderer Stelle:
 
@@ -77,7 +77,15 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ### Begleiter (freiwillig, privat)
 
-- Selbst gezeichnete Figur mit Namen; Zubehör verteilt sich über die Ausbildungszeit. Erinnert höchstens einmal am Tag an Anstehendes (Bericht, Unterschrift, Berufsschule, Firmentermin, Prüfung, Urlaub) – nie ans Lernen. Schalter für das ganze Portal beim Super-Admin.
+- Selbst gezeichnete Figur mit Namen; Zubehör verteilt sich über die Ausbildungszeit. Erinnert höchstens einmal am Tag an Anstehendes (Bericht, Unterschrift, Berufsschule, Firmentermin, Prüfung, Urlaub; mit dem Pflanzenkalender aus dem Game Vault an durstige Pflanzen) – nie ans Lernen. Schalter für das ganze Portal beim Super-Admin.
+
+### Game Vault (freiwillig, privat)
+
+- Reiter „Game Vault“ unter Lernen (nur Azubis mit Lernmodul; Schalter für das ganze Portal beim Super-Admin, anfangs aus). Erstes Spiel: **Pflanzenregal**.
+- **Tropfen** zum Gießen: je eingereichtem Bericht 5 (egal wann), je Unterthema Gelb 2 und Grün 5, je bestandenem Quiz 3, je wiederholter fälliger Karteikarte 1. **Funken** für Booster: je gelesenem Zusatzwissen 1, je Abzeichen-Stufe 3. Das Guthaben wird bei jedem Aufruf aus Berichtsheft und Lernstand errechnet (minus Ausgaben); gespeichert werden nur Ausgaben, ein Zähler für Karteikarten und Höchststände – ohne Datum. Keine Fristen.
+- **Pflanzen** (9 Plätze, mit Gadget 12) wachsen in 4 Stufen; Gießen (2 Tropfen) geht ab 70 % Feuchte und bringt Wachstum. Die Erde trocknet nur an Arbeitstagen im Betrieb (nicht in Urlaub, Berufsschule, Abwesenheit laut Bericht); Pflanzen welken höchstens, eingehen können sie nicht.
+- **Berichtsheft-Gewächs** je Ausbildungsjahr: ein Blatt je eingereichtem Bericht, errechnet, nicht gespeichert.
+- **Meilensteine** aus der Ausbildungszeit (Start, Probezeit nach 4 Monaten, jedes Ausbildungsjahr, Halbzeit, Abschluss): je ein Samenpaket, Sorte frei wählbar; ein seltenes Paket gegen 150 Tropfen, ein Paket ohne Meilenstein gegen 300. **Gärtnerei:** Booster (Pflanzenlampe, Luftbefeuchter, Dünger) für Funken; Gadgets (Bewässerungsdocht, Pflanzenkalender – der Begleiter erinnert an durstige Pflanzen –, viertes Regalbrett) mit Meilensteinen oder für 200 Tropfen.
 
 ### Glocke, Benachrichtigungen, Kalender
 
@@ -101,7 +109,7 @@ Eine Installation gehört zu **einem** Ausbildungsbetrieb. Das Portal führt Aus
 
 ## 3. Datenmodell
 
-SQLite, 46 Tabellen, Migrationen fortlaufend in `server/migrations/` (Stand: 040). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
+SQLite, 47 Tabellen (dazu `schema_version`), Migrationen fortlaufend in `server/migrations/` (Stand: 041). Zeitangaben als ISO-Text, Wochen über ihren **Montag** (`YYYY-MM-DD`). JSON-Felder sind als Text gespeichert.
 
 ### Kern
 
@@ -188,6 +196,8 @@ erDiagram
 | `lern_zusatz` | gelesenes Zusatzwissen | `azubi_id`, `paket`, `zusatz_id` |
 | `planer` | Vorhaben, Termine, Haken, Phasen, Antworten, Notizen (JSON) | `azubi_id`, `paket` |
 | `begleiter` | Figur, Name, an/aus, gezeigte Stufe, abgeschaltete Erinnerungen | `azubi_id` |
+| `regal` | Game Vault: an/aus, ausgegebene Tropfen und Funken, Zähler wiederholter Karteikarten, Höchststände, eingelöste Samenpakete, gekaufte Gadgets, Vorrat an Boostern | `azubi_id` |
+| `regal_pflanze` | Pflanze: Platz, Art, Stufe, Wuchs, Tag des letzten Gießens, Booster bis | `id` (`azubi_id`, `platz`) |
 
 Dazu, nicht privat: `lern_paket_stand` (Prüfsumme je Unterthema, für „Lerninhalte aktualisiert“), `lern_inhalt_version` (Prüfsummen der Bausteine je Inhaltsstand eines Unterthemas – damit der Azubi sieht, was seit seinem letzten Blick neu ist oder sich geändert hat; aufgehoben, solange der Stand aktuell ist oder ein Lernstand auf ihn verweist) und `lern_einreichung` (eingereichte ZIP-Dateien mit Prüfergebnis und Entscheidung).
 
@@ -231,6 +241,7 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/jahreskalender` | Jahreskalender | eigenes Jahr |
 | `/lernen`, `/lernen/<Themenfeld>`, `/lernen/kompendium` | Lernen | Themenfelder, Lernstand, Abzeichen |
 | `/lernen/ueben`, `…/karten/<Feld>`, `…/quiz/<Unterthema>` | Üben | Karteikarten, Quiz |
+| `/lernen/vault`, `…/regal`, `…/gaertnerei`, `…/tropfen` | Game Vault | Pflanzenregal, Samenpakete, Gärtnerei, Regeln für Tropfen und Funken (wenn eingeschaltet) |
 | `/planer` | Planer | Planer für die Prüfung (wenn freigeschaltet) |
 | `/anleitungen`, `/anleitungen/<Thema>` | Anleitungen | Paket für alle Berufe, nur lesen |
 
@@ -270,11 +281,11 @@ Pfade des eigenen Routers (`src/App.tsx`). Navigation: ab 1024 px Kopfzeile mit 
 | `/verwaltung/protokoll` | Protokoll | die neuesten 200 Einträge |
 | `/verwaltung/meldungen` | Rückmeldungen | Fehler und Ideen, mit Rückfrage |
 | `/verwaltung/lerninhalte` | Lerninhalte | Einreichungen prüfen, übernehmen, zurückgeben |
-| `/verwaltung/erscheinungsbild` | Erscheinungsbild | Logo, Begleiter-Schalter, Teams-App |
+| `/verwaltung/erscheinungsbild` | Erscheinungsbild | Logo, Begleiter-Schalter, Game-Vault-Schalter, Teams-App |
 
 ## 5. Schnittstelle
 
-Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 186 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
+Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen als `{ m, p, wer, h }` erklärt: Methode, Pfad, erlaubte Rollen, Funktion. 197 Routen, die meisten unter `/api/azubis/:id/…` (Plan, Berichte, Urlaub, Profil, Zuweisungen). Fremde Kennung → 404, falsche Rolle → 403; schreibende Anfragen prüfen die Herkunft (`Origin`). Die vollständige Liste mit Rechten steht in `server/test/api.test.ts`.
 
 | Bereich | Präfix |
 | --- | --- |
@@ -283,7 +294,7 @@ Alle Routen liegen unter `/api/` und sind in `server/api.ts` und den Fachmodulen
 | Azubi-bezogen | `/api/azubis/:id/…` |
 | Urlaub | `/api/urlaub/…` |
 | Einsatzwünsche, Erinnerungen | `/api/azubis/:id/wuensche`, `/api/wuensche/…`, `/api/erinnerungen/…` |
-| Lernmodul, Planer, Begleiter | `/api/lernen/…`, `/api/planer/…`, `/api/begleiter/…`, `/api/anleitungen/…` |
+| Lernmodul, Planer, Begleiter, Game Vault | `/api/lernen/…`, `/api/planer/…`, `/api/begleiter/…`, `/api/regal/…`, `/api/anleitungen/…` |
 | Verwaltung | `/api/konten/…`, `/api/stammdaten/…`, `/api/abteilungen/…`, `/api/planvorlagen/…`, `/api/protokoll`, `/api/branding/…`, `/api/teams/…`, `/api/schulbloecke/…`, `/api/lernpakete/…`, `/api/lerninhalte/…` |
 | Rückmeldungen | `/api/fehlermeldungen/…`, `/api/rueckmeldungen/…`, `/api/meine-meldungen/…` |
 | Sonstiges | `/api/aktivitaeten/…` (Glocke), `/api/jahreskalender`, `/api/abo/…` (Kalender), `/api/health` |
@@ -292,7 +303,7 @@ Außerhalb von `/api/` liefert der Server neben der Oberfläche nur `/teams/app`
 
 ## 6. Grundsätze
 
-- **Datenschutz:** Lernstand, Abzeichen, Übungsergebnisse, Planer (außer Terminen), Begleiter, private Termine und Entwürfe sind privat für den Azubi. Wünsche zu Lerninhalten ohne Person. Benachrichtigungen ohne fremde Namen und Inhalte. Kein Abwesenheitsgrund mit Gesundheitsbezug.
+- **Datenschutz:** Lernstand, Abzeichen, Übungsergebnisse, Planer (außer Terminen), Begleiter, Game Vault, private Termine und Entwürfe sind privat für den Azubi. Wünsche zu Lerninhalten ohne Person. Benachrichtigungen ohne fremde Namen und Inhalte. Kein Abwesenheitsgrund mit Gesundheitsbezug.
 - **Keine Leistungs- und Verhaltenskontrolle:** keine Noten, Ranglisten, Statistiken oder Vergleiche zwischen Azubis.
 - **Barrierefreiheit:** WCAG 2.2 AA; PC, Tablet und Handy ab 320 px.
 - **Sicherheit:** OWASP Top 10:2025; Container gehärtet; Pakete fest über `package-lock.json`.

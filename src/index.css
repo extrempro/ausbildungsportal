@@ -10327,3 +10327,217 @@ html.in-teams {
   font-size: 12px;
   font-weight: 600;
 }
+
+/* ---------- Game Vault: Pflanzenregal (src/pages/GameVault.tsx, src/vault/pflanzen.tsx) ---------- */
+/* Farben der Pflanzen: wie beim Begleiter nur hier festgelegt; sie gelten nur innerhalb der Zeichnung */
+.pf {
+  --pf-a: #4c9a4f;
+  --pf-b: #6fb86a;
+  --pf-bluete: #f472b6;
+  --pf-stiel: #3f6f3a;
+  --pf-topf: #c2703d;
+  --pf-topfrand: #a85d2f;
+  flex: 0 0 auto;
+}
+.pf-blatt { fill: var(--pf-a); }
+.pf-blatt2 { fill: var(--pf-b); }
+.pf-stiel { stroke: var(--pf-stiel); }
+.pf-bluete { fill: var(--pf-bluete); }
+.pf-topf { fill: var(--pf-topf); }
+.pf-topfrand { fill: var(--pf-topfrand); }
+.pf-bogenhanf { --pf-a: #3f7d4a; --pf-b: #7aa35a; }
+.pf-gluecksfeder { --pf-a: #2f8f5b; --pf-b: #4fb07a; }
+.pf-gummibaum { --pf-a: #1f5a3a; --pf-b: #2f7a4f; }
+.pf-usambara { --pf-a: #3f7f4f; --pf-b: #5a9a62; --pf-bluete: #8b5cf6; }
+.pf-flamingo { --pf-a: #2f7a45; --pf-b: #3f8f55; --pf-bluete: #e11d48; }
+.pf-friedenslilie { --pf-a: #2f6f45; --pf-b: #4a8f5c; --pf-bluete: #f8fafc; }
+.pf-efeuranke { --pf-a: #3f8f45; --pf-b: #8fc07a; }
+.pf-erbsenranke { --pf-a: #5aa86a; --pf-b: #7cc08a; }
+.pf-tradeskantie { --pf-a: #7c3a8f; --pf-b: #a3c48a; }
+.pf-orchidee { --pf-a: #3e8e57; --pf-b: #5aa870; --pf-bluete: #e879a6; }
+.pf-maranta { --pf-a: #1f6b4f; --pf-b: #9fb8ad; }
+.pf-schildfarn { --pf-a: #2f7a3f; --pf-b: #4f9a55; }
+.pf-mondfarn { --pf-a: #2c7a7b; --pf-b: #4fa3a4; }
+.pf-silberranke { --pf-a: #8fa3a0; --pf-b: #c2d1cd; }
+.pf-glutfarn { --pf-a: #b45309; --pf-b: #f59e0b; }
+.pf-sternorchidee { --pf-a: #2f6f55; --pf-b: #4f9a75; --pf-bluete: #fbbf24; }
+.pf-bericht { --pf-a: #15803d; --pf-b: #4ade80; }
+.pf-s-selten { --pf-topf: #5b7db1; --pf-topfrand: #46669a; }
+.pf-s-besonders { --pf-topf: #7c5cc4; --pf-topfrand: #6446a8; }
+.pf-s-legendaer { --pf-topf: #c9a227; --pf-topfrand: #a8851a; }
+.pf-s-bericht { --pf-topf: #e7e1d3; --pf-topfrand: #cfc6b2; }
+.pf.pf-welk { --pf-a: #a5a45c; --pf-b: #b9b672; --pf-stiel: #8a8a4a; }
+.vault-tropfen { fill: #38bdf8; stroke: #0369a1; stroke-width: 1.5; }
+.vault-funke { fill: #fbbf24; stroke: #b45309; stroke-width: 1.5; stroke-linejoin: round; }
+/* das Regal selbst: Wand und Holz */
+.vault-regal {
+  --vault-wand: #f1ede4;
+  --vault-holz: #a0784f;
+  --vault-holz-kante: #7a5a3a;
+  --vault-frei: #6b5f48;
+  background: var(--vault-wand);
+}
+html.dark .vault-regal {
+  --vault-wand: #2a2620;
+  --vault-holz: #7a5a3a;
+  --vault-holz-kante: #5a4128;
+  --vault-frei: #d6ccb8;
+}
+
+.vault-kacheln {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.vault-kachel {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+.vault-kachel h2 { margin-top: 0; }
+.vault-ware { margin-bottom: 0; display: flex; flex-direction: column; }
+.vault-ware h3 { margin-top: 0; }
+.vault-ware .aktionen { margin-top: auto; }
+.vault-marken { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.vault-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.vault-kopf h1 { margin-bottom: 4px; }
+.vault-kopf > div:first-child { flex: 1 1 420px; }
+.vault-kopf-rechts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.vault-guthaben { display: flex; flex-wrap: wrap; gap: 8px; }
+.vault-geld {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-card);
+  color: var(--c-text);
+  text-decoration: none;
+}
+.vault-geld strong { font-size: 18px; }
+.vault-muenze { flex: 0 0 auto; }
+.vault-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 0; }
+
+.vault-wartet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.vault-raum {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 1023px) {
+  .vault-raum { grid-template-columns: minmax(0, 1fr); }
+}
+.vault-brett { margin-bottom: 18px; }
+.vault-plaetze {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.vault-holz {
+  height: 14px;
+  margin: 0 -8px;
+  border-radius: 4px;
+  background: var(--vault-holz);
+  box-shadow: 0 4px 0 var(--vault-holz-kante);
+}
+.vault-platz {
+  min-height: 196px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 4px 8px;
+  text-align: center;
+  font-size: 14px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.vault-pflanze {
+  width: 100%;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.vault-pflanze:hover { background: color-mix(in srgb, var(--c-card) 55%, transparent); }
+.vault-pflanze.an { border-color: var(--c-accent); background: var(--c-card); }
+.vault-frei {
+  justify-content: center;
+  border: 2px dashed var(--vault-holz);
+  color: var(--vault-frei);
+}
+.vault-gewaechs strong, .vault-pflanze strong { line-height: 1.2; }
+.vault-seite { display: flex; flex-direction: column; gap: 0; }
+.vault-wert {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.vault-wert .balken { grid-column: 1 / -1; height: 10px; }
+.vault-wasser span { background: var(--c-ferien); }
+.vault-liste { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+
+.vault-sorten { border: 0; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.vault-sorte {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 2px solid var(--c-border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.vault-sorte.an { border-color: var(--c-accent); background: var(--c-accent-soft); }
+.vault-sorte > span { display: flex; flex-direction: column; }
+.vault-sorte input { width: 20px; height: 20px; flex: 0 0 auto; }
+.vault-neu { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.vault-neu h3 { margin: 0; font-size: 22px; }
+@media (prefers-reduced-motion: no-preference) {
+  .vault-neu .pf { animation: vault-auf 0.9s ease-out both; }
+  .vault-pflanze .pf { transition: transform 0.3s ease; }
+}
+@keyframes vault-auf {
+  0% { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(3deg); opacity: 1; }
+  100% { transform: none; }
+}
+@media (max-width: 699px) {
+  .vault-platz { min-height: 150px; font-size: 12px; }
+  .vault-pflanze, .vault-gewaechs { font-size: 12px; }
+  .vault-platz .pf { width: 76px; height: 95px; }
+  .vault-plaetze { gap: 6px; }
+  .vault-regal .pille { font-size: 12px; white-space: normal; }
+  .vault-kachel { flex-direction: column; }
+  .vault-geld { flex: 1 1 auto; justify-content: center; }
+  .vault-kopf-rechts, .vault-guthaben { width: 100%; }
+}
+/* unter der festen Leiste oben bleibt etwas Luft, wenn die Pflanze ins Bild rollt */
+.vault-detail { scroll-margin-top: 72px; }

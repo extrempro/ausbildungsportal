@@ -48,6 +48,7 @@ const ERINNERUNGEN: [string, string][] = [
   ['schule', 'Nächste Woche ist Berufsschule'],
   ['firmentermin', 'Ein Firmentermin steht an'],
   ['pruefung', 'Ein Termin für deine Prüfung steht an'],
+  ['pflanzen', 'Pflanzen im Regal haben Durst (mit dem Pflanzenkalender im Game Vault)'],
   ['urlaub', 'Dein Urlaub beginnt'],
 ];
 

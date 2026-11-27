@@ -986,6 +986,47 @@ const AZUBI: Kapitel[] = [
     ),
   },
   {
+    id: 'game-vault',
+    titel: 'Game Vault: Dein Pflanzenregal pflegen',
+    gruppe: 'Lernen und Prüfung',
+    inhalt: (
+      <>
+        <p>
+          Im Game Vault unter <Link zu="/lernen/vault">Lernen → „Game Vault“</Link> steht dein Pflanzenregal: Du gießt Pflanzen mit Tropfen, die du für Berichte und fürs Lernen bekommst. Freiwillig und nur für dich – niemand sieht, ob oder wie viel du spielst.
+        </p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Öffne „Game Vault“ und tippe auf „Regal anlegen“.</li>
+          <li>Tippe auf „Samenpaket öffnen“ und such dir eine Sorte aus: Grün-, Blüh- oder Hängepflanzen. Die Pflanze steht danach als Keimling im Regal.</li>
+          <li>Wähl eine Pflanze aus. Ist die Erde unter 70 % feucht, tippe auf „Pflanze gießen“ – das kostet 2 Tropfen und lässt sie wachsen.</li>
+          <li>In der „Gärtnerei“ kaufst du mit Funken Booster (Pflanzenlampe, Luftbefeuchter, Dünger). Im Regal gibst du sie unter „Booster geben“ einer Pflanze.</li>
+        </ol>
+        <h3>Begriffe</h3>
+        <dl className="begriffe">
+          <Begriff wort="Tropfen">Zum Gießen. Es gibt sie für jeden eingereichten Bericht (+5, egal wann), für Unterthemen auf Gelb (+2) und Grün (+5), für ein bestandenes Quiz (+3) und für jede fällige Karteikarte, die du wiederholst (+1).</Begriff>
+          <Begriff wort="Funken">Für Booster. Es gibt sie für gelesenes Zusatzwissen (+1) und für jede Abzeichen-Stufe (+3).</Begriff>
+          <Begriff wort="Berichtsheft-Gewächs">Eins je Ausbildungsjahr. Es bekommt ein Blatt für jeden eingereichten Bericht. Lücken sind vergangene Wochen ohne Bericht – holst du sie nach, wächst das Blatt nach. Es braucht kein Wasser.</Begriff>
+          <Begriff wort="Meilenstein">Ein Abschnitt deiner Ausbildungszeit: Probezeit (nach 4 Monaten), jedes Ausbildungsjahr, Halbzeit, Abschluss. Bei jedem gibt es ein Samenpaket. Leistung spielt keine Rolle.</Begriff>
+          <Begriff wort="Seltenes Paket">Kostet 150 Tropfen extra. Darin ist eine seltene, besondere oder mit Glück eine legendäre Pflanze.</Begriff>
+          <Begriff wort="Gadgets">Bleiben für immer: Bewässerungsdocht (Erde trocknet halb so schnell), Pflanzenkalender (dein Begleiter sagt dir, wenn eine Pflanze Durst hat), viertes Regalbrett. Sie kommen mit Meilensteinen – oder für 200 Tropfen.</Begriff>
+        </dl>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Nur für dich:</strong> Ausbilder, Beauftragte und Admin sehen weder Regal noch Tropfen. Es gibt keine Rangliste.
+          </li>
+          <li>
+            <strong>Nichts wird mitgeschrieben:</strong> Das Portal rechnet dein Guthaben jedes Mal neu aus deinem Berichtsheft und deinem Lernstand aus. Stellst du ein Thema zurück auf Rot, bleiben die Tropfen.
+          </li>
+          <li>Pflanzen trocknen nur an Arbeitstagen im Betrieb – nicht am Wochenende, an Feiertagen, im Urlaub, in Berufsschulwochen und an Tagen, die im Bericht als abwesend stehen.</li>
+          <li>Eine durstige Pflanze lässt die Blätter hängen, eingehen kann sie nicht. Nach dem Gießen erholt sie sich.</li>
+          <li>Ist das Regal voll, gibst du unter „Pflanze weggeben“ eine Pflanze ab. Unten im Regal kannst du es ausblenden (bleibt gespeichert) oder ganz löschen.</li>
+          <li>Den Game Vault gibt es, wenn dein Beruf ein Lernmodul hat und der Super-Admin ihn eingeschaltet hat.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'kompendium',
     titel: 'Im Kompendium nachschlagen',
     gruppe: 'Lernen und Prüfung',
@@ -1151,6 +1192,7 @@ const AZUBI: Kapitel[] = [
           <li>Ein Firmentermin steht in zwei Tagen an.</li>
           <li>Ein Termin für deine Prüfung steht an: eine Woche und einen Tag vorher. Dazu zählen auch die Termine aus deinem Planer.</li>
           <li>Dein genehmigter Urlaub beginnt am nächsten Arbeitstag.</li>
+          <li>Pflanzen in deinem Regal haben Durst – nur, wenn du im Game Vault den Pflanzenkalender hast (einmal in der Woche).</li>
         </ul>
         <p>
           Unter <Link zu="/konto">Konto</Link> bei „Begleiter“ schaltest du jede dieser Erinnerungen einzeln aus.
@@ -2467,6 +2509,31 @@ const ADMIN: Kapitel[] = [
           <li>Du siehst nicht, welcher Azubi einen Begleiter hat, welche Figur es ist oder wie sie heißt. Das sehen auch Ausbilder und Ausbildungsbeauftragte nicht.</li>
           <li>Das Zubehör hängt nur an der Ausbildungszeit, nicht an dem, was ein Azubi im Portal macht. Es gibt keine Punkte und keinen Vergleich.</li>
           <li>Der Begleiter erinnert Azubis an das, was ansteht – zum Beispiel an einen fehlenden Bericht oder einen Firmentermin. Das sieht nur der Azubi; gespeichert wird dazu nur, welche Erinnerungen er abgeschaltet hat.</li>
+          <li>Das Ein- und Ausschalten steht im Protokoll.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: 'vault-schalter',
+    titel: 'Den Game Vault der Azubis ein- oder ausschalten',
+    gruppe: 'Verwaltung',
+    inhalt: (
+      <>
+        <p>Der Game Vault ist ein freiwilliges Spiel unter „Lernen“: Azubis pflegen ein Pflanzenregal mit Tropfen, die sie für Berichte und fürs Lernen bekommen. Ob es ihn in eurem Portal gibt, entscheidest du.</p>
+        <h3>So geht's</h3>
+        <ol className="schritte">
+          <li>Öffne <Link zu="/verwaltung/erscheinungsbild">Erscheinungsbild</Link>.</li>
+          <li>Setze oder entferne unter „Game Vault für Azubis“ den Haken. Er wird sofort gespeichert.</li>
+        </ol>
+        <h3>Gut zu wissen</h3>
+        <ul className="punkte">
+          <li>
+            <strong>Am Anfang ist der Game Vault ausgeschaltet.</strong> Er belohnt eingereichte Berichte und Lernen – sprich vor dem Einschalten am besten mit dem Betriebsrat.
+          </li>
+          <li>Du siehst nicht, wer ein Regal hat oder was darin steht. Das sehen auch Ausbilder und Ausbildungsbeauftragte nicht. Es gibt keine Rangliste.</li>
+          <li>Tropfen und Funken werden nicht mitgeschrieben, sondern jedes Mal aus Berichtsheft und Lernstand errechnet. Es gibt keine Fristen. Gespeichert werden nur Ausgaben, ein Zähler für wiederholte Karteikarten und je Pflanze der Tag, an dem sie zuletzt gegossen wurde.</li>
+          <li>Schaltest du aus, verschwindet der Game Vault bei allen Azubis. Ihre Regale bleiben gespeichert.</li>
           <li>Das Ein- und Ausschalten steht im Protokoll.</li>
         </ul>
       </>

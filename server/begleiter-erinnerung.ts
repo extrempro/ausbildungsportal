@@ -3,6 +3,7 @@ import { ausbildungswochen } from './berichte';
 import { firmentermineZwischen } from './firmentermin';
 import { kalenderwoche, montagVon, plusTage, tageZwischen } from './kalender';
 import { mitPlanerTerminen } from './planer';
+import { durstigePflanzen } from './regal';
 import { dauerVon, leseProfil } from './stammdaten';
 import { arbeitstage, urlaubsZeitraeume } from './urlaub';
 
@@ -13,9 +14,10 @@ import { arbeitstage, urlaubsZeitraeume } from './urlaub';
  *   Firmentermine, Prüfungstermine). Es wird nichts dazu gespeichert und niemand anderes erfährt davon.
  * - Jede Art lässt sich vom Azubi einzeln abschalten (Spalte begleiter.erinnern_aus).
  * - Die Oberfläche zeigt höchstens eine am Tag und jede nur einmal; dazu dient der „schluessel“.
- * - Erinnert wird nur an Pflichten und Termine – nie ans Lernen.
+ * - Erinnert wird nur an Pflichten und Termine – nie ans Lernen. Ausnahme auf eigenen Wunsch: Wer im Game Vault den
+ *   Pflanzenkalender hat, hört, wenn eine Pflanze Durst hat.
  */
-export const ERINNERUNGEN = ['bericht_woche', 'bericht_alt', 'bericht_zurueck', 'unterschrift', 'schule', 'firmentermin', 'pruefung', 'urlaub'] as const;
+export const ERINNERUNGEN = ['bericht_woche', 'bericht_alt', 'bericht_zurueck', 'unterschrift', 'schule', 'firmentermin', 'pruefung', 'urlaub', 'pflanzen'] as const;
 export type ErinnerungArt = (typeof ERINNERUNGEN)[number];
 
 export interface Erinnerung {
@@ -118,6 +120,11 @@ export function erinnerungenAm(k: Kontext, azubiId: number, tag: string, aus: re
     if (arbeitstage(db, plusTage(tag, 1), plusTage(u.von, -1)).length === 0) {
       dazu({ art: 'urlaub', schluessel: `urlaub:${u.id}:${u.von}`, text: `${gross(wann(tag, u.von)).replace(/^Am /, 'Ab ').replace(/^Morgen$/, 'Ab morgen').replace(/^Übermorgen$/, 'Ab übermorgen')} hast du Urlaub. Erhol dich gut!`, zu: '/urlaub', knopf: 'Urlaub ansehen' });
     }
+  }
+  // --- Pflanzenkalender aus dem Game Vault: einmal je Woche, wenn Pflanzen Durst haben ---
+  if (!aus.includes('pflanzen')) {
+    const n = durstigePflanzen(k, azubiId);
+    if (n > 0) dazu({ art: 'pflanzen', schluessel: `pflanzen:${montag}`, text: n === 1 ? 'Eine deiner Pflanzen hat Durst.' : `${n} deiner Pflanzen haben Durst.`, zu: '/lernen/vault/regal', knopf: 'Zum Regal' });
   }
   return liste;
 }
